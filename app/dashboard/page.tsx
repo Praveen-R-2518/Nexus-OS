@@ -31,7 +31,7 @@ const GLOBAL_REFRESH_MS = 30_000;
 const INBOX_REFRESH_MS = 15_000;
 
 function urgencyBadgeLabel(urgency: Conversation["urgency"] | null | undefined): string {
-  if (urgency == null || urgency === "") return "—";
+  if (urgency == null) return "—";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 

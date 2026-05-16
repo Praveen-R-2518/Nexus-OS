@@ -25,8 +25,8 @@ import {
 const REFRESH_MS = 30_000;
 const FETCH_LIMIT = 100;
 
-type UrgencyFilter = "" | Conversation["urgency"];
-type IntentFilter = "" | Exclude<Conversation["intent"], "unknown">;
+type UrgencyFilter = "" | NonNullable<Conversation["urgency"]>;
+type IntentFilter = "" | Exclude<NonNullable<Conversation["intent"]>, "unknown">;
 
 const URGENCY_OPTIONS: { value: UrgencyFilter; label: string }[] = [
   { value: "", label: "All" },
@@ -63,7 +63,7 @@ function sourceIcon(source: Conversation["source"]) {
 function intentBadgeLabel(
   intent: Conversation["intent"] | null | undefined,
 ): string {
-  if (intent == null || intent === "") {
+  if (intent == null) {
     return "Unknown";
   }
   switch (intent) {
@@ -83,7 +83,7 @@ function intentBadgeLabel(
 function urgencyBadgeLabel(
   urgency: Conversation["urgency"] | null | undefined,
 ): string {
-  if (urgency == null || urgency === "") return "—";
+  if (urgency == null) return "—";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 

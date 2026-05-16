@@ -40,7 +40,7 @@ type TableRow = Conversation & {
   action: string;
 };
 
-const urgencyRank: Record<Conversation["urgency"], number> = {
+const urgencyRank: Record<NonNullable<Conversation["urgency"]>, number> = {
   critical: 4,
   high: 3,
   medium: 2,
@@ -61,7 +61,8 @@ function formatReportDate(dateStr?: string): string {
   }).format(date);
 }
 
-function labelize(value: string): string {
+function labelize(value: string | null | undefined): string {
+  if (!value) return "Unknown";
   return value
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -232,8 +233,8 @@ export default function ReportPage() {
         aValue = Number(a.estimated_value) || 0;
         bValue = Number(b.estimated_value) || 0;
       } else if (sortKey === "urgency") {
-        aValue = urgencyRank[a.urgency];
-        bValue = urgencyRank[b.urgency];
+        aValue = a.urgency ? urgencyRank[a.urgency] : 0;
+        bValue = b.urgency ? urgencyRank[b.urgency] : 0;
       } else {
         aValue = String(a[sortKey]).toLowerCase();
         bValue = String(b[sortKey]).toLowerCase();

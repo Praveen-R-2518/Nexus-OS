@@ -72,6 +72,7 @@ function intentLabel(intent: Conversation["intent"]): string {
 }
 
 function urgencyLabel(urgency: Conversation["urgency"]): string {
+  if (!urgency) return "Unknown";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 

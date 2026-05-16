@@ -2,7 +2,7 @@
  * Nexus OS — Lead deduplication (Supabase REST + n8n Code)
  *
  * Looks up an **active** lead whose `customer_email` column matches the incoming
- * identity (plain email or `tel:+…` phone — same TEXT column per Nexus schema).
+ * identity (plain email in the Gmail-first build, stored in `customer_email`).
  *
  * ### n8n graph placement
  *
