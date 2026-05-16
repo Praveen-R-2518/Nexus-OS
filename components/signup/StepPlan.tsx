@@ -139,14 +139,14 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Choose your plan</h2>
-          <p className="mt-1 text-sm text-gray-400">
+          <h2 className="text-xl font-semibold text-foreground">Choose your plan</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Smart defaults based on your workspace. Change anytime before going
             live.
           </p>
         </div>
         <div
-          className="inline-flex rounded-lg border border-gray-800 bg-gray-950 p-1"
+          className="inline-flex rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-1"
           role="group"
           aria-label="Billing cycle"
         >
@@ -156,8 +156,8 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition",
               cycle === "monthly"
-                ? "bg-gray-800 text-white"
-                : "text-gray-400 hover:text-gray-200",
+                ? "bg-gray-100 dark:bg-gray-800 text-foreground"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
             )}
           >
             Monthly
@@ -169,7 +169,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
               "rounded-md px-3 py-1.5 text-sm font-medium transition",
               cycle === "annual"
                 ? "bg-emerald-600/90 text-white"
-                : "text-gray-400 hover:text-gray-200",
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
             )}
           >
             Annual — Save 17%
@@ -211,7 +211,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
         })}
       </div>
       {error ? (
-        <p className="text-center text-sm text-red-400" role="alert">
+        <p className="text-center text-sm text-[#8B1A1A]" role="alert">
           {error}
         </p>
       ) : null}

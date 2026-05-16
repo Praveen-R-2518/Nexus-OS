@@ -96,7 +96,7 @@ function LoginForm() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-gray-400">
+      <div className="flex min-h-screen items-center justify-center text-sm text-gray-500 dark:text-gray-400">
         Loading secure workspace…
       </div>
     );
@@ -104,24 +104,24 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-950 p-6 shadow-2xl shadow-black/40">
+      <div className="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 surface-card p-6 shadow-2xl shadow-black/10 dark:shadow-black/40">
         <div className="mb-6 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.28em] text-emerald-400">
+          <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1B6B3A] dark:text-emerald-400">
             Founder Access
           </p>
-          <h1 className="text-2xl font-semibold text-gray-50">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
             Sign in to Nexus OS
           </h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Live Gmail and fallback webhook data stay behind the founder
             dashboard.
           </p>
         </div>
         <form className="space-y-4" onSubmit={signInWithPassword}>
           <label className="block space-y-2 text-sm">
-            <span className="text-gray-300">Email</span>
+            <span className="text-slate-700 dark:text-slate-300">Email</span>
             <input
-              className="h-10 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 text-gray-50 outline-none transition focus:border-emerald-500"
+              className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -130,26 +130,26 @@ function LoginForm() {
             />
           </label>
           <label className="block space-y-2 text-sm">
-            <span className="text-gray-300">Password</span>
+            <span className="text-slate-700 dark:text-slate-300">Password</span>
             <input
-              className="h-10 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 text-gray-50 outline-none transition focus:border-emerald-500"
+              className="h-10 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-gray-700 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-gray-950"
+              className="rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-[#1B6B3A] focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-950"
             />
             Remember me
           </label>
           {message ? (
-            <p className="text-sm text-amber-300" role="alert">
+            <p className="text-sm text-[#7A4200] dark:text-amber-300" role="alert">
               {message}
             </p>
           ) : null}
@@ -166,18 +166,18 @@ function LoginForm() {
               type="button"
               disabled={busy || !email}
               onClick={sendMagicLink}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 transition hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Mail className="h-4 w-4 shrink-0" aria-hidden />
               Magic link
             </button>
           </div>
         </form>
-        <p className="mt-6 text-center text-xs text-gray-500">
+        <p className="mt-6 text-center text-xs text-slate-500">
           Need an account?{" "}
           <a
             href="/signup"
-            className="text-emerald-400 underline decoration-emerald-500/40 underline-offset-2 hover:text-emerald-300"
+            className="text-[#1B6B3A] dark:text-emerald-400 underline decoration-emerald-500/40 underline-offset-2 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
           >
             Start signup
           </a>
@@ -191,7 +191,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-gray-400">
+        <div className="flex min-h-screen items-center justify-center text-sm text-gray-500 dark:text-gray-400">
           Loading…
         </div>
       }

@@ -44,23 +44,23 @@ export function formatRelativeTime(dateStr: string): string {
 }
 
 export function getRiskColor(score: number): string {
-  if (score >= 80) return "text-red-400";
-  if (score >= 60) return "text-orange-400";
-  if (score >= 40) return "text-yellow-400";
-  return "text-green-400";
+  if (score >= 80) return "text-[#8B1A1A] dark:text-red-400";
+  if (score >= 60) return "text-[#7A4200] dark:text-orange-400";
+  if (score >= 40) return "text-yellow-500 dark:text-yellow-400";
+  return "text-[#1B6B3A] dark:text-green-400";
 }
 
 /** Full pill styles for urgency badges */
 export function getUrgencyBadgeClass(urgency: string): string {
   switch (urgency.toLowerCase()) {
     case "critical":
-      return "border-red-500/50 bg-red-500/15 text-red-300";
+      return "border-red-500/50 bg-red-500/15 text-[#8B1A1A]";
     case "high":
-      return "border-orange-500/40 bg-orange-500/10 text-orange-300";
+      return "border-orange-500/40 bg-orange-500/10 text-[#7A4200]";
     case "medium":
       return "border-yellow-500/40 bg-yellow-500/10 text-yellow-300";
     case "low":
-      return "border-green-500/40 bg-green-500/10 text-green-300";
+      return "border-green-500/40 bg-green-500/10 text-[#1B6B3A]";
     default:
       return "border-gray-600 bg-gray-800 text-gray-400";
   }

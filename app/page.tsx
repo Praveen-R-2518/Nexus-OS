@@ -41,8 +41,8 @@ function StepCard({ step, index }: { step: { id: string; title: string; desc: st
     >
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-trajectory-blue/0 via-trajectory-blue/50 to-trajectory-blue/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <span className="text-trajectory-blue font-mono text-lg font-bold tracking-widest">{step.id}</span>
-      <h3 className="text-3xl md:text-4xl font-semibold text-atmospheric-grey tracking-tight">{step.title}</h3>
-      <p className="text-lg text-atmospheric-grey/70 leading-relaxed">{step.desc}</p>
+      <h3 className="text-3xl md:text-4xl font-semibold text-slate-900 dark:text-atmospheric-grey tracking-tight">{step.title}</h3>
+      <p className="text-lg text-slate-600 dark:text-atmospheric-grey/70 leading-relaxed">{step.desc}</p>
     </motion.div>
   );
 }
@@ -51,7 +51,7 @@ export default function LandingPage() {
   const containerRef = useRef(null);
 
   return (
-    <div className="relative min-h-screen bg-obsidian selection:bg-trajectory-blue/30" ref={containerRef}>
+    <div className="relative min-h-screen bg-slate-50 dark:bg-obsidian selection:bg-trajectory-blue/30" ref={containerRef}>
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* 3D Background */}
@@ -67,7 +67,7 @@ export default function LandingPage() {
         {/* Foreground Content */}
         <div className="z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto">
           <div className="animate-fade-up [animation-delay:0ms]">
-            <h1 className="text-[64px] font-medium tracking-[-1.28px] text-atmospheric-grey leading-[1.1] mb-6">
+            <h1 className="text-[64px] font-medium tracking-[-1.28px] text-slate-900 dark:text-atmospheric-grey leading-[1.1] mb-6">
               Deploy Your Revenue <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-trajectory-blue to-blue-400">
                 Command Center.
@@ -76,7 +76,7 @@ export default function LandingPage() {
           </div>
 
           <div className="animate-fade-up [animation-delay:200ms]">
-            <p className="text-lg text-atmospheric-grey/60 mb-10 max-w-2xl mx-auto font-light">
+            <p className="text-lg text-slate-500 dark:text-atmospheric-grey/60 mb-10 max-w-2xl mx-auto font-light">
               The AI-powered Small Business Management Dashboard for busy founders. 
               Engineered for precision, speed, and absolute control.
             </p>
@@ -85,7 +85,7 @@ export default function LandingPage() {
           <div className="animate-fade-up [animation-delay:400ms]">
             <Link
               href="/login"
-              className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-atmospheric-grey text-obsidian font-semibold rounded-full overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 dark:bg-atmospheric-grey text-white dark:text-obsidian font-semibold rounded-full overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative">Get Started</span>
@@ -99,8 +99,8 @@ export default function LandingPage() {
       {/* Process Section */}
       <section className="relative py-32 px-6 max-w-5xl mx-auto">
         <div className="mb-32 text-center">
-          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-atmospheric-grey mb-6">The Process</h2>
-          <p className="text-xl text-atmospheric-grey/60 max-w-2xl mx-auto">A six-step protocol to reclaim your time and revenue.</p>
+          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-slate-900 dark:text-atmospheric-grey mb-6">The Process</h2>
+          <p className="text-xl text-slate-500 dark:text-atmospheric-grey/60 max-w-2xl mx-auto">A six-step protocol to reclaim your time and revenue.</p>
         </div>
 
         <div className="relative flex flex-col gap-16 md:gap-24">
@@ -114,8 +114,8 @@ export default function LandingPage() {
       </section>
 
       {/* Quote & Logo Section */}
-      <section className="relative py-32 px-6 flex flex-col items-center justify-center border-t border-white/5 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-trajectory-blue/5 to-obsidian pointer-events-none" />
+      <section className="relative py-32 px-6 flex flex-col items-center justify-center border-t border-slate-200 dark:border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-50 dark:from-obsidian via-trajectory-blue/5 to-slate-50 dark:to-obsidian pointer-events-none" />
         
         <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
           <div className="relative mb-16">
@@ -133,7 +133,7 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <blockquote className={`text-5xl md:text-7xl text-atmospheric-grey/90 leading-relaxed ${tangerine.className}`}>
+          <blockquote className={`text-5xl md:text-7xl text-slate-800 dark:text-atmospheric-grey/90 leading-relaxed ${tangerine.className}`}>
             &quot;We built Nexus OS because founders shouldn&apos;t have to choose between saving time and saving revenue.&quot;
           </blockquote>
           <div className="mt-12 flex flex-col items-center gap-3">
@@ -144,16 +144,16 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-obsidian py-12 px-6">
+      <footer className="border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-obsidian py-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
-            <span className="font-mono text-sm font-bold tracking-widest text-atmospheric-grey">NEXUS OS</span>
-            <span className="hidden md:inline text-atmospheric-grey/40 text-sm">|</span>
-            <span className="text-atmospheric-grey/40 text-sm">© {new Date().getFullYear()} All rights reserved.</span>
-            <span className="hidden md:inline text-atmospheric-grey/40 text-sm">|</span>
-            <span className="text-atmospheric-grey/60 text-sm font-medium">Developed by Knurdz 3.0</span>
+            <span className="font-mono text-sm font-bold tracking-widest text-slate-900 dark:text-atmospheric-grey">NEXUS OS</span>
+            <span className="hidden md:inline text-slate-400 dark:text-atmospheric-grey/40 text-sm">|</span>
+            <span className="text-slate-400 dark:text-atmospheric-grey/40 text-sm">© {new Date().getFullYear()} All rights reserved.</span>
+            <span className="hidden md:inline text-slate-400 dark:text-atmospheric-grey/40 text-sm">|</span>
+            <span className="text-slate-500 dark:text-atmospheric-grey/60 text-sm font-medium">Developed by Knurdz 3.0</span>
           </div>
-          <div className="flex items-center gap-6 text-sm text-atmospheric-grey/60">
+          <div className="flex items-center gap-6 text-sm text-slate-500 dark:text-atmospheric-grey/60">
             <Link href="#" className="hover:text-trajectory-blue transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-trajectory-blue transition-colors">Terms of Service</Link>
             <Link href="#" className="hover:text-trajectory-blue transition-colors">Contact Support</Link>

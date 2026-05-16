@@ -17,6 +17,15 @@ const config: Config = {
         obsidian: "var(--obsidian)",
         "trajectory-blue": "var(--trajectory-blue)",
         "atmospheric-grey": "var(--atmospheric-grey)",
+        light: {
+          'text-primary': '#1A1A1A',
+          'text-secondary': '#5C5C5C',
+          'text-tertiary': '#8A8A8A',
+          'text-positive': '#1B6B3A',
+          'text-warning': '#7A4200',
+          'text-critical': '#8B1A1A',
+          'text-nav': '#2E2E2E',
+        }
       },
       letterSpacing: {
         tightest: "-0.02em",

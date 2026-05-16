@@ -14,7 +14,7 @@ export function Spinner({ className, label = "Loading" }: SpinnerProps) {
     >
       <span
         className={cn(
-          "block h-full w-full animate-spin rounded-full border-2 border-gray-700 border-t-emerald-400",
+          "block h-full w-full animate-spin rounded-full border-2 border-slate-200 dark:border-slate-700 border-t-emerald-500 dark:border-t-emerald-400",
         )}
       />
       <span className="sr-only">{label}</span>
