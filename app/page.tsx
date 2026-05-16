@@ -65,7 +65,9 @@ export default function LandingPage() {
         </div>
 
         {/* Foreground Content */}
-        <div className="z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto">
+        <motion.div
+          className="z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto"
+        >
           <div className="animate-fade-up [animation-delay:0ms]">
             <h1 className="text-[64px] font-medium tracking-[-1.28px] text-atmospheric-grey leading-[1.1] mb-6">
               Deploy Your Revenue <br className="hidden md:block" />
@@ -92,7 +94,7 @@ export default function LandingPage() {
               <ChevronsRight className="relative w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-        </div>
+        </motion.div>
         
       </section>
 

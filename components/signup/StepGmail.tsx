@@ -24,20 +24,20 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-950/60">
+    <div className="rounded-xl border border-white/10 glass-panel">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-white"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-atmospheric-grey"
       >
         {title}
         {open ? (
-          <ChevronUp className="h-4 w-4 shrink-0 text-gray-400" />
+          <ChevronUp className="h-4 w-4 shrink-0 text-atmospheric-grey/40" />
         ) : (
-          <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+          <ChevronDown className="h-4 w-4 shrink-0 text-atmospheric-grey/40" />
         )}
       </button>
-      {open ? <div className="border-t border-gray-800 px-4 py-3 text-sm">{children}</div> : null}
+      {open ? <div className="border-t border-white/10 px-4 py-3 text-sm">{children}</div> : null}
     </div>
   );
 }
@@ -128,23 +128,23 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-white">Connect Gmail (IMAP)</h2>
-        <p className="mt-1 text-sm text-gray-400">
+        <h2 className="text-xl font-semibold text-atmospheric-grey">Connect Gmail (IMAP)</h2>
+        <p className="mt-1 text-sm text-atmospheric-grey/60">
           Follow the steps, then test your credentials. You can skip and finish
           later.
         </p>
       </div>
       <Section title="Section A — Enable IMAP in Gmail" open={openA} onToggle={() => setOpenA((v) => !v)}>
-        <ol className="list-decimal space-y-2 pl-5 text-gray-300">
+        <ol className="list-decimal space-y-2 pl-5 text-atmospheric-grey/80">
           <li>Open gmail.com</li>
           <li>Settings (gear icon) → See all settings</li>
           <li>Tab: Forwarding and POP/IMAP</li>
           <li>Enable IMAP → Save Changes</li>
         </ol>
-        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-200">
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-atmospheric-grey">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-600 bg-gray-900 text-emerald-600"
+            className="h-4 w-4 rounded border-white/10 bg-white/5 text-trajectory-blue focus:ring-trajectory-blue"
             checked={chkA}
             onChange={(e) => setChkA(e.target.checked)}
           />
@@ -152,17 +152,17 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
         </label>
       </Section>
       <Section title="Section B — Create App Password" open={openB} onToggle={() => setOpenB((v) => !v)}>
-        <ol className="list-decimal space-y-2 pl-5 text-gray-300">
+        <ol className="list-decimal space-y-2 pl-5 text-atmospheric-grey/80">
           <li>Go to myaccount.google.com/security</li>
           <li>Enable 2-Step Verification if not already on</li>
           <li>Search &quot;App passwords&quot;</li>
           <li>App: Mail → Device: Other → Name: NexusOS</li>
           <li>Copy the 16-character password shown</li>
         </ol>
-        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-200">
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-atmospheric-grey">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-600 bg-gray-900 text-emerald-600"
+            className="h-4 w-4 rounded border-white/10 bg-white/5 text-trajectory-blue focus:ring-trajectory-blue"
             checked={chkB}
             onChange={(e) => setChkB(e.target.checked)}
           />
@@ -200,8 +200,8 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
                 className={cn(
                   "rounded-lg border px-3 py-2 text-sm",
                   banner.type === "ok"
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                    : "border-red-500/40 bg-red-500/10 text-red-200",
+                    ? "border-trajectory-blue/40 bg-trajectory-blue/10 text-trajectory-blue"
+                    : "border-red-500/40 bg-red-500/10 text-red-300",
                 )}
                 role="status"
               >
@@ -212,14 +212,14 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
               type="button"
               disabled={busy}
               onClick={testConnection}
-              className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
             >
               {busy ? "Testing…" : "Test Connection"}
             </button>
           </div>
         </Section>
       ) : (
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-atmospheric-grey/40">
           Complete Sections A and B to unlock the connection form.
         </p>
       )}
@@ -228,7 +228,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           type="button"
           disabled={busy}
           onClick={skip}
-          className="text-sm text-gray-400 underline decoration-gray-600 underline-offset-4 hover:text-gray-200"
+          className="glass-button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-atmospheric-grey/80 transition hover:text-atmospheric-grey disabled:opacity-50"
         >
           Skip for now
         </button>

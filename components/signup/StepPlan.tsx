@@ -139,14 +139,14 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Choose your plan</h2>
-          <p className="mt-1 text-sm text-gray-400">
+          <h2 className="text-xl font-semibold text-atmospheric-grey">Choose your plan</h2>
+          <p className="mt-1 text-sm text-atmospheric-grey/60">
             Smart defaults based on your workspace. Change anytime before going
             live.
           </p>
         </div>
         <div
-          className="inline-flex rounded-lg border border-gray-800 bg-gray-950 p-1"
+          className="inline-flex rounded-lg border border-white/10 bg-white/5 p-1"
           role="group"
           aria-label="Billing cycle"
         >
@@ -156,8 +156,8 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition",
               cycle === "monthly"
-                ? "bg-gray-800 text-white"
-                : "text-gray-400 hover:text-gray-200",
+                ? "bg-trajectory-blue text-white"
+                : "text-atmospheric-grey/60 hover:text-atmospheric-grey",
             )}
           >
             Monthly
@@ -168,8 +168,8 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition",
               cycle === "annual"
-                ? "bg-emerald-600/90 text-white"
-                : "text-gray-400 hover:text-gray-200",
+                ? "bg-trajectory-blue text-white"
+                : "text-atmospheric-grey/60 hover:text-atmospheric-grey",
             )}
           >
             Annual — Save 17%
