@@ -209,7 +209,19 @@ function normalizeItem(raw) {
 }
 
 if (typeof $input !== "undefined") {
-  return $input.all().map(({ json }) => ({ json: normalizeItem(json) }));
+  try {
+    return $input.all().map(({ json }) => ({ json: normalizeItem(json) }));
+  } catch (error) {
+    return [
+      {
+        json: {
+          error: error.message,
+          node: "MultiChannelNormalizer",
+          timestamp: new Date().toISOString(),
+        },
+      },
+    ];
+  }
 }
 
 if (typeof module !== "undefined" && module.exports) {

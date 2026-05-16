@@ -20,48 +20,56 @@ function stripForN8nCodeNode(filePath) {
     /\nif \(typeof module !== "undefined" && module\.exports\) \{[\s\S]*$/,
     "\n",
   );
-  // Normalizer: replace guarded n8n entry with plain return
+  // Normalizer: unwrap guarded entry for n8n (keep try/catch)
   src = src.replace(
-    /\nif \(typeof \$input !== "undefined"\) \{\n\s*return \$input\.all\(\)\.map\(\(\{ json \}\) => \(\{\n\s*json: normalizeItem\(json\),\n\s*\}\)\);\n\}\n/,
-    "\nreturn $input.all().map(({ json }) => ({\n  json: normalizeItem(json),\n}));\n",
+    /\nif \(typeof \$input !== "undefined"\) \{\n\s*try \{\n\s*return \$input\.all\(\)\.map\(\(\{ json \}\) => \(\{ json: normalizeItem\(json\) \}\)\);\n\s*\} catch \(error\) \{\n\s*return \[\n\s*\{\n\s*json: \{\n\s*error: error\.message,\n\s*node: "MultiChannelNormalizer",\n\s*timestamp: new Date\(\)\.toISOString\(\),\n\s*\},\n\s*\},\n\s*\];\n\s*\}\n\}\n/,
+    "\ntry {\n  return $input.all().map(({ json }) => ({\n    json: normalizeItem(json),\n  }));\n} catch (error) {\n  return [\n    {\n      json: {\n        error: error.message,\n        node: \"MultiChannelNormalizer\",\n        timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}\n",
   );
-  // Noise filter: same pattern
+  // Noise filter: unwrap guarded entry for n8n (keep try/catch)
   src = src.replace(
-    /\nif \(typeof \$input !== "undefined"\) \{\n\s*return \$input\.all\(\)\.map\(\(\{ json \}\) => evaluateNoiseFilter\(json\)\);\n\}\n/,
-    "\nreturn $input.all().map(({ json }) => evaluateNoiseFilter(json));\n",
+    /\nif \(typeof \$input !== "undefined"\) \{\n\s*try \{\n\s*return \$input\.all\(\)\.map\(\(\{ json \}\) => evaluateNoiseFilter\(json\)\);\n\s*\} catch \(error\) \{\n\s*return \[\n\s*\{\n\s*json: \{\n\s*error: error\.message,\n\s*node: "NoiseFilter",\n\s*timestamp: new Date\(\)\.toISOString\(\),\n\s*\},\n\s*\},\n\s*\];\n\s*\}\n\}\n/,
+    "\ntry {\n  return $input.all().map(({ json }) => evaluateNoiseFilter(json));\n} catch (error) {\n  return [\n    {\n      json: {\n        error: error.message,\n        node: \"NoiseFilter\",\n        timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}\n",
   );
   return src.trim() + "\n";
 }
 
 const dedupLookupQuery = `
-const normalized = $input.first().json;
-const id = normalized.customer_email_or_phone || '';
-if (!id) throw new Error('DedupLookupQuery: missing customer_email_or_phone');
-const variants = [...new Set([id, id.toLowerCase()].filter(Boolean))];
-const orInner = variants.map((v) => 'customer_email.eq.' + encodeURIComponent(v)).join(',');
-const lookup_path =
-  '?select=id,status,updated_at' +
-  '&status=in.(new,in_progress)' +
-  '&or=(' + orInner + ')' +
-  '&order=updated_at.desc&limit=1';
-return [{ json: { lookup_path, normalized } }];
+try {
+  const normalized = $input.first().json;
+  const id = normalized.customer_email_or_phone || '';
+  if (!id) throw new Error('DedupLookupQuery: missing customer_email_or_phone');
+  const variants = [...new Set([id, id.toLowerCase()].filter(Boolean))];
+  const orInner = variants.map((v) => 'customer_email.eq.' + encodeURIComponent(v)).join(',');
+  const lookup_path =
+    '?select=id,status,updated_at' +
+    '&status=in.(new,in_progress)' +
+    '&or=(' + orInner + ')' +
+    '&order=updated_at.desc&limit=1';
+  return [{ json: { lookup_path, normalized } }];
+} catch (error) {
+  return [{ json: { error: error.message, node: 'DedupLookupQuery', timestamp: new Date().toISOString() } }];
+}
 `.trim();
 
 const dedupDecision = `
-const response = $input.first().json;
-const rows = Array.isArray(response)
-  ? response
-  : Array.isArray(response.body)
-    ? response.body
-    : response && response.id
-      ? [response]
-      : [];
-const normalized = $('Multi-Channel Normalizer').first().json;
-const hit = Array.isArray(rows) && rows[0] && rows[0].id;
-if (hit) {
-  return [{ json: { action: 'append_conversation', lead_id: rows[0].id, normalized } }];
+try {
+  const response = $input.first().json;
+  const rows = Array.isArray(response)
+    ? response
+    : Array.isArray(response.body)
+      ? response.body
+      : response && response.id
+        ? [response]
+        : [];
+  const normalized = $('Multi-Channel Normalizer').first().json;
+  const hit = Array.isArray(rows) && rows[0] && rows[0].id;
+  if (hit) {
+    return [{ json: { action: 'append_conversation', lead_id: rows[0].id, normalized } }];
+  }
+  return [{ json: { action: 'create_new_lead', normalized } }];
+} catch (error) {
+  return [{ json: { error: error.message, node: 'DedupDecision', timestamp: new Date().toISOString() } }];
 }
-return [{ json: { action: 'create_new_lead', normalized } }];
 `.trim();
 
 function uuid(i) {
@@ -81,6 +89,7 @@ function codeNode(id, name, position, jsCode) {
     type: "n8n-nodes-base.code",
     typeVersion: 2,
     position,
+    onError: "continueRegularOutput",
   };
 }
 
@@ -189,6 +198,7 @@ function ifKeepNode(id, name, position) {
     type: "n8n-nodes-base.if",
     typeVersion: 2.3,
     position,
+    onError: "continueErrorOutput",
   };
 }
 
@@ -254,6 +264,7 @@ function switchNode(id, name, position, fallbackOutputName) {
     type: "n8n-nodes-base.switch",
     typeVersion: 3.4,
     position,
+    onError: "continueErrorOutput",
   };
 }
 
@@ -337,7 +348,12 @@ const gmailWebhook = {
     httpMethod: "POST",
     path: "gmail-inbound",
     responseMode: "onReceived",
-    options: {},
+    options: {
+      responseData: '{"status":"received"}',
+      responseHeaders: {
+        entries: [{ name: "Content-Type", value: "application/json; charset=utf-8" }],
+      },
+    },
   },
   id: uuid(301),
   name: "Gmail Test Webhook",
