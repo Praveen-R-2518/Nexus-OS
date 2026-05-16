@@ -213,14 +213,14 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
               type="button"
               disabled={busy}
               onClick={testConnection}
-              className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
             >
               {busy ? "Testing…" : "Test Connection"}
             </button>
           </div>
         </Section>
       ) : (
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-atmospheric-grey/40">
           Complete Sections A and B to unlock the connection form.
         </p>
       )}

@@ -273,9 +273,6 @@ export default function DashboardPage() {
       <div className="relative space-y-8">
         <header className="flex flex-col gap-4 border-b border-black/10 dark:border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-trajectory-blue">
-              Nexus OS
-            </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-atmospheric-grey sm:text-4xl">
               Command Center
             </h1>
@@ -401,7 +398,7 @@ export default function DashboardPage() {
                             <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
                               {c.customer_name}
                             </p>
-                            <p className="line-clamp-1 text-xs text-gray-500">
+                            <p className="line-clamp-1 text-xs text-atmospheric-grey/60">
                               {conversationMessagePreview(c)}
                             </p>
                           </div>
@@ -555,7 +552,7 @@ export default function DashboardPage() {
                                     ? "bg-orange-500/80"
                                     : c.risk_score >= 40
                                       ? "bg-yellow-500/80"
-                                      : "bg-emerald-500/70",
+                                      : "bg-trajectory-blue/70",
                               )}
                               style={{
                                 width: `${Math.min(100, Math.max(0, c.risk_score))}%`,

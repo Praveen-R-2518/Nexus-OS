@@ -35,7 +35,7 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 className={cn(
                   "relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold",
                   done &&
-                    "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-900/40",
+                    "border-trajectory-blue bg-trajectory-blue text-white shadow-sm shadow-trajectory-blue/40",
                   active &&
                     !done &&
                     "border-emerald-500 bg-white dark:bg-slate-900 text-[#1B6B3A] dark:text-emerald-400 ring-2 ring-emerald-500/40",

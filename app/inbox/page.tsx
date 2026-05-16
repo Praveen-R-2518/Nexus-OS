@@ -382,7 +382,7 @@ function InboxPageContent() {
 
         <div className="shrink-0 space-y-3 border-b border-slate-200 dark:border-slate-800 p-3">
           <div>
-            <p className="mb-1.5 text-xs font-medium text-gray-500">Urgency</p>
+            <p className="mb-1.5 text-xs font-medium text-atmospheric-grey/60">Urgency</p>
             <div className="flex flex-wrap gap-1.5">
               {URGENCY_OPTIONS.map((opt) => {
                 const active = activeUrgencyFilter === opt.value;
@@ -414,7 +414,7 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <p className="mb-1.5 text-xs font-medium text-gray-500">Intent</p>
+            <p className="mb-1.5 text-xs font-medium text-atmospheric-grey/60">Intent</p>
             <div className="flex flex-wrap gap-1.5">
               {INTENT_OPTIONS.map((opt) => {
                 const active = activeIntentFilter === opt.value;
@@ -446,9 +446,9 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">
-              Search
-            </label>
+          <label className="mb-1 block text-xs font-medium text-atmospheric-grey/60">
+            Search
+          </label>
             <input
               type="search"
               value={searchQuery}
@@ -519,11 +519,11 @@ function InboxPageContent() {
                               value={c.intent}
                               label={intentBadgeLabel(c.intent)}
                             />
-                            <span className="ml-auto text-xs tabular-nums text-gray-500">
+                            <span className="ml-auto text-xs tabular-nums text-atmospheric-grey/40">
                               {formatCurrency(c.estimated_value)}
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1 text-xs text-atmospheric-grey/40">
                             {formatRelativeTime(c.created_at)}
                           </p>
                         </div>
@@ -577,7 +577,7 @@ function InboxPageContent() {
               <p className="mb-4 text-sm text-[#8B1A1A]">{detailError}</p>
             ) : null}
             {detailLoading ? (
-              <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mb-4 flex items-center gap-2 text-sm text-atmospheric-grey/60">
                 <Spinner className="h-4 w-4" label="Loading details" />
                 Loading draft info…
               </div>
@@ -605,7 +605,7 @@ function InboxPageContent() {
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs text-gray-500">Risk score</p>
+                  <p className="text-xs text-atmospheric-grey/60">Risk score</p>
                   <p
                     className={cn(
                       "text-lg font-semibold tabular-nums",
@@ -616,7 +616,7 @@ function InboxPageContent() {
                   </p>
                   <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                     <div
-                      className="h-full rounded-full bg-emerald-500/80 transition-all"
+                      className="h-full rounded-full bg-trajectory-blue/80 transition-all"
                       style={{
                         width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
                       }}
@@ -628,7 +628,7 @@ function InboxPageContent() {
                   <p className="text-lg font-semibold tabular-nums text-[#1B6B3A] dark:text-emerald-400">
                     {formatCurrency(selectedConversation.estimated_value)}
                   </p>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-atmospheric-grey/40">
                     {confidencePercent(selectedConversation.confidence)}% confident
                   </p>
                 </div>

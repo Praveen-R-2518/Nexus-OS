@@ -34,7 +34,7 @@ export default function PricingCard({
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col rounded-xl border p-4 shadow-sm transition sm:p-5",
+        "relative flex h-full flex-col rounded-xl border p-4 shadow-sm transition sm:p-5 glass-panel",
         disabled && "opacity-45 grayscale",
         selected
           ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/5 ring-2 ring-emerald-500/40"
@@ -43,7 +43,7 @@ export default function PricingCard({
       )}
     >
       {recommended ? (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-trajectory-blue px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
           Recommended
         </span>
       ) : null}

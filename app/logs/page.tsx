@@ -45,7 +45,7 @@ function CountTile({
         accent,
       )}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-atmospheric-grey/60">
         {label}
       </p>
       <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">

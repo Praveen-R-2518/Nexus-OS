@@ -68,7 +68,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 sm:w-auto sm:px-8"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-3 text-sm font-semibold text-white transition hover:bg-blue-600 sm:w-auto sm:px-8"
       >
         Go to Dashboard →
       </button>

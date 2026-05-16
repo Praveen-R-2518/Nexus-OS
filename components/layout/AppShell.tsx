@@ -19,7 +19,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (bare) {
     return (
-      <div className="flex min-h-screen flex-col bg-obsidian">{children}</div>
+      <div className="flex min-h-screen flex-col space-bg relative">
+        <div className="starfield" />
+        <div className="relative z-10 flex-1 flex flex-col">{children}</div>
+      </div>
     );
   }
 

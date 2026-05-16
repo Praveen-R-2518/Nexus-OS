@@ -353,7 +353,7 @@ export default function ApprovalPage() {
       {toast ? (
         <div
           className={cn(
-            "fixed right-6 top-6 z-50 rounded-xl border px-4 py-3 text-sm shadow-2xl",
+            "fixed right-6 top-6 z-50 rounded-xl border px-4 py-3 text-sm shadow-2xl glass-panel",
             toast.kind === "success"
               ? "border-emerald-200 bg-emerald-50 text-[#1B6B3A] dark:border-emerald-500/40 dark:bg-emerald-950/90 dark:text-emerald-200"
               : "border-red-200 bg-red-50 text-[#8B1A1A] dark:border-red-500/40 dark:bg-red-950/90 dark:text-red-200",
@@ -491,7 +491,7 @@ export default function ApprovalPage() {
                                 )}
                               </span>
                             </div>
-                            <p className="mt-2 inline-flex items-center gap-1 text-xs text-gray-500">
+                            <p className="mt-2 inline-flex items-center gap-1 text-xs text-atmospheric-grey/40">
                               <Clock className="h-3 w-3" aria-hidden />
                               {formatRelativeTime(draft.created_at)}
                             </p>
@@ -523,7 +523,7 @@ export default function ApprovalPage() {
               <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 pb-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-atmospheric-grey/60">
                       Review Draft
                     </p>
                     <h1 className="mt-1 text-2xl font-semibold text-foreground">
@@ -612,7 +612,7 @@ export default function ApprovalPage() {
                       <Bot className="h-4 w-4 text-[#1B6B3A]" aria-hidden />
                       AI Draft Reply
                     </h2>
-                    <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-300">
+                    <span className="rounded-full border border-trajectory-blue/30 bg-trajectory-blue/10 px-2 py-0.5 text-xs font-medium text-trajectory-blue">
                       {toneLabel(selectedDraft.tone)}
                     </span>
                   </div>
@@ -627,7 +627,7 @@ export default function ApprovalPage() {
                     rows={10}
                     className="mt-4 w-full resize-none rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 text-sm leading-relaxed text-gray-900 dark:text-gray-100 outline-none transition-colors placeholder:text-gray-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30"
                   />
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-atmospheric-grey/60">
                     <span>Tone: {toneLabel(selectedDraft.tone)}</span>
                     <span className="tabular-nums">
                       {selectedText.length} characters
@@ -697,7 +697,7 @@ export default function ApprovalPage() {
                 <h2 className="text-lg font-semibold text-foreground">
                   Reject draft
                 </h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-atmospheric-grey/60">
                   Add feedback so the team can improve the next AI reply.
                 </p>
               </div>
@@ -735,7 +735,7 @@ export default function ApprovalPage() {
                   rejectionReason.trim() === "" ||
                   actionDraftId === rejectingDraft.id
                 }
-                className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {actionDraftId === rejectingDraft.id ? (
                   <Spinner className="h-4 w-4" label="Rejecting draft" />

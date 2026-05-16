@@ -181,7 +181,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("solo")}
             className={cn(
-              "flex items-start gap-3 rounded-xl border p-4 text-left transition",
+              "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
               workspaceType === "solo"
                 ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
                 : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
@@ -204,7 +204,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("team")}
             className={cn(
-              "flex items-start gap-3 rounded-xl border p-4 text-left transition",
+              "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
               workspaceType === "team"
                 ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
                 : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
@@ -240,7 +240,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 Team member emails{" "}
-                <span className="font-normal text-gray-500">(optional)</span>
+                <span className="font-normal text-atmospheric-grey/40">(optional)</span>
               </p>
               <button
                 type="button"
@@ -285,7 +285,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
       >
         {busy ? "Saving…" : "Continue"}
       </button>

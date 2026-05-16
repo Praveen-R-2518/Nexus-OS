@@ -14,7 +14,8 @@ export default function NotFound() {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/dashboard"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500"
+          prefetch={true}
+          className="rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600"
         >
           Command Center
         </Link>

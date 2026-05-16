@@ -146,7 +146,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
               </span>
             ) : null}
             {!brand && digitsOnly.length > 0 ? (
-              <CreditCard className="h-5 w-5 text-gray-500" aria-hidden />
+              <CreditCard className="h-5 w-5 text-atmospheric-grey/40" aria-hidden />
             ) : null}
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-60"
         >
           {busy ? <Spinner className="h-5 w-5" label="Processing" /> : null}
           {busy ? "Processing…" : "Start Free Trial"}

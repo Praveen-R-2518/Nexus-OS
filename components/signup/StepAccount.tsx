@@ -180,7 +180,7 @@ export default function StepAccount({ onNext }: StepAccountProps) {
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
       >
         {busy ? "Creating account…" : "Continue"}
       </button>
