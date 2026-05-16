@@ -25,37 +25,37 @@ export default function StepDone({ snapshot }: StepDoneProps) {
         <p className="text-4xl" aria-hidden>
           🎉
         </p>
-        <h2 className="mt-3 text-2xl font-bold text-white">NexusOS is ready!</h2>
-        <p className="mt-2 text-sm text-gray-400">
+        <h2 className="mt-3 text-2xl font-bold text-atmospheric-grey">NexusOS is ready!</h2>
+        <p className="mt-2 text-sm text-atmospheric-grey/60">
           Your workspace is configured. Here&apos;s what we set up.
         </p>
       </div>
-      <div className="rounded-xl border border-gray-800 bg-gray-950/80 p-5 text-left text-sm">
-        <p className="mb-3 font-semibold text-gray-200">Summary</p>
-        <ul className="space-y-2 text-gray-300">
+      <div className="glass-panel rounded-xl p-5 text-left text-sm">
+        <p className="mb-3 font-semibold text-atmospheric-grey">Summary</p>
+        <ul className="space-y-2 text-atmospheric-grey/80">
           <li>✓ Account created</li>
           <li>
             ✓ Workspace:{" "}
-            <span className="text-white">
+            <span className="text-trajectory-blue">
               {snapshot.companyName || "Your workspace"}
             </span>
           </li>
           <li>
             ✓ Plan:{" "}
-            <span className="text-white">
+            <span className="text-trajectory-blue">
               {planLabel(snapshot.planTier)} — 14-day free trial
             </span>
           </li>
           <li>
-            ✓ Gmail: <span className="text-white">{gmailLabel}</span>
+            ✓ Gmail: <span className="text-trajectory-blue">{gmailLabel}</span>
           </li>
         </ul>
       </div>
-      <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-5 text-left text-sm">
-        <p className="mb-3 font-semibold text-gray-200">Onboarding checklist</p>
-        <ul className="space-y-2 text-gray-400">
+      <div className="glass-panel rounded-xl p-5 text-left text-sm">
+        <p className="mb-3 font-semibold text-atmospheric-grey">Onboarding checklist</p>
+        <ul className="space-y-2 text-atmospheric-grey/60">
           {snapshot.gmailConnected === true ? (
-            <li className="text-emerald-300/90">✓ Connect Gmail</li>
+            <li className="text-trajectory-blue">✓ Connect Gmail</li>
           ) : (
             <li>□ Connect Gmail</li>
           )}
@@ -67,7 +67,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 sm:w-auto sm:px-8"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-3 text-sm font-semibold text-white transition hover:bg-blue-600 sm:w-auto sm:px-8"
       >
         Go to Dashboard →
       </button>

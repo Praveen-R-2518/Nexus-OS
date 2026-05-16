@@ -100,8 +100,8 @@ export default function StepAccount({ onNext }: StepAccountProps) {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-lg space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-white">Create your account</h2>
-        <p className="mt-1 text-sm text-gray-400">
+        <h2 className="text-xl font-semibold text-atmospheric-grey">Create your account</h2>
+        <p className="mt-1 text-sm text-atmospheric-grey/60">
           Supabase will email you a verification link in the background. You can
           continue onboarding now.
         </p>
@@ -158,18 +158,18 @@ export default function StepAccount({ onNext }: StepAccountProps) {
         onChange={(e) => setPhone(e.target.value)}
         autoComplete="tel"
       />
-      <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-300">
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-atmospheric-grey/80">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-900 text-emerald-600 focus:ring-emerald-500"
+          className="mt-1 h-4 w-4 rounded border-white/10 bg-white/5 text-trajectory-blue focus:ring-trajectory-blue"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
         <span>
           I agree to the{" "}
-          <span className="text-emerald-400">Terms of Service</span> and{" "}
-          <span className="text-emerald-400">Privacy Policy</span>
+          <span className="text-trajectory-blue">Terms of Service</span> and{" "}
+          <span className="text-trajectory-blue">Privacy Policy</span>
         </span>
       </label>
       {formError ? (
@@ -180,7 +180,7 @@ export default function StepAccount({ onNext }: StepAccountProps) {
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
       >
         {busy ? "Creating account…" : "Continue"}
       </button>
