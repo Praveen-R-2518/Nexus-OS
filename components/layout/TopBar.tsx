@@ -26,7 +26,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-obsidian/90 px-6 backdrop-blur">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-obsidian/40 px-6 backdrop-blur-xl">
       <span className="font-mono text-sm font-semibold tracking-wide text-atmospheric-grey">
         NEXUS OS
       </span>
@@ -40,7 +40,7 @@ export default function TopBar() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-medium text-atmospheric-grey/60 transition hover:border-red-500/40 hover:bg-red-950/30 hover:text-red-200"
+          className="glass-button inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-atmospheric-grey/80 hover:text-red-300 hover:border-red-500/40 hover:bg-red-500/10"
         >
           <LogOut className="h-3.5 w-3.5" aria-hidden />
           Sign out

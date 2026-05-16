@@ -49,10 +49,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "relative rounded-xl p-6 overflow-hidden",
-        isCritical
-          ? "glass-panel"
-          : "bg-obsidian border border-white/10",
+        "relative rounded-xl p-6 overflow-hidden glass-panel",
         className,
       )}
     >

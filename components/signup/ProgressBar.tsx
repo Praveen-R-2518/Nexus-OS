@@ -26,7 +26,7 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 <div
                   className={cn(
                     "absolute left-[calc(50%+14px)] top-[14px] h-px w-[calc(100%-28px)]",
-                    done ? "bg-emerald-500" : "bg-gray-700",
+                    done ? "bg-trajectory-blue" : "bg-white/10",
                   )}
                   aria-hidden
                 />
@@ -35,13 +35,13 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 className={cn(
                   "relative z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold",
                   done &&
-                    "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-900/40",
+                    "border-trajectory-blue bg-trajectory-blue text-white shadow-sm shadow-trajectory-blue/40",
                   active &&
                     !done &&
-                    "border-emerald-400 bg-gray-900 text-emerald-300 ring-2 ring-emerald-500/40",
+                    "border-trajectory-blue bg-white/5 text-trajectory-blue ring-2 ring-trajectory-blue/40",
                   !active &&
                     !done &&
-                    "border-gray-700 bg-gray-900 text-gray-500",
+                    "border-white/10 bg-white/5 text-atmospheric-grey/40",
                 )}
               >
                 {done ? <Check className="h-3.5 w-3.5" aria-hidden /> : stepNumber}
@@ -49,7 +49,7 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
               <p
                 className={cn(
                   "mt-2 max-w-[104px] text-[10px] font-medium uppercase leading-snug tracking-wide sm:text-xs",
-                  active ? "text-emerald-300" : "text-gray-500",
+                  active ? "text-trajectory-blue" : "text-atmospheric-grey/40",
                 )}
               >
                 {label}

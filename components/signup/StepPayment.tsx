@@ -94,46 +94,46 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </p>
       </div>
       <div>
-        <h2 className="text-xl font-semibold text-white">Mock checkout</h2>
-        <p className="mt-1 text-sm text-gray-400">
+        <h2 className="text-xl font-semibold text-atmospheric-grey">Mock checkout</h2>
+        <p className="mt-1 text-sm text-atmospheric-grey/60">
           Styled like a card form. Replace submit handler when Dodo API keys are
           ready.
         </p>
       </div>
-      <div className="rounded-xl border border-gray-800 bg-gray-950/80 p-4 text-sm">
-        <p className="font-medium text-gray-200">Order summary</p>
-        <dl className="mt-3 space-y-2 text-gray-400">
+      <div className="rounded-xl border border-white/10 glass-panel p-4 text-sm">
+        <p className="font-medium text-atmospheric-grey">Order summary</p>
+        <dl className="mt-3 space-y-2 text-atmospheric-grey/60">
           <div className="flex justify-between gap-4">
             <dt>Plan</dt>
-            <dd className="text-right text-gray-100">{planLabel(tier)}</dd>
+            <dd className="text-right text-atmospheric-grey">{planLabel(tier)}</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt>Billing</dt>
-            <dd className="text-right text-gray-100">
+            <dd className="text-right text-atmospheric-grey">
               {cycle === "monthly" ? "Monthly" : "Annual"}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt>Amount</dt>
-            <dd className="text-right text-gray-100">
+            <dd className="text-right text-atmospheric-grey">
               {tier === "enterprise" ? "Custom" : `$${amount}/${period}`}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt>Trial</dt>
-            <dd className="text-right text-gray-100">
+            <dd className="text-right text-atmospheric-grey">
               14 days free, then {recurring}
             </dd>
           </div>
-          <div className="flex justify-between gap-4 border-t border-gray-800 pt-2 font-semibold text-white">
+          <div className="flex justify-between gap-4 border-t border-white/10 pt-2 font-semibold text-white">
             <dt>Total due today</dt>
             <dd>$0.00</dd>
           </div>
         </dl>
       </div>
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-gray-800 bg-gray-950/60 p-4">
+      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-white/10 glass-panel p-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-200">Card details</span>
+          <span className="text-sm font-medium text-atmospheric-grey">Card details</span>
           <div className="flex h-7 items-center gap-2">
             {brand === "visa" ? (
               <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-blue-900">
@@ -146,14 +146,14 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
               </span>
             ) : null}
             {!brand && digitsOnly.length > 0 ? (
-              <CreditCard className="h-5 w-5 text-gray-500" aria-hidden />
+              <CreditCard className="h-5 w-5 text-atmospheric-grey/40" aria-hidden />
             ) : null}
           </div>
         </div>
         <label className="block space-y-1.5 text-sm">
-          <span className="text-gray-300">Cardholder name</span>
+          <span className="text-atmospheric-grey/80">Cardholder name</span>
           <input
-            className="h-11 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 text-gray-100 outline-none focus:border-emerald-500"
+            className="glass-input h-11 w-full rounded-lg px-3 text-atmospheric-grey outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="cc-name"
@@ -161,9 +161,9 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           />
         </label>
         <label className="block space-y-1.5 text-sm">
-          <span className="text-gray-300">Card number</span>
+          <span className="text-atmospheric-grey/80">Card number</span>
           <input
-            className="h-11 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 font-mono text-gray-100 outline-none focus:border-emerald-500"
+            className="glass-input h-11 w-full rounded-lg px-3 font-mono text-atmospheric-grey outline-none"
             inputMode="numeric"
             placeholder="4242 4242 4242 4242"
             value={card}
@@ -174,9 +174,9 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block space-y-1.5 text-sm">
-            <span className="text-gray-300">Expiry</span>
+            <span className="text-atmospheric-grey/80">Expiry</span>
             <input
-              className="h-11 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 font-mono text-gray-100 outline-none focus:border-emerald-500"
+              className="glass-input h-11 w-full rounded-lg px-3 font-mono text-atmospheric-grey outline-none"
               placeholder="MM/YY"
               value={expiry}
               onChange={(e) => setExpiry(e.target.value)}
@@ -185,9 +185,9 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
             />
           </label>
           <label className="block space-y-1.5 text-sm">
-            <span className="text-gray-300">CVV</span>
+            <span className="text-atmospheric-grey/80">CVV</span>
             <input
-              className="h-11 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 font-mono text-gray-100 outline-none focus:border-emerald-500"
+              className="glass-input h-11 w-full rounded-lg px-3 font-mono text-atmospheric-grey outline-none"
               type="password"
               inputMode="numeric"
               maxLength={4}
@@ -203,7 +203,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           <p
             className={cn(
               "text-sm",
-              doneMsg.startsWith("✓") ? "text-emerald-400" : "text-red-400",
+              doneMsg.startsWith("✓") ? "text-trajectory-blue" : "text-red-400",
             )}
             role="status"
           >
@@ -213,7 +213,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-60"
         >
           {busy ? <Spinner className="h-5 w-5" label="Processing" /> : null}
           {busy ? "Processing…" : "Start Free Trial"}

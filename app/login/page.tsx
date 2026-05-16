@@ -79,7 +79,7 @@ function LoginForm() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-gray-400">
+      <div className="flex min-h-screen items-center justify-center text-sm text-atmospheric-grey/60">
         Loading secure workspace…
       </div>
     );
@@ -87,24 +87,24 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-950 p-6 shadow-2xl shadow-black/40">
+      <div className="w-full max-w-md rounded-xl border border-white/10 glass-panel p-6 shadow-2xl">
         <div className="mb-6 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.28em] text-emerald-400">
+          <p className="text-xs font-medium uppercase tracking-[0.28em] text-trajectory-blue">
             Founder Access
           </p>
-          <h1 className="text-2xl font-semibold text-gray-50">
+          <h1 className="text-2xl font-semibold text-atmospheric-grey">
             Sign in to Nexus OS
           </h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-atmospheric-grey/60">
             Live Gmail and fallback webhook data stay behind the founder
             dashboard.
           </p>
         </div>
         <form className="space-y-4" onSubmit={signInWithPassword}>
           <label className="block space-y-2 text-sm">
-            <span className="text-gray-300">Email</span>
+            <span className="text-atmospheric-grey/80">Email</span>
             <input
-              className="h-10 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 text-gray-50 outline-none transition focus:border-emerald-500"
+              className="glass-input h-10 w-full rounded-lg px-3"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -113,9 +113,9 @@ function LoginForm() {
             />
           </label>
           <label className="block space-y-2 text-sm">
-            <span className="text-gray-300">Password</span>
+            <span className="text-atmospheric-grey/80">Password</span>
             <input
-              className="h-10 w-full rounded-lg border border-gray-800 bg-gray-900 px-3 text-gray-50 outline-none transition focus:border-emerald-500"
+              className="glass-input h-10 w-full rounded-lg px-3"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -131,7 +131,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:opacity-50"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               Sign in
@@ -140,18 +140,18 @@ function LoginForm() {
               type="button"
               disabled={busy || !email}
               onClick={sendMagicLink}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="glass-button inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-atmospheric-grey/80 hover:text-atmospheric-grey disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Mail className="h-4 w-4 shrink-0" aria-hidden />
               Magic link
             </button>
           </div>
         </form>
-        <p className="mt-6 text-center text-xs text-gray-500">
+        <p className="mt-6 text-center text-xs text-atmospheric-grey/60">
           Need an account?{" "}
           <a
             href="/signup"
-            className="text-emerald-400 underline decoration-emerald-500/40 underline-offset-2 hover:text-emerald-300"
+            className="text-trajectory-blue underline decoration-trajectory-blue/40 underline-offset-2 hover:text-blue-400"
           >
             Start signup
           </a>
@@ -165,7 +165,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-gray-400">
+        <div className="flex min-h-screen items-center justify-center text-sm text-atmospheric-grey/60">
           Loading…
         </div>
       }

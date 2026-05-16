@@ -37,14 +37,14 @@ export default function FormInput({
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-200">
+      <label htmlFor={id} className="block text-sm font-medium text-atmospheric-grey">
         {label}
         {rest.required ? <span className="text-red-400"> *</span> : null}
       </label>
       <div className="relative">
         {Icon ? (
           <Icon
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-atmospheric-grey/40"
             aria-hidden
           />
         ) : null}
@@ -52,12 +52,12 @@ export default function FormInput({
           id={id}
           type={inputType}
           className={cn(
-            "h-11 w-full rounded-lg border bg-gray-950 px-3 text-sm text-gray-50 outline-none transition placeholder:text-gray-600 focus:ring-2",
+            "glass-input h-11 w-full rounded-lg px-3 text-sm transition placeholder:text-atmospheric-grey/40 focus:ring-2",
             Icon ? "pl-10" : "",
             isPassword ? "pr-20" : valid || error ? "pr-10" : "",
             error
               ? "border-red-500/70 focus:border-red-400 focus:ring-red-500/30"
-              : "border-gray-800 focus:border-emerald-500 focus:ring-emerald-500/25",
+              : "focus:border-trajectory-blue focus:ring-trajectory-blue/25",
             className,
           )}
           aria-invalid={error ? "true" : "false"}
@@ -69,7 +69,7 @@ export default function FormInput({
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-400 transition hover:bg-gray-800 hover:text-gray-200"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-atmospheric-grey/40 transition hover:bg-white/10 hover:text-atmospheric-grey"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
@@ -81,13 +81,13 @@ export default function FormInput({
         ) : null}
         {!isPassword && valid ? (
           <Check
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400"
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-trajectory-blue"
             aria-hidden
           />
         ) : null}
       </div>
       {hint && !error ? (
-        <p id={`${id}-hint`} className="text-xs text-gray-500">
+        <p id={`${id}-hint`} className="text-xs text-atmospheric-grey/40">
           {hint}
         </p>
       ) : null}
@@ -114,17 +114,17 @@ export function FormSelect({
 } & SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-200">
+      <label htmlFor={id} className="block text-sm font-medium text-atmospheric-grey">
         {label}
         {rest.required ? <span className="text-red-400"> *</span> : null}
       </label>
       <select
         id={id}
         className={cn(
-          "h-11 w-full rounded-lg border bg-gray-950 px-3 text-sm text-gray-50 outline-none transition focus:ring-2",
+          "glass-input h-11 w-full rounded-lg px-3 text-sm transition focus:ring-2",
           error
             ? "border-red-500/70 focus:border-red-400 focus:ring-red-500/30"
-            : "border-gray-800 focus:border-emerald-500 focus:ring-emerald-500/25",
+            : "focus:border-trajectory-blue focus:ring-trajectory-blue/25",
         )}
         {...rest}
       >
