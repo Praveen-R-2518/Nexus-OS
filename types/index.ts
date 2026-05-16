@@ -1,21 +1,33 @@
 export interface Conversation {
   id: string;
-  source: "email" | "whatsapp" | "chat" | "form";
+  source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form";
   customer_name: string;
   customer_email?: string;
-  raw_message: string;
-  intent: "purchase" | "complaint" | "churn_risk" | "support" | "unknown";
-  urgency: "critical" | "high" | "medium" | "low";
+  /** Ingest/plain text column from Supabase. */
+  message?: string;
+  /** Legacy / mock inbox body (prefer `message` when both exist). */
+  raw_message?: string;
+  intent?:
+    | "purchase"
+    | "complaint"
+    | "churn_risk"
+    | "support"
+    | "unknown"
+    | null;
+  urgency?: "critical" | "high" | "medium" | "low" | null;
   estimated_value: number;
   risk_score: number;
   confidence: number;
-  status:
+  status?:
     | "new"
     | "classified"
     | "draft_ready"
     | "approved"
     | "sent"
-    | "rejected";
+    | "rejected"
+    | "unread"
+    | string
+    | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,14 +62,17 @@ export interface Lead {
   created_at: string;
 }
 
+/** Matches `public.workflow_logs` (see supabase/migrations/0001_initial_schema.sql). */
 export interface WorkflowLog {
   id: string;
   workflow_name: string;
-  status: "success" | "failed" | "running";
-  trigger: string;
-  duration_ms?: number;
-  error_message?: string;
-  created_at: string;
+  step: string;
+  /** Outcome label from workflows (e.g. success, failed, running). */
+  result: string;
+  payload: Record<string, unknown>;
+  error: string | null;
+  timestamp: string;
+  created_at?: string;
 }
 
 export interface DailyReport {

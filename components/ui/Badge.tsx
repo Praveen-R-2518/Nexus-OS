@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 export interface BadgeProps {
   label: string;
   variant: "urgency" | "intent" | "status";
-  value: string;
+  /** DB rows may omit classification — null/undefined get neutral styling. */
+  value: string | null | undefined;
   className?: string;
 }
 
@@ -45,7 +46,13 @@ const statusColors: Record<string, string> = {
 const fallback =
   "border-gray-600 bg-gray-800 text-gray-400";
 
-function stylesForVariant(variant: BadgeProps["variant"], value: string): string {
+function stylesForVariant(
+  variant: BadgeProps["variant"],
+  value: string | null | undefined,
+): string {
+  if (value == null || typeof value !== "string" || value.trim() === "") {
+    return fallback;
+  }
   const key = value.toLowerCase();
   switch (variant) {
     case "urgency":
@@ -63,7 +70,7 @@ export function Badge({ label, variant, value, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-md",
         stylesForVariant(variant, value),
         className,
       )}
