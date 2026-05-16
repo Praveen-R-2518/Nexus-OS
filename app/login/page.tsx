@@ -148,8 +148,13 @@ function LoginForm() {
           </div>
         </form>
         <p className="mt-6 text-center text-xs text-gray-500">
-          Need an account? Create one in the Supabase dashboard (Authentication
-          → Users), then sign in here.
+          Need an account?{" "}
+          <a
+            href="/signup"
+            className="text-emerald-400 underline decoration-emerald-500/40 underline-offset-2 hover:text-emerald-300"
+          >
+            Start signup
+          </a>
         </p>
       </div>
     </div>

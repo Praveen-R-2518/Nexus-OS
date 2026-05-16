@@ -1,0 +1,110 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import ProgressBar from "@/components/signup/ProgressBar";
+import StepAccount from "@/components/signup/StepAccount";
+import StepDone from "@/components/signup/StepDone";
+import StepGmail from "@/components/signup/StepGmail";
+import StepPayment from "@/components/signup/StepPayment";
+import StepPlan from "@/components/signup/StepPlan";
+import StepWorkspace from "@/components/signup/StepWorkspace";
+import {
+  defaultSignupSnapshot,
+  loadSignupSnapshot,
+  saveSignupSnapshot,
+  type SignupSnapshot,
+} from "@/components/signup/types";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+const STEP_LABELS = [
+  "Account",
+  "Workspace",
+  "Plan",
+  "Payment",
+  "Gmail",
+  "Done",
+] as const;
+
+export default function SignupPage() {
+  const [snapshot, setSnapshot] = useState<SignupSnapshot>(defaultSignupSnapshot);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setSnapshot(loadSignupSnapshot());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveSignupSnapshot(snapshot);
+  }, [snapshot, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const supabase = createSupabaseBrowserClient();
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      if (!data.session && snapshot.currentStep > 1) {
+        setSnapshot(defaultSignupSnapshot());
+        saveSignupSnapshot(defaultSignupSnapshot());
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, snapshot.currentStep]);
+
+  const goToStep = useCallback((step: number, patch?: Partial<SignupSnapshot>) => {
+    setSnapshot((s) => ({
+      ...s,
+      ...(patch ?? {}),
+      currentStep: Math.min(6, Math.max(1, step)),
+    }));
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 px-4 py-8 sm:py-12">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-8 text-center sm:mb-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">
+            NexusOS
+          </p>
+          <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
+            Revenue Command Center
+          </h1>
+          <p className="mt-2 text-sm text-gray-400">
+            Multi-step signup — optimized for a clean live demo.
+          </p>
+        </header>
+        <div className="rounded-2xl border border-gray-800 bg-gray-950/40 p-4 shadow-xl shadow-black/30 sm:p-8">
+          <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
+          <div className="mt-8 sm:mt-10">
+            {snapshot.currentStep === 1 ? (
+              <StepAccount onNext={() => goToStep(2)} />
+            ) : null}
+            {snapshot.currentStep === 2 ? (
+              <StepWorkspace
+                snapshot={snapshot}
+                onComplete={(patch) => goToStep(3, patch)}
+              />
+            ) : null}
+            {snapshot.currentStep === 3 ? (
+              <StepPlan snapshot={snapshot} onComplete={(patch) => goToStep(4, patch)} />
+            ) : null}
+            {snapshot.currentStep === 4 ? (
+              <StepPayment snapshot={snapshot} onNext={() => goToStep(5)} />
+            ) : null}
+            {snapshot.currentStep === 5 ? (
+              <StepGmail
+                snapshot={snapshot}
+                onComplete={(patch) => goToStep(6, patch)}
+              />
+            ) : null}
+            {snapshot.currentStep === 6 ? <StepDone snapshot={snapshot} /> : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
