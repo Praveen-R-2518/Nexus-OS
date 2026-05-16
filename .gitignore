@@ -48,6 +48,7 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
+next-env.d.ts
 
 # ESLint cache
 .eslintcache
@@ -64,6 +65,3 @@ pnpm-debug.log*
 *-private-key.pem
 *.p12
 *.pfx
-
-# IDE / editor (optional junk; uncomment if team agrees)
-#.idea/
