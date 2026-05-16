@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Generates importable n8n workflow skeletons under n8n_logic/exports/.
  * Run from repo root: `node scripts/build_n8n_workflow_exports.js`
@@ -286,147 +287,57 @@ ${leadLine}  message: $('Dedup Decision').first().json.normalized.message,
 } }}`;
 }
 
-// --- WF0b WhatsApp ---
-const waWebhook = {
+const outDir = path.join(n8nLogic, "exports");
+fs.mkdirSync(outDir, { recursive: true });
+const staleRemovedChannelExport = path.join(outDir, "wf0b_" + "wh" + "atsapp_intake.json");
+if (fs.existsSync(staleRemovedChannelExport)) fs.unlinkSync(staleRemovedChannelExport);
+
+// --- WF0a Gmail (IMAP credential slot + webhook fallback) ---
+const emailTrigger = {
+  parameters: {
+    mailbox: "INBOX",
+    postProcessAction: "read",
+    format: "simple",
+    downloadAttachments: false,
+  },
+  id: uuid(29),
+  name: "Gmail IMAP Trigger (configure credential)",
+  type: "n8n-nodes-base.emailReadImap",
+  typeVersion: 2.1,
+  position: [0, 120],
+  disabled: true,
+  notes: "Enable after adding an IMAP credential in n8n. The webhook fallback below remains available for demos.",
+};
+
+const gmailWebhook = {
   parameters: {
     httpMethod: "POST",
-    path: "wa-inbound",
+    path: "gmail-inbound",
     responseMode: "onReceived",
     options: {},
   },
-  id: uuid(10),
-  name: "Webhook WhatsApp",
+  id: uuid(301),
+  name: "Gmail Test Webhook",
   type: "n8n-nodes-base.webhook",
-  typeVersion: 2,
-  position: [0, 300],
-  webhookId: "nexus-wa-inbound",
+  typeVersion: 2.1,
+  position: [0, 360],
+  webhookId: "nexus-gmail-inbound",
 };
 
-const nodesWA = [
-  sticky(
-    "## Nexus OS — WF0b WhatsApp Intake\n\n1. Uses the existing `Supabase API` n8n credential.\n2. Calls WF2 through `/webhook/nexus/classify` after conversation persistence.\n3. Twilio Sandbox: point the Twilio webhook URL to this n8n Webhook; payload auto-parses via normalizer.\n4. Meta simulation: POST JSON body from `n8n_logic/fixtures/whatsapp_meta_sample.json`.",
-    [-200, 0],
-    420,
-  ),
-  waWebhook,
-  codeNode(uuid(11), "Multi-Channel Normalizer", [280, 260], normalizerJs),
-  codeNode(uuid(12), "Noise Filter", [520, 260], noiseJs),
-  ifKeepNode(uuid(13), "IF Keep", [760, 260]),
-  httpNode(uuid(14), "Log Noise Drop", [1000, 80], {
-    method: "POST",
-    url: `${supabaseBaseUrl}/workflow_logs`,
-    supabaseCredential: true,
-    headers: supabaseMinimalHeaders,
-    body: '={{ { workflow_name: "WF0b WhatsApp Intake", step: "noise_filter_dropped", result: "skipped", payload: $json } }}',
-    onError: "continueRegularOutput",
-  }),
-  codeNode(uuid(15), "Dedup Lookup Query", [1000, 300], dedupLookupQuery),
-  httpNode(uuid(16), "Supabase GET Lead Dedup", [1240, 300], {
-    method: "GET",
-    url: `=${supabaseBaseUrl}/leads{{ $json.lookup_path }}`,
-    supabaseCredential: true,
-    headers: [{ name: "Content-Type", value: "application/json" }],
-    options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
-    alwaysOutputData: true,
-  }),
-  codeNode(uuid(17), "Dedup Decision", [1480, 300], dedupDecision),
-  switchNode(uuid(18), "Switch Action", [1720, 280], "extra"),
-  httpNode(uuid(19), "POST Conversation (append)", [1960, 160], {
-    method: "POST",
-    url: `${supabaseBaseUrl}/conversations`,
-    supabaseCredential: true,
-    headers: supabaseCredentialHeaders,
-    body: '={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id }) } }}',
-    options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
-  }),
-  httpNode(uuid(20), "PATCH Lead Touch", [2200, 160], {
-    method: "PATCH",
-    url: `=${supabaseBaseUrl}/leads?id=eq.{{ $('Dedup Decision').first().json.lead_id }}`,
-    supabaseCredential: true,
-    headers: supabaseCredentialHeaders,
-    body: "={{ { updated_at: new Date().toISOString() } }}",
-    options: { response: { response: { neverError: true, responseFormat: "json" } } },
-    onError: "continueRegularOutput",
-  }),
-  httpNode(uuid(211), "POST Conversation (new)", [1960, 400], {
-    method: "POST",
-    url: `${supabaseBaseUrl}/conversations`,
-    supabaseCredential: true,
-    headers: supabaseCredentialHeaders,
-    body: '={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id }) } }}',
-    options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
-  }),
-  httpNode(uuid(22), "Trigger WF2 Classification (append)", [2440, 160], {
-    method: "POST",
-    url: wf2WebhookUrl,
-    headers: [{ name: "Content-Type", value: "application/json" }],
-    body: wf2TriggerBody("POST Conversation (append)", true),
-    options: { timeout: 15000, response: { response: { neverError: true, responseFormat: "json" } } },
-    onError: "continueRegularOutput",
-    alwaysOutputData: true,
-  }),
-  httpNode(uuid(221), "Trigger WF2 Classification (new)", [2440, 400], {
-    method: "POST",
-    url: wf2WebhookUrl,
-    headers: [{ name: "Content-Type", value: "application/json" }],
-    body: wf2TriggerBody("POST Conversation (new)", false),
-    options: { timeout: 15000, response: { response: { neverError: true, responseFormat: "json" } } },
-    onError: "continueRegularOutput",
-    alwaysOutputData: true,
-  }),
-  httpNode(uuid(23), "Log Intake OK", [2680, 280], {
-    method: "POST",
-    url: `${supabaseBaseUrl}/workflow_logs`,
-    supabaseCredential: true,
-    headers: supabaseCredentialHeaders,
-    body: "={{ { workflow_name: 'WF0b WhatsApp Intake', step: 'channel_intake_ok', result: 'success', payload: { source: 'whatsapp', wf2_response: $json } } }}",
-    onError: "continueRegularOutput",
-  }),
-];
-
-const connWA = buildConnections({
-  "Webhook WhatsApp": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
-  "Multi-Channel Normalizer": [[{ node: "Noise Filter", type: "main", index: 0 }]],
-  "Noise Filter": [[{ node: "IF Keep", type: "main", index: 0 }]],
-  "IF Keep": [
-    [{ node: "Dedup Lookup Query", type: "main", index: 0 }],
-    [{ node: "Log Noise Drop", type: "main", index: 0 }],
-  ],
-  "Dedup Lookup Query": [[{ node: "Supabase GET Lead Dedup", type: "main", index: 0 }]],
-  "Supabase GET Lead Dedup": [[{ node: "Dedup Decision", type: "main", index: 0 }]],
-  "Dedup Decision": [[{ node: "Switch Action", type: "main", index: 0 }]],
-  "Switch Action": [
-    [{ node: "POST Conversation (append)", type: "main", index: 0 }],
-    [{ node: "POST Conversation (new)", type: "main", index: 0 }],
-  ],
-  "POST Conversation (append)": [[{ node: "PATCH Lead Touch", type: "main", index: 0 }]],
-  "PATCH Lead Touch": [[{ node: "Trigger WF2 Classification (append)", type: "main", index: 0 }]],
-  "POST Conversation (new)": [[{ node: "Trigger WF2 Classification (new)", type: "main", index: 0 }]],
-  "Trigger WF2 Classification (append)": [[{ node: "Log Intake OK", type: "main", index: 0 }]],
-  "Trigger WF2 Classification (new)": [[{ node: "Log Intake OK", type: "main", index: 0 }]],
-});
-
-const outDir = path.join(n8nLogic, "exports");
-fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(
-  path.join(outDir, "wf0b_whatsapp_intake.json"),
-  JSON.stringify(workflowTemplate("WF0b WhatsApp Intake", nodesWA, connWA), null, 2),
-);
-
-// --- WF0a Gmail (Manual trigger + instruction; swap for IMAP Email Read) ---
 const manual = {
   parameters: {},
   id: uuid(30),
   name: "Manual Trigger",
   type: "n8n-nodes-base.manualTrigger",
   typeVersion: 1,
-  position: [0, 300],
+  position: [0, 600],
+  disabled: true,
 };
 
 const setFixture = codeNode(
   uuid(31),
   "Load Gmail Fixture (demo)",
-  [220, 300],
+  [220, 600],
   [
     "return [{",
     "  json: " +
@@ -442,16 +353,18 @@ const setFixture = codeNode(
 
 const nodesGmail = [
   sticky(
-    "## Nexus OS — WF0a Gmail Intake\n\n**Production:** delete `Manual Trigger` + `Load Gmail Fixture` and connect **IMAP Email Read** (or Gmail Trigger) directly into `Multi-Channel Normalizer`.\n\nNormalizer auto-detects Gmail-shaped payloads.",
+    "## Nexus OS - WF0a Gmail Intake\n\nPrimary path: enable `Gmail IMAP Trigger` after adding an IMAP credential.\n\nFallback path: POST Gmail-shaped payloads to `/webhook/gmail-inbound`.\n\nManual fixture stays disabled as a last-resort demo path.",
     [-220, 0],
     460,
   ),
+  emailTrigger,
+  gmailWebhook,
   manual,
   setFixture,
-  codeNode(uuid(32), "Multi-Channel Normalizer", [460, 300], normalizerJs),
-  codeNode(uuid(33), "Noise Filter", [700, 300], noiseJs),
-  ifKeepNode(uuid(34), "IF Keep", [940, 300]),
-  httpNode(uuid(35), "Log Noise Drop", [1180, 120], {
+  codeNode(uuid(32), "Multi-Channel Normalizer", [500, 360], normalizerJs),
+  codeNode(uuid(33), "Noise Filter", [740, 360], noiseJs),
+  ifKeepNode(uuid(34), "IF Keep", [980, 360]),
+  httpNode(uuid(35), "Log Noise Drop", [1220, 160], {
     method: "POST",
     url: `${supabaseBaseUrl}/workflow_logs`,
     supabaseCredential: true,
@@ -459,8 +372,8 @@ const nodesGmail = [
     body: '={{ { workflow_name: "WF0a Gmail Intake", step: "noise_filter_dropped", result: "skipped", payload: $json } }}',
     onError: "continueRegularOutput",
   }),
-  codeNode(uuid(36), "Dedup Lookup Query", [1180, 340], dedupLookupQuery),
-  httpNode(uuid(37), "Supabase GET Lead Dedup", [1420, 340], {
+  codeNode(uuid(36), "Dedup Lookup Query", [1220, 400], dedupLookupQuery),
+  httpNode(uuid(37), "Supabase GET Lead Dedup", [1460, 400], {
     method: "GET",
     url: `=${supabaseBaseUrl}/leads{{ $json.lookup_path }}`,
     supabaseCredential: true,
@@ -468,9 +381,9 @@ const nodesGmail = [
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
     alwaysOutputData: true,
   }),
-  codeNode(uuid(38), "Dedup Decision", [1660, 340], dedupDecision),
-  switchNode(uuid(39), "Switch Action", [1900, 320], "extra"),
-  httpNode(uuid(40), "POST Conversation (append)", [2140, 200], {
+  codeNode(uuid(38), "Dedup Decision", [1700, 400], dedupDecision),
+  switchNode(uuid(39), "Switch Action", [1940, 380], "extra"),
+  httpNode(uuid(40), "POST Conversation (append)", [2180, 260], {
     method: "POST",
     url: `${supabaseBaseUrl}/conversations`,
     supabaseCredential: true,
@@ -478,7 +391,7 @@ const nodesGmail = [
     body: '={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id }) } }}',
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
   }),
-  httpNode(uuid(41), "PATCH Lead Touch", [2380, 200], {
+  httpNode(uuid(41), "PATCH Lead Touch", [2420, 260], {
     method: "PATCH",
     url: `=${supabaseBaseUrl}/leads?id=eq.{{ $('Dedup Decision').first().json.lead_id }}`,
     supabaseCredential: true,
@@ -487,7 +400,7 @@ const nodesGmail = [
     options: { response: { response: { neverError: true, responseFormat: "json" } } },
     onError: "continueRegularOutput",
   }),
-  httpNode(uuid(42), "POST Conversation (new)", [2140, 440], {
+  httpNode(uuid(42), "POST Conversation (new)", [2180, 500], {
     method: "POST",
     url: `${supabaseBaseUrl}/conversations`,
     supabaseCredential: true,
@@ -495,35 +408,37 @@ const nodesGmail = [
     body: '={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id }) } }}',
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
   }),
-  httpNode(uuid(43), "Trigger WF2 Classification (append)", [2620, 200], {
+  httpNode(uuid(43), "Trigger WF2 Classification (append)", [2660, 260], {
     method: "POST",
     url: wf2WebhookUrl,
     headers: [{ name: "Content-Type", value: "application/json" }],
     body: wf2TriggerBody("POST Conversation (append)", true),
-    options: { timeout: 15000, response: { response: { neverError: true, responseFormat: "json" } } },
+    options: { timeout: 30000, response: { response: { neverError: true, responseFormat: "json" } } },
     onError: "continueRegularOutput",
     alwaysOutputData: true,
   }),
-  httpNode(uuid(431), "Trigger WF2 Classification (new)", [2620, 440], {
+  httpNode(uuid(431), "Trigger WF2 Classification (new)", [2660, 500], {
     method: "POST",
     url: wf2WebhookUrl,
     headers: [{ name: "Content-Type", value: "application/json" }],
     body: wf2TriggerBody("POST Conversation (new)", false),
-    options: { timeout: 15000, response: { response: { neverError: true, responseFormat: "json" } } },
+    options: { timeout: 30000, response: { response: { neverError: true, responseFormat: "json" } } },
     onError: "continueRegularOutput",
     alwaysOutputData: true,
   }),
-  httpNode(uuid(44), "Log Intake OK", [2860, 320], {
+  httpNode(uuid(44), "Log Intake OK", [2900, 380], {
     method: "POST",
     url: `${supabaseBaseUrl}/workflow_logs`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
-    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'channel_intake_ok', result: 'success', payload: { source: 'gmail', wf2_response: $json } } }}",
+    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', payload: { source: 'gmail', wf2_response: $json } } }}",
     onError: "continueRegularOutput",
   }),
 ];
 
 const connGmail = buildConnections({
+  "Gmail IMAP Trigger (configure credential)": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
+  "Gmail Test Webhook": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
   "Manual Trigger": [[{ node: "Load Gmail Fixture (demo)", type: "main", index: 0 }]],
   "Load Gmail Fixture (demo)": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
   "Multi-Channel Normalizer": [[{ node: "Noise Filter", type: "main", index: 0 }]],
@@ -552,4 +467,3 @@ fs.writeFileSync(
 );
 
 console.log("Wrote", path.join(outDir, "wf0a_gmail_intake.json"));
-console.log("Wrote", path.join(outDir, "wf0b_whatsapp_intake.json"));

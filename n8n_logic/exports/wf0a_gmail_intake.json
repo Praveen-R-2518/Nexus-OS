@@ -3,11 +3,11 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Nexus OS — WF0a Gmail Intake\n\n**Production:** delete `Manual Trigger` + `Load Gmail Fixture` and connect **IMAP Email Read** (or Gmail Trigger) directly into `Multi-Channel Normalizer`.\n\nNormalizer auto-detects Gmail-shaped payloads.",
+        "content": "## Nexus OS - WF0a Gmail Intake\n\nPrimary path: enable `Gmail IMAP Trigger` after adding an IMAP credential.\n\nFallback path: POST Gmail-shaped payloads to `/webhook/gmail-inbound`.\n\nManual fixture stays disabled as a last-resort demo path.",
         "height": 460,
         "width": 400
       },
-      "id": "00000016-0000-4000-8000-000000165951",
+      "id": "00000052-0000-4000-8000-000000525411",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -17,6 +17,41 @@
       ]
     },
     {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "format": "simple",
+        "downloadAttachments": false
+      },
+      "id": "00000000-0000-4000-8000-000000000029",
+      "name": "Gmail IMAP Trigger (configure credential)",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        120
+      ],
+      "disabled": true,
+      "notes": "Enable after adding an IMAP credential in n8n. The webhook fallback below remains available for demos."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gmail-inbound",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000301",
+      "name": "Gmail Test Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "nexus-gmail-inbound"
+    },
+    {
       "parameters": {},
       "id": "00000000-0000-4000-8000-000000000030",
       "name": "Manual Trigger",
@@ -24,14 +59,15 @@
       "typeVersion": 1,
       "position": [
         0,
-        300
-      ]
+        600
+      ],
+      "disabled": true
     },
     {
       "parameters": {
         "language": "javaScript",
         "mode": "runOnceForAllItems",
-        "jsCode": "return [{\n  json: {\n  \"__source\": \"gmail\",\n  \"subject\": \"Need help launching our revenue ops automation\",\n  \"from\": \"\\\"Alex Customer\\\" <alex.customer@example.com>\",\n  \"text\": \"Hi team — we're evaluating Nexus OS to centralize inbox + follow-ups. Can we book a 20-min call this week?\\n\\nThanks,\\nAlex\\n\\n--\\nAlex Customer\\nFounder, Example Co.\",\n  \"date\": \"2026-05-16T10:15:00.000Z\",\n  \"headers\": {\n    \"message-id\": \"<CA+demo+thread-root@mail.gmail.com>\",\n    \"in-reply-to\": \"\",\n    \"list-unsubscribe\": \"\",\n    \"auto-submitted\": \"\",\n    \"subject\": \"Need help launching our revenue ops automation\",\n    \"from\": \"\\\"Alex Customer\\\" <alex.customer@example.com>\"\n  }\n},\n}];"
+        "jsCode": "return [{\n  json: {\n  \"__source\": \"gmail\",\n  \"subject\": \"Boutique Hotel Website Quote\",\n  \"from\": {\n    \"text\": \"\\\"Kasun Perera\\\" <kasun@hotelceylon.lk>\"\n  },\n  \"textPlain\": \"Hi Silva & Co, I need an official quote for building an ecommerce website for our boutique hotel in Colombo. We need an online booking system and a high-res room gallery. What are your standard packages and pricing?\",\n  \"threadId\": \"gm_thread_112233\",\n  \"date\": \"2026-05-16T10:15:00.000Z\",\n  \"headers\": {\n    \"message-id\": \"<gm_thread_112233@mail.gmail.com>\",\n    \"in-reply-to\": \"\",\n    \"list-unsubscribe\": \"\",\n    \"auto-submitted\": \"\",\n    \"subject\": \"Boutique Hotel Website Quote\",\n    \"from\": \"\\\"Kasun Perera\\\" <kasun@hotelceylon.lk>\"\n  }\n},\n}];"
       },
       "id": "00000000-0000-4000-8000-000000000031",
       "name": "Load Gmail Fixture (demo)",
@@ -39,22 +75,22 @@
       "typeVersion": 2,
       "position": [
         220,
-        300
+        600
       ]
     },
     {
       "parameters": {
         "language": "javaScript",
         "mode": "runOnceForAllItems",
-        "jsCode": "// --- Shared helpers (safe in Node + n8n) ---\n\nfunction stripHtml(html) {\n  if (!html || typeof html !== \"string\") return \"\";\n  return html\n    .replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/gi, \" \")\n    .replace(/<style\\b[^<]*(?:(?!<\\/style>)<[^<]*)*<\\/style>/gi, \" \")\n    .replace(/<[^>]+>/g, \" \")\n    .replace(/\\s+/g, \" \")\n    .trim();\n}\n\nfunction stripSignatureAndQuotes(text) {\n  if (!text || typeof text !== \"string\") return \"\";\n  let t = text.replace(/\\r\\n/g, \"\\n\");\n\n  // Drop \"On … wrote:\" style quoted history\n  const onWrote = /^On .+ wrote:\\s*$/im;\n  const idx = t.search(onWrote);\n  if (idx !== -1) t = t.slice(0, idx).trim();\n\n  // Trim after common signature delimiters\n  const sigDash = t.split(/^--\\s*$/m);\n  if (sigDash.length > 1) t = sigDash[0].trim();\n\n  const sentFrom = t.split(/^Sent from my .+$/im);\n  if (sentFrom.length > 1) t = sentFrom[0].trim();\n\n  return t.trim();\n}\n\nfunction parseFromHeader(from) {\n  if (!from || typeof from !== \"string\") {\n    return { customer_name: \"\", customer_email_or_phone: \"\" };\n  }\n  const trimmed = from.trim();\n  const angled = /^\\s*\"?([^\"<]*?)\"?\\s*<\\s*([^>]+)\\s*>\\s*$/;\n  const m = trimmed.match(angled);\n  if (m) {\n    const name = (m[1] || \"\").replace(/^\"|\"$/g, \"\").trim();\n    const addr = (m[2] || \"\").trim();\n    return {\n      customer_name: name || titleCaseFromEmail(addr),\n      customer_email_or_phone: addr.toLowerCase(),\n    };\n  }\n  const bareEmail = trimmed.match(/^([\\w.!#$%&'*+/=?^`{|}~-]+@[\\w.-]+\\.[A-Za-z]{2,})$/);\n  if (bareEmail) {\n    const e = bareEmail[1].toLowerCase();\n    return { customer_name: titleCaseFromEmail(e), customer_email_or_phone: e };\n  }\n  return { customer_name: trimmed, customer_email_or_phone: \"\" };\n}\n\nfunction titleCaseFromEmail(email) {\n  const local = (email || \"\").split(\"@\")[0] || \"\";\n  if (!local) return \"\";\n  return local\n    .replace(/[._-]+/g, \" \")\n    .replace(/\\b\\w/g, (c) => c.toUpperCase())\n    .trim();\n}\n\n/** Normalize phone digits to tel:+E164-style string for Supabase `customer_email` co-use */\nfunction toTelIdentity(phoneLike) {\n  if (!phoneLike) return \"\";\n  const s = String(phoneLike).trim();\n  if (s.toLowerCase().startsWith(\"tel:\")) return s;\n  const whatsappPrefix = s.match(/^whatsapp:\\+?(\\d+)$/i);\n  if (whatsappPrefix) return `tel:+${whatsappPrefix[1]}`;\n  const digits = s.replace(/\\D/g, \"\");\n  if (!digits) return \"\";\n  return `tel:+${digits}`;\n}\n\nfunction unwrapBody(payload) {\n  if (payload && typeof payload === \"object\" && payload.body) return payload.body;\n  return payload;\n}\n\nfunction getHeadersObject(raw) {\n  const h = raw.headers;\n  if (h && typeof h === \"object\" && !Array.isArray(h)) return h;\n  if (typeof raw.headers === \"string\") return parseRawHeaders(raw.headers);\n  // IMAP: sometimes header lines as array\n  if (Array.isArray(raw.headerLines)) {\n    const o = {};\n    for (const line of raw.headerLines) {\n      const idx = String(line).indexOf(\":\");\n      if (idx > 0) {\n        const k = String(line).slice(0, idx).trim().toLowerCase();\n        o[k] = String(line).slice(idx + 1).trim();\n      }\n    }\n    return o;\n  }\n  return {};\n}\n\nfunction parseRawHeaders(block) {\n  const o = {};\n  if (!block || typeof block !== \"string\") return o;\n  const lines = block.split(/\\r?\\n/);\n  let cur = null;\n  for (const line of lines) {\n    if (/^\\s/.test(line) && cur) {\n      o[cur] += \" \" + line.trim();\n      continue;\n    }\n    const idx = line.indexOf(\":\");\n    if (idx === -1) continue;\n    cur = line.slice(0, idx).trim().toLowerCase();\n    o[cur] = line.slice(idx + 1).trim();\n  }\n  return o;\n}\n\nfunction gmailThreadKey(raw, headers) {\n  if (raw.threadId) return String(raw.threadId);\n  const inReply = headers[\"in-reply-to\"] || headers[\"in_reply_to\"];\n  if (inReply) return `msg:${stripAngleId(inReply)}`;\n  const msgId = headers[\"message-id\"] || headers[\"message_id\"];\n  if (msgId) return `msg:${stripAngleId(msgId)}`;\n  return null;\n}\n\nfunction stripAngleId(v) {\n  return String(v).replace(/[<>]/g, \"\").trim();\n}\n\nfunction detectSource(raw) {\n  const r = unwrapBody(raw);\n  if (r && r.__source) return String(r.__source).toLowerCase();\n  if (r && r.source && [\"gmail\", \"whatsapp\"].includes(String(r.source).toLowerCase())) {\n    return String(r.source).toLowerCase();\n  }\n  // Twilio webhook\n  if (r && (r.From || r.from) && (r.Body || r.body) && (r.SmsSid || r.MessageSid || r.AccountSid)) {\n    return \"whatsapp\";\n  }\n  // Meta Cloud API\n  if (r && r.entry && Array.isArray(r.entry) && r.entry[0] && r.entry[0].changes) {\n    return \"whatsapp\";\n  }\n  // Gmail-ish\n  if (r && (r.from || r.From) && (r.text !== undefined || r.html !== undefined || r.textHtml)) {\n    return \"gmail\";\n  }\n  throw new Error(\n    \"multi_channel_normalizer: could not detect source; set __source to gmail|whatsapp\",\n  );\n}\n\nfunction parseGmail(rawInput) {\n  const raw = unwrapBody(rawInput);\n  const headers = getHeadersObject(raw);\n  const fromField = raw.from || raw.From || headers.from || \"\";\n  const { customer_name, customer_email_or_phone } = parseFromHeader(fromField);\n\n  let body =\n    (typeof raw.text === \"string\" && raw.text) ||\n    (typeof raw.textPlain === \"string\" && raw.textPlain) ||\n    (typeof raw.textAsHtml === \"string\" && stripHtml(raw.textAsHtml)) ||\n    \"\";\n  if (!body && typeof raw.html === \"string\") body = stripHtml(raw.html);\n  if (!body && typeof raw.textHtml === \"string\") body = stripHtml(raw.textHtml);\n\n  const message = stripSignatureAndQuotes(body);\n\n  const subject = raw.subject || headers.subject || \"\";\n  const receivedAt =\n    raw.date ||\n    raw.dateUtc ||\n    raw.internalDate ||\n    new Date().toISOString();\n\n  const external_thread_id = gmailThreadKey(raw, headers);\n\n  return {\n    source: \"gmail\",\n    customer_name,\n    customer_email_or_phone,\n    message,\n    external_thread_id,\n    received_at: typeof receivedAt === \"number\"\n      ? new Date(receivedAt).toISOString()\n      : new Date(receivedAt).toISOString(),\n    raw_payload: rawInput,\n    // Noise filter helpers\n    _filter: {\n      from_header: fromField,\n      subject: subject || \"\",\n      list_unsubscribe: !!(headers[\"list-unsubscribe\"] || headers[\"list_unsubscribe\"]),\n      auto_submitted: headers[\"auto-submitted\"] || headers[\"auto_submitted\"] || \"\",\n      has_attachment: !!(raw.attachments && raw.attachments.length),\n      body_for_rules: message,\n    },\n  };\n}\n\nfunction parseWhatsApp(rawInput) {\n  const raw = unwrapBody(rawInput);\n\n  // --- Twilio WhatsApp Sandbox / API ---\n  const fromTwilio = raw.From || raw.from;\n  const bodyTwilio = raw.Body ?? raw.body;\n  const profileName = raw.ProfileName || raw.profileName || \"\";\n\n  if (fromTwilio && bodyTwilio !== undefined && bodyTwilio !== null) {\n    const phone = toTelIdentity(fromTwilio);\n    return {\n      source: \"whatsapp\",\n      customer_name: String(profileName || \"\").trim() || phone,\n      customer_email_or_phone: phone,\n      message: stripSignatureAndQuotes(String(bodyTwilio)),\n      external_thread_id: phone.replace(/^tel:/, \"wa:\"),\n      received_at: new Date().toISOString(),\n      raw_payload: rawInput,\n      _filter: {\n        from_header: \"\",\n        subject: \"\",\n        list_unsubscribe: false,\n        auto_submitted: \"\",\n        has_attachment: !!(raw.NumMedia && Number(raw.NumMedia) > 0),\n        body_for_rules: String(bodyTwilio),\n      },\n    };\n  }\n\n  // --- Meta WhatsApp Cloud API ---\n  try {\n    const entry0 = raw.entry[0];\n    const change0 = entry0.changes[0];\n    const value = change0.value;\n    const msg0 = value.messages[0];\n    const contact0 = value.contacts && value.contacts[0];\n    const waFrom = msg0.from;\n    const phone = toTelIdentity(waFrom);\n    const textBody =\n      msg0.text && msg0.text.body !== undefined\n        ? msg0.text.body\n        : msg0.type === \"text\"\n          ? \"\"\n          : `[${msg0.type}]`;\n\n    return {\n      source: \"whatsapp\",\n      customer_name:\n        (contact0 && contact0.profile && contact0.profile.name) || phone,\n      customer_email_or_phone: phone,\n      message: stripSignatureAndQuotes(String(textBody)),\n      external_thread_id: phone.replace(/^tel:/, \"wa:\"),\n      received_at: new Date().toISOString(),\n      raw_payload: rawInput,\n      _filter: {\n        from_header: \"\",\n        subject: \"\",\n        list_unsubscribe: false,\n        auto_submitted: \"\",\n        has_attachment: msg0.type && msg0.type !== \"text\",\n        body_for_rules: String(textBody),\n      },\n    };\n  } catch (e) {\n    throw new Error(\n      `multi_channel_normalizer: WhatsApp parse failed — ${e.message}`,\n    );\n  }\n}\n\nfunction normalizeItem(raw) {\n  const source =\n    raw && raw.__source\n      ? String(raw.__source).toLowerCase()\n      : raw && raw.source && [\"gmail\", \"whatsapp\"].includes(String(raw.source).toLowerCase())\n        ? String(raw.source).toLowerCase()\n        : detectSource(raw);\n\n  if (source === \"gmail\") return parseGmail(raw);\n  if (source === \"whatsapp\") return parseWhatsApp(raw);\n  throw new Error(`multi_channel_normalizer: unknown source \"${source}\"`);\n}\n\n// --- n8n entrypoint (paste from \"if (typeof $input\" through the closing brace into Code node) ---\n\nreturn $input.all().map(({ json }) => ({\n  json: normalizeItem(json),\n}));\n"
+        "jsCode": "function stripHtml(html) {\n  if (!html || typeof html !== \"string\") return \"\";\n  return html\n    .replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/gi, \" \")\n    .replace(/<style\\b[^<]*(?:(?!<\\/style>)<[^<]*)*<\\/style>/gi, \" \")\n    .replace(/<[^>]+>/g, \" \")\n    .replace(/\\s+/g, \" \")\n    .trim();\n}\n\nfunction stripSignatureAndQuotes(text) {\n  if (!text || typeof text !== \"string\") return \"\";\n  let t = text.replace(/\\r\\n/g, \"\\n\");\n\n  const idx = t.search(/^On .+ wrote:\\s*$/im);\n  if (idx !== -1) t = t.slice(0, idx).trim();\n\n  const sigDash = t.split(/^--\\s*$/m);\n  if (sigDash.length > 1) t = sigDash[0].trim();\n\n  const sentFrom = t.split(/^Sent from my .+$/im);\n  if (sentFrom.length > 1) t = sentFrom[0].trim();\n\n  return t.trim();\n}\n\nfunction valueText(value) {\n  if (value === null || value === undefined) return \"\";\n  if (typeof value === \"string\") return value;\n  if (typeof value.text === \"string\") return value.text;\n  if (typeof value.value === \"string\") return value.value;\n  if (Array.isArray(value) && value[0]) return valueText(value[0]);\n  return String(value || \"\");\n}\n\nfunction parseFromHeader(from) {\n  const text = valueText(from).trim();\n  if (!text) return { customer_name: \"\", customer_email_or_phone: \"\" };\n\n  const angled = /^\\s*\"?([^\"<]*?)\"?\\s*<\\s*([^>]+)\\s*>\\s*$/;\n  const m = text.match(angled);\n  if (m) {\n    const name = (m[1] || \"\").replace(/^\"|\"$/g, \"\").trim();\n    const email = (m[2] || \"\").trim().toLowerCase();\n    return {\n      customer_name: name || titleCaseFromEmail(email),\n      customer_email_or_phone: email,\n    };\n  }\n\n  const bare = text.match(/^([\\w.!#$%&'*+/=?^`{|}~-]+@[\\w.-]+\\.[A-Za-z]{2,})$/);\n  if (bare) {\n    const email = bare[1].toLowerCase();\n    return {\n      customer_name: titleCaseFromEmail(email),\n      customer_email_or_phone: email,\n    };\n  }\n\n  return { customer_name: text, customer_email_or_phone: \"\" };\n}\n\nfunction titleCaseFromEmail(email) {\n  const local = (email || \"\").split(\"@\")[0] || \"\";\n  return local\n    .replace(/[._-]+/g, \" \")\n    .replace(/\\b\\w/g, (c) => c.toUpperCase())\n    .trim();\n}\n\nfunction parseHeaders(raw) {\n  const headers = raw.headers || raw.header || {};\n  if (headers && typeof headers === \"object\" && !Array.isArray(headers)) {\n    return Object.fromEntries(\n      Object.entries(headers).map(([k, v]) => [String(k).toLowerCase(), valueText(v)]),\n    );\n  }\n  if (Array.isArray(raw.headerLines)) {\n    const out = {};\n    for (const line of raw.headerLines) {\n      const idx = String(line).indexOf(\":\");\n      if (idx > 0) out[String(line).slice(0, idx).trim().toLowerCase()] = String(line).slice(idx + 1).trim();\n    }\n    return out;\n  }\n  return {};\n}\n\nfunction unwrapBody(payload) {\n  if (payload && typeof payload === \"object\" && payload.body) return payload.body;\n  return payload;\n}\n\nfunction stripAngleId(v) {\n  return String(v || \"\").replace(/[<>]/g, \"\").trim();\n}\n\nfunction threadKey(raw, headers) {\n  if (raw.threadId) return String(raw.threadId);\n  if (raw.thread_id) return String(raw.thread_id);\n  if (raw.id) return `gmail:${raw.id}`;\n  if (headers[\"in-reply-to\"]) return `msg:${stripAngleId(headers[\"in-reply-to\"])}`;\n  if (headers[\"message-id\"]) return `msg:${stripAngleId(headers[\"message-id\"])}`;\n  return null;\n}\n\nfunction detectSource(rawInput) {\n  const raw = unwrapBody(rawInput) || {};\n  const explicit = raw.__source || raw.source;\n  if (explicit && [\"gmail\", \"demo\"].includes(String(explicit).toLowerCase())) {\n    return String(explicit).toLowerCase();\n  }\n  if (raw.customer_email && raw.message) return \"demo\";\n  if (\n    raw.from ||\n    raw.From ||\n    raw.subject ||\n    raw.textPlain !== undefined ||\n    raw.text !== undefined ||\n    raw.html !== undefined ||\n    raw.textHtml !== undefined\n  ) {\n    return \"gmail\";\n  }\n  throw new Error(\"multi_channel_normalizer: could not detect gmail or demo payload\");\n}\n\nfunction parseGmail(rawInput) {\n  const raw = unwrapBody(rawInput) || {};\n  const headers = parseHeaders(raw);\n  const fromField = raw.from || raw.From || headers.from || \"\";\n  const { customer_name, customer_email_or_phone } = parseFromHeader(fromField);\n\n  let body =\n    valueText(raw.textPlain) ||\n    valueText(raw.text) ||\n    valueText(raw.textAsHtml) ||\n    valueText(raw.textHtml);\n  if (!body && raw.html) body = stripHtml(valueText(raw.html));\n  if (raw.textAsHtml && body === valueText(raw.textAsHtml)) body = stripHtml(body);\n  if (raw.textHtml && body === valueText(raw.textHtml)) body = stripHtml(body);\n\n  const message = stripSignatureAndQuotes(body);\n  const subject = valueText(raw.subject || headers.subject);\n  const dateValue = raw.date || raw.dateUtc || raw.internalDate || raw.receivedDate || new Date().toISOString();\n  const receivedAt = typeof dateValue === \"number\" ? new Date(dateValue).toISOString() : new Date(dateValue).toISOString();\n\n  return {\n    source: \"gmail\",\n    customer_name,\n    customer_email_or_phone,\n    message,\n    external_thread_id: threadKey(raw, headers),\n    received_at: receivedAt,\n    raw_payload: rawInput,\n    _filter: {\n      from_header: valueText(fromField),\n      subject,\n      list_unsubscribe: !!(headers[\"list-unsubscribe\"] || headers[\"list_unsubscribe\"]),\n      auto_submitted: headers[\"auto-submitted\"] || headers[\"auto_submitted\"] || \"\",\n      has_attachment: !!(raw.attachments && raw.attachments.length),\n      body_for_rules: message,\n    },\n  };\n}\n\nfunction parseDemo(rawInput) {\n  const raw = unwrapBody(rawInput) || {};\n  return {\n    source: raw.source || \"demo\",\n    customer_name: String(raw.customer_name || \"\").trim(),\n    customer_email_or_phone: String(raw.customer_email || raw.customer_email_or_phone || \"\").trim().toLowerCase(),\n    message: String(raw.message || \"\").trim(),\n    external_thread_id: raw.threadId || raw.thread_id || null,\n    received_at: raw.received_at || new Date().toISOString(),\n    raw_payload: rawInput,\n    _filter: {\n      from_header: raw.customer_email || \"\",\n      subject: raw.subject || \"\",\n      list_unsubscribe: false,\n      auto_submitted: \"\",\n      has_attachment: false,\n      body_for_rules: String(raw.message || \"\").trim(),\n    },\n  };\n}\n\nfunction normalizeItem(raw) {\n  const source = detectSource(raw);\n  if (source === \"gmail\") return parseGmail(raw);\n  if (source === \"demo\") return parseDemo(raw);\n  throw new Error(`multi_channel_normalizer: unsupported source \"${source}\"`);\n}\n\nif (typeof $input !== \"undefined\") {\n  return $input.all().map(({ json }) => ({ json: normalizeItem(json) }));\n}\n"
       },
       "id": "00000000-0000-4000-8000-000000000032",
       "name": "Multi-Channel Normalizer",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        460,
-        300
+        500,
+        360
       ]
     },
     {
@@ -68,8 +104,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        700,
-        300
+        740,
+        360
       ]
     },
     {
@@ -100,8 +136,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        940,
-        300
+        980,
+        360
       ]
     },
     {
@@ -134,8 +170,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1180,
-        120
+        1220,
+        160
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -156,8 +192,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1180,
-        340
+        1220,
+        400
       ]
     },
     {
@@ -189,8 +225,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1420,
-        340
+        1460,
+        400
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -211,8 +247,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1660,
-        340
+        1700,
+        400
       ]
     },
     {
@@ -278,8 +314,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        1900,
-        320
+        1940,
+        380
       ]
     },
     {
@@ -319,8 +355,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2140,
-        200
+        2180,
+        260
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -366,8 +402,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2380,
-        200
+        2420,
+        260
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -414,8 +450,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2140,
-        440
+        2180,
+        500
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -439,7 +475,7 @@
           ]
         },
         "options": {
-          "timeout": 15000,
+          "timeout": 30000,
           "response": {
             "response": {
               "neverError": true,
@@ -457,8 +493,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2620,
-        200
+        2660,
+        260
       ],
       "onError": "continueRegularOutput",
       "alwaysOutputData": true
@@ -478,7 +514,7 @@
           ]
         },
         "options": {
-          "timeout": 15000,
+          "timeout": 30000,
           "response": {
             "response": {
               "neverError": true,
@@ -496,8 +532,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2620,
-        440
+        2660,
+        500
       ],
       "onError": "continueRegularOutput",
       "alwaysOutputData": true
@@ -525,15 +561,15 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'channel_intake_ok', result: 'success', payload: { source: 'gmail', wf2_response: $json } } }}"
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', payload: { source: 'gmail', wf2_response: $json } } }}"
       },
       "id": "00000000-0000-4000-8000-000000000044",
       "name": "Log Intake OK",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2860,
-        320
+        2900,
+        380
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -545,6 +581,28 @@
     }
   ],
   "connections": {
+    "Gmail IMAP Trigger (configure credential)": {
+      "main": [
+        [
+          {
+            "node": "Multi-Channel Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Test Webhook": {
+      "main": [
+        [
+          {
+            "node": "Multi-Channel Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Manual Trigger": {
       "main": [
         [

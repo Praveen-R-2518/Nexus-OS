@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Separator } from "@/components/ui/separator";
 
+import { AuthGate } from "./auth-gate";
 import { DashboardNav } from "./dashboard-nav";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <Separator className="bg-zinc-800" />
         <DashboardNav />
       </aside>
-      <main className="min-h-screen flex-1 overflow-auto p-8">{children}</main>
+      <main className="min-h-screen flex-1 overflow-auto p-6 lg:p-8">
+        <AuthGate>{children}</AuthGate>
+      </main>
     </div>
   );
 }
