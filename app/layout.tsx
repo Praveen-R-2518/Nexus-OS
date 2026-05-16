@@ -1,34 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { ReactNode } from "react";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import AppShell from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "Nexus OS",
-  description: "Revenue Command Center for founder-led service businesses.",
+  description: "AI inbox and revenue rescue command center",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col bg-zinc-950 text-zinc-50">
-        {children}
+    <html lang="en">
+      <body className="min-h-screen bg-gray-900 font-sans text-gray-100 antialiased">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

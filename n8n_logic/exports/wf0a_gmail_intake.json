@@ -1,0 +1,789 @@
+{
+  "name": "WF0a Gmail Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Nexus OS - WF0a Gmail Intake\n\nPrimary path: enable `Gmail IMAP Trigger` after adding an IMAP credential.\n\nFallback path: POST Gmail-shaped payloads to `/webhook/gmail-inbound`.\n\nManual fixture stays disabled as a last-resort demo path.",
+        "height": 460,
+        "width": 400
+      },
+      "id": "00000052-0000-4000-8000-000000525411",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "format": "simple",
+        "downloadAttachments": false
+      },
+      "id": "00000000-0000-4000-8000-000000000029",
+      "name": "Gmail IMAP Trigger (configure credential)",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        120
+      ],
+      "disabled": true,
+      "notes": "Enable after adding an IMAP credential in n8n. The webhook fallback below remains available for demos."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gmail-inbound",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000301",
+      "name": "Gmail Test Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "nexus-gmail-inbound"
+    },
+    {
+      "parameters": {},
+      "id": "00000000-0000-4000-8000-000000000030",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        600
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{\n  json: {\n  \"__source\": \"gmail\",\n  \"subject\": \"Boutique Hotel Website Quote\",\n  \"from\": {\n    \"text\": \"\\\"Kasun Perera\\\" <kasun@hotelceylon.lk>\"\n  },\n  \"textPlain\": \"Hi Silva & Co, I need an official quote for building an ecommerce website for our boutique hotel in Colombo. We need an online booking system and a high-res room gallery. What are your standard packages and pricing?\",\n  \"threadId\": \"gm_thread_112233\",\n  \"date\": \"2026-05-16T10:15:00.000Z\",\n  \"headers\": {\n    \"message-id\": \"<gm_thread_112233@mail.gmail.com>\",\n    \"in-reply-to\": \"\",\n    \"list-unsubscribe\": \"\",\n    \"auto-submitted\": \"\",\n    \"subject\": \"Boutique Hotel Website Quote\",\n    \"from\": \"\\\"Kasun Perera\\\" <kasun@hotelceylon.lk>\"\n  }\n},\n}];"
+      },
+      "id": "00000000-0000-4000-8000-000000000031",
+      "name": "Load Gmail Fixture (demo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "function stripHtml(html) {\n  if (!html || typeof html !== \"string\") return \"\";\n  return html\n    .replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/gi, \" \")\n    .replace(/<style\\b[^<]*(?:(?!<\\/style>)<[^<]*)*<\\/style>/gi, \" \")\n    .replace(/<[^>]+>/g, \" \")\n    .replace(/\\s+/g, \" \")\n    .trim();\n}\n\nfunction stripSignatureAndQuotes(text) {\n  if (!text || typeof text !== \"string\") return \"\";\n  let t = text.replace(/\\r\\n/g, \"\\n\");\n\n  const idx = t.search(/^On .+ wrote:\\s*$/im);\n  if (idx !== -1) t = t.slice(0, idx).trim();\n\n  const sigDash = t.split(/^--\\s*$/m);\n  if (sigDash.length > 1) t = sigDash[0].trim();\n\n  const sentFrom = t.split(/^Sent from my .+$/im);\n  if (sentFrom.length > 1) t = sentFrom[0].trim();\n\n  return t.trim();\n}\n\nfunction valueText(value) {\n  if (value === null || value === undefined) return \"\";\n  if (typeof value === \"string\") return value;\n  if (typeof value.text === \"string\") return value.text;\n  if (typeof value.value === \"string\") return value.value;\n  if (Array.isArray(value) && value[0]) return valueText(value[0]);\n  return String(value || \"\");\n}\n\nfunction parseFromHeader(from) {\n  const text = valueText(from).trim();\n  if (!text) return { customer_name: \"\", customer_email_or_phone: \"\" };\n\n  const angled = /^\\s*\"?([^\"<]*?)\"?\\s*<\\s*([^>]+)\\s*>\\s*$/;\n  const m = text.match(angled);\n  if (m) {\n    const name = (m[1] || \"\").replace(/^\"|\"$/g, \"\").trim();\n    const email = (m[2] || \"\").trim().toLowerCase();\n    return {\n      customer_name: name || titleCaseFromEmail(email),\n      customer_email_or_phone: email,\n    };\n  }\n\n  const bare = text.match(/^([\\w.!#$%&'*+/=?^`{|}~-]+@[\\w.-]+\\.[A-Za-z]{2,})$/);\n  if (bare) {\n    const email = bare[1].toLowerCase();\n    return {\n      customer_name: titleCaseFromEmail(email),\n      customer_email_or_phone: email,\n    };\n  }\n\n  return { customer_name: text, customer_email_or_phone: \"\" };\n}\n\nfunction titleCaseFromEmail(email) {\n  const local = (email || \"\").split(\"@\")[0] || \"\";\n  return local\n    .replace(/[._-]+/g, \" \")\n    .replace(/\\b\\w/g, (c) => c.toUpperCase())\n    .trim();\n}\n\nfunction parseHeaders(raw) {\n  const headers = raw.headers || raw.header || {};\n  if (headers && typeof headers === \"object\" && !Array.isArray(headers)) {\n    return Object.fromEntries(\n      Object.entries(headers).map(([k, v]) => [String(k).toLowerCase(), valueText(v)]),\n    );\n  }\n  if (Array.isArray(raw.headerLines)) {\n    const out = {};\n    for (const line of raw.headerLines) {\n      const idx = String(line).indexOf(\":\");\n      if (idx > 0) out[String(line).slice(0, idx).trim().toLowerCase()] = String(line).slice(idx + 1).trim();\n    }\n    return out;\n  }\n  return {};\n}\n\nfunction unwrapBody(payload) {\n  if (payload && typeof payload === \"object\" && payload.body) return payload.body;\n  return payload;\n}\n\nfunction stripAngleId(v) {\n  return String(v || \"\").replace(/[<>]/g, \"\").trim();\n}\n\nfunction threadKey(raw, headers) {\n  if (raw.threadId) return String(raw.threadId);\n  if (raw.thread_id) return String(raw.thread_id);\n  if (raw.id) return `gmail:${raw.id}`;\n  if (headers[\"in-reply-to\"]) return `msg:${stripAngleId(headers[\"in-reply-to\"])}`;\n  if (headers[\"message-id\"]) return `msg:${stripAngleId(headers[\"message-id\"])}`;\n  return null;\n}\n\nfunction detectSource(rawInput) {\n  const raw = unwrapBody(rawInput) || {};\n  const explicit = raw.__source || raw.source;\n  if (explicit && [\"gmail\", \"demo\"].includes(String(explicit).toLowerCase())) {\n    return String(explicit).toLowerCase();\n  }\n  if (raw.customer_email && raw.message) return \"demo\";\n  if (\n    raw.from ||\n    raw.From ||\n    raw.subject ||\n    raw.textPlain !== undefined ||\n    raw.text !== undefined ||\n    raw.html !== undefined ||\n    raw.textHtml !== undefined\n  ) {\n    return \"gmail\";\n  }\n  throw new Error(\"multi_channel_normalizer: could not detect gmail or demo payload\");\n}\n\nfunction parseGmail(rawInput) {\n  const raw = unwrapBody(rawInput) || {};\n  const headers = parseHeaders(raw);\n  const fromField = raw.from || raw.From || headers.from || \"\";\n  const { customer_name, customer_email_or_phone } = parseFromHeader(fromField);\n\n  let body =\n    valueText(raw.textPlain) ||\n    valueText(raw.text) ||\n    valueText(raw.textAsHtml) ||\n    valueText(raw.textHtml);\n  if (!body && raw.html) body = stripHtml(valueText(raw.html));\n  if (raw.textAsHtml && body === valueText(raw.textAsHtml)) body = stripHtml(body);\n  if (raw.textHtml && body === valueText(raw.textHtml)) body = stripHtml(body);\n\n  const message = stripSignatureAndQuotes(body);\n  const subject = valueText(raw.subject || headers.subject);\n  const dateValue = raw.date || raw.dateUtc || raw.internalDate || raw.receivedDate || new Date().toISOString();\n  const receivedAt = typeof dateValue === \"number\" ? new Date(dateValue).toISOString() : new Date(dateValue).toISOString();\n\n  return {\n    source: \"gmail\",\n    customer_name,\n    customer_email_or_phone,\n    message,\n    external_thread_id: threadKey(raw, headers),\n    received_at: receivedAt,\n    raw_payload: rawInput,\n    _filter: {\n      from_header: valueText(fromField),\n      subject,\n      list_unsubscribe: !!(headers[\"list-unsubscribe\"] || headers[\"list_unsubscribe\"]),\n      auto_submitted: headers[\"auto-submitted\"] || headers[\"auto_submitted\"] || \"\",\n      has_attachment: !!(raw.attachments && raw.attachments.length),\n      body_for_rules: message,\n    },\n  };\n}\n\nfunction parseDemo(rawInput) {\n  const raw = unwrapBody(rawInput) || {};\n  return {\n    source: raw.source || \"demo\",\n    customer_name: String(raw.customer_name || \"\").trim(),\n    customer_email_or_phone: String(raw.customer_email || raw.customer_email_or_phone || \"\").trim().toLowerCase(),\n    message: String(raw.message || \"\").trim(),\n    external_thread_id: raw.threadId || raw.thread_id || null,\n    received_at: raw.received_at || new Date().toISOString(),\n    raw_payload: rawInput,\n    _filter: {\n      from_header: raw.customer_email || \"\",\n      subject: raw.subject || \"\",\n      list_unsubscribe: false,\n      auto_submitted: \"\",\n      has_attachment: false,\n      body_for_rules: String(raw.message || \"\").trim(),\n    },\n  };\n}\n\nfunction normalizeItem(raw) {\n  const source = detectSource(raw);\n  if (source === \"gmail\") return parseGmail(raw);\n  if (source === \"demo\") return parseDemo(raw);\n  throw new Error(`multi_channel_normalizer: unsupported source \"${source}\"`);\n}\n\nif (typeof $input !== \"undefined\") {\n  return $input.all().map(({ json }) => ({ json: normalizeItem(json) }));\n}\n"
+      },
+      "id": "00000000-0000-4000-8000-000000000032",
+      "name": "Multi-Channel Normalizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const AUTOMATED_LOCAL = new RegExp(\n  String.raw`^(no-?reply|noreply|do-not-reply|mailer-daemon|notifications?|notify|alerts?|news(letters?)?|updates?|info|hello|support)(?:$|[.\\-_])`,\n  \"i\",\n);\n\nconst PLEASANTRY = /^(thanks?|thx|ty|ok|okay|got\\s+it|cheers|noted|👍|🙏)\\b\\.?[!.']*$/iu;\n\nconst OFFICE_SUBJ = /^(out of office|automatic reply|vacation)\\b/i;\n\nconst SPAM_LEX = [\"free\", \"win\", \"click here\", \"prize\", \"viagra\", \"crypto\", \"$$$\"];\n\nfunction tokenCount(s) {\n  return s\n    .trim()\n    .split(/\\s+/)\n    .filter(Boolean).length;\n}\n\nfunction hasQuestion(body) {\n  return typeof body === \"string\" && body.includes(\"?\");\n}\n\nfunction normBody(message, filter) {\n  const b = (filter && filter.body_for_rules) || message || \"\";\n  return String(b).trim();\n}\n\nfunction drop(reason, normalized) {\n  return {\n    json: {\n      keep: false,\n      drop_reason: reason,\n      normalized,\n    },\n  };\n}\n\nfunction keep(normalized) {\n  return {\n    json: {\n      keep: true,\n      drop_reason: null,\n      ...normalized,\n    },\n  };\n}\n\nfunction evaluateNoiseFilter(normalized) {\n  const f = normalized._filter || {};\n  const body = normBody(normalized.message, f);\n  const fromHeader = String(f.from_header || \"\").toLowerCase();\n  const subject = String(f.subject || \"\");\n\n  // Extract rough \"local part\" and domain for Gmail-ish heuristics\n  const emailMatch = fromHeader.match(/<([^>]+)>\\s*$/);\n  const addr = (emailMatch ? emailMatch[1] : fromHeader).trim();\n  const at = addr.lastIndexOf(\"@\");\n  const localPart = at > 0 ? addr.slice(0, at) : addr;\n  const domain = at > 0 ? addr.slice(at + 1) : \"\";\n\n  if (normalized.source === \"gmail\") {\n    if (\n      (AUTOMATED_LOCAL.test(localPart) || AUTOMATED_LOCAL.test(domain)) &&\n      !hasQuestion(body)\n    ) {\n      return drop(\"automated_sender_no_question\", normalized);\n    }\n\n    if (OFFICE_SUBJ.test(subject)) {\n      return drop(\"auto_reply_subject\", normalized);\n    }\n\n    const autoSub = String(f.auto_submitted || \"\").toLowerCase();\n    if (autoSub.includes(\"auto-replied\")) {\n      return drop(\"auto_submitted_header\", normalized);\n    }\n\n    if (f.list_unsubscribe) {\n      return drop(\"list_unsubscribe_header\", normalized);\n    }\n\n    if (\n      /\\bunsubscribe\\b/i.test(body) &&\n      /\\bhttps?:\\/\\//i.test(body.slice(0, 80))\n    ) {\n      return drop(\"newsletter_unsubscribe_body\", normalized);\n    }\n  }\n\n  const tokens = tokenCount(body);\n  if (tokens <= 3 && tokens > 0 && PLEASANTRY.test(body)) {\n    return drop(\"short_pleasantry\", normalized);\n  }\n\n  if (body.length < 8 && !f.has_attachment) {\n    return drop(\"body_too_short\", normalized);\n  }\n\n  let spamHits = 0;\n  const low = body.toLowerCase();\n  for (const w of SPAM_LEX) {\n    if (low.includes(w)) spamHits++;\n  }\n  if (spamHits >= 3) {\n    return drop(\"spam_keyword_density\", normalized);\n  }\n\n  return keep(normalized);\n}\n\n// --- n8n entrypoint ---\nreturn $input.all().map(({ json }) => evaluateNoiseFilter(json));\n"
+      },
+      "id": "00000000-0000-4000-8000-000000000033",
+      "name": "Noise Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000091",
+              "leftValue": "={{ $json.keep }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000034",
+      "name": "IF Keep",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        980,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", payload: $json } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000035",
+      "name": "Log Noise Drop",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1220,
+        160
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const normalized = $input.first().json;\nconst id = normalized.customer_email_or_phone || '';\nif (!id) throw new Error('DedupLookupQuery: missing customer_email_or_phone');\nconst variants = [...new Set([id, id.toLowerCase()].filter(Boolean))];\nconst orInner = variants.map((v) => 'customer_email.eq.' + encodeURIComponent(v)).join(',');\nconst lookup_path =\n  '?select=id,status,updated_at' +\n  '&status=in.(new,in_progress,awaiting_reply)' +\n  '&or=(' + orInner + ')' +\n  '&order=updated_at.desc&limit=1';\nreturn [{ json: { lookup_path, normalized } }];"
+      },
+      "id": "00000000-0000-4000-8000-000000000036",
+      "name": "Dedup Lookup Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads{{ $json.lookup_path }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth"
+      },
+      "id": "00000000-0000-4000-8000-000000000037",
+      "name": "Supabase GET Lead Dedup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1460,
+        400
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const response = $input.first().json;\nconst rows = Array.isArray(response)\n  ? response\n  : Array.isArray(response.body)\n    ? response.body\n    : response && response.id\n      ? [response]\n      : [];\nconst normalized = $('Multi-Channel Normalizer').first().json;\nconst hit = Array.isArray(rows) && rows[0] && rows[0].id;\nif (hit) {\n  return [{ json: { action: 'append_conversation', lead_id: rows[0].id, normalized } }];\n}\nreturn [{ json: { action: 'create_new_lead', normalized } }];"
+      },
+      "id": "00000000-0000-4000-8000-000000000038",
+      "name": "Dedup Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "append_conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "00000000-0000-4000-8000-000000000003"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "append_conversation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "create_new_lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "00000000-0000-4000-8000-000000000004"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create_new_lead"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000039",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1940,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id }) } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000040",
+      "name": "POST Conversation (append)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2180,
+        260
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads?id=eq.{{ $('Dedup Decision').first().json.lead_id }}",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { updated_at: new Date().toISOString() } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000041",
+      "name": "PATCH Lead Touch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2420,
+        260
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id }) } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000042",
+      "name": "POST Conversation (new)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2180,
+        500
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  conversation_id: $('POST Conversation (append)').first().json.body[0].id,\n  lead_id: $('Dedup Decision').first().json.lead_id,\n  message: $('Dedup Decision').first().json.normalized.message,\n  customer_name: $('Dedup Decision').first().json.normalized.customer_name,\n  customer_email: $('Dedup Decision').first().json.normalized.customer_email_or_phone\n} }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000043",
+      "name": "Trigger WF2 Classification (append)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2660,
+        260
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  conversation_id: $('POST Conversation (new)').first().json.body[0].id,\n  message: $('Dedup Decision').first().json.normalized.message,\n  customer_name: $('Dedup Decision').first().json.normalized.customer_name,\n  customer_email: $('Dedup Decision').first().json.normalized.customer_email_or_phone\n} }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000431",
+      "name": "Trigger WF2 Classification (new)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2660,
+        500
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', payload: { source: 'gmail', wf2_response: $json } } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000044",
+      "name": "Log Intake OK",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2900,
+        380
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Gmail IMAP Trigger (configure credential)": {
+      "main": [
+        [
+          {
+            "node": "Multi-Channel Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Test Webhook": {
+      "main": [
+        [
+          {
+            "node": "Multi-Channel Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Gmail Fixture (demo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Gmail Fixture (demo)": {
+      "main": [
+        [
+          {
+            "node": "Multi-Channel Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Multi-Channel Normalizer": {
+      "main": [
+        [
+          {
+            "node": "Noise Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Noise Filter": {
+      "main": [
+        [
+          {
+            "node": "IF Keep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Keep": {
+      "main": [
+        [
+          {
+            "node": "Dedup Lookup Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Noise Drop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedup Lookup Query": {
+      "main": [
+        [
+          {
+            "node": "Supabase GET Lead Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase GET Lead Dedup": {
+      "main": [
+        [
+          {
+            "node": "Dedup Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedup Decision": {
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Action": {
+      "main": [
+        [
+          {
+            "node": "POST Conversation (append)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST Conversation (new)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Conversation (append)": {
+      "main": [
+        [
+          {
+            "node": "PATCH Lead Touch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PATCH Lead Touch": {
+      "main": [
+        [
+          {
+            "node": "Trigger WF2 Classification (append)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Conversation (new)": {
+      "main": [
+        [
+          {
+            "node": "Trigger WF2 Classification (new)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger WF2 Classification (append)": {
+      "main": [
+        [
+          {
+            "node": "Log Intake OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger WF2 Classification (new)": {
+      "main": [
+        [
+          {
+            "node": "Log Intake OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "nexus-os-export"
+  },
+  "tags": [
+    {
+      "name": "nexus-os"
+    }
+  ]
+}

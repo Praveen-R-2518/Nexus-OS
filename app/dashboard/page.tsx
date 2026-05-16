@@ -1,14 +1,627 @@
-export default function DashboardPage() {
+"use client";
+
+import Link from "next/link";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Clock,
+  Flame,
+  TrendingDown,
+} from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import type { Conversation, Metrics } from "@/types";
+import {
+  cn,
+  conversationMessagePreview,
+  formatCurrency,
+  formatRelativeTime,
+  getRiskColor,
+} from "@/lib/utils";
+
+const GLOBAL_REFRESH_MS = 30_000;
+const INBOX_REFRESH_MS = 15_000;
+
+function urgencyBadgeLabel(urgency: Conversation["urgency"] | null | undefined): string {
+  if (urgency == null) return "—";
+  return urgency.charAt(0).toUpperCase() + urgency.slice(1);
+}
+
+function isDraftPipelineReady(status: Conversation["status"]): boolean {
   return (
-    <section className="mx-auto flex max-w-6xl flex-col gap-4">
-      <p className="text-sm text-cyan-400 uppercase tracking-[0.3em]">
-        Nexus OS
-      </p>
-      <h1 className="text-4xl font-semibold">Revenue Command Center</h1>
-      <p className="max-w-2xl text-zinc-400">
-        Command dashboard stub for live revenue opportunities, customer risk, AI
-        drafts, follow-ups, and daily buy-back reporting.
-      </p>
-    </section>
+    status === "draft_ready" ||
+    status === "approved" ||
+    status === "sent" ||
+    status === "rejected"
+  );
+}
+
+function hotLeadDraftTag(
+  status: Conversation["status"],
+): "Draft Ready" | "Needs Reply" {
+  return isDraftPipelineReady(status) ? "Draft Ready" : "Needs Reply";
+}
+
+function churnDraftTag(
+  status: Conversation["status"],
+): "Draft Ready" | "Awaiting Draft" {
+  return isDraftPipelineReady(status) ? "Draft Ready" : "Awaiting Draft";
+}
+
+function MetricsSkeletonRow() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="h-[132px] animate-pulse rounded-xl border border-gray-800 bg-gray-800/40"
+        />
+      ))}
+    </div>
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="space-y-3 p-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex animate-pulse gap-3 rounded-lg border border-gray-800 bg-gray-900/40 p-3"
+        >
+          <div className="h-6 w-16 shrink-0 rounded-full bg-gray-800" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-4 w-1/3 rounded bg-gray-800" />
+            <div className="h-3 w-full rounded bg-gray-800/80" />
+          </div>
+          <div className="hidden h-8 w-14 shrink-0 rounded bg-gray-800 sm:block" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SideCardSkeleton() {
+  return (
+    <div className="animate-pulse rounded-xl border border-gray-800 bg-gray-900/40 p-4">
+      <div className="mb-4 h-5 w-40 rounded bg-gray-800" />
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-14 rounded-lg bg-gray-800/50" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState<number | null>(
+    null,
+  );
+  const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+
+  const prevConvIdsRef = useRef<Set<string>>(new Set());
+  const firstConvFetchRef = useRef(true);
+  const highlightClearRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const applyConversationHighlights = useCallback((next: Conversation[]) => {
+    const nextIds = new Set(next.map((c) => c.id));
+
+    if (firstConvFetchRef.current) {
+      firstConvFetchRef.current = false;
+      prevConvIdsRef.current = nextIds;
+      return;
+    }
+
+    const prev = prevConvIdsRef.current;
+    const appeared = new Set<string>();
+    for (const id of Array.from(nextIds)) {
+      if (!prev.has(id)) appeared.add(id);
+    }
+    prevConvIdsRef.current = nextIds;
+
+    if (appeared.size === 0) return;
+
+    if (highlightClearRef.current) clearTimeout(highlightClearRef.current);
+    setHighlightIds(appeared);
+    highlightClearRef.current = setTimeout(() => {
+      setHighlightIds(new Set());
+      highlightClearRef.current = null;
+    }, 900);
+  }, []);
+
+  const loadDashboard = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) setLoading(true);
+    setError(null);
+
+    try {
+      const [metricsRes, conversationsRes] = await Promise.all([
+        fetch("/api/metrics"),
+        fetch("/api/conversations?limit=10"),
+      ]);
+
+      const metricsJson = (await metricsRes.json()) as {
+        metrics?: Metrics;
+        error?: string;
+      };
+      const conversationsJson = (await conversationsRes.json()) as {
+        data?: Conversation[];
+        error?: string;
+      };
+
+      if (!metricsRes.ok) {
+        throw new Error(
+          typeof metricsJson.error === "string"
+            ? metricsJson.error
+            : metricsRes.statusText,
+        );
+      }
+      if (!conversationsRes.ok) {
+        throw new Error(
+          typeof conversationsJson.error === "string"
+            ? conversationsJson.error
+            : conversationsRes.statusText,
+        );
+      }
+
+      if (!metricsJson.metrics || typeof metricsJson.metrics !== "object") {
+        throw new Error("Invalid metrics response");
+      }
+      if (!Array.isArray(conversationsJson.data)) {
+        throw new Error("Invalid conversations response");
+      }
+
+      setMetrics(metricsJson.metrics);
+      setConversations(conversationsJson.data);
+      applyConversationHighlights(conversationsJson.data);
+      setLastUpdatedAt(Date.now());
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "Failed to load command center";
+      setError(msg);
+      if (!silent) {
+        setMetrics(null);
+        setConversations([]);
+      }
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [applyConversationHighlights]);
+
+  const loadInboxOnly = useCallback(async () => {
+    setError(null);
+    try {
+      const conversationsRes = await fetch("/api/conversations?limit=10");
+      const conversationsJson = (await conversationsRes.json()) as {
+        data?: Conversation[];
+        error?: string;
+      };
+
+      if (!conversationsRes.ok) {
+        throw new Error(
+          typeof conversationsJson.error === "string"
+            ? conversationsJson.error
+            : conversationsRes.statusText,
+        );
+      }
+      if (!Array.isArray(conversationsJson.data)) {
+        throw new Error("Invalid conversations response");
+      }
+
+      setConversations(conversationsJson.data);
+      applyConversationHighlights(conversationsJson.data);
+      setLastUpdatedAt(Date.now());
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "Failed to refresh inbox feed";
+      setError(msg);
+    }
+  }, [applyConversationHighlights]);
+
+  useEffect(() => {
+    void loadDashboard();
+
+    const globalTimer = window.setInterval(() => {
+      void loadDashboard({ silent: true });
+    }, GLOBAL_REFRESH_MS);
+
+    const inboxTimer = window.setInterval(() => {
+      void loadInboxOnly();
+    }, INBOX_REFRESH_MS);
+
+    return () => {
+      window.clearInterval(globalTimer);
+      window.clearInterval(inboxTimer);
+      if (highlightClearRef.current) clearTimeout(highlightClearRef.current);
+    };
+  }, [loadDashboard, loadInboxOnly]);
+
+  useEffect(() => {
+    if (lastUpdatedAt === null) {
+      setSecondsSinceUpdate(null);
+      return;
+    }
+    const tick = () => {
+      setSecondsSinceUpdate(
+        Math.max(0, Math.floor((Date.now() - lastUpdatedAt) / 1000)),
+      );
+    };
+    tick();
+    const t = window.setInterval(tick, 1000);
+    return () => window.clearInterval(t);
+  }, [lastUpdatedAt]);
+
+  const hotLeadsList = useMemo(() => {
+    return conversations
+      .filter(
+        (c) =>
+          c.intent === "purchase" &&
+          (c.urgency === "critical" || c.urgency === "high"),
+      )
+      .slice(0, 5);
+  }, [conversations]);
+
+  const churnRisksList = useMemo(() => {
+    return conversations.filter((c) => c.intent === "churn_risk").slice(0, 5);
+  }, [conversations]);
+
+  return (
+    <div className="relative min-h-[calc(100vh-6rem)] overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.55]"
+        aria-hidden
+      >
+        <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
+      </div>
+
+      <div className="relative space-y-8">
+        <header className="flex flex-col gap-4 border-b border-gray-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90">
+              Nexus OS
+            </p>
+            <h1 className="mt-2 bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
+              Command Center
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-gray-400">
+              Live revenue rescue ops — prioritize revenue at risk, route hot
+              leads, and intercept churn before it lands.
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/5 px-3 py-1 text-xs font-medium text-emerald-300/90">
+              <span
+                className="relative flex h-2 w-2"
+                aria-hidden
+              >
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              Live sync
+            </div>
+            <p className="text-xs tabular-nums text-gray-500">
+              {secondsSinceUpdate === null
+                ? "Awaiting first sync…"
+                : `Last updated: ${secondsSinceUpdate}s ago`}
+            </p>
+          </div>
+        </header>
+
+        {error ? (
+          <div className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        ) : null}
+
+        {/* Metrics */}
+        <section aria-label="Key metrics">
+          {loading && !metrics ? (
+            <MetricsSkeletonRow />
+          ) : metrics ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <Card
+                title="Revenue at Risk"
+                value={formatCurrency(metrics.revenue_at_risk)}
+                subtitle="in unresolved conversations"
+                accent="text-red-400"
+                icon={<TrendingDown className="text-red-400" />}
+                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(248,113,113,0.08)] animate-fade-up [animation-delay:0ms]"
+              />
+              <Card
+                title="Hot Leads"
+                value={metrics.hot_leads}
+                subtitle="high-intent buyers right now"
+                accent="text-orange-400"
+                icon={<Flame className="text-orange-400" />}
+                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(251,146,60,0.08)] animate-fade-up [animation-delay:75ms]"
+              />
+              <Card
+                title="Churn Risks"
+                value={metrics.churn_risks}
+                subtitle="customers showing churn signals"
+                accent="text-yellow-400"
+                icon={<AlertTriangle className="text-yellow-400" />}
+                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(250,204,21,0.08)] animate-fade-up [animation-delay:150ms]"
+              />
+              <Card
+                title="Hours Saved"
+                value={`${metrics.hours_saved.toFixed(1)}h`}
+                subtitle="saved by AI drafting"
+                accent="text-emerald-400"
+                icon={<Clock className="text-emerald-400" />}
+                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(52,211,153,0.08)] animate-fade-up [animation-delay:225ms]"
+              />
+            </div>
+          ) : (
+            <EmptyState
+              title="No metrics yet"
+              description="Connect Supabase or check API configuration."
+              className="border-gray-800 bg-gray-900/40"
+            />
+          )}
+        </section>
+
+        {/* Two columns */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+          {/* Live Inbox */}
+          <section
+            aria-label="Live inbox feed"
+            className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+          >
+            <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
+                  Live Inbox
+                </h2>
+                <span
+                  className="text-emerald-400 animate-pulse-dot select-none"
+                  aria-hidden
+                >
+                  ●
+                </span>
+                <span className="sr-only">Real-time updates enabled</span>
+              </div>
+              <Link
+                href="/inbox"
+                className="text-xs font-medium text-emerald-400/90 hover:text-emerald-300"
+              >
+                Open inbox →
+              </Link>
+            </div>
+
+            {loading && conversations.length === 0 ? (
+              <FeedSkeleton />
+            ) : conversations.length === 0 ? (
+              <EmptyState
+                title="Inbox empty"
+                description="New conversations will appear here."
+                className="border-0 bg-transparent py-12"
+              />
+            ) : (
+              <ul className="divide-y divide-gray-800/80">
+                {conversations.map((c) => {
+                  const highlighted = highlightIds.has(c.id);
+                  return (
+                    <li key={c.id}>
+                      <div
+                        className={cn(
+                          "flex flex-col gap-3 px-4 py-3 transition-colors sm:flex-row sm:items-center sm:gap-4",
+                          c.urgency === "critical" && "bg-red-950/30",
+                          highlighted && "animate-slide-down-row",
+                        )}
+                      >
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                          <div className="shrink-0 pt-0.5">
+                            <Badge
+                              variant="urgency"
+                              value={c.urgency}
+                              label={urgencyBadgeLabel(c.urgency)}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold text-gray-100">
+                              {c.customer_name}
+                            </p>
+                            <p className="line-clamp-1 text-xs text-gray-500">
+                              {conversationMessagePreview(c)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 sm:justify-end">
+                          <span
+                            className={cn(
+                              "text-sm font-semibold tabular-nums sm:w-12 sm:text-right",
+                              getRiskColor(c.risk_score),
+                            )}
+                          >
+                            {c.risk_score}
+                          </span>
+                          <span className="text-sm font-medium tabular-nums text-emerald-400/90 sm:w-24 sm:text-right">
+                            {formatCurrency(c.estimated_value)}
+                          </span>
+                          <time
+                            className="text-xs tabular-nums text-gray-500 sm:w-28 sm:text-right"
+                            dateTime={c.updated_at}
+                          >
+                            {formatRelativeTime(c.updated_at)}
+                          </time>
+                          <Link
+                            href={`/inbox?id=${encodeURIComponent(c.id)}`}
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800/80 text-gray-300 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300"
+                            aria-label={`Open ${c.customer_name} in inbox`}
+                          >
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          {/* Right column */}
+          <div className="flex flex-col gap-6">
+            {/* Hot Leads */}
+            <section
+              aria-label="Hot leads"
+              className="overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-b from-orange-500/5 to-transparent"
+            >
+              <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
+                <h2 className="text-sm font-semibold text-gray-100">
+                  🔥 Hot Leads
+                </h2>
+                <Link
+                  href="/inbox?intent=purchase"
+                  className="text-xs font-medium text-orange-400 hover:text-orange-300"
+                >
+                  View all →
+                </Link>
+              </div>
+              <div className="p-4">
+                {loading && conversations.length === 0 ? (
+                  <SideCardSkeleton />
+                ) : hotLeadsList.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-gray-500">
+                    No hot leads in the current snapshot.
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {hotLeadsList.map((c) => (
+                      <li key={c.id}>
+                        <div className="rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="truncate font-medium text-gray-100">
+                              {c.customer_name}
+                            </p>
+                            <span className="shrink-0 text-sm font-semibold tabular-nums text-emerald-400">
+                              {formatCurrency(c.estimated_value)}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <Badge
+                              variant="urgency"
+                              value={c.urgency}
+                              label={urgencyBadgeLabel(c.urgency)}
+                            />
+                            <span
+                              className={cn(
+                                "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                                isDraftPipelineReady(c.status)
+                                  ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300"
+                                  : "border-gray-600 bg-gray-800 text-gray-400",
+                              )}
+                            >
+                              {hotLeadDraftTag(c.status)}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+
+            {/* Churn Risks */}
+            <section
+              aria-label="Churn risks"
+              className="overflow-hidden rounded-xl border border-yellow-500/20 bg-gradient-to-b from-yellow-500/5 to-transparent"
+            >
+              <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
+                <h2 className="text-sm font-semibold text-gray-100">
+                  ⚠️ Churn Risks
+                </h2>
+                <Link
+                  href="/inbox?intent=churn_risk"
+                  className="text-xs font-medium text-yellow-400 hover:text-yellow-300"
+                >
+                  View all →
+                </Link>
+              </div>
+              <div className="p-4">
+                {loading && conversations.length === 0 ? (
+                  <SideCardSkeleton />
+                ) : churnRisksList.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-gray-500">
+                    No churn signals in the current snapshot.
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {churnRisksList.map((c) => (
+                      <li key={c.id}>
+                        <div className="rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="truncate font-medium text-gray-100">
+                              {c.customer_name}
+                            </p>
+                            <span
+                              className={cn(
+                                "shrink-0 text-sm font-semibold tabular-nums",
+                                getRiskColor(c.risk_score),
+                              )}
+                            >
+                              {c.risk_score}
+                            </span>
+                          </div>
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-800">
+                            <div
+                              className={cn(
+                                "h-full rounded-full transition-all",
+                                c.risk_score >= 80
+                                  ? "bg-red-500/80"
+                                  : c.risk_score >= 60
+                                    ? "bg-orange-500/80"
+                                    : c.risk_score >= 40
+                                      ? "bg-yellow-500/80"
+                                      : "bg-emerald-500/70",
+                              )}
+                              style={{
+                                width: `${Math.min(100, Math.max(0, c.risk_score))}%`,
+                              }}
+                            />
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span
+                              className={cn(
+                                "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                                isDraftPipelineReady(c.status)
+                                  ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300"
+                                  : "border-gray-600 bg-gray-800 text-gray-400",
+                              )}
+                            >
+                              {churnDraftTag(c.status)}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
