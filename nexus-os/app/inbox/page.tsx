@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ClipboardList,
   Inbox as InboxIcon,
@@ -97,7 +98,10 @@ function timelineCompletion(status: Conversation["status"]): {
   };
 }
 
-export default function InboxPage() {
+function InboxPageContent() {
+  const searchParams = useSearchParams();
+  const prevQsRef = useRef<string | null>(null);
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
@@ -179,18 +183,49 @@ export default function InboxPage() {
   }, [conversations, activeUrgencyFilter, activeIntentFilter, searchQuery]);
 
   useEffect(() => {
+    const intent = searchParams.get("intent");
+    if (
+      intent &&
+      INTENT_OPTIONS.some((o) => o.value === intent && o.value !== "")
+    ) {
+      setActiveIntentFilter(intent as IntentFilter);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (listLoading) return;
     if (filteredConversations.length === 0) {
       setSelectedConversationId(null);
       return;
     }
+
+    const qs = searchParams.toString();
+    const isFirst = prevQsRef.current === null;
+    const qsChanged = !isFirst && qs !== prevQsRef.current;
+    prevQsRef.current = qs;
+
+    const urlId = searchParams.get("id");
+    if (
+      (isFirst || qsChanged) &&
+      urlId &&
+      filteredConversations.some((c) => c.id === urlId)
+    ) {
+      setSelectedConversationId(urlId);
+      return;
+    }
+
     const stillValid = selectedConversationId
       ? filteredConversations.some((c) => c.id === selectedConversationId)
       : false;
     if (!stillValid) {
       setSelectedConversationId(filteredConversations[0]!.id);
     }
-  }, [filteredConversations, listLoading, selectedConversationId]);
+  }, [
+    filteredConversations,
+    listLoading,
+    selectedConversationId,
+    searchParams,
+  ]);
 
   useEffect(() => {
     if (!selectedConversationId) return;
@@ -637,5 +672,20 @@ export default function InboxPage() {
       </section>
     </div>
     </>
+  );
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-400">
+          <Spinner className="h-8 w-8" label="Loading inbox" />
+          <p className="text-sm">Loading conversations…</p>
+        </div>
+      }
+    >
+      <InboxPageContent />
+    </Suspense>
   );
 }
