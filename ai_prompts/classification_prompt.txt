@@ -41,7 +41,7 @@ BOOLEANS
 needs_human_approval: true if a human should review the reply before sending (legal risk, churn, refunds, threats, ambiguity, or high revenue_risk); false only when a safe automated reply is clearly appropriate.
 
 STRINGS
-summary: max 25 words, factual, no quotes from policy.
+summary: max 25 words, factual, no quotes from policy. If you mention a monetary figure the customer brought up, prefix with $ unless the message implies another currency (e.g. LKR, €).
 recommended_action: one specific, practical next step for staff (what to do next).
 suggested_reply_angle: tone and substance hint for drafting a reply (e.g. empathize, confirm booking window, offer pricing range)—not the full reply.
 
