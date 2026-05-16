@@ -6,36 +6,44 @@ import { Environment } from "@react-three/drei";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
+import { Tangerine } from "next/font/google";
 import DataNexus from "@/components/landing/DataNexus";
+import Image from "next/image";
+
+const tangerine = Tangerine({ subsets: ["latin"], weight: ["400", "700"] });
 
 const steps = [
-  { id: "01", title: "Discovery", desc: "AI scans your inbox for revenue opportunities." },
-  { id: "02", title: "Intake", desc: "Classifies and categorizes incoming leads." },
-  { id: "03", title: "Rescue", desc: "Identifies at-risk deals and drafts responses." },
-  { id: "04", title: "Approval", desc: "You review AI-drafted replies in one click." },
-  { id: "05", title: "Execution", desc: "Automated follow-ups and CRM syncing." },
-  { id: "06", title: "Growth", desc: "Monitor metrics in your Command Center." },
+  { id: "01", title: "Discovery", desc: "Our AI continuously monitors your communication channels, instantly identifying high-value revenue opportunities and urgent customer needs before they escalate." },
+  { id: "02", title: "Intake", desc: "Every incoming lead is automatically classified, scored for risk, and categorized by intent, ensuring your team focuses on what matters most." },
+  { id: "03", title: "Rescue", desc: "Proactively flags at-risk deals and churn signals, instantly drafting context-aware, empathetic responses to save the relationship." },
+  { id: "04", title: "Approval", desc: "Review, edit, and approve AI-drafted replies in a single click. Maintain your brand's voice while saving hours of manual drafting." },
+  { id: "05", title: "Execution", desc: "Seamlessly integrates with your existing CRM to automate follow-ups, update deal stages, and ensure no opportunity slips through the cracks." },
+  { id: "06", title: "Growth", desc: "Monitor your saved revenue, team efficiency, and customer satisfaction metrics in real-time through your centralized Command Center." },
 ];
 
 function StepCard({ step, index }: { step: { id: string; title: string; desc: string }; index: number }) {
+  const isEven = index % 2 === 0;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.2 }}
+      initial={{ opacity: 0, x: isEven ? -50 : 50, y: 30 }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
       transition={{
         type: "spring",
         mass: 1,
-        stiffness: 100,
+        stiffness: 80,
         damping: 20,
-        delay: index * 0.1,
+        delay: 0.1,
       }}
-      className="glass-panel p-8 rounded-2xl flex flex-col gap-4 relative overflow-hidden group"
+      className={`glass-panel p-10 md:p-12 rounded-3xl flex flex-col gap-4 relative overflow-hidden group w-full max-w-2xl ${
+        isEven ? "md:self-start" : "md:self-end"
+      }`}
     >
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-trajectory-blue/0 via-trajectory-blue/50 to-trajectory-blue/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <span className="text-trajectory-blue font-mono text-sm font-bold tracking-widest">{step.id}</span>
-      <h3 className="text-2xl font-semibold text-atmospheric-grey tracking-tight">{step.title}</h3>
-      <p className="text-atmospheric-grey/70 leading-relaxed">{step.desc}</p>
+      <span className="text-trajectory-blue font-mono text-lg font-bold tracking-widest">{step.id}</span>
+      <h3 className="text-3xl md:text-4xl font-semibold text-atmospheric-grey tracking-tight">{step.title}</h3>
+      <p className="text-lg text-atmospheric-grey/70 leading-relaxed">{step.desc}</p>
     </motion.div>
   );
 }
@@ -94,30 +102,72 @@ export default function LandingPage() {
           </div>
         </div>
         
-        {/* Scroll Indicator */}
-        <motion.div 
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-atmospheric-grey/40"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <span className="text-xs font-mono uppercase tracking-widest">System Online</span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-atmospheric-grey/40 to-transparent" />
-        </motion.div>
       </section>
 
       {/* Process Section */}
-      <section className="relative py-32 px-6 max-w-6xl mx-auto">
-        <div className="mb-20 text-center">
-          <h2 className="text-4xl font-medium tracking-tight text-atmospheric-grey mb-4">The Process</h2>
-          <p className="text-atmospheric-grey/60">A six-step protocol to reclaim your time and revenue.</p>
+      <section className="relative py-32 px-6 max-w-5xl mx-auto">
+        <div className="mb-32 text-center">
+          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-atmospheric-grey mb-6">The Process</h2>
+          <p className="text-xl text-atmospheric-grey/60 max-w-2xl mx-auto">A six-step protocol to reclaim your time and revenue.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="relative flex flex-col gap-16 md:gap-24">
+          {/* Central connecting line */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-trajectory-blue/0 via-trajectory-blue/20 to-trajectory-blue/0 hidden md:block -translate-x-1/2" />
+          
           {steps.map((step, index) => (
             <StepCard key={step.id} step={step} index={index} />
           ))}
         </div>
       </section>
+
+      {/* Quote & Logo Section */}
+      <section className="relative py-32 px-6 flex flex-col items-center justify-center border-t border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-obsidian via-trajectory-blue/5 to-obsidian pointer-events-none" />
+        
+        <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
+          <div className="relative mb-16">
+            {/* Logo Glow */}
+            <div className="absolute inset-0 bg-trajectory-blue/20 blur-[80px] rounded-full scale-150" />
+            {/* Logo */}
+            <div className="relative flex items-center justify-center w-72 h-24">
+              <Image 
+                src="/logo.png" 
+                alt="Nexus OS Logo" 
+                fill 
+                className="object-contain drop-shadow-[0_0_15px_rgba(0,82,204,0.3)]"
+                priority
+              />
+            </div>
+          </div>
+          
+          <blockquote className={`text-5xl md:text-7xl text-atmospheric-grey/90 leading-relaxed ${tangerine.className}`}>
+            "We built Nexus OS because founders shouldn't have to choose between saving time and saving revenue."
+          </blockquote>
+          <div className="mt-12 flex flex-col items-center gap-3">
+            <div className="w-12 h-[1px] bg-trajectory-blue/50" />
+            <span className="text-sm font-medium uppercase tracking-widest text-trajectory-blue">The Nexus Team</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-obsidian py-12 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
+            <span className="font-mono text-sm font-bold tracking-widest text-atmospheric-grey">NEXUS OS</span>
+            <span className="hidden md:inline text-atmospheric-grey/40 text-sm">|</span>
+            <span className="text-atmospheric-grey/40 text-sm">© {new Date().getFullYear()} All rights reserved.</span>
+            <span className="hidden md:inline text-atmospheric-grey/40 text-sm">|</span>
+            <span className="text-atmospheric-grey/60 text-sm font-medium">Developed by Knurdz 3.0</span>
+          </div>
+          <div className="flex items-center gap-6 text-sm text-atmospheric-grey/60">
+            <Link href="#" className="hover:text-trajectory-blue transition-colors">Privacy Policy</Link>
+            <Link href="#" className="hover:text-trajectory-blue transition-colors">Terms of Service</Link>
+            <Link href="#" className="hover:text-trajectory-blue transition-colors">Contact Support</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
