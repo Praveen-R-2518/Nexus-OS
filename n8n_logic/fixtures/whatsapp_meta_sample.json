@@ -1,0 +1,35 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "123456789",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550001111",
+              "phone_number_id": "987654321"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Alex Customer" },
+                "wa_id": "94771234567"
+              }
+            ],
+            "messages": [
+              {
+                "from": "94771234567",
+                "id": "wamid.HBgMOTQxNzEyMzQ1NjcVAgARGBI5QTNDQj...",
+                "timestamp": "1715850000",
+                "type": "text",
+                "text": { "body": "We want to move forward on the automation project — what's the next step?" }
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
