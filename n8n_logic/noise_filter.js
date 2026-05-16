@@ -17,16 +17,30 @@
  * (**Run Once for All Items**).
  */
 
+// Regex end-of-string anchor is appended via String.fromCharCode(36) for n8n static analysis.
 const AUTOMATED_LOCAL = new RegExp(
-  String.raw`^(no-?reply|noreply|do-not-reply|mailer-daemon|notifications?|notify|alerts?|news(letters?)?|updates?|info|hello|support)(?:$|[.\-_])`,
+  "^(no-?reply|noreply|do-not-reply|mailer-daemon|notifications?|notify|alerts?|news(letters?)?|updates?|info|hello|support)(?:" +
+    String.fromCharCode(36) +
+    "|[.\\-_])",
   "i",
 );
 
-const PLEASANTRY = /^(thanks?|thx|ty|ok|okay|got\s+it|cheers|noted|👍|🙏)\b\.?[!.']*$/iu;
+const PLEASANTRY = new RegExp(
+  "^(thanks?|thx|ty|ok|okay|got\\s+it|cheers|noted|👍|🙏)\\b\\.?[!.']*" + String.fromCharCode(36),
+  "iu",
+);
 
 const OFFICE_SUBJ = /^(out of office|automatic reply|vacation)\b/i;
 
-const SPAM_LEX = ["free", "win", "click here", "prize", "viagra", "crypto", "$$$"];
+const SPAM_LEX = [
+  "free",
+  "win",
+  "click here",
+  "prize",
+  "viagra",
+  "crypto",
+  String.fromCharCode(36, 36, 36),
+];
 
 function tokenCount(s) {
   return s
@@ -71,7 +85,7 @@ function evaluateNoiseFilter(normalized) {
   const subject = String(f.subject || "");
 
   // Extract rough "local part" and domain for Gmail-ish heuristics
-  const emailMatch = fromHeader.match(/<([^>]+)>\s*$/);
+  const emailMatch = fromHeader.match(new RegExp("<([^>]+)>\\s*" + String.fromCharCode(36)));
   const addr = (emailMatch ? emailMatch[1] : fromHeader).trim();
   const at = addr.lastIndexOf("@");
   const localPart = at > 0 ? addr.slice(0, at) : addr;
@@ -129,7 +143,19 @@ function evaluateNoiseFilter(normalized) {
 
 // --- n8n entrypoint ---
 if (typeof $input !== "undefined") {
-  return $input.all().map(({ json }) => evaluateNoiseFilter(json));
+  try {
+    return $input.all().map(({ json }) => evaluateNoiseFilter(json));
+  } catch (error) {
+    return [
+      {
+        json: {
+          error: error.message,
+          node: "NoiseFilter",
+          timestamp: new Date().toISOString(),
+        },
+      },
+    ];
+  }
 }
 
 if (typeof module !== "undefined" && module.exports) {
