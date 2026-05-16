@@ -369,17 +369,17 @@ function InboxPageContent() {
         </p>
       ) : null}
       <div className="flex h-[calc(100vh-6rem)] min-h-[560px] gap-4">
-      <aside className="flex w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/60">
-        <div className="shrink-0 border-b border-gray-800 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <aside className="flex w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-white/10 glass-panel">
+        <div className="shrink-0 border-b border-white/10 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-atmospheric-grey/60">
             Revenue at Risk
           </p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-amber-400">
+          <p className="mt-1 text-xl font-semibold tabular-nums text-trajectory-blue">
             {formatCurrency(revenueAtRisk)}
           </p>
         </div>
 
-        <div className="shrink-0 space-y-3 border-b border-gray-800 p-3">
+        <div className="shrink-0 space-y-3 border-b border-white/10 p-3">
           <div>
             <p className="mb-1.5 text-xs font-medium text-gray-500">Urgency</p>
             <div className="flex flex-wrap gap-1.5">
@@ -402,7 +402,7 @@ function InboxPageContent() {
                     <span
                       className={cn(
                         "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
-                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                        active ? "bg-emerald-500/25" : "bg-obsidian/80",
                       )}
                     >
                       {count}
@@ -434,7 +434,7 @@ function InboxPageContent() {
                     <span
                       className={cn(
                         "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
-                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                        active ? "bg-emerald-500/25" : "bg-obsidian/80",
                       )}
                     >
                       {pillCount}
@@ -537,7 +537,7 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-white/10 glass-panel">
         {!selectedConversation ? (
           <EmptyState
             title="Select a message to view details"
@@ -582,11 +582,11 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-xl bg-gray-800 p-4 font-mono text-sm leading-relaxed text-gray-200">
+            <div className="mb-6 rounded-xl bg-white/5 p-4 font-mono text-sm leading-relaxed text-atmospheric-grey">
               {conversationMessageText(selectedConversation)}
             </div>
 
-            <div className="mb-6 rounded-xl border border-gray-800 bg-gray-900/60 p-4">
+            <div className="mb-6 rounded-xl border border-white/10 glass-panel p-4">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
                 Classification
               </h2>

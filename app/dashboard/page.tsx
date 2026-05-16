@@ -75,7 +75,7 @@ function FeedSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse gap-3 rounded-lg border border-gray-800 bg-gray-900/40 p-3"
+          className="flex animate-pulse gap-3 rounded-lg border border-gray-800 bg-obsidian/40 p-3"
         >
           <div className="h-6 w-16 shrink-0 rounded-full bg-gray-800" />
           <div className="min-w-0 flex-1 space-y-2">
@@ -91,7 +91,7 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-gray-800 bg-gray-900/40 p-4">
+    <div className="animate-pulse rounded-xl border border-gray-800 bg-obsidian/40 p-4">
       <div className="mb-4 h-5 w-40 rounded bg-gray-800" />
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -292,27 +292,27 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative space-y-8">
-        <header className="flex flex-col gap-4 border-b border-gray-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <header className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-trajectory-blue">
               Nexus OS
             </p>
-            <h1 className="mt-2 bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-atmospheric-grey sm:text-4xl">
               Command Center
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-gray-400">
+            <p className="mt-2 max-w-xl text-sm text-atmospheric-grey/60">
               Live revenue rescue ops — prioritize revenue at risk, route hot
               leads, and intercept churn before it lands.
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 sm:items-end">
-            <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/5 px-3 py-1 text-xs font-medium text-emerald-300/90">
+            <div className="flex items-center gap-2 rounded-full border border-trajectory-blue/25 bg-trajectory-blue/5 px-3 py-1 text-xs font-medium text-trajectory-blue">
               <span
                 className="relative flex h-2 w-2"
                 aria-hidden
               >
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-trajectory-blue opacity-40" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-trajectory-blue" />
               </span>
               Live sync
             </div>
@@ -340,40 +340,40 @@ export default function DashboardPage() {
                 title="Revenue at Risk"
                 value={formatCurrency(metrics.revenue_at_risk)}
                 subtitle="in unresolved conversations"
-                accent="text-red-400"
-                icon={<TrendingDown className="text-red-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(248,113,113,0.08)] animate-fade-up [animation-delay:0ms]"
+                icon={<TrendingDown />}
+                variant="critical"
+                className="animate-fade-up [animation-delay:0ms]"
               />
               <Card
                 title="Hot Leads"
                 value={metrics.hot_leads}
                 subtitle="high-intent buyers right now"
-                accent="text-orange-400"
-                icon={<Flame className="text-orange-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(251,146,60,0.08)] animate-fade-up [animation-delay:75ms]"
+                icon={<Flame />}
+                variant="critical"
+                className="animate-fade-up [animation-delay:75ms]"
               />
               <Card
                 title="Churn Risks"
                 value={metrics.churn_risks}
                 subtitle="customers showing churn signals"
-                accent="text-yellow-400"
-                icon={<AlertTriangle className="text-yellow-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(250,204,21,0.08)] animate-fade-up [animation-delay:150ms]"
+                icon={<AlertTriangle />}
+                variant="support"
+                className="animate-fade-up [animation-delay:150ms]"
               />
               <Card
                 title="Hours Saved"
                 value={`${metrics.hours_saved.toFixed(1)}h`}
                 subtitle="saved by AI drafting"
-                accent="text-emerald-400"
-                icon={<Clock className="text-emerald-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(52,211,153,0.08)] animate-fade-up [animation-delay:225ms]"
+                icon={<Clock />}
+                variant="support"
+                className="animate-fade-up [animation-delay:225ms]"
               />
             </div>
           ) : (
             <EmptyState
               title="No metrics yet"
               description="Connect Supabase or check API configuration."
-              className="border-gray-800 bg-gray-900/40"
+              className="border-gray-800 bg-obsidian/40"
             />
           )}
         </section>
@@ -383,7 +383,7 @@ export default function DashboardPage() {
           {/* Live Inbox */}
           <section
             aria-label="Live inbox feed"
-            className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+            className="overflow-hidden rounded-xl border border-gray-800 bg-obsidian/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
           >
             <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
               <div className="flex items-center gap-2">
@@ -508,7 +508,7 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2.5">
+                        <div className="rounded-lg border border-gray-800 bg-obsidian/60 px-3 py-2.5">
                           <div className="flex items-start justify-between gap-2">
                             <p className="truncate font-medium text-gray-100">
                               {c.customer_name}
@@ -569,7 +569,7 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2.5">
+                        <div className="rounded-lg border border-gray-800 bg-obsidian/60 px-3 py-2.5">
                           <div className="flex items-start justify-between gap-2">
                             <p className="truncate font-medium text-gray-100">
                               {c.customer_name}

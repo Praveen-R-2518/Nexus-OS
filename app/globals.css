@@ -2,7 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+@layer base {
+  :root {
+    --background: #0D1521; /* obsidian */
+    --foreground: #F6F6F6; /* atmospheric-grey */
+  }
+
+  body {
+    @apply bg-obsidian text-atmospheric-grey antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+  }
 }

@@ -8,6 +8,7 @@ import TopBar from "@/components/layout/TopBar";
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
 
 function isAuthOnlyRoute(pathname: string): boolean {
+  if (pathname === "/") return true;
   return AUTH_ONLY_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
@@ -19,7 +20,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (bare) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-900">{children}</div>
+      <div className="flex min-h-screen flex-col bg-obsidian">{children}</div>
     );
   }
 
@@ -28,7 +29,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col pl-[240px]">
         <TopBar />
-        <main className="flex-1 bg-gray-900 p-6">{children}</main>
+        <main className="flex-1 bg-obsidian p-6">{children}</main>
       </div>
     </div>
   );

@@ -8,9 +8,18 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-plus-jakarta-sans)", "sans-serif"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        obsidian: "#0D1521",
+        "trajectory-blue": "#0052CC",
+        "atmospheric-grey": "#F6F6F6",
+      },
+      letterSpacing: {
+        tightest: "-0.02em",
       },
       keyframes: {
         fadeUp: {

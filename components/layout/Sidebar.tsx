@@ -23,12 +23,12 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[240px] flex-col border-r border-gray-800 bg-gray-950">
-      <div className="border-b border-gray-800 px-4 py-5">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-400/90">
-          Revenue
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[240px] flex-col border-r border-white/10 bg-obsidian">
+      <div className="border-b border-white/10 px-4 py-5">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-trajectory-blue">
+          Nexus OS
         </p>
-        <p className="mt-1 text-sm font-semibold text-gray-100">Command Center</p>
+        <p className="mt-1 text-sm font-semibold text-atmospheric-grey">Command Center</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {nav.map(({ href, label, Icon }) => {
@@ -41,8 +41,8 @@ export default function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-gray-900 text-emerald-400"
-                  : "text-gray-400 hover:bg-gray-900/80 hover:text-gray-100",
+                  ? "bg-white/5 text-trajectory-blue"
+                  : "text-atmospheric-grey/60 hover:bg-white/5 hover:text-atmospheric-grey",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />

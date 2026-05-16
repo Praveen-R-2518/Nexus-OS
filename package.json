@@ -12,16 +12,21 @@
     "n8n:export-workflows": "node scripts/build_n8n_workflow_exports.js"
   },
   "dependencies": {
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.105.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.38.0",
     "imap": "^0.8.19",
     "lucide-react": "^1.16.0",
     "next": "^14.2.35",
     "react": "^18",
     "react-dom": "^18",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.6.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@types/imap": "^0.8.43",
