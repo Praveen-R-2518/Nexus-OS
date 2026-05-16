@@ -1,0 +1,15 @@
+{
+  "__source": "gmail",
+  "subject": "Need help launching our revenue ops automation",
+  "from": "\"Alex Customer\" <alex.customer@example.com>",
+  "text": "Hi team — we're evaluating Nexus OS to centralize inbox + follow-ups. Can we book a 20-min call this week?\n\nThanks,\nAlex\n\n--\nAlex Customer\nFounder, Example Co.",
+  "date": "2026-05-16T10:15:00.000Z",
+  "headers": {
+    "message-id": "<CA+demo+thread-root@mail.gmail.com>",
+    "in-reply-to": "",
+    "list-unsubscribe": "",
+    "auto-submitted": "",
+    "subject": "Need help launching our revenue ops automation",
+    "from": "\"Alex Customer\" <alex.customer@example.com>"
+  }
+}
