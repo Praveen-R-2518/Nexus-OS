@@ -107,10 +107,6 @@ export default function DashboardPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
-  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState<number | null>(
-    null,
-  );
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
 
   const prevConvIdsRef = useRef<Set<string>>(new Set());
@@ -190,7 +186,6 @@ export default function DashboardPage() {
       setMetrics(metricsJson.metrics);
       setConversations(conversationsJson.data);
       applyConversationHighlights(conversationsJson.data);
-      setLastUpdatedAt(Date.now());
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Failed to load command center";
@@ -226,7 +221,6 @@ export default function DashboardPage() {
 
       setConversations(conversationsJson.data);
       applyConversationHighlights(conversationsJson.data);
-      setLastUpdatedAt(Date.now());
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Failed to refresh inbox feed";
@@ -252,21 +246,6 @@ export default function DashboardPage() {
     };
   }, [loadDashboard, loadInboxOnly]);
 
-  useEffect(() => {
-    if (lastUpdatedAt === null) {
-      setSecondsSinceUpdate(null);
-      return;
-    }
-    const tick = () => {
-      setSecondsSinceUpdate(
-        Math.max(0, Math.floor((Date.now() - lastUpdatedAt) / 1000)),
-      );
-    };
-    tick();
-    const t = window.setInterval(tick, 1000);
-    return () => window.clearInterval(t);
-  }, [lastUpdatedAt]);
-
   const hotLeadsList = useMemo(() => {
     return conversations
       .filter(
@@ -286,32 +265,12 @@ export default function DashboardPage() {
       <div className="relative space-y-8">
         <header className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-trajectory-blue">
-              Nexus OS
-            </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-atmospheric-grey sm:text-4xl">
               Command Center
             </h1>
             <p className="mt-2 max-w-xl text-sm text-atmospheric-grey/60">
               Live revenue rescue ops — prioritize revenue at risk, route hot
               leads, and intercept churn before it lands.
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 sm:items-end">
-            <div className="flex items-center gap-2 rounded-full border border-trajectory-blue/25 bg-trajectory-blue/5 px-3 py-1 text-xs font-medium text-trajectory-blue">
-              <span
-                className="relative flex h-2 w-2"
-                aria-hidden
-              >
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-trajectory-blue opacity-40" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-trajectory-blue" />
-              </span>
-              Live sync
-            </div>
-            <p className="text-xs tabular-nums text-gray-500">
-              {secondsSinceUpdate === null
-                ? "Awaiting first sync…"
-                : `Last updated: ${secondsSinceUpdate}s ago`}
             </p>
           </div>
         </header>

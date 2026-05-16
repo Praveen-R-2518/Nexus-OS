@@ -445,15 +445,15 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">
-              Search
-            </label>
+          <label className="mb-1 block text-xs font-medium text-atmospheric-grey/60">
+            Search
+          </label>
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Name or message…"
-              className="w-full rounded-lg border border-gray-700 bg-gray-800/80 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+              className="glass-input w-full rounded-lg px-3 py-2 text-sm placeholder:text-atmospheric-grey/40"
             />
           </div>
         </div>

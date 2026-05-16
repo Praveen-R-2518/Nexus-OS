@@ -95,9 +95,6 @@ export default function LogsPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 border-b border-gray-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90">
-            Nexus OS
-          </p>
           <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold tracking-tight text-gray-100">
             <Activity className="h-7 w-7 text-emerald-400" aria-hidden />
             Workflow Logs

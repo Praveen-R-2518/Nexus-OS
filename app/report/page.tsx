@@ -299,9 +299,6 @@ export default function ReportPage() {
       <div className="relative space-y-8">
         <header className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-trajectory-blue">
-              Revenue Recovery Intelligence
-            </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-atmospheric-grey sm:text-4xl">
               Daily Buy-Back Report
             </h1>

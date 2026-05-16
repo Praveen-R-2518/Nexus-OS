@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 600 200">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: ArialMT, Arial;
+        font-size: 69.5px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #1e3768;
+      }
+
+      .cls-1, .cls-3 {
+        isolation: isolate;
+      }
+
+      .cls-4 {
+        fill: #a1cc3a;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.1, SVG Export Plug-In . SVG Version: 1.2.0 Build 142)  -->
+  <g>
+    <g id="Layer_1">
+      <g id="Layer_2">
+        <g>
+          <polygon class="cls-2" points="101.3 128.37 101.3 150.52 72.54 150.52 72.54 134.04 111.33 88.82 123.44 103.33 151.7 71.47 141.88 62.52 176.69 54.67 172.32 90.24 162.12 81.15 123.66 125.09 111.1 110.09 86.22 139.46 91.5 139.46 101.3 128.37"/>
+          <polygon class="cls-2" points="126.39 128.48 135.94 117.68 147.66 131.76 147.66 103.77 161.74 87.84 161.74 131.76 161.74 150.24 144.44 150.24 126.39 128.48"/>
+          <polygon class="cls-2" points="99.43 96.35 108.82 85.5 89.18 61.98 72.54 61.98 72.54 127.56 86.73 110.97 86.73 81.13 99.43 96.35"/>
+          <polygon class="cls-4" points="168.01 52.06 170.59 49.74 164.08 43.27 161.55 45.72 168.01 52.06"/>
+          <rect class="cls-4" x="173.41" y="38.4" width="3.52" height="9.9"/>
+          <polygon class="cls-4" points="180.41 49.03 188.72 40.57 191.17 42.86 182.91 51.41 180.41 49.03"/>
+          <polygon class="cls-4" points="183.68 54.67 193.54 54.85 193.54 58.04 183.68 58.04 183.68 54.67"/>
+          <polygon class="cls-4" points="182.16 61.35 188.61 67.98 186.42 70.19 179.83 63.77 182.16 61.35"/>
+        </g>
+        <g class="cls-3">
+          <text class="cls-1" transform="translate(200.62 134.71)"><tspan x="0" y="0">NEXUS OS</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

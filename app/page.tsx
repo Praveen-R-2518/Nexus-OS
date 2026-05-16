@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { Tangerine } from "next/font/google";
@@ -50,13 +50,6 @@ function StepCard({ step, index }: { step: { id: string; title: string; desc: st
 
 export default function LandingPage() {
   const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
 
   return (
     <div className="relative min-h-screen bg-obsidian selection:bg-trajectory-blue/30" ref={containerRef}>
@@ -75,7 +68,6 @@ export default function LandingPage() {
         {/* Foreground Content */}
         <motion.div
           className="z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto"
-          style={{ opacity, scale }}
         >
           <div className="animate-fade-up [animation-delay:0ms]">
             <h1 className="text-[64px] font-medium tracking-[-1.28px] text-atmospheric-grey leading-[1.1] mb-6">
@@ -96,6 +88,7 @@ export default function LandingPage() {
           <div className="animate-fade-up [animation-delay:400ms]">
             <Link
               href="/dashboard"
+              prefetch={true}
               className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-atmospheric-grey text-obsidian font-semibold rounded-full overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
