@@ -1,0 +1,9 @@
+-- Nexus OS initial schema migration placeholder.
+-- Tables in scope:
+-- business_profiles
+-- conversations
+-- leads
+-- reply_drafts
+-- followups
+-- workflow_logs
+-- daily_reports
