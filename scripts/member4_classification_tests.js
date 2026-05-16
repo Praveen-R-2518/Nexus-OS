@@ -163,6 +163,7 @@ const TESTS = [
 
 async function main() {
   loadEnvLocal();
+  const writeDoc = process.argv.includes('--write-doc');
   const promptPath = path.join(__dirname, '..', 'ai_prompts', 'classification_prompt.txt');
   if (!fs.existsSync(promptPath)) throw new Error('Missing ' + promptPath);
   const system = fs.readFileSync(promptPath, 'utf8');
@@ -170,16 +171,31 @@ async function main() {
 
   console.log('Nexus OS — classification_prompt.txt (5 scenarios)');
   console.log('Model:', model);
+  if (writeDoc) console.log('Will write docs/classification_test_results_v1.md (--write-doc)');
   console.log('');
 
   let passed = 0;
+  /** @type {{ id: number; name: string; message: string; pass: boolean; failures: string[]; obj: object | null; error?: string }[]} */
+  const records = [];
+
   for (const t of TESTS) {
-    let obj;
+    let obj = null;
+    let errorMsg = '';
     try {
       obj = await classify(system, t.message, model);
     } catch (e) {
-      console.log(`Test ${t.id} ERROR (${t.name}): ${e.message}`);
+      errorMsg = e.message || String(e);
+      console.log(`Test ${t.id} ERROR (${t.name}): ${errorMsg}`);
       console.log('');
+      records.push({
+        id: t.id,
+        name: t.name,
+        message: t.message,
+        pass: false,
+        failures: [],
+        obj: null,
+        error: errorMsg,
+      });
       continue;
     }
 
@@ -192,7 +208,8 @@ async function main() {
       }
     }
 
-    if (failures.length === 0) {
+    const ok = failures.length === 0;
+    if (ok) {
       passed += 1;
       console.log(`Test ${t.id} PASS — ${t.name}`);
     } else {
@@ -201,9 +218,99 @@ async function main() {
     }
     console.log(JSON.stringify(obj, null, 2));
     console.log('');
+    records.push({
+      id: t.id,
+      name: t.name,
+      message: t.message,
+      pass: ok,
+      failures,
+      obj,
+    });
   }
 
   console.log(`Summary: ${passed}/${TESTS.length} passed`);
+
+  if (writeDoc) {
+    const docPath = path.join(__dirname, '..', 'docs', 'classification_test_results_v1.md');
+    const date = new Date().toISOString().slice(0, 10);
+    const lines = [
+      '# Test Results — Classification Prompt v1',
+      '',
+      `**Date:** ${date}`,
+      `**Model:** ${model}`,
+      '**Prompt file:** `ai_prompts/classification_prompt.txt` (Nexus OS schema)',
+      '',
+      '## How this was run',
+      '',
+      '```powershell',
+      'cd "c:\\New CURSOR BUILDATHON\\Nexus-OS"',
+      '$env:OPENAI_MODEL = "gpt-4o"   # optional',
+      'node scripts/member4_classification_tests.js --write-doc',
+      '```',
+      '',
+      '---',
+      '',
+    ];
+
+    for (const r of records) {
+      lines.push(`## Test ${r.id} — ${r.name}`);
+      lines.push('');
+      lines.push('**Input:**');
+      lines.push('');
+      lines.push('```');
+      lines.push(r.message);
+      lines.push('```');
+      lines.push('');
+      lines.push('**Actual output:**');
+      lines.push('');
+      lines.push('```json');
+      if (r.error) {
+        lines.push(`/* ERROR: ${r.error} */`);
+      } else if (r.obj) {
+        lines.push(JSON.stringify(r.obj, null, 2));
+      } else {
+        lines.push('{}');
+      }
+      lines.push('```');
+      lines.push('');
+      const st = r.error ? 'ERROR' : r.pass ? 'PASS' : 'FAIL';
+      lines.push(`**Status:** ${st}${r.failures.length ? ` — failed checks: ${r.failures.join('; ')}` : ''}`);
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+    }
+
+    lines.push('## Summary');
+    lines.push('');
+    lines.push('| Test | Topic | Status |');
+    lines.push('|------|--------|--------|');
+    const topics = [
+      'Pricing / quote',
+      'Booking call',
+      'Proposal follow-up',
+      'Complaint / churn',
+      'CMS support',
+    ];
+    records.forEach((r, i) => {
+      const st = r.error ? 'ERROR' : r.pass ? 'PASS' : 'FAIL';
+      lines.push(`| ${r.id} | ${topics[i] || r.name} | ${st} |`);
+    });
+    lines.push('');
+    lines.push(`**Final:** ${passed}/${TESTS.length} PASS`);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## Handoff (Member 2)');
+    lines.push('');
+    lines.push('When all five are PASS:');
+    lines.push('');
+    lines.push('> Classification prompt (`classification_prompt.txt`) is validated. Ready for WF2 / n8n OpenAI node (Nexus OS JSON schema).');
+    lines.push('');
+
+    fs.writeFileSync(docPath, lines.join('\n'), 'utf8');
+    console.log(`Wrote ${docPath}`);
+  }
+
   if (passed < TESTS.length) process.exit(1);
 }
 
