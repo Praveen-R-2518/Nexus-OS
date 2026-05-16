@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function TopBar() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function TopBar() {
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
@@ -37,6 +38,7 @@ export default function TopBar() {
         >
           {now ? format(now, "yyyy-MM-dd HH:mm:ss") : "—"}
         </time>
+        <ThemeToggle />
         <button
           type="button"
           onClick={() => void signOut()}

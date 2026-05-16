@@ -28,11 +28,10 @@ function StepCard({ step, index }: { step: { id: string; title: string; desc: st
     <motion.div
       initial={{ opacity: 0, x: isEven ? -50 : 50, y: 30 }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
+      viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
       transition={{
         type: "spring",
-        mass: 1,
-        stiffness: 80,
+        stiffness: 50,
         damping: 20,
         delay: 0.1,
       }}
@@ -92,11 +91,11 @@ export default function LandingPage() {
 
           <div className="animate-fade-up [animation-delay:400ms]">
             <Link
-              href="/dashboard"
+              href="/login"
               className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-atmospheric-grey text-obsidian font-semibold rounded-full overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              <span className="relative">Start Project</span>
+              <span className="relative">Get Started</span>
               <ChevronsRight className="relative w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -128,14 +127,14 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
           <div className="relative mb-16">
             {/* Logo Glow */}
-            <div className="absolute inset-0 bg-trajectory-blue/20 blur-[80px] rounded-full scale-150" />
+            <div className="absolute inset-0 bg-blue-500/20 blur-[80px] rounded-full scale-150" />
             {/* Logo */}
             <div className="relative flex items-center justify-center w-72 h-24">
               <Image 
                 src="/logo.png" 
                 alt="Nexus OS Logo" 
                 fill 
-                className="object-contain drop-shadow-[0_0_15px_rgba(0,82,204,0.3)]"
+                className="object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                 priority
               />
             </div>
