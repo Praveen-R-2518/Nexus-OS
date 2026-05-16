@@ -5,7 +5,8 @@ import type { WorkflowLog } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-const WORKFLOW_LOG_STATUSES: ReadonlyArray<WorkflowLog["status"]> = [
+/** Query `?status=` filters the `result` column on `workflow_logs`. */
+const WORKFLOW_LOG_RESULTS: ReadonlyArray<string> = [
   "success",
   "failed",
   "running",
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
   if (
     statusParam !== null &&
     statusParam !== "" &&
-    !WORKFLOW_LOG_STATUSES.includes(statusParam as WorkflowLog["status"])
+    !WORKFLOW_LOG_RESULTS.includes(statusParam)
   ) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
@@ -53,11 +54,11 @@ export async function GET(request: Request) {
   let logsQuery = supabase
     .from("workflow_logs")
     .select("*")
-    .order("created_at", { ascending: false })
+    .order("timestamp", { ascending: false })
     .limit(50);
 
   if (statusParam && statusParam.length > 0) {
-    logsQuery = logsQuery.eq("status", statusParam);
+    logsQuery = logsQuery.eq("result", statusParam);
   }
 
   const [logsResult, successCount, failedCount, runningCount] =
@@ -66,15 +67,15 @@ export async function GET(request: Request) {
       supabase
         .from("workflow_logs")
         .select("*", { count: "exact", head: true })
-        .eq("status", "success"),
+        .eq("result", "success"),
       supabase
         .from("workflow_logs")
         .select("*", { count: "exact", head: true })
-        .eq("status", "failed"),
+        .eq("result", "failed"),
       supabase
         .from("workflow_logs")
         .select("*", { count: "exact", head: true })
-        .eq("status", "running"),
+        .eq("result", "running"),
     ]);
 
   if (logsResult.error) {

@@ -25,14 +25,22 @@ function approvalWebhookUrl(): string | null {
   return `${normalized}/webhook/approval-trigger`;
 }
 
-async function insertWorkflowLogSuccess(supabase: ReturnType<typeof createServerClient>) {
-  const { error } = await supabase.from("workflow_log").insert({
+async function insertApprovalWorkflowLog(
+  supabase: ReturnType<typeof createServerClient>,
+  meta: {
+    draft_id: string;
+    conversation_id: string;
+    action: "approve" | "reject";
+  },
+) {
+  const { error } = await supabase.from("workflow_logs").insert({
     workflow_name: "approval-trigger",
-    status: "success",
-    trigger: "human_approval",
+    step: "human_approval",
+    result: "success",
+    payload: meta,
   });
   if (error) {
-    console.error("[approval] workflow_log insert failed:", error.message);
+    console.error("[approval] workflow_logs insert failed:", error.message);
   }
 }
 
@@ -206,7 +214,11 @@ export async function PATCH(request: Request) {
       }
     }
 
-    await insertWorkflowLogSuccess(supabase);
+    await insertApprovalWorkflowLog(supabase, {
+      draft_id: draftId,
+      conversation_id: conversationId,
+      action: "approve",
+    });
 
     return NextResponse.json({
       success: true,
@@ -241,7 +253,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: convErr.message }, { status: 500 });
   }
 
-  await insertWorkflowLogSuccess(supabase);
+  await insertApprovalWorkflowLog(supabase, {
+    draft_id: draftId,
+    conversation_id: conversationId,
+    action: "reject",
+  });
 
   return NextResponse.json({
     success: true,
