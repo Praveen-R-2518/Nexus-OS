@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 
-const AUTH_ONLY_PREFIXES = ["/login"] as const;
+const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
 
 function isAuthOnlyRoute(pathname: string): boolean {
   return AUTH_ONLY_PREFIXES.some(

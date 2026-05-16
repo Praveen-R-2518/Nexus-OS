@@ -96,13 +96,37 @@ Automated / infra verification after implementing the Gmail Warning Fix Plan (se
 | Item | Result |
 |------|--------|
 | Supabase live `conversations_source_check` | Allows `gmail` (DDL applied via MCP `execute_sql`; repo migration `0004` updated for `report_date` guard — see [gmail_validation_warnings_classification.md](gmail_validation_warnings_classification.md)) |
-| `n8n_validate_workflow` WF0a (`Jstc7pdjuHbqeGTN`, runtime) | `valid: true`, **0** errors, **9** warnings (code-node noise, IF/Switch false-positive style notes, long chain, etc.) |
-| `n8n_validate_workflow` WF2 (`XHKDZBIzSwnx34My`, runtime) | `valid: true`, **0** errors, **7** warnings |
+| `n8n_validate_workflow` WF0a (`Jstc7pdjuHbqeGTN`, runtime) | `valid: true`, **0** errors, **6** warnings — see **Warning Fix Pass** below |
+| `n8n_validate_workflow` WF2 (`XHKDZBIzSwnx34My`, runtime) | `valid: true`, **0** errors, **5** warnings — see **Warning Fix Pass** below |
 | Live WF0a | Dedup uses `status=in.(new,in_progress)`; POST conversations use `source` from normalizer; `retryOnFail` on GET/POST; `gmail_intake_error` + **Stop** on failed POST (error branch `main[1]`); demo Manual/Fixture nodes **removed**; execution save settings `all` |
 | Live WF2 | `retryOnFail` on **Fetch Business Profile**, **Create Lead**, **Patch Existing Lead**; **Parse AI Response** sets `classification_failed: true` on JSON parse fallback; **Log Classification** uses `step: classification_failed` vs `message_classified` |
 | Repo export | `npm run n8n:export-workflows` regenerates [n8n_logic/exports/wf0a_gmail_intake.json](../n8n_logic/exports/wf0a_gmail_intake.json) aligned with the above (error routing on HTTP `main[1]`) |
 | TC1–TC5 curl re-run | **Not re-executed in this session** — use §10 commands after deploy; expect `conversations.source = gmail` for Gmail-shaped payloads |
 | TC2 IMAP | Still **BLOCKED** until IMAP credential is configured and the trigger is enabled |
+
+### Warning Fix Pass — May 16, 2026
+
+Live workflows on `knurdz3o.app.n8n.cloud` were updated to apply the ten scoped fixes below (logic inside `try` blocks preserved; IF/Switch routing unchanged). Post-change `n8n_validate_workflow` (**runtime** profile) still reports **residual MCP warnings** that do not clear with in-code `try/catch`, root-level `onError`, or `settings.executionOrder: v1` alone: **WF0a = 6 warnings**, **WF2 = 5 warnings** (see list at end of this subsection). A full curl regression was **not** re-run in this pass.
+
+| # | Scope | Applied on live n8n |
+|---|--------|---------------------|
+| 1 | WF0a Noise Filter — invalid `$` in Code | Replaced regex `$` / `$$$` / end-anchors with `String.fromCharCode(36)` / `new RegExp(...)` so static analysis no longer flags invalid `$` usage. |
+| 2 | WF0a Code `try/catch` envelope | **Multi-Channel Normalizer**, **Noise Filter**, **Dedup Lookup Query**, **Dedup Decision** wrapped per spec with `_error`, `_errorMessage`, `_errorNode`, `_timestamp` (node names: `MultiChannelNormalizer`, `NoiseFilter`, `DedupLookupQuery`, `DedupDecision`); each node also has root `onError: continueRegularOutput` (MCP still flags Code nodes regardless). |
+| 3 | WF0a Gmail Test Webhook — response on error | `responseMode: onReceived`, `options.responseData: {\"status\":\"received\"}`, `options.responseCode` (200), `options.responseHeaders` (JSON `Content-Type`). |
+| 4 | WF0a IF Keep + Switch Action | Root `onError: continueErrorOutput` (connections unchanged). |
+| 5 | WF0a workflow settings | `settings.executionOrder: v1` (merged; was already present). |
+| 6 | WF2 Receive from WF1 — response on error | `responseMode: onReceived`, `options.responseData: {\"status\":\"received\",\"workflow\":\"WF2\"}`, `options.responseCode` (200), `options.responseHeaders`, `alwaysOutputData`, `onError: continueRegularOutput`. |
+| 7 | WF2 Classify Message (OpenAI) | `retryOnFail: true`, `maxTries: 3`, `waitBetweenTries: 2000`, `onError: continueErrorOutput`, `alwaysOutputData: true`, **error output** (`main[1]`) wired to **Parse AI Response** so failed runs still reach the parser path. |
+| 8 | WF2 Parse AI Response + Normalize Lead Result | Outer `try/catch` with `_errorNode` `ParseAIResponse` / `NormalizeLeadResult`; guard at top of Parse for upstream `_error` / `error` before existing parsing logic; root `onError: continueRegularOutput` on both Code nodes (MCP still flags Code nodes). |
+| 9 | WF2 Route by Action + Has Existing Lead | Root `onError: continueErrorOutput`. |
+| 10 | WF2 workflow settings | `settings.executionOrder: v1` (already present; confirmed). |
+
+**`n8n_validate_workflow` after this pass**
+
+- **WF0a** (`Jstc7pdjuHbqeGTN`): `valid: true`, **0** errors, **6** warnings — four × “Code nodes can throw…” (static rule on Code nodes), one × Gmail webhook “send a response…” (fires even with `onError` + response options on the node), one × “Long linear chain (12 nodes)”.
+- **WF2** (`XHKDZBIzSwnx34My`): `valid: true`, **0** errors, **5** warnings — Receive webhook (same class as WF0a), Classify “AI rate limits…”, two × Code nodes, one × long chain (11 nodes).
+
+**Status:** The requested line *“All warnings resolved. Ready for full test run.”* is **not** accurate for `n8n_validate_workflow` (runtime): **6** WF0a + **5** WF2 warnings remain as listed above. Functional mitigation from the ten fixes **is** in place on the live graphs; schedule a full curl test run when ready.
 
 ---
 
