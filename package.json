@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test:silva-class": "node scripts/member4_silva_classification_tests.js",
+    "test:classify": "node scripts/member4_classification_tests.js",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

@@ -9,7 +9,7 @@
  *   - customer_name
  *   - channel
  *   - original_message  (or `message` as fallback)
- *   - classification_result  (object from workflow 2, or JSON string; Nexus or Silva/LKR schema — WF3 enriches needs_human_approval for Silva when needed)
+ *   - classification_result  (object from workflow 2, or JSON string)
  *
  * Output JSON: reply_text, approval_required, approval_reason, tone, next_step,
  * follow_up_needed, follow_up_delay_minutes
@@ -88,7 +88,7 @@ function normalizeClassification(raw) {
   return raw;
 }
 
-/** Map Silva/LKR classifier fields so reply_generation_prompt (Nexus) still sees needs_human_approval when appropriate. */
+/** If an alternate schema sets intent/risk without needs_human_approval, derive a boolean for the reply model. */
 function enrichClassificationForReply(cls) {
   const out = { ...cls };
   if (typeof out.needs_human_approval === 'boolean') return out;

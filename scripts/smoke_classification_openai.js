@@ -1,7 +1,7 @@
 /**
  * One-off smoke test: classification prompt + OpenAI json_object mode.
  * Loads OPENAI_API_KEY from process.env or .env.local (repo root). Does not print the key.
- * Optional: NEXUS_CLASSIFICATION_PROMPT_FILE (e.g. classification_prompt_silva_lkr.txt).
+ * Optional: NEXUS_CLASSIFICATION_PROMPT_FILE (default classification_prompt.txt).
  */
 
 const fs = require('fs');
