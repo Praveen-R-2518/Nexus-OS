@@ -31,7 +31,7 @@ revenue_risk: low | medium | high | critical
 
 customer_stage: One short lowercase phrase for relationship/lifecycle inferred from the message (e.g. prospect, qualified, active, at_risk, churned). Use unknown if the stage cannot be inferred.
 
-lead_score: Integer 0–100; higher means stronger buy/book/pay intent and revenue opportunity.
+lead_score: Integer 0–100; higher means stronger buy/book/pay intent, expansion, or near-term revenue opportunity. Scheduling-only messages from existing customers with no new purchase signal are often mid-range (about 35–65), not near zero.
 confidence: number from 0 to 1 inclusive (how sure you are of this classification).
 
 ARRAYS
@@ -46,8 +46,10 @@ recommended_action: one specific, practical next step for staff (what to do next
 suggested_reply_angle: tone and substance hint for drafting a reply (e.g. empathize, confirm booking window, offer pricing range)—not the full reply.
 
 SCORING AND RISK RULES
-- Ready to buy, book, pay, or commit: set lead_score high (typically 70–100) and urgency at least medium unless the message is clearly non-urgent.
-- Angry, ignored, canceling, comparing to competitors, or threatening to leave: raise urgency and revenue_risk (often high or critical; use critical for explicit cancel/churn or legal threats).
+- Primary intent_type: If several labels fit, choose the one that matches the customer’s main goal. Precedence hints: churn_risk when exit, competitor, or “switch agency” language appears; complaint for clear product/service fault without exit threat; pricing_question when they explicitly ask price, cost, or “how much”; booking_request for scheduling, rescheduling, or canceling a meeting or appointment; follow_up for continuing an existing engagement, deliverable feedback, or upsell after work has started; new_lead for first-time interest or capabilities questions from a likely non-customer; support_issue for help with something broken or blocked; general only when none of the above fit well.
+- Ready to buy, book, pay, commit, or expand scope (add services): set lead_score high (typically 70–100) and urgency at least medium unless the message is clearly non-urgent.
+- Angry, ignored, canceling, comparing to competitors, or threatening to leave: raise urgency and revenue_risk (often high; use critical for explicit cancel, chargeback, legal threat, or final ultimatum).
+- revenue_risk: high when revenue is at stake from silence, defection, or replacement shopping; medium for dissatisfaction or impatience without a clear exit; low for routine or positive operational messages.
 - Complaints and churn_risk usually warrant needs_human_approval true unless the issue is trivial and low risk.
 - If the message is too vague to classify reliably, lower confidence and favor needs_human_approval true.
 
