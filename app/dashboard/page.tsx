@@ -62,7 +62,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-[132px] animate-pulse rounded-xl border border-white/10 bg-white/5"
+          className="h-[132px] animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800/40"
         />
       ))}
     </div>
@@ -75,14 +75,14 @@ function FeedSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse gap-3 rounded-lg border border-white/10 bg-white/5 p-3"
+          className="flex animate-pulse gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-obsidian/40 p-3"
         >
-          <div className="h-6 w-16 shrink-0 rounded-full bg-white/10" />
+          <div className="h-6 w-16 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800" />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-4 w-1/3 rounded bg-white/10" />
-            <div className="h-3 w-full rounded bg-white/5" />
+            <div className="h-4 w-1/3 rounded bg-gray-100 dark:bg-gray-800" />
+            <div className="h-3 w-full rounded bg-gray-100 dark:bg-gray-800/80" />
           </div>
-          <div className="hidden h-8 w-14 shrink-0 rounded bg-white/10 sm:block" />
+          <div className="hidden h-8 w-14 shrink-0 rounded bg-gray-100 dark:bg-gray-800 sm:block" />
         </div>
       ))}
     </div>
@@ -91,11 +91,11 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-white/10 bg-white/5 p-4">
-      <div className="mb-4 h-5 w-40 rounded bg-white/10" />
+    <div className="animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-obsidian/40 p-4">
+      <div className="mb-4 h-5 w-40 rounded bg-gray-100 dark:bg-gray-800" />
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-lg bg-white/5" />
+          <div key={i} className="h-14 rounded-lg bg-gray-100 dark:bg-gray-800/50" />
         ))}
       </div>
     </div>
@@ -262,8 +262,16 @@ export default function DashboardPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-6rem)] overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.55]"
+        aria-hidden
+      >
+        <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-violet-500/20 dark:bg-violet-500/10 blur-3xl" />
+      </div>
+
       <div className="relative space-y-8">
-        <header className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <header className="flex flex-col gap-4 border-b border-black/10 dark:border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-atmospheric-grey sm:text-4xl">
               Command Center
@@ -276,7 +284,7 @@ export default function DashboardPage() {
         </header>
 
         {error ? (
-          <div className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <div className="rounded-xl border border-red-200 dark:border-red-500/35 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A] dark:text-red-200">
             {error}
           </div>
         ) : null}
@@ -324,7 +332,7 @@ export default function DashboardPage() {
             <EmptyState
               title="No metrics yet"
               description="Connect Supabase or check API configuration."
-              className="border-gray-800 bg-obsidian/40"
+              className="border-gray-200 dark:border-gray-800 bg-obsidian/40"
             />
           )}
         </section>
@@ -334,15 +342,15 @@ export default function DashboardPage() {
           {/* Live Inbox */}
           <section
             aria-label="Live inbox feed"
-            className="overflow-hidden glass-panel"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-card shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-atmospheric-grey">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                   Live Inbox
                 </h2>
                 <span
-                  className="text-trajectory-blue animate-pulse-dot select-none"
+                  className="text-[#1B6B3A] dark:text-emerald-400 animate-pulse-dot select-none"
                   aria-hidden
                 >
                   ●
@@ -351,7 +359,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/inbox"
-                className="text-xs font-medium text-trajectory-blue hover:text-blue-400"
+                className="text-xs font-medium text-[#1B6B3A] dark:text-emerald-400/90 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
               >
                 Open inbox →
               </Link>
@@ -366,7 +374,7 @@ export default function DashboardPage() {
                 className="border-0 bg-transparent py-12"
               />
             ) : (
-              <ul className="divide-y divide-white/10">
+              <ul className="divide-y divide-slate-200 dark:divide-slate-800/80">
                 {conversations.map((c) => {
                   const highlighted = highlightIds.has(c.id);
                   return (
@@ -374,7 +382,7 @@ export default function DashboardPage() {
                       <div
                         className={cn(
                           "flex flex-col gap-3 px-4 py-3 transition-colors sm:flex-row sm:items-center sm:gap-4",
-                          c.urgency === "critical" && "bg-red-500/10",
+                          c.urgency === "critical" && "bg-red-50 dark:bg-red-950/30",
                           highlighted && "animate-slide-down-row",
                         )}
                       >
@@ -387,7 +395,7 @@ export default function DashboardPage() {
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold text-atmospheric-grey">
+                            <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
                               {c.customer_name}
                             </p>
                             <p className="line-clamp-1 text-xs text-atmospheric-grey/60">
@@ -405,18 +413,18 @@ export default function DashboardPage() {
                           >
                             {c.risk_score}
                           </span>
-                          <span className="text-sm font-medium tabular-nums text-trajectory-blue sm:w-24 sm:text-right">
+                          <span className="text-sm font-medium tabular-nums text-[#1B6B3A] dark:text-emerald-400/90 sm:w-24 sm:text-right">
                             {formatCurrency(c.estimated_value)}
                           </span>
                           <time
-                            className="text-xs tabular-nums text-atmospheric-grey/40 sm:w-28 sm:text-right"
+                            className="text-xs tabular-nums text-slate-500 sm:w-28 sm:text-right"
                             dateTime={c.updated_at}
                           >
                             {formatRelativeTime(c.updated_at)}
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="glass-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-atmospheric-grey/60 hover:text-trajectory-blue"
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition-colors hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-4 w-4" />
@@ -435,15 +443,15 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden glass-panel border-orange-500/20"
+              className="overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-b from-orange-50 dark:from-orange-500/5 to-transparent"
             >
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                <h2 className="text-sm font-semibold text-atmospheric-grey">
-                  🔥 Hot Leads
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <Flame className="h-4 w-4 text-[#7A4200] dark:text-orange-400" /> Hot Leads
                 </h2>
                 <Link
                   href="/inbox?intent=purchase"
-                  className="text-xs font-medium text-orange-400 hover:text-orange-300"
+                  className="text-xs font-medium text-[#7A4200] dark:text-orange-400 hover:text-[#7A4200] dark:hover:text-[#7A4200]"
                 >
                   View all →
                 </Link>
@@ -452,19 +460,19 @@ export default function DashboardPage() {
                 {loading && conversations.length === 0 ? (
                   <SideCardSkeleton />
                 ) : hotLeadsList.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-atmospheric-grey/40">
+                  <p className="py-6 text-center text-sm text-slate-500">
                     No hot leads in the current snapshot.
                   </p>
                 ) : (
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 surface-card px-3 py-2.5">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-medium text-atmospheric-grey">
+                            <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                               {c.customer_name}
                             </p>
-                            <span className="shrink-0 text-sm font-semibold tabular-nums text-trajectory-blue">
+                            <span className="shrink-0 text-sm font-semibold tabular-nums text-[#1B6B3A] dark:text-emerald-400">
                               {formatCurrency(c.estimated_value)}
                             </span>
                           </div>
@@ -478,8 +486,8 @@ export default function DashboardPage() {
                               className={cn(
                                 "rounded-full border px-2 py-0.5 text-[11px] font-medium",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-trajectory-blue/30 bg-trajectory-blue/10 text-trajectory-blue"
-                                  : "border-white/10 bg-white/5 text-atmospheric-grey/60",
+                                  ? "border-emerald-500/35 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-300"
+                                  : "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
                               )}
                             >
                               {hotLeadDraftTag(c.status)}
@@ -496,15 +504,15 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden glass-panel border-yellow-500/20"
+              className="overflow-hidden rounded-xl border border-yellow-500/20 bg-gradient-to-b from-yellow-50 dark:from-yellow-500/5 to-transparent"
             >
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                <h2 className="text-sm font-semibold text-atmospheric-grey">
-                  ⚠️ Churn Risks
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" /> Churn Risks
                 </h2>
                 <Link
                   href="/inbox?intent=churn_risk"
-                  className="text-xs font-medium text-yellow-400 hover:text-yellow-300"
+                  className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 dark:hover:text-yellow-300"
                 >
                   View all →
                 </Link>
@@ -513,16 +521,16 @@ export default function DashboardPage() {
                 {loading && conversations.length === 0 ? (
                   <SideCardSkeleton />
                 ) : churnRisksList.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-atmospheric-grey/40">
+                  <p className="py-6 text-center text-sm text-slate-500">
                     No churn signals in the current snapshot.
                   </p>
                 ) : (
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 surface-card px-3 py-2.5">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-medium text-atmospheric-grey">
+                            <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                               {c.customer_name}
                             </p>
                             <span
@@ -534,7 +542,7 @@ export default function DashboardPage() {
                               {c.risk_score}
                             </span>
                           </div>
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                             <div
                               className={cn(
                                 "h-full rounded-full transition-all",
@@ -556,8 +564,8 @@ export default function DashboardPage() {
                               className={cn(
                                 "rounded-full border px-2 py-0.5 text-[11px] font-medium",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-trajectory-blue/30 bg-trajectory-blue/10 text-trajectory-blue"
-                                  : "border-white/10 bg-white/5 text-atmospheric-grey/60",
+                                  ? "border-emerald-500/35 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-300"
+                                  : "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
                               )}
                             >
                               {churnDraftTag(c.status)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { PartyPopper, Check } from "lucide-react";
 import type { PlanTier, SignupSnapshot } from "@/components/signup/types";
 
 function planLabel(tier: PlanTier | null): string {
@@ -22,40 +23,40 @@ export default function StepDone({ snapshot }: StepDoneProps) {
   return (
     <div className="mx-auto max-w-xl space-y-8 text-center">
       <div>
-        <p className="text-4xl" aria-hidden>
-          🎉
-        </p>
-        <h2 className="mt-3 text-2xl font-bold text-atmospheric-grey">NexusOS is ready!</h2>
-        <p className="mt-2 text-sm text-atmospheric-grey/60">
+        <div className="flex justify-center text-4xl" aria-hidden>
+          <PartyPopper className="w-12 h-12 text-[#1B6B3A]" />
+        </div>
+        <h2 className="mt-3 text-2xl font-bold text-foreground">NexusOS is ready!</h2>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Your workspace is configured. Here&apos;s what we set up.
         </p>
       </div>
-      <div className="glass-panel rounded-xl p-5 text-left text-sm">
-        <p className="mb-3 font-semibold text-atmospheric-grey">Summary</p>
-        <ul className="space-y-2 text-atmospheric-grey/80">
-          <li>✓ Account created</li>
-          <li>
-            ✓ Workspace:{" "}
-            <span className="text-trajectory-blue">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/80 p-5 text-left text-sm">
+        <p className="mb-3 font-semibold text-gray-700 dark:text-gray-200">Summary</p>
+        <ul className="space-y-2 text-gray-600 dark:text-gray-300">
+          <li className="flex items-center"><Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Account created</li>
+          <li className="flex items-center">
+            <Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Workspace:{" "}
+            <span className="text-foreground ml-1">
               {snapshot.companyName || "Your workspace"}
             </span>
           </li>
-          <li>
-            ✓ Plan:{" "}
-            <span className="text-trajectory-blue">
+          <li className="flex items-center">
+            <Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Plan:{" "}
+            <span className="text-foreground ml-1">
               {planLabel(snapshot.planTier)} — 14-day free trial
             </span>
           </li>
-          <li>
-            ✓ Gmail: <span className="text-trajectory-blue">{gmailLabel}</span>
+          <li className="flex items-center">
+            <Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Gmail: <span className="text-foreground ml-1">{gmailLabel}</span>
           </li>
         </ul>
       </div>
-      <div className="glass-panel rounded-xl p-5 text-left text-sm">
-        <p className="mb-3 font-semibold text-atmospheric-grey">Onboarding checklist</p>
-        <ul className="space-y-2 text-atmospheric-grey/60">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 p-5 text-left text-sm">
+        <p className="mb-3 font-semibold text-gray-700 dark:text-gray-200">Onboarding checklist</p>
+        <ul className="space-y-2 text-gray-500 dark:text-gray-400">
           {snapshot.gmailConnected === true ? (
-            <li className="text-trajectory-blue">✓ Connect Gmail</li>
+            <li className="text-[#1B6B3A] flex items-center"><Check className="inline w-4 h-4 mr-1" /> Connect Gmail</li>
           ) : (
             <li>□ Connect Gmail</li>
           )}

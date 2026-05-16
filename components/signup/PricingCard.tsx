@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PlanTier } from "./types";
 
@@ -36,9 +37,9 @@ export default function PricingCard({
         "relative flex h-full flex-col rounded-xl border p-4 shadow-sm transition sm:p-5 glass-panel",
         disabled && "opacity-45 grayscale",
         selected
-          ? "border-trajectory-blue bg-trajectory-blue/5 ring-2 ring-trajectory-blue/40"
-          : "border-white/10",
-        !disabled && !selected && "hover:border-white/20 hover:bg-white/5",
+          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/5 ring-2 ring-emerald-500/40"
+          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80",
+        !disabled && !selected && "hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900/60",
       )}
     >
       {recommended ? (
@@ -47,16 +48,16 @@ export default function PricingCard({
         </span>
       ) : null}
       <div className="mb-3 text-center">
-        <p className="text-sm font-semibold text-atmospheric-grey">{title}</p>
-        <p className="mt-2 text-2xl font-bold tabular-nums text-white">{priceLabel}</p>
-        <p className="mt-1 text-xs text-atmospheric-grey/60">{users}</p>
-        <p className="text-xs text-atmospheric-grey/60">{emails}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+        <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 dark:text-foreground">{priceLabel}</p>
+        <p className="mt-1 text-xs text-slate-500">{users}</p>
+        <p className="text-xs text-slate-500">{emails}</p>
       </div>
-      <ul className="mb-4 flex-1 space-y-1.5 text-xs text-atmospheric-grey/60">
+      <ul className="mb-4 flex-1 space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
         {features.map((f) => (
           <li key={f} className="flex gap-2">
-            <span className="text-trajectory-blue" aria-hidden>
-              ✓
+            <span aria-hidden>
+              <Check className="w-4 h-4 text-[#1B6B3A] dark:text-emerald-400" />
             </span>
             <span>{f}</span>
           </li>
@@ -69,10 +70,10 @@ export default function PricingCard({
         className={cn(
           "mt-auto inline-flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition",
           disabled
-            ? "cursor-not-allowed bg-white/5 text-atmospheric-grey/40"
+            ? "cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-500"
             : selected
-              ? "bg-trajectory-blue text-white hover:bg-blue-600"
-              : "glass-button text-atmospheric-grey hover:text-trajectory-blue",
+              ? "bg-emerald-600 text-white hover:bg-emerald-500"
+              : "border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:border-emerald-500/60 hover:bg-slate-50 dark:hover:bg-slate-800",
         )}
       >
         {ctaLabel}

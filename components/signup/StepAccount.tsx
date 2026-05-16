@@ -100,8 +100,8 @@ export default function StepAccount({ onNext }: StepAccountProps) {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-lg space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-atmospheric-grey">Create your account</h2>
-        <p className="mt-1 text-sm text-atmospheric-grey/60">
+        <h2 className="text-xl font-semibold text-foreground">Create your account</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Supabase will email you a verification link in the background. You can
           continue onboarding now.
         </p>
@@ -158,22 +158,22 @@ export default function StepAccount({ onNext }: StepAccountProps) {
         onChange={(e) => setPhone(e.target.value)}
         autoComplete="tel"
       />
-      <label className="flex cursor-pointer items-start gap-3 text-sm text-atmospheric-grey/80">
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 rounded border-white/10 bg-white/5 text-trajectory-blue focus:ring-trajectory-blue"
+          className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[#1B6B3A] focus:ring-emerald-500"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
         <span>
           I agree to the{" "}
-          <span className="text-trajectory-blue">Terms of Service</span> and{" "}
-          <span className="text-trajectory-blue">Privacy Policy</span>
+          <span className="text-[#1B6B3A]">Terms of Service</span> and{" "}
+          <span className="text-[#1B6B3A]">Privacy Policy</span>
         </span>
       </label>
       {formError ? (
-        <p className="text-sm text-red-400" role="alert">
+        <p className="text-sm text-[#8B1A1A]" role="alert">
           {formError}
         </p>
       ) : null}

@@ -132,8 +132,8 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-atmospheric-grey">Workspace setup</h2>
-        <p className="mt-1 text-sm text-atmospheric-grey/60">
+        <h2 className="text-xl font-semibold text-foreground">Workspace setup</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Tell us about your company. You can invite teammates later.
         </p>
       </div>
@@ -175,7 +175,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </FormSelect>
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium text-atmospheric-grey">Workspace type</p>
+        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Workspace type</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
@@ -183,19 +183,19 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             className={cn(
               "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
               workspaceType === "solo"
-                ? "border-trajectory-blue bg-trajectory-blue/10 ring-2 ring-trajectory-blue/30"
-                : "border-white/10 hover:border-white/20",
+                ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
+                : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
             )}
           >
-            <span className="text-2xl" aria-hidden>
-              👤
+            <span className="flex items-center justify-center w-6 h-6" aria-hidden>
+              <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </span>
             <span>
-              <span className="flex items-center gap-2 font-semibold text-atmospheric-grey">
-                <User className="h-4 w-4 text-trajectory-blue" />
+              <span className="flex items-center gap-2 font-semibold text-foreground">
+                <User className="h-4 w-4 text-[#1B6B3A]" />
                 Solo
               </span>
-              <span className="mt-1 block text-xs text-atmospheric-grey/60">
+              <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
                 Just me managing my inbox
               </span>
             </span>
@@ -206,19 +206,19 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             className={cn(
               "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
               workspaceType === "team"
-                ? "border-trajectory-blue bg-trajectory-blue/10 ring-2 ring-trajectory-blue/30"
-                : "border-white/10 hover:border-white/20",
+                ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
+                : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
             )}
           >
-            <span className="text-2xl" aria-hidden>
-              👥
+            <span className="flex items-center justify-center w-6 h-6" aria-hidden>
+              <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </span>
             <span>
-              <span className="flex items-center gap-2 font-semibold text-atmospheric-grey">
-                <Users className="h-4 w-4 text-trajectory-blue" />
+              <span className="flex items-center gap-2 font-semibold text-foreground">
+                <Users className="h-4 w-4 text-[#1B6B3A]" />
                 Team
               </span>
-              <span className="mt-1 block text-xs text-atmospheric-grey/60">
+              <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
                 Multiple people will use this workspace
               </span>
             </span>
@@ -226,7 +226,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       </div>
       {workspaceType === "team" ? (
-        <div className="space-y-4 rounded-xl border border-white/10 glass-panel p-4">
+        <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 p-4">
           <FormInput
             id="teamSize"
             label="Expected number of users"
@@ -238,14 +238,14 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
           />
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-atmospheric-grey">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 Team member emails{" "}
                 <span className="font-normal text-atmospheric-grey/40">(optional)</span>
               </p>
               <button
                 type="button"
                 onClick={addEmailRow}
-                className="glass-button inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-atmospheric-grey/80 hover:text-atmospheric-grey"
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-800"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add
@@ -256,7 +256,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                 <div key={i} className="flex gap-2">
                   <input
                     type="email"
-                    className="glass-input h-10 flex-1 rounded-lg px-3 text-sm outline-none"
+                    className="h-10 flex-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 text-sm text-gray-900 dark:text-gray-100 outline-none focus:border-emerald-500"
                     placeholder="teammate@company.com"
                     value={row}
                     onChange={(e) => updateEmailRow(i, e.target.value)}
@@ -266,7 +266,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                       type="button"
                       aria-label="Remove row"
                       onClick={() => removeEmailRow(i)}
-                      className="glass-button rounded-lg p-2 text-atmospheric-grey/60 hover:text-red-400"
+                      className="rounded-lg border border-gray-300 dark:border-gray-700 p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -278,7 +278,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       ) : null}
       {error ? (
-        <p className="text-sm text-red-400" role="alert">
+        <p className="text-sm text-[#8B1A1A]" role="alert">
           {error}
         </p>
       ) : null}

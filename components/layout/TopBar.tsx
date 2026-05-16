@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -28,49 +26,50 @@ export default function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-obsidian/40 px-8 backdrop-blur-xl">
-      <div className="flex items-center">
-        <Image
-          src="/Logo.svg"
-          alt="Nexus OS Logo"
-          width={180}
-          height={60}
-          className="h-12 w-auto"
-          priority
-        />
-      </div>
-      <div className="flex items-center gap-8">
-        <nav className="hidden md:flex items-center gap-6">
-          {nav.map(({ href, label }) => {
-            const active =
-              pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
-            return (
-              <Link
-                key={href}
-                href={href}
-                prefetch={true}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  active
-                    ? "text-trajectory-blue"
-                    : "text-atmospheric-grey/60 hover:text-atmospheric-grey"
-                )}
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
-        <ThemeToggle />
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="glass-button inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-atmospheric-grey/80 transition hover:border-red-500/40 hover:bg-red-950/30 hover:text-red-200"
-        >
-          <LogOut className="h-3.5 w-3.5" aria-hidden />
-          Sign out
-        </button>
-      </div>
-    </header>
+    <div className="px-6 pt-4 pb-2 w-full z-50 sticky top-0">
+      <header className="flex w-full items-center justify-between px-8 py-4 rounded-full bg-white/60 dark:bg-black/20 backdrop-blur-md border border-black/10 dark:border-white/10 shadow-lg transition-all duration-300 hover:bg-white/80 dark:hover:bg-black/40 hover:shadow-xl">
+        {/* Left: Wordmark */}
+        <div className="flex items-center">
+          <span className="font-mono text-lg font-bold tracking-[0.2em]">
+            <span className="logo-nexus">NEXUS</span>&thinsp;<span className="logo-os">OS</span>
+          </span>
+        </div>
+
+        {/* Right: Nav Links + Actions */}
+        <div className="flex items-center gap-8">
+          <nav className="flex items-center gap-8">
+            {nav.map(({ href, label }) => {
+              const active =
+                pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "text-sm font-medium transition-colors",
+                    active
+                      ? "text-foreground"
+                      : "text-foreground/60 hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="inline-flex cursor-pointer items-center justify-center rounded-full bg-[#E54D2E] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#E54D2E]/90"
+            >
+              Logout <span className="ml-1">→</span>
+            </button>
+          </div>
+        </div>
+      </header>
+    </div>
   );
 }

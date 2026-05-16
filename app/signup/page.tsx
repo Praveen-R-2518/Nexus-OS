@@ -64,20 +64,20 @@ export default function SignupPage() {
   }, []);
 
   return (
-    <div className="min-h-screen px-4 py-8 sm:py-12 relative z-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-b dark:from-slate-950 dark:to-slate-900 px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 text-center sm:mb-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-trajectory-blue">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1B6B3A] dark:text-emerald-400">
             NexusOS
           </p>
-          <h1 className="mt-2 text-2xl font-bold text-atmospheric-grey sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-foreground sm:text-3xl">
             Revenue Command Center
           </h1>
-          <p className="mt-2 text-sm text-atmospheric-grey/60">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Multi-step signup — optimized for a clean live demo.
           </p>
         </header>
-        <div className="rounded-2xl border border-white/10 glass-panel p-4 shadow-xl sm:p-8">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 surface-card p-4 shadow-xl shadow-black/5 dark:shadow-black/30 sm:p-8">
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
           <div className="mt-8 sm:mt-10">
             {snapshot.currentStep === 1 ? (
