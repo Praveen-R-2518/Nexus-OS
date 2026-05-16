@@ -7,7 +7,6 @@ import {
   ClipboardList,
   Inbox as InboxIcon,
   Mail,
-  MessageCircle,
   MessagesSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -48,9 +47,9 @@ function sourceIcon(source: Conversation["source"]) {
   const common = "h-4 w-4 shrink-0 text-gray-500";
   switch (source) {
     case "email":
+    case "gmail":
+    case "imap":
       return <Mail className={common} aria-hidden />;
-    case "whatsapp":
-      return <MessageCircle className={common} aria-hidden />;
     case "chat":
       return <MessagesSquare className={common} aria-hidden />;
     case "form":

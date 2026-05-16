@@ -19,7 +19,7 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
   },
   {
     id: "22222222-2222-4222-8222-222222222222",
-    source: "whatsapp",
+    source: "email",
     customer_name: "Jordan Lee",
     customer_email: "jordan@example.com",
     raw_message:
