@@ -162,10 +162,13 @@ export async function POST(request: Request) {
   try {
     await testImap(username, password);
   } catch {
-    return NextResponse.json({
-      success: false,
-      error: "Invalid credentials or IMAP not enabled",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Invalid credentials or IMAP not enabled",
+      },
+      { status: 400 },
+    );
   }
 
   let encryptedPayload: string;
