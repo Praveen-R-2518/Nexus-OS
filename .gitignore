@@ -19,23 +19,49 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Secrets & local env — ignore all variants; whitelist safe templates only
+.env
+.env.*
+.envrc
 
-# vercel
+# Allowed env templates (rename / copy locally; never put real secrets in these files)
+!.env.example
+!.env.sample
+!.env*.example
+
+# vercel / deploy
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ESLint cache
+.eslintcache
+
+# Turborepo
+.turbo
+
+# Trigger.dev local dev / build caches
+.trigger
+
+# Common credential/key filenames (prefer env vars instead)
+**/credentials.json
+**/service-account*.json
+*-private-key.pem
+*.p12
+*.pfx
