@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 
 export default function TopBar() {
-  const [now, setNow] = useState<Date>(() => new Date());
+  /** Avoid hydration mismatch: SSR and first paint share a stable placeholder. */
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
+    const tick = () => setNow(new Date());
+    tick();
+    const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -17,10 +20,10 @@ export default function TopBar() {
         NEXUS OS
       </span>
       <time
-        dateTime={now.toISOString()}
+        dateTime={now?.toISOString() ?? undefined}
         className="font-mono text-sm tabular-nums text-emerald-400"
       >
-        {format(now, "yyyy-MM-dd HH:mm:ss")}
+        {now ? format(now, "yyyy-MM-dd HH:mm:ss") : "—"}
       </time>
     </header>
   );

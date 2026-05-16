@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import type { Conversation, Metrics } from "@/types";
 import {
   cn,
+  conversationMessagePreview,
   formatCurrency,
   formatRelativeTime,
   getRiskColor,
@@ -29,7 +30,8 @@ import {
 const GLOBAL_REFRESH_MS = 30_000;
 const INBOX_REFRESH_MS = 15_000;
 
-function urgencyBadgeLabel(urgency: Conversation["urgency"]): string {
+function urgencyBadgeLabel(urgency: Conversation["urgency"] | null | undefined): string {
+  if (urgency == null || urgency === "") return "—";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 
@@ -52,11 +54,6 @@ function churnDraftTag(
   status: Conversation["status"],
 ): "Draft Ready" | "Awaiting Draft" {
   return isDraftPipelineReady(status) ? "Draft Ready" : "Awaiting Draft";
-}
-
-function messagePreview(raw: string): string {
-  const line = raw.replace(/\s+/g, " ").trim();
-  return line.length > 0 ? line : "—";
 }
 
 function MetricsSkeletonRow() {
@@ -443,7 +440,7 @@ export default function DashboardPage() {
                               {c.customer_name}
                             </p>
                             <p className="line-clamp-1 text-xs text-gray-500">
-                              {messagePreview(c.raw_message)}
+                              {conversationMessagePreview(c)}
                             </p>
                           </div>
                         </div>

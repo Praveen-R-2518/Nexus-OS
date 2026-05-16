@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import type { Conversation, ReplyDraft } from "@/types";
 import {
   cn,
+  conversationMessageText,
   formatCurrency,
   formatRelativeTime,
   getRiskColor,
@@ -59,7 +60,12 @@ function sourceIcon(source: Conversation["source"]) {
   }
 }
 
-function intentBadgeLabel(intent: Conversation["intent"]): string {
+function intentBadgeLabel(
+  intent: Conversation["intent"] | null | undefined,
+): string {
+  if (intent == null || intent === "") {
+    return "Unknown";
+  }
   switch (intent) {
     case "purchase":
       return "Purchase";
@@ -74,7 +80,10 @@ function intentBadgeLabel(intent: Conversation["intent"]): string {
   }
 }
 
-function urgencyBadgeLabel(urgency: Conversation["urgency"]): string {
+function urgencyBadgeLabel(
+  urgency: Conversation["urgency"] | null | undefined,
+): string {
+  if (urgency == null || urgency === "") return "—";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 
@@ -175,7 +184,7 @@ function InboxPageContent() {
       }
       if (q) {
         const name = c.customer_name.toLowerCase();
-        const msg = c.raw_message.toLowerCase();
+        const msg = conversationMessageText(c).toLowerCase();
         if (!name.includes(q) && !msg.includes(q)) return false;
       }
       return true;
@@ -497,7 +506,7 @@ function InboxPageContent() {
                             </span>
                           </div>
                           <p className="line-clamp-2 text-sm text-gray-400">
-                            {c.raw_message}
+                            {conversationMessageText(c)}
                           </p>
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             <Badge
@@ -575,7 +584,7 @@ function InboxPageContent() {
             ) : null}
 
             <div className="mb-6 rounded-xl bg-gray-800 p-4 font-mono text-sm leading-relaxed text-gray-200">
-              {selectedConversation.raw_message}
+              {conversationMessageText(selectedConversation)}
             </div>
 
             <div className="mb-6 rounded-xl border border-gray-800 bg-gray-900/60 p-4">
