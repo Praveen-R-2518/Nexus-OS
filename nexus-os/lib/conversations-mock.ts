@@ -1,5 +1,9 @@
 import type { PostgrestError } from "@supabase/supabase-js";
-import type { Conversation, ReplyDraft } from "@/types";
+import type {
+  Conversation,
+  ReplyDraft,
+  ReplyDraftWithConversation,
+} from "@/types";
 import { MOCK_CONVERSATIONS, MOCK_REPLY_DRAFTS } from "@/lib/mock-inbox-data";
 
 const MAX_LIMIT = 100;
@@ -146,4 +150,59 @@ export function mockConversationById(
     (d) => d.conversation_id === conversation.id,
   );
   return { conversation, drafts };
+}
+
+const DRAFT_STATUS: ReadonlyArray<ReplyDraft["approval_status"]> = [
+  "pending",
+  "approved",
+  "rejected",
+];
+
+/**
+ * Demo reply drafts for GET /api/reply-drafts when Supabase is not configured
+ * or mock mode is forced (same conditions as conversations mock).
+ */
+export function mockReplyDraftsListResult(
+  searchParams: URLSearchParams,
+): ReplyDraftWithConversation[] {
+  const statusParam = searchParams.get("status");
+  const conversationIdRaw = searchParams.get("conversation_id");
+  const conversationId =
+    conversationIdRaw === null ? null : conversationIdRaw.trim();
+
+  if (
+    statusParam !== null &&
+    statusParam !== "" &&
+    !DRAFT_STATUS.includes(statusParam as ReplyDraft["approval_status"])
+  ) {
+    throw new Error("Invalid status (use pending, approved, or rejected)");
+  }
+  if (conversationIdRaw !== null && conversationId === "") {
+    throw new Error("conversation_id must not be empty when provided");
+  }
+
+  const convById = new Map(MOCK_CONVERSATIONS.map((c) => [c.id, c]));
+  let rows = MOCK_REPLY_DRAFTS.map((d): ReplyDraftWithConversation => {
+    const c = convById.get(d.conversation_id);
+    return {
+      ...d,
+      conversation: {
+        customer_name: c?.customer_name ?? "",
+        risk_score: c?.risk_score ?? 0,
+        estimated_value: c?.estimated_value ?? 0,
+      },
+    };
+  });
+
+  if (statusParam && statusParam.length > 0) {
+    rows = rows.filter((r) => r.approval_status === statusParam);
+  }
+  if (conversationId && conversationId.length > 0) {
+    rows = rows.filter((r) => r.conversation_id === conversationId);
+  }
+
+  return [...rows].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 }

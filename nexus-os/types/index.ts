@@ -32,6 +32,14 @@ export interface ReplyDraft {
   created_at: string;
 }
 
+/** Reply draft row with joined conversation fields from GET /api/reply-drafts */
+export type ReplyDraftWithConversation = ReplyDraft & {
+  conversation: Pick<
+    Conversation,
+    "customer_name" | "risk_score" | "estimated_value"
+  >;
+};
+
 export interface Lead {
   id: string;
   conversation_id: string;
