@@ -21,6 +21,7 @@ import {
 } from "@/lib/api";
 import {
   cn,
+  conversationMessageText,
   formatCurrency,
   formatRelativeTime,
   getRiskColor,
@@ -475,7 +476,7 @@ export default function ApprovalPage() {
                               </span>
                             </div>
                             <p className="mt-1 line-clamp-2 text-sm text-gray-400">
-                              {draft.conversation.raw_message}
+                              {conversationMessageText(draft.conversation)}
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-1.5">
                               <Badge
@@ -561,7 +562,7 @@ export default function ApprovalPage() {
                     </span>
                   </div>
                   <div className="mt-4 rounded-xl bg-gray-950 p-4 font-mono text-sm leading-relaxed text-gray-200">
-                    {selectedDraft.conversation.raw_message}
+                    {conversationMessageText(selectedDraft.conversation)}
                   </div>
                 </section>
 

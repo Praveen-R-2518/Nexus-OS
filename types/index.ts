@@ -3,19 +3,31 @@ export interface Conversation {
   source: "email" | "whatsapp" | "chat" | "form";
   customer_name: string;
   customer_email?: string;
-  raw_message: string;
-  intent: "purchase" | "complaint" | "churn_risk" | "support" | "unknown";
-  urgency: "critical" | "high" | "medium" | "low";
+  /** Ingest/plain text column from Supabase. */
+  message?: string;
+  /** Legacy / mock inbox body (prefer `message` when both exist). */
+  raw_message?: string;
+  intent?:
+    | "purchase"
+    | "complaint"
+    | "churn_risk"
+    | "support"
+    | "unknown"
+    | null;
+  urgency?: "critical" | "high" | "medium" | "low" | null;
   estimated_value: number;
   risk_score: number;
   confidence: number;
-  status:
+  status?:
     | "new"
     | "classified"
     | "draft_ready"
     | "approved"
     | "sent"
-    | "rejected";
+    | "rejected"
+    | "unread"
+    | string
+    | null;
   created_at: string;
   updated_at: string;
 }
