@@ -2,7 +2,7 @@ import type {
   Conversation,
   DailyReport,
   Metrics,
-  ReplyDraft,
+  ReplyDraftWithConversation,
   WorkflowLog,
 } from "@/types";
 
@@ -98,30 +98,35 @@ export async function fetchConversations(): Promise<Conversation[]> {
 
 export async function fetchReplyDrafts(
   status?: string,
-): Promise<ReplyDraft[]> {
-  const qs =
-    status !== undefined && status !== ""
-      ? `?status=${encodeURIComponent(status)}`
-      : "";
-  const json = await requestJson<{ data: ReplyDraft[] }>(
-    `/api/reply-drafts${qs}`,
+  conversationId?: string,
+): Promise<ReplyDraftWithConversation[]> {
+  const params = new URLSearchParams();
+  if (status !== undefined && status !== "") {
+    params.set("status", status);
+  }
+  if (conversationId !== undefined && conversationId !== "") {
+    params.set("conversation_id", conversationId);
+  }
+  const qs = params.toString();
+  const json = await requestJson<{ data: ReplyDraftWithConversation[] }>(
+    `/api/reply-drafts${qs ? `?${qs}` : ""}`,
   );
   if (!Array.isArray(json.data)) {
     throw new Error(
-      "fetchReplyDrafts: invalid response shape (expected { data: ReplyDraft[] })",
+      "fetchReplyDrafts: invalid response shape (expected { data: ReplyDraftWithConversation[] })",
     );
   }
   return json.data;
 }
 
 export async function fetchMetrics(): Promise<Metrics> {
-  const json = await requestJson<{ data: Metrics }>("/api/metrics");
-  if (!json.data || typeof json.data !== "object") {
+  const json = await requestJson<{ metrics: Metrics }>("/api/metrics");
+  if (!json.metrics || typeof json.metrics !== "object") {
     throw new Error(
-      "fetchMetrics: invalid response shape (expected { data: Metrics })",
+      "fetchMetrics: invalid response shape (expected { metrics: Metrics })",
     );
   }
-  return json.data;
+  return json.metrics;
 }
 
 export async function fetchWorkflowLogs(): Promise<WorkflowLog[]> {
@@ -144,12 +149,16 @@ export async function fetchDailyReport(): Promise<DailyReport | null> {
   return json.data.length > 0 ? json.data[0] ?? null : null;
 }
 
-export async function approveReply(draftId: string): Promise<void> {
-  await requestJson<{ ok: boolean }>("/api/approval", {
+export async function approveReply(
+  draftId: string,
+  draftText?: string,
+): Promise<void> {
+  await requestJson<{ success: boolean }>("/api/approval", {
     method: "PATCH",
     body: JSON.stringify({
-      draftId,
+      draft_id: draftId,
       action: "approve",
+      draft_text: draftText,
     }),
   });
 }
@@ -158,12 +167,12 @@ export async function rejectReply(
   draftId: string,
   reason: string,
 ): Promise<void> {
-  await requestJson<{ ok: boolean }>("/api/approval", {
+  await requestJson<{ success: boolean }>("/api/approval", {
     method: "PATCH",
     body: JSON.stringify({
-      draftId,
+      draft_id: draftId,
       action: "reject",
-      reason,
+      rejection_reason: reason,
     }),
   });
 }
