@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "npm run dev --prefix ./nexus-os",
+    "build": "npm run build --prefix ./nexus-os",
+    "start": "npm run start --prefix ./nexus-os",
+    "lint": "npm run lint --prefix ./nexus-os",
+    "install:app": "npm install --prefix ./nexus-os"
   },
   "dependencies": {
     "@radix-ui/react-separator": "^1.1.8",
