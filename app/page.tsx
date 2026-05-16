@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { Tangerine } from "next/font/google";
@@ -49,13 +49,6 @@ function StepCard({ step, index }: { step: { id: string; title: string; desc: st
 
 export default function LandingPage() {
   const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
 
   return (
     <div className="relative min-h-screen bg-obsidian selection:bg-trajectory-blue/30" ref={containerRef}>
@@ -141,7 +134,7 @@ export default function LandingPage() {
           </div>
           
           <blockquote className={`text-5xl md:text-7xl text-atmospheric-grey/90 leading-relaxed ${tangerine.className}`}>
-            "We built Nexus OS because founders shouldn't have to choose between saving time and saving revenue."
+            &quot;We built Nexus OS because founders shouldn&apos;t have to choose between saving time and saving revenue.&quot;
           </blockquote>
           <div className="mt-12 flex flex-col items-center gap-3">
             <div className="w-12 h-[1px] bg-trajectory-blue/50" />
