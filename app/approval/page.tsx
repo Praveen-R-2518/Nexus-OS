@@ -364,7 +364,7 @@ export default function ApprovalPage() {
       ) : null}
 
       <div className="flex h-[calc(100vh-6rem)] min-h-[620px] gap-4">
-        <aside className="flex w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/60">
+        <aside className="flex w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-gray-800 bg-obsidian/60">
           <div className="border-b border-gray-800 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
               Approval Queue
@@ -415,7 +415,7 @@ export default function ApprovalPage() {
                     <span
                       className={cn(
                         "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
-                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                        active ? "bg-emerald-500/25" : "bg-obsidian/80",
                       )}
                     >
                       {counts[filter.value]}
@@ -506,7 +506,7 @@ export default function ApprovalPage() {
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-800 bg-obsidian/40">
           {!selectedDraft ? (
             <EmptyState
               title={
@@ -547,10 +547,13 @@ export default function ApprovalPage() {
                     <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-lg font-bold tabular-nums text-emerald-300">
                       {formatCurrency(selectedDraft.conversation.estimated_value)}
                     </span>
+                    <span className="rounded-full border border-trajectory-blue/30 bg-trajectory-blue/10 px-3 py-1.5 text-sm font-medium tabular-nums text-trajectory-blue">
+                      Confidence: {Math.round((selectedDraft.conversation.confidence || 0.95) * 100)}%
+                    </span>
                   </div>
                 </div>
 
-                <section className="rounded-xl border border-gray-800 bg-gray-900/60 p-4">
+                <section className="rounded-xl border border-white/10 glass-panel p-4">
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                     Original Message
                   </h2>
@@ -567,7 +570,7 @@ export default function ApprovalPage() {
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-gray-800 bg-gray-900/60 p-4">
+                <section className="rounded-xl border border-white/10 glass-panel p-4">
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                     AI Classification
                   </h2>
@@ -603,7 +606,7 @@ export default function ApprovalPage() {
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-gray-800 bg-gray-900/60 p-4">
+                <section className="rounded-xl border border-white/10 glass-panel p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
                       <Bot className="h-4 w-4 text-emerald-400" aria-hidden />
@@ -657,7 +660,7 @@ export default function ApprovalPage() {
                         actionDraftId === selectedDraft.id ||
                         selectedDraft.approval_status === "rejected"
                       }
-                      className="inline-flex items-center gap-2 rounded-lg border border-red-500/40 bg-transparent px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-lg border border-red-500/40 bg-transparent px-4 py-2 text-sm font-medium text-red-300 transition-all duration-150 hover:bg-red-500/10 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                     >
                       <XCircle className="h-4 w-4" aria-hidden />
                       Reject
@@ -669,7 +672,7 @@ export default function ApprovalPage() {
                         actionDraftId === selectedDraft.id ||
                         selectedDraft.approval_status === "approved"
                       }
-                      className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-gray-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
                     >
                       {actionDraftId === selectedDraft.id ? (
                         <Spinner className="h-4 w-4" label="Approving draft" />
@@ -701,7 +704,7 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="rounded-lg p-1 text-gray-500 transition-colors hover:bg-gray-900 hover:text-gray-300"
+                className="rounded-lg p-1 text-gray-500 transition-colors hover:bg-obsidian hover:text-gray-300"
                 aria-label="Close rejection modal"
               >
                 <XCircle className="h-5 w-5" aria-hidden />
@@ -713,7 +716,7 @@ export default function ApprovalPage() {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={5}
-                className="mt-2 w-full resize-none rounded-xl border border-gray-700 bg-gray-900 p-3 text-sm text-gray-100 outline-none transition-colors placeholder:text-gray-600 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/30"
+                className="mt-2 w-full resize-none rounded-xl border border-gray-700 bg-obsidian p-3 text-sm text-gray-100 outline-none transition-colors placeholder:text-gray-600 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/30"
                 placeholder="What should change before this reply is sent?"
               />
             </label>
@@ -721,7 +724,7 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-900"
+                className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-obsidian"
               >
                 Cancel
               </button>
