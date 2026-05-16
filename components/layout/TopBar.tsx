@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -22,7 +23,7 @@ export default function TopBar() {
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
@@ -60,6 +61,7 @@ export default function TopBar() {
             );
           })}
         </nav>
+        <ThemeToggle />
         <button
           type="button"
           onClick={() => void signOut()}

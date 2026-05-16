@@ -14,9 +14,9 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        obsidian: "#0D1521",
-        "trajectory-blue": "#0052CC",
-        "atmospheric-grey": "#F6F6F6",
+        obsidian: "var(--obsidian)",
+        "trajectory-blue": "var(--trajectory-blue)",
+        "atmospheric-grey": "var(--atmospheric-grey)",
       },
       letterSpacing: {
         tightest: "-0.02em",

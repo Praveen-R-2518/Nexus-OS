@@ -10,6 +10,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -19,6 +20,14 @@ function LoginForm() {
     nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")
       ? nextPath
       : "/dashboard";
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -57,7 +66,15 @@ function LoginForm() {
       email,
       password,
     });
-    if (error) setMessage(error.message);
+    if (error) {
+      setMessage(error.message);
+    } else {
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
+    }
     setBusy(false);
   }
 
@@ -121,6 +138,15 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
             />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="rounded border-gray-700 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-gray-950"
+            />
+            Remember me
           </label>
           {message ? (
             <p className="text-sm text-amber-300" role="alert">

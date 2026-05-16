@@ -4,8 +4,19 @@
 
 @layer base {
   :root {
-    --background: #0D1521; /* obsidian */
-    --foreground: #F6F6F6; /* atmospheric-grey */
+    --background: #F8FAFC;
+    --foreground: #1E293B;
+    --obsidian: #F8FAFC;
+    --atmospheric-grey: #1E293B;
+    --trajectory-blue: #1E3667; /* Logo dark blue */
+  }
+
+  .dark {
+    --background: #0D1521;
+    --foreground: #F6F6F6;
+    --obsidian: #0D1521;
+    --atmospheric-grey: #F6F6F6;
+    --trajectory-blue: #0052CC; /* Original blue */
   }
 
   body {
