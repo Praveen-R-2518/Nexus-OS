@@ -1,7 +1,641 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ClipboardList,
+  Inbox as InboxIcon,
+  Mail,
+  MessageCircle,
+  MessagesSquare,
+} from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Spinner } from "@/components/ui/Spinner";
+import type { Conversation, ReplyDraft } from "@/types";
+import {
+  cn,
+  formatCurrency,
+  formatRelativeTime,
+  getRiskColor,
+} from "@/lib/utils";
+
+const REFRESH_MS = 30_000;
+const FETCH_LIMIT = 100;
+
+type UrgencyFilter = "" | Conversation["urgency"];
+type IntentFilter = "" | Exclude<Conversation["intent"], "unknown">;
+
+const URGENCY_OPTIONS: { value: UrgencyFilter; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "critical", label: "Critical" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
+
+const INTENT_OPTIONS: { value: IntentFilter; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "purchase", label: "Purchase" },
+  { value: "complaint", label: "Complaint" },
+  { value: "churn_risk", label: "Churn Risk" },
+  { value: "support", label: "Support" },
+];
+
+function sourceIcon(source: Conversation["source"]) {
+  const common = "h-4 w-4 shrink-0 text-gray-500";
+  switch (source) {
+    case "email":
+      return <Mail className={common} aria-hidden />;
+    case "whatsapp":
+      return <MessageCircle className={common} aria-hidden />;
+    case "chat":
+      return <MessagesSquare className={common} aria-hidden />;
+    case "form":
+      return <ClipboardList className={common} aria-hidden />;
+    default:
+      return <InboxIcon className={common} aria-hidden />;
+  }
+}
+
+function intentBadgeLabel(intent: Conversation["intent"]): string {
+  switch (intent) {
+    case "purchase":
+      return "Purchase";
+    case "complaint":
+      return "Complaint";
+    case "churn_risk":
+      return "Churn Risk";
+    case "support":
+      return "Support";
+    default:
+      return "Unknown";
+  }
+}
+
+function urgencyBadgeLabel(urgency: Conversation["urgency"]): string {
+  return urgency.charAt(0).toUpperCase() + urgency.slice(1);
+}
+
+function timelineCompletion(status: Conversation["status"]): {
+  received: boolean;
+  classified: boolean;
+  draftReady: boolean;
+  approved: boolean;
+  sent: boolean;
+} {
+  return {
+    received: true,
+    classified: status !== "new",
+    draftReady:
+      status === "draft_ready" ||
+      status === "approved" ||
+      status === "sent" ||
+      status === "rejected",
+    approved: status === "approved" || status === "sent",
+    sent: status === "sent",
+  };
+}
+
 export default function InboxPage() {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
+
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
+  const [activeUrgencyFilter, setActiveUrgencyFilter] =
+    useState<UrgencyFilter>("");
+  const [activeIntentFilter, setActiveIntentFilter] =
+    useState<IntentFilter>("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [detailDrafts, setDetailDrafts] = useState<ReplyDraft[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  const [usingMockData, setUsingMockData] = useState(false);
+
+  const loadConversations = useCallback(async () => {
+    setListError(null);
+    try {
+      const res = await fetch(`/api/conversations?limit=${FETCH_LIMIT}`);
+      const json = (await res.json()) as {
+        data?: Conversation[];
+        error?: string;
+        source?: string;
+      };
+      if (!res.ok) {
+        throw new Error(
+          typeof json.error === "string" ? json.error : res.statusText,
+        );
+      }
+      if (!Array.isArray(json.data)) {
+        throw new Error("Invalid conversations response");
+      }
+      setConversations(json.data);
+      setUsingMockData(json.source === "mock");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to load conversations";
+      setListError(msg);
+      setConversations([]);
+      setUsingMockData(false);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadConversations();
+    const t = setInterval(() => {
+      void loadConversations();
+    }, REFRESH_MS);
+    return () => clearInterval(t);
+  }, [loadConversations]);
+
+  const revenueAtRisk = useMemo(() => {
+    return conversations
+      .filter((c) => c.status !== "sent")
+      .reduce((sum, c) => sum + (Number(c.estimated_value) || 0), 0);
+  }, [conversations]);
+
+  const filteredConversations = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return conversations.filter((c) => {
+      if (activeUrgencyFilter && c.urgency !== activeUrgencyFilter) {
+        return false;
+      }
+      if (activeIntentFilter && c.intent !== activeIntentFilter) {
+        return false;
+      }
+      if (q) {
+        const name = c.customer_name.toLowerCase();
+        const msg = c.raw_message.toLowerCase();
+        if (!name.includes(q) && !msg.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [conversations, activeUrgencyFilter, activeIntentFilter, searchQuery]);
+
+  useEffect(() => {
+    if (listLoading) return;
+    if (filteredConversations.length === 0) {
+      setSelectedConversationId(null);
+      return;
+    }
+    const stillValid = selectedConversationId
+      ? filteredConversations.some((c) => c.id === selectedConversationId)
+      : false;
+    if (!stillValid) {
+      setSelectedConversationId(filteredConversations[0]!.id);
+    }
+  }, [filteredConversations, listLoading, selectedConversationId]);
+
+  useEffect(() => {
+    if (!selectedConversationId) return;
+    if (!conversations.some((c) => c.id === selectedConversationId)) {
+      setSelectedConversationId(null);
+    }
+  }, [conversations, selectedConversationId]);
+
+  useEffect(() => {
+    if (!selectedConversationId) {
+      setDetailDrafts([]);
+      setDetailError(null);
+      setDetailLoading(false);
+      return;
+    }
+
+    const ac = new AbortController();
+    setDetailLoading(true);
+    setDetailError(null);
+
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/conversations/${encodeURIComponent(selectedConversationId)}`,
+          { signal: ac.signal },
+        );
+        const json = (await res.json()) as {
+          drafts?: ReplyDraft[];
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(
+            typeof json.error === "string" ? json.error : res.statusText,
+          );
+        }
+        setDetailDrafts(Array.isArray(json.drafts) ? json.drafts : []);
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
+        const msg =
+          e instanceof Error ? e.message : "Failed to load conversation";
+        setDetailError(msg);
+        setDetailDrafts([]);
+      } finally {
+        if (!ac.signal.aborted) setDetailLoading(false);
+      }
+    })();
+
+    return () => ac.abort();
+  }, [selectedConversationId]);
+
+  const selectedConversation = useMemo(() => {
+    if (!selectedConversationId) return null;
+    return (
+      conversations.find((c) => c.id === selectedConversationId) ?? null
+    );
+  }, [conversations, selectedConversationId]);
+
+  const urgencyCounts = useMemo(() => {
+    const base = { "": conversations.length } as Record<string, number>;
+    for (const { value } of URGENCY_OPTIONS) {
+      if (value === "") continue;
+      base[value] = conversations.filter((c) => c.urgency === value).length;
+    }
+    return base;
+  }, [conversations]);
+
+  const intentCounts = useMemo(() => {
+    const base: Record<string, number> = { "": conversations.length };
+    for (const { value } of INTENT_OPTIONS) {
+      if (value === "") continue;
+      base[value] = conversations.filter((c) => c.intent === value).length;
+    }
+    return base;
+  }, [conversations]);
+
+  function confidencePercent(confidence: number): number {
+    if (confidence > 1) {
+      return Math.round(Math.min(100, Math.max(0, confidence)));
+    }
+    return Math.round(Math.min(100, Math.max(0, confidence * 100)));
+  }
+
+  const stage = selectedConversation
+    ? timelineCompletion(selectedConversation.status)
+    : null;
+
+  if (listLoading && conversations.length === 0) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-400">
+        <Spinner className="h-8 w-8" label="Loading inbox" />
+        <p className="text-sm">Loading conversations…</p>
+      </div>
+    );
+  }
+
+  if (listError && conversations.length === 0) {
+    return (
+      <EmptyState
+        title="Could not load inbox"
+        description={listError}
+        icon={<InboxIcon />}
+        className="min-h-[50vh]"
+      />
+    );
+  }
+
   return (
-    <div className="text-gray-300">
-      <p>Inbox — coming soon</p>
+    <>
+      {usingMockData ? (
+        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          Demo data — add{" "}
+          <code className="rounded bg-gray-800 px-1 text-amber-100">
+            NEXT_PUBLIC_SUPABASE_URL
+          </code>{" "}
+          and{" "}
+          <code className="rounded bg-gray-800 px-1 text-amber-100">
+            SUPABASE_SERVICE_ROLE_KEY
+          </code>{" "}
+          in{" "}
+          <code className="rounded bg-gray-800 px-1 text-amber-100">
+            .env.local
+          </code>{" "}
+          to load live conversations (or set{" "}
+          <code className="rounded bg-gray-800 px-1 text-amber-100">
+            NEXUS_USE_MOCK_DATA=false
+          </code>{" "}
+          to disable auto-demo in development).
+        </p>
+      ) : null}
+      {listError && conversations.length > 0 ? (
+        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          Could not refresh inbox: {listError}
+        </p>
+      ) : null}
+      <div className="flex h-[calc(100vh-6rem)] min-h-[560px] gap-4">
+      <aside className="flex w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/60">
+        <div className="shrink-0 border-b border-gray-800 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            Revenue at Risk
+          </p>
+          <p className="mt-1 text-xl font-semibold tabular-nums text-amber-400">
+            {formatCurrency(revenueAtRisk)}
+          </p>
+        </div>
+
+        <div className="shrink-0 space-y-3 border-b border-gray-800 p-3">
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-gray-500">Urgency</p>
+            <div className="flex flex-wrap gap-1.5">
+              {URGENCY_OPTIONS.map((opt) => {
+                const active = activeUrgencyFilter === opt.value;
+                const count = urgencyCounts[opt.value] ?? 0;
+                return (
+                  <button
+                    key={opt.label + opt.value}
+                    type="button"
+                    onClick={() => setActiveUrgencyFilter(opt.value)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                      active
+                        ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
+                        : "border-gray-700 bg-gray-800/80 text-gray-300 hover:border-gray-600",
+                    )}
+                  >
+                    {opt.label}
+                    <span
+                      className={cn(
+                        "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
+                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-gray-500">Intent</p>
+            <div className="flex flex-wrap gap-1.5">
+              {INTENT_OPTIONS.map((opt) => {
+                const active = activeIntentFilter === opt.value;
+                const pillCount = intentCounts[opt.value] ?? 0;
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => setActiveIntentFilter(opt.value)}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                      active
+                        ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
+                        : "border-gray-700 bg-gray-800/80 text-gray-300 hover:border-gray-600",
+                    )}
+                  >
+                    {opt.label}
+                    <span
+                      className={cn(
+                        "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
+                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                      )}
+                    >
+                      {pillCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500">
+              Search
+            </label>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Name or message…"
+              className="w-full rounded-lg border border-gray-700 bg-gray-800/80 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+            />
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          {filteredConversations.length === 0 ? (
+            <EmptyState
+              title="No messages match"
+              description="Try adjusting filters or search."
+              icon={<InboxIcon />}
+              className="border-gray-800 bg-transparent py-10"
+            />
+          ) : (
+            <ul className="space-y-2">
+              {filteredConversations.map((c) => {
+                const selected = c.id === selectedConversationId;
+                const criticalBorder =
+                  c.urgency === "critical" && !selected
+                    ? "border-l-4 border-red-500/40"
+                    : selected
+                      ? "border-l-4 border-emerald-400 bg-gray-800"
+                      : "border-l-4 border-transparent";
+
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedConversationId(c.id)}
+                      className={cn(
+                        "w-full rounded-lg border border-gray-800 p-3 text-left transition-colors hover:border-gray-700 hover:bg-gray-800/50",
+                        criticalBorder,
+                        selected && "ring-1 ring-emerald-400/30",
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        {sourceIcon(c.source)}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="truncate font-semibold text-gray-100">
+                              {c.customer_name}
+                            </p>
+                            <span
+                              className={cn(
+                                "shrink-0 text-sm font-semibold tabular-nums",
+                                getRiskColor(c.risk_score),
+                              )}
+                            >
+                              {c.risk_score}
+                            </span>
+                          </div>
+                          <p className="line-clamp-2 text-sm text-gray-400">
+                            {c.raw_message}
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            <Badge
+                              variant="urgency"
+                              value={c.urgency}
+                              label={urgencyBadgeLabel(c.urgency)}
+                            />
+                            <Badge
+                              variant="intent"
+                              value={c.intent}
+                              label={intentBadgeLabel(c.intent)}
+                            />
+                            <span className="ml-auto text-xs tabular-nums text-gray-500">
+                              {formatCurrency(c.estimated_value)}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {formatRelativeTime(c.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </aside>
+
+      {/* Right panel */}
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40">
+        {!selectedConversation ? (
+          <EmptyState
+            title="Select a message to view details"
+            icon={<InboxIcon />}
+            className="m-4 min-h-[320px] flex-1 border-gray-800"
+          />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-semibold text-white">
+                  {selectedConversation.customer_name}
+                </h1>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-400">
+                  <span className="inline-flex items-center gap-1 capitalize">
+                    {sourceIcon(selectedConversation.source)}
+                    {selectedConversation.source}
+                  </span>
+                  <span aria-hidden>·</span>
+                  <time dateTime={selectedConversation.created_at}>
+                    {formatRelativeTime(selectedConversation.created_at)}
+                  </time>
+                </p>
+              </div>
+              {detailDrafts.length > 0 ? (
+                <Link
+                  href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
+                  className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                >
+                  View Draft Reply
+                </Link>
+              ) : null}
+            </div>
+
+            {detailError ? (
+              <p className="mb-4 text-sm text-red-400">{detailError}</p>
+            ) : null}
+            {detailLoading ? (
+              <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+                <Spinner className="h-4 w-4" label="Loading details" />
+                Loading draft info…
+              </div>
+            ) : null}
+
+            <div className="mb-6 rounded-xl bg-gray-800 p-4 font-mono text-sm leading-relaxed text-gray-200">
+              {selectedConversation.raw_message}
+            </div>
+
+            <div className="mb-6 rounded-xl border border-gray-800 bg-gray-900/60 p-4">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                Classification
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                <Badge
+                  variant="intent"
+                  value={selectedConversation.intent}
+                  label={`Intent: ${intentBadgeLabel(selectedConversation.intent)}`}
+                />
+                <Badge
+                  variant="urgency"
+                  value={selectedConversation.urgency}
+                  label={`Urgency: ${urgencyBadgeLabel(selectedConversation.urgency)}`}
+                />
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-gray-500">Risk score</p>
+                  <p
+                    className={cn(
+                      "text-lg font-semibold tabular-nums",
+                      getRiskColor(selectedConversation.risk_score),
+                    )}
+                  >
+                    {selectedConversation.risk_score}
+                  </p>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-800">
+                    <div
+                      className="h-full rounded-full bg-emerald-500/80 transition-all"
+                      style={{
+                        width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Estimated value</p>
+                  <p className="text-lg font-semibold tabular-nums text-emerald-400">
+                    {formatCurrency(selectedConversation.estimated_value)}
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {confidencePercent(selectedConversation.confidence)}% confident
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {stage ? (
+              <div className="mt-auto border-t border-gray-800 pt-6">
+                <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  Status
+                </h2>
+                <ol className="space-y-3">
+                  {(
+                    [
+                      ["Received", stage.received],
+                      ["Classified", stage.classified],
+                      ["Draft ready", stage.draftReady],
+                      ["Approved", stage.approved],
+                      ["Sent", stage.sent],
+                    ] as const
+                  ).map(([label, done], i) => (
+                    <li
+                      key={label}
+                      className="flex items-center gap-3 text-sm"
+                    >
+                      <span
+                        className={cn(
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-medium tabular-nums",
+                          done
+                            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
+                            : "border-gray-700 bg-gray-800 text-gray-500",
+                        )}
+                      >
+                        {done ? "✓" : i + 1}
+                      </span>
+                      <span
+                        className={cn(
+                          done ? "text-gray-200" : "text-gray-500",
+                        )}
+                      >
+                        {label}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </section>
     </div>
+    </>
   );
 }
