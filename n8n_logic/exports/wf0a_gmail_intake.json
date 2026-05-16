@@ -7,7 +7,7 @@
         "height": 460,
         "width": 400
       },
-      "id": "00000053-0000-4000-8000-000000530728",
+      "id": "00000016-0000-4000-8000-000000165951",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -107,26 +107,14 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '') + '/rest/v1/workflow_logs'}}",
-        "authentication": "none",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
             },
             {
               "name": "Prefer",
@@ -135,19 +123,27 @@
           ]
         },
         "options": {},
+        "genericAuthType": "httpCustomAuth",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"dropped\", payload: $json }) }}"
+        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", payload: $json } }}"
       },
       "id": "00000000-0000-4000-8000-000000000035",
       "name": "Log Noise Drop",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         1180,
         120
-      ]
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -167,45 +163,48 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '') + '/rest/v1/leads' + $json.lookup_path}}",
-        "authentication": "none",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads{{ $json.lookup_path }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
               "name": "Content-Type",
               "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
             }
           ]
         },
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth"
       },
       "id": "00000000-0000-4000-8000-000000000037",
       "name": "Supabase GET Lead Dedup",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         1420,
         340
-      ]
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "parameters": {
         "language": "javaScript",
         "mode": "runOnceForAllItems",
-        "jsCode": "const rows = $input.first().json;\nconst normalized = $('Multi-Channel Normalizer').first().json;\nconst hit = Array.isArray(rows) && rows[0] && rows[0].id;\nif (hit) {\n  return [{ json: { action: 'append_conversation', lead_id: rows[0].id, normalized } }];\n}\nreturn [{ json: { action: 'create_new_lead', normalized } }];"
+        "jsCode": "const response = $input.first().json;\nconst rows = Array.isArray(response)\n  ? response\n  : Array.isArray(response.body)\n    ? response.body\n    : response && response.id\n      ? [response]\n      : [];\nconst normalized = $('Multi-Channel Normalizer').first().json;\nconst hit = Array.isArray(rows) && rows[0] && rows[0].id;\nif (hit) {\n  return [{ json: { action: 'append_conversation', lead_id: rows[0].id, normalized } }];\n}\nreturn [{ json: { action: 'create_new_lead', normalized } }];"
       },
       "id": "00000000-0000-4000-8000-000000000038",
       "name": "Dedup Decision",
@@ -286,19 +285,11 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '') + '/rest/v1/conversations'}}",
-        "authentication": "none",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_ANON_KEY}}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -309,37 +300,43 @@
             }
           ]
         },
-        "options": {},
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id }) }) }}"
+        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id }) } }}"
       },
       "id": "00000000-0000-4000-8000-000000000040",
       "name": "POST Conversation (append)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         2140,
         200
-      ]
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL.replace(/\\/$/, '') + '/rest/v1/leads?id=eq.' + $('Dedup Decision').first().json.lead_id }}",
-        "authentication": "none",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads?id=eq.{{ $('Dedup Decision').first().json.lead_id }}",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_ANON_KEY}}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -350,37 +347,44 @@
             }
           ]
         },
-        "options": {},
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ updated_at: new Date().toISOString() }) }}"
+        "jsonBody": "={{ { updated_at: new Date().toISOString() } }}"
       },
       "id": "00000000-0000-4000-8000-000000000041",
       "name": "PATCH Lead Touch",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         2380,
         200
-      ]
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '') + '/rest/v1/conversations'}}",
-        "authentication": "none",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations",
+        "authentication": "genericCredentialType",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_ANON_KEY}}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_ANON_KEY}}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -391,55 +395,121 @@
             }
           ]
         },
-        "options": {},
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "genericAuthType": "httpCustomAuth",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id }) }) }}"
+        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id }) } }}"
       },
       "id": "00000000-0000-4000-8000-000000000042",
       "name": "POST Conversation (new)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         2140,
         440
-      ]
-    },
-    {
-      "parameters": {
-        "source": "database",
-        "workflowId": "REPLACE_WITH_WF2_CLASSIFICATION_ID",
-        "mode": "once",
-        "options": {}
-      },
-      "id": "00000000-0000-4000-8000-000000000043",
-      "name": "Execute WF2 Classification",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.1,
-      "position": [
-        2620,
-        320
       ],
-      "notesInFlow": true,
-      "notes": "Open this node and pick WF2 Classification. Placeholder id string: REPLACE_WITH_WF2_CLASSIFICATION_ID"
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '') + '/rest/v1/workflow_logs'}}",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "={{$env.SUPABASE_ANON_KEY}}"
-            },
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  conversation_id: $('POST Conversation (append)').first().json.body[0].id,\n  lead_id: $('Dedup Decision').first().json.lead_id,\n  message: $('Dedup Decision').first().json.normalized.message,\n  customer_name: $('Dedup Decision').first().json.normalized.customer_name,\n  customer_email: $('Dedup Decision').first().json.normalized.customer_email_or_phone\n} }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000043",
+      "name": "Trigger WF2 Classification (append)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2620,
+        200
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
             {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.SUPABASE_ANON_KEY}}"
-            },
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  conversation_id: $('POST Conversation (new)').first().json.body[0].id,\n  message: $('Dedup Decision').first().json.normalized.message,\n  customer_name: $('Dedup Decision').first().json.normalized.customer_name,\n  customer_email: $('Dedup Decision').first().json.normalized.customer_email_or_phone\n} }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000431",
+      "name": "Trigger WF2 Classification (new)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2620,
+        440
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -451,19 +521,27 @@
           ]
         },
         "options": {},
+        "genericAuthType": "httpCustomAuth",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ workflow_name: 'WF0a Gmail Intake', step: 'channel_intake_ok', result: 'ok', payload: { source: 'gmail' } }) }}"
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'channel_intake_ok', result: 'success', payload: { source: 'gmail', wf2_response: $json } } }}"
       },
       "id": "00000000-0000-4000-8000-000000000044",
       "name": "Log Intake OK",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.4,
       "position": [
         2860,
         320
-      ]
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -595,7 +673,7 @@
       "main": [
         [
           {
-            "node": "Execute WF2 Classification",
+            "node": "Trigger WF2 Classification (append)",
             "type": "main",
             "index": 0
           }
@@ -606,14 +684,25 @@
       "main": [
         [
           {
-            "node": "Execute WF2 Classification",
+            "node": "Trigger WF2 Classification (new)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Execute WF2 Classification": {
+    "Trigger WF2 Classification (append)": {
+      "main": [
+        [
+          {
+            "node": "Log Intake OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger WF2 Classification (new)": {
       "main": [
         [
           {
