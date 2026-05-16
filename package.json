@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:classify": "node scripts/member4_classification_tests.js",
+    "test:classify:doc": "node scripts/member4_classification_tests.js --write-doc",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
