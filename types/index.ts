@@ -62,14 +62,17 @@ export interface Lead {
   created_at: string;
 }
 
+/** Matches `public.workflow_logs` (see supabase/migrations/0001_initial_schema.sql). */
 export interface WorkflowLog {
   id: string;
   workflow_name: string;
-  status: "success" | "failed" | "running";
-  trigger: string;
-  duration_ms?: number;
-  error_message?: string;
-  created_at: string;
+  step: string;
+  /** Outcome label from workflows (e.g. success, failed, running). */
+  result: string;
+  payload: Record<string, unknown>;
+  error: string | null;
+  timestamp: string;
+  created_at?: string;
 }
 
 export interface DailyReport {
