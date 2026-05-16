@@ -41,14 +41,14 @@ function CountTile({
   return (
     <div
       className={cn(
-        "rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-3",
+        "rounded-xl border border-white/10 glass-panel px-4 py-3",
         accent,
       )}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-atmospheric-grey/60">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-100">
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-atmospheric-grey">
         {value}
       </p>
     </div>
@@ -176,21 +176,21 @@ export default function LogsPage() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-gray-800 bg-gray-900/40">
-          <Spinner className="h-8 w-8 text-emerald-400" />
+        <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-white/10 glass-panel">
+          <Spinner className="h-8 w-8 text-trajectory-blue" />
         </div>
       ) : logs.length === 0 ? (
         <EmptyState
           title="No workflow logs"
           description="When n8n workflows write to `workflow_logs`, they will show up here."
-          className="border-gray-800 bg-gray-900/40"
+          className="border-white/10 glass-panel"
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40">
+        <div className="overflow-hidden rounded-xl border border-white/10 glass-panel">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-950/80 text-xs uppercase tracking-wide text-gray-500">
+                <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-atmospheric-grey/60">
                   <th className="px-4 py-3 font-medium">Time</th>
                   <th className="px-4 py-3 font-medium">Workflow</th>
                   <th className="px-4 py-3 font-medium">Step</th>
@@ -198,16 +198,16 @@ export default function LogsPage() {
                   <th className="px-4 py-3 font-medium">Error</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/80">
+              <tbody className="divide-y divide-white/10">
                 {logs.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-800/30">
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-400">
+                  <tr key={row.id} className="hover:bg-white/5">
+                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-atmospheric-grey/40">
                       {new Date(row.timestamp).toLocaleString()}
                     </td>
-                    <td className="max-w-[180px] truncate px-4 py-3 text-gray-200">
+                    <td className="max-w-[180px] truncate px-4 py-3 text-atmospheric-grey">
                       {row.workflow_name}
                     </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-gray-300">
+                    <td className="max-w-[200px] truncate px-4 py-3 text-atmospheric-grey/80">
                       {row.step}
                     </td>
                     <td className="px-4 py-3">
@@ -231,8 +231,8 @@ export default function LogsPage() {
         </div>
       )}
 
-      <p className="text-center text-xs text-gray-600">
-        <Link href="/dashboard" className="text-emerald-400/90 hover:underline">
+      <p className="text-center text-xs text-atmospheric-grey/40">
+        <Link href="/dashboard" className="text-trajectory-blue hover:underline">
           ← Command Center
         </Link>
       </p>

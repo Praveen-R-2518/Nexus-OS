@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 
-const AUTH_ONLY_PREFIXES = ["/login"] as const;
+const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
 
 function isAuthOnlyRoute(pathname: string): boolean {
+  if (pathname === "/") return true;
   return AUTH_ONLY_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
@@ -19,16 +20,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (bare) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-900">{children}</div>
+      <div className="flex min-h-screen flex-col space-bg relative">
+        <div className="starfield" />
+        <div className="relative z-10 flex-1 flex flex-col">{children}</div>
+      </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen space-bg relative text-atmospheric-grey">
+      <div className="starfield" />
       <Sidebar />
-      <div className="flex min-h-screen flex-1 flex-col pl-[240px]">
+      <div className="relative z-10 flex min-h-screen flex-1 flex-col pl-[240px]">
         <TopBar />
-        <main className="flex-1 bg-gray-900 p-6">{children}</main>
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   );

@@ -34,7 +34,7 @@
  * const orInner = variants.map((v) => `customer_email.eq.${encodeURIComponent(v)}`).join(',');
  * const lookup_path =
  *   '?select=id,status,updated_at' +
- *   '&status=in.(new,in_progress,awaiting_reply)' +
+ *   '&status=in.(new,in_progress)' +
  *   '&or=(' + orInner + ')' +
  *   '&order=updated_at.desc&limit=1';
  * return [{ json: { lookup_path, normalized } }];
@@ -72,7 +72,7 @@ function buildLookupPath(normalized) {
 
   return (
     "?select=id,status,updated_at" +
-    "&status=in.(new,in_progress,awaiting_reply)" +
+    "&status=in.(new,in_progress)" +
     "&or=(" +
     orInner +
     ")" +

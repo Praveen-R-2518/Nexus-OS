@@ -41,7 +41,7 @@ CONTENT RULES
 - Use a clear, useful, founder-friendly tone. Make business value obvious: revenue almost lost or still at risk, time saved, and urgent follow-ups.
 - Tie the narrative together: what was at stake, what Nexus OS did (drafts, approvals, scheduled follow-ups, logs), and what still needs a human.
 - Simple arithmetic on two provided fields is allowed when clearly labeled (for example reply drafts minus replies approved), without implying extra backend metrics.
-- Present revenue_at_risk with the exact value from the payload; optional thousands separators for readability. Add a currency symbol only if the payload includes one or explicitly names a currency.
+- Money in the report (any field that represents money—e.g. revenue_at_risk, estimated_revenue_opportunity, estimated_value, revenue rescued, amounts inside nested objects such as conversations): format for readers with a currency symbol and thousands separators (e.g. $12,450). Use $ by default. If the input JSON names another currency (e.g. `currency`, `currency_code`, `pricing_rules.currency`), use that for all such amounts in the report instead ($ only when no other currency is indicated). Never alter the numeric values—formatting only; still do not invent amounts not in the payload.
 - For a presenter scanning aloud in about two minutes: keep sections short; prefer one tight opening paragraph in the Executive Summary (under ~20 seconds read time when spoken) and optional **bold** on a few headline numbers in that section only.
 
 SECTION INTENT (keep brief)
