@@ -250,7 +250,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
           </div>
 
           <div className="p-3 bg-gray-800 border-t border-gray-700 text-xs text-gray-400">
-            Messages flow through: WF1 (intake) -> WF2 (classify) -> WF3 (draft) -> Supabase
+            Messages flow through: WF1 (intake) → WF2 (classify) → WF3 (draft) → Supabase
           </div>
         </div>
       )}

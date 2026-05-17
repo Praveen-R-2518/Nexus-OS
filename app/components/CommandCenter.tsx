@@ -2,7 +2,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import DemoButton from '@/app/components/DemoButton';
 import { useRealtimeConversations, useRealtimeLeads } from '@/app/hooks/useRealtimeData';
 
