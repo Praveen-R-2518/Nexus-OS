@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
 import type { DailyReport } from "@/types";
@@ -6,6 +7,9 @@ import type { DailyReport } from "@/types";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
   let supabase;
   try {
     supabase = createServerClient();

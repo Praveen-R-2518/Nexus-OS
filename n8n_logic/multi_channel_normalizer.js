@@ -15,6 +15,15 @@ function stripHtml(html) {
     .trim();
 }
 
+function stripQuotedLines(text) {
+  if (!text || typeof text !== "string") return "";
+  const withoutGtQuotes = text
+    .split("\n")
+    .filter((line) => !/^\s*>/.test(line))
+    .join("\n");
+  return withoutGtQuotes.replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function stripSignatureAndQuotes(text) {
   if (!text || typeof text !== "string") return "";
   let t = text.replace(/\r\n/g, "\n");
@@ -147,7 +156,7 @@ function parseGmail(rawInput) {
   if (raw.textAsHtml && body === valueText(raw.textAsHtml)) body = stripHtml(body);
   if (raw.textHtml && body === valueText(raw.textHtml)) body = stripHtml(body);
 
-  const message = stripSignatureAndQuotes(body);
+  const message = stripQuotedLines(stripSignatureAndQuotes(body));
   const subject = valueText(raw.subject || headers.subject);
   const dateValue = raw.date || raw.dateUtc || raw.internalDate || raw.receivedDate || new Date().toISOString();
   const receivedAt = typeof dateValue === "number" ? new Date(dateValue).toISOString() : new Date(dateValue).toISOString();
@@ -200,7 +209,19 @@ function normalizeItem(raw) {
 }
 
 if (typeof $input !== "undefined") {
-  return $input.all().map(({ json }) => ({ json: normalizeItem(json) }));
+  try {
+    return $input.all().map(({ json }) => ({ json: normalizeItem(json) }));
+  } catch (error) {
+    return [
+      {
+        json: {
+          error: error.message,
+          node: "MultiChannelNormalizer",
+          timestamp: new Date().toISOString(),
+        },
+      },
+    ];
+  }
 }
 
 if (typeof module !== "undefined" && module.exports) {

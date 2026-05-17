@@ -1,5 +1,6 @@
 "use client";
 
+import DemoButton from "@/app/components/DemoButton";
 import Link from "next/link";
 import {
   useCallback,
@@ -62,7 +63,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-[132px] animate-pulse rounded-xl border border-gray-800 bg-gray-800/40"
+          className="h-[132px] animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800/40"
         />
       ))}
     </div>
@@ -75,14 +76,14 @@ function FeedSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse gap-3 rounded-lg border border-gray-800 bg-gray-900/40 p-3"
+          className="flex animate-pulse gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-obsidian/40 p-3"
         >
-          <div className="h-6 w-16 shrink-0 rounded-full bg-gray-800" />
+          <div className="h-6 w-16 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800" />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-4 w-1/3 rounded bg-gray-800" />
-            <div className="h-3 w-full rounded bg-gray-800/80" />
+            <div className="h-4 w-1/3 rounded bg-gray-100 dark:bg-gray-800" />
+            <div className="h-3 w-full rounded bg-gray-100 dark:bg-gray-800/80" />
           </div>
-          <div className="hidden h-8 w-14 shrink-0 rounded bg-gray-800 sm:block" />
+          <div className="hidden h-8 w-14 shrink-0 rounded bg-gray-100 dark:bg-gray-800 sm:block" />
         </div>
       ))}
     </div>
@@ -91,11 +92,11 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-gray-800 bg-gray-900/40 p-4">
-      <div className="mb-4 h-5 w-40 rounded bg-gray-800" />
+    <div className="animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-obsidian/40 p-4">
+      <div className="mb-4 h-5 w-40 rounded bg-gray-100 dark:bg-gray-800" />
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-lg bg-gray-800/50" />
+          <div key={i} className="h-14 rounded-lg bg-gray-100 dark:bg-gray-800/50" />
         ))}
       </div>
     </div>
@@ -107,10 +108,6 @@ export default function DashboardPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
-  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState<number | null>(
-    null,
-  );
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
 
   const prevConvIdsRef = useRef<Set<string>>(new Set());
@@ -190,7 +187,6 @@ export default function DashboardPage() {
       setMetrics(metricsJson.metrics);
       setConversations(conversationsJson.data);
       applyConversationHighlights(conversationsJson.data);
-      setLastUpdatedAt(Date.now());
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Failed to load command center";
@@ -226,7 +222,6 @@ export default function DashboardPage() {
 
       setConversations(conversationsJson.data);
       applyConversationHighlights(conversationsJson.data);
-      setLastUpdatedAt(Date.now());
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Failed to refresh inbox feed";
@@ -252,21 +247,6 @@ export default function DashboardPage() {
     };
   }, [loadDashboard, loadInboxOnly]);
 
-  useEffect(() => {
-    if (lastUpdatedAt === null) {
-      setSecondsSinceUpdate(null);
-      return;
-    }
-    const tick = () => {
-      setSecondsSinceUpdate(
-        Math.max(0, Math.floor((Date.now() - lastUpdatedAt) / 1000)),
-      );
-    };
-    tick();
-    const t = window.setInterval(tick, 1000);
-    return () => window.clearInterval(t);
-  }, [lastUpdatedAt]);
-
   const hotLeadsList = useMemo(() => {
     return conversations
       .filter(
@@ -287,45 +267,32 @@ export default function DashboardPage() {
         className="pointer-events-none absolute inset-0 opacity-[0.55]"
         aria-hidden
       >
-        <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-violet-500/20 dark:bg-violet-500/10 blur-3xl" />
       </div>
 
       <div className="relative space-y-8">
-        <header className="flex flex-col gap-4 border-b border-gray-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90">
-              Nexus OS
-            </p>
-            <h1 className="mt-2 bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
-              Command Center
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-gray-400">
-              Live revenue rescue ops — prioritize revenue at risk, route hot
-              leads, and intercept churn before it lands.
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 sm:items-end">
-            <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/5 px-3 py-1 text-xs font-medium text-emerald-300/90">
-              <span
-                className="relative flex h-2 w-2"
-                aria-hidden
-              >
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              Live sync
+        <header className="border-b border-black/10 dark:border-white/10 pb-6">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Command Center
+              </h1>
             </div>
-            <p className="text-xs tabular-nums text-gray-500">
-              {secondsSinceUpdate === null
-                ? "Awaiting first sync…"
-                : `Last updated: ${secondsSinceUpdate}s ago`}
-            </p>
+            <DemoButton
+              onSent={() => {
+                void loadDashboard({ silent: true });
+              }}
+            />
           </div>
+          <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400 mb-8">
+            Live revenue rescue ops — prioritize revenue at risk, route hot
+            leads, and intercept churn before it lands.
+          </p>
         </header>
 
         {error ? (
-          <div className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <div className="rounded-xl border border-red-200 dark:border-red-500/35 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A] dark:text-red-200">
             {error}
           </div>
         ) : null}
@@ -340,67 +307,55 @@ export default function DashboardPage() {
                 title="Revenue at Risk"
                 value={formatCurrency(metrics.revenue_at_risk)}
                 subtitle="in unresolved conversations"
-                accent="text-red-400"
-                icon={<TrendingDown className="text-red-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(248,113,113,0.08)] animate-fade-up [animation-delay:0ms]"
+                icon={<TrendingDown />}
+                variant="critical"
+                className="animate-fade-up [animation-delay:0ms]"
               />
               <Card
                 title="Hot Leads"
                 value={metrics.hot_leads}
                 subtitle="high-intent buyers right now"
-                accent="text-orange-400"
-                icon={<Flame className="text-orange-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(251,146,60,0.08)] animate-fade-up [animation-delay:75ms]"
+                icon={<Flame />}
+                variant="critical"
+                className="animate-fade-up [animation-delay:75ms]"
               />
               <Card
                 title="Churn Risks"
                 value={metrics.churn_risks}
                 subtitle="customers showing churn signals"
-                accent="text-yellow-400"
-                icon={<AlertTriangle className="text-yellow-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(250,204,21,0.08)] animate-fade-up [animation-delay:150ms]"
+                icon={<AlertTriangle />}
+                variant="support"
+                className="animate-fade-up [animation-delay:150ms]"
               />
               <Card
                 title="Hours Saved"
                 value={`${metrics.hours_saved.toFixed(1)}h`}
                 subtitle="saved by AI drafting"
-                accent="text-emerald-400"
-                icon={<Clock className="text-emerald-400" />}
-                className="border-gray-700/80 bg-gradient-to-br from-gray-800 to-gray-800/60 shadow-[0_0_0_1px_rgba(52,211,153,0.08)] animate-fade-up [animation-delay:225ms]"
+                icon={<Clock />}
+                variant="support"
+                className="animate-fade-up [animation-delay:225ms]"
               />
             </div>
           ) : (
             <EmptyState
               title="No metrics yet"
               description="Connect Supabase or check API configuration."
-              className="border-gray-800 bg-gray-900/40"
+              className="border-gray-200 dark:border-gray-800 bg-obsidian/40"
             />
           )}
         </section>
 
         {/* Two columns */}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-          {/* Live Inbox */}
+          {/* Inbox feed */}
           <section
-            aria-label="Live inbox feed"
-            className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+            aria-label="Inbox feed preview"
+            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-card shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
           >
-            <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
-                  Live Inbox
-                </h2>
-                <span
-                  className="text-emerald-400 animate-pulse-dot select-none"
-                  aria-hidden
-                >
-                  ●
-                </span>
-                <span className="sr-only">Real-time updates enabled</span>
-              </div>
+            <div className="flex items-center justify-end border-b border-slate-200 dark:border-slate-800 px-4 py-3">
               <Link
                 href="/inbox"
-                className="text-xs font-medium text-emerald-400/90 hover:text-emerald-300"
+                className="text-xs font-medium text-[#1B6B3A] dark:text-emerald-400/90 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
               >
                 Open inbox →
               </Link>
@@ -415,7 +370,7 @@ export default function DashboardPage() {
                 className="border-0 bg-transparent py-12"
               />
             ) : (
-              <ul className="divide-y divide-gray-800/80">
+              <ul className="divide-y divide-slate-200 dark:divide-slate-800/80">
                 {conversations.map((c) => {
                   const highlighted = highlightIds.has(c.id);
                   return (
@@ -423,7 +378,7 @@ export default function DashboardPage() {
                       <div
                         className={cn(
                           "flex flex-col gap-3 px-4 py-3 transition-colors sm:flex-row sm:items-center sm:gap-4",
-                          c.urgency === "critical" && "bg-red-950/30",
+                          c.urgency === "critical" && "bg-red-50 dark:bg-red-950/30",
                           highlighted && "animate-slide-down-row",
                         )}
                       >
@@ -436,10 +391,10 @@ export default function DashboardPage() {
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold text-gray-100">
+                            <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
                               {c.customer_name}
                             </p>
-                            <p className="line-clamp-1 text-xs text-gray-500">
+                            <p className="line-clamp-1 text-xs text-atmospheric-grey/60">
                               {conversationMessagePreview(c)}
                             </p>
                           </div>
@@ -454,18 +409,18 @@ export default function DashboardPage() {
                           >
                             {c.risk_score}
                           </span>
-                          <span className="text-sm font-medium tabular-nums text-emerald-400/90 sm:w-24 sm:text-right">
+                          <span className="text-sm font-medium tabular-nums text-[#1B6B3A] dark:text-emerald-400/90 sm:w-24 sm:text-right">
                             {formatCurrency(c.estimated_value)}
                           </span>
                           <time
-                            className="text-xs tabular-nums text-gray-500 sm:w-28 sm:text-right"
+                            className="text-xs tabular-nums text-slate-500 sm:w-28 sm:text-right"
                             dateTime={c.updated_at}
                           >
                             {formatRelativeTime(c.updated_at)}
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-700 bg-gray-800/80 text-gray-300 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-300"
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition-colors hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-4 w-4" />
@@ -484,15 +439,15 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-b from-orange-500/5 to-transparent"
+              className="overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-b from-orange-50 dark:from-orange-500/5 to-transparent"
             >
-              <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
-                <h2 className="text-sm font-semibold text-gray-100">
-                  🔥 Hot Leads
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <Flame className="h-4 w-4 text-[#7A4200] dark:text-orange-400" /> Hot Leads
                 </h2>
                 <Link
                   href="/inbox?intent=purchase"
-                  className="text-xs font-medium text-orange-400 hover:text-orange-300"
+                  className="text-xs font-medium text-[#7A4200] dark:text-orange-400 hover:text-[#7A4200] dark:hover:text-[#7A4200]"
                 >
                   View all →
                 </Link>
@@ -501,19 +456,19 @@ export default function DashboardPage() {
                 {loading && conversations.length === 0 ? (
                   <SideCardSkeleton />
                 ) : hotLeadsList.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-gray-500">
+                  <p className="py-6 text-center text-sm text-slate-500">
                     No hot leads in the current snapshot.
                   </p>
                 ) : (
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2.5">
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 surface-card px-3 py-2.5">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-medium text-gray-100">
+                            <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                               {c.customer_name}
                             </p>
-                            <span className="shrink-0 text-sm font-semibold tabular-nums text-emerald-400">
+                            <span className="shrink-0 text-sm font-semibold tabular-nums text-[#1B6B3A] dark:text-emerald-400">
                               {formatCurrency(c.estimated_value)}
                             </span>
                           </div>
@@ -527,8 +482,8 @@ export default function DashboardPage() {
                               className={cn(
                                 "rounded-full border px-2 py-0.5 text-[11px] font-medium",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300"
-                                  : "border-gray-600 bg-gray-800 text-gray-400",
+                                  ? "border-emerald-500/35 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-300"
+                                  : "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
                               )}
                             >
                               {hotLeadDraftTag(c.status)}
@@ -545,15 +500,15 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden rounded-xl border border-yellow-500/20 bg-gradient-to-b from-yellow-500/5 to-transparent"
+              className="overflow-hidden rounded-xl border border-yellow-500/20 bg-gradient-to-b from-yellow-50 dark:from-yellow-500/5 to-transparent"
             >
-              <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
-                <h2 className="text-sm font-semibold text-gray-100">
-                  ⚠️ Churn Risks
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" /> Churn Risks
                 </h2>
                 <Link
                   href="/inbox?intent=churn_risk"
-                  className="text-xs font-medium text-yellow-400 hover:text-yellow-300"
+                  className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 dark:hover:text-yellow-300"
                 >
                   View all →
                 </Link>
@@ -562,16 +517,16 @@ export default function DashboardPage() {
                 {loading && conversations.length === 0 ? (
                   <SideCardSkeleton />
                 ) : churnRisksList.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-gray-500">
+                  <p className="py-6 text-center text-sm text-slate-500">
                     No churn signals in the current snapshot.
                   </p>
                 ) : (
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2.5">
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 surface-card px-3 py-2.5">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-medium text-gray-100">
+                            <p className="truncate font-medium text-slate-900 dark:text-slate-100">
                               {c.customer_name}
                             </p>
                             <span
@@ -583,17 +538,17 @@ export default function DashboardPage() {
                               {c.risk_score}
                             </span>
                           </div>
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-800">
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                             <div
                               className={cn(
                                 "h-full rounded-full transition-all",
                                 c.risk_score >= 80
-                                  ? "bg-red-500/80"
+                                  ? "bg-[#C0392B] opacity-70"
                                   : c.risk_score >= 60
                                     ? "bg-orange-500/80"
                                     : c.risk_score >= 40
                                       ? "bg-yellow-500/80"
-                                      : "bg-emerald-500/70",
+                                      : "bg-trajectory-blue/70",
                               )}
                               style={{
                                 width: `${Math.min(100, Math.max(0, c.risk_score))}%`,
@@ -605,8 +560,8 @@ export default function DashboardPage() {
                               className={cn(
                                 "rounded-full border px-2 py-0.5 text-[11px] font-medium",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300"
-                                  : "border-gray-600 bg-gray-800 text-gray-400",
+                                  ? "border-emerald-500/35 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-300"
+                                  : "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
                               )}
                             >
                               {churnDraftTag(c.status)}

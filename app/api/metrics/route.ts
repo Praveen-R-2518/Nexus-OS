@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { MOCK_CONVERSATIONS, MOCK_REPLY_DRAFTS } from "@/lib/mock-inbox-data";
 import {
@@ -46,6 +47,9 @@ function mockMetricsResponse() {
 }
 
 export async function GET() {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
   if (shouldUseMockConversations()) {
     return mockMetricsResponse();
   }

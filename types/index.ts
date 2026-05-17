@@ -1,6 +1,6 @@
 export interface Conversation {
   id: string;
-  source: "email" | "whatsapp" | "chat" | "form";
+  source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form";
   customer_name: string;
   customer_email?: string;
   /** Ingest/plain text column from Supabase. */

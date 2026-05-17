@@ -7,8 +7,8 @@ import {
   ClipboardList,
   Inbox as InboxIcon,
   Mail,
-  MessageCircle,
   MessagesSquare,
+  Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -48,9 +48,9 @@ function sourceIcon(source: Conversation["source"]) {
   const common = "h-4 w-4 shrink-0 text-gray-500";
   switch (source) {
     case "email":
+    case "gmail":
+    case "imap":
       return <Mail className={common} aria-hidden />;
-    case "whatsapp":
-      return <MessageCircle className={common} aria-hidden />;
     case "chat":
       return <MessagesSquare className={common} aria-hidden />;
     case "form":
@@ -323,7 +323,7 @@ function InboxPageContent() {
 
   if (listLoading && conversations.length === 0) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-400">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
         <Spinner className="h-8 w-8" label="Loading inbox" />
         <p className="text-sm">Loading conversations…</p>
       </div>
@@ -344,45 +344,45 @@ function InboxPageContent() {
   return (
     <>
       {usingMockData ? (
-        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-[#7A4200]">
           Demo data — add{" "}
-          <code className="rounded bg-gray-800 px-1 text-amber-100">
+          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
             NEXT_PUBLIC_SUPABASE_URL
           </code>{" "}
           and{" "}
-          <code className="rounded bg-gray-800 px-1 text-amber-100">
+          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
             SUPABASE_SERVICE_ROLE_KEY
           </code>{" "}
           in{" "}
-          <code className="rounded bg-gray-800 px-1 text-amber-100">
+          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
             .env.local
           </code>{" "}
           to load live conversations (or set{" "}
-          <code className="rounded bg-gray-800 px-1 text-amber-100">
+          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
             NEXUS_USE_MOCK_DATA=false
           </code>{" "}
           to disable auto-demo in development).
         </p>
       ) : null}
       {listError && conversations.length > 0 ? (
-        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-[#7A4200]">
           Could not refresh inbox: {listError}
         </p>
       ) : null}
       <div className="flex h-[calc(100vh-6rem)] min-h-[560px] gap-4">
-      <aside className="flex w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/60">
-        <div className="shrink-0 border-b border-gray-800 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <aside className="flex w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-muted">
+        <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Revenue at Risk
           </p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-amber-400">
+          <p className="mt-1 text-xl font-semibold tabular-nums text-trajectory-blue">
             {formatCurrency(revenueAtRisk)}
           </p>
         </div>
 
-        <div className="shrink-0 space-y-3 border-b border-gray-800 p-3">
+        <div className="shrink-0 space-y-3 border-b border-slate-200 dark:border-slate-800 p-3">
           <div>
-            <p className="mb-1.5 text-xs font-medium text-gray-500">Urgency</p>
+            <p className="mb-1.5 text-xs font-medium text-atmospheric-grey/60">Urgency</p>
             <div className="flex flex-wrap gap-1.5">
               {URGENCY_OPTIONS.map((opt) => {
                 const active = activeUrgencyFilter === opt.value;
@@ -395,15 +395,15 @@ function InboxPageContent() {
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                       active
-                        ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
-                        : "border-gray-700 bg-gray-800/80 text-gray-300 hover:border-gray-600",
+                        ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
+                        : "border-slate-300 dark:border-slate-700 bg-surface-card dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600",
                     )}
                   >
                     {opt.label}
                     <span
                       className={cn(
                         "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
-                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                        active ? "bg-emerald-100 dark:bg-emerald-500/25" : "bg-slate-100 dark:bg-slate-900/80",
                       )}
                     >
                       {count}
@@ -414,7 +414,7 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <p className="mb-1.5 text-xs font-medium text-gray-500">Intent</p>
+            <p className="mb-1.5 text-xs font-medium text-atmospheric-grey/60">Intent</p>
             <div className="flex flex-wrap gap-1.5">
               {INTENT_OPTIONS.map((opt) => {
                 const active = activeIntentFilter === opt.value;
@@ -427,15 +427,15 @@ function InboxPageContent() {
                     className={cn(
                       "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                       active
-                        ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
-                        : "border-gray-700 bg-gray-800/80 text-gray-300 hover:border-gray-600",
+                        ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
+                        : "border-slate-300 dark:border-slate-700 bg-surface-card dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600",
                     )}
                   >
                     {opt.label}
                     <span
                       className={cn(
                         "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
-                        active ? "bg-emerald-500/25" : "bg-gray-900/80",
+                        active ? "bg-emerald-100 dark:bg-emerald-500/25" : "bg-slate-100 dark:bg-slate-900/80",
                       )}
                     >
                       {pillCount}
@@ -446,15 +446,15 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">
-              Search
-            </label>
+          <label className="mb-1 block text-xs font-medium text-atmospheric-grey/60">
+            Search
+          </label>
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Name or message…"
-              className="w-full rounded-lg border border-gray-700 bg-gray-800/80 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/80 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-600 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
             />
           </div>
         </div>
@@ -465,7 +465,7 @@ function InboxPageContent() {
               title="No messages match"
               description="Try adjusting filters or search."
               icon={<InboxIcon />}
-              className="border-gray-800 bg-transparent py-10"
+              className="border-gray-200 dark:border-gray-800 bg-transparent py-10"
             />
           ) : (
             <ul className="space-y-2">
@@ -475,7 +475,7 @@ function InboxPageContent() {
                   c.urgency === "critical" && !selected
                     ? "border-l-4 border-red-500/40"
                     : selected
-                      ? "border-l-4 border-emerald-400 bg-gray-800"
+                      ? "border-l-4 border-emerald-400 bg-gray-100 dark:bg-gray-800"
                       : "border-l-4 border-transparent";
 
                 return (
@@ -484,16 +484,16 @@ function InboxPageContent() {
                       type="button"
                       onClick={() => setSelectedConversationId(c.id)}
                       className={cn(
-                        "w-full rounded-lg border border-gray-800 p-3 text-left transition-colors hover:border-gray-700 hover:bg-gray-800/50",
+                        "w-full rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-left transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50",
                         criticalBorder,
-                        selected && "ring-1 ring-emerald-400/30",
+                        selected && "bg-surface-elevated dark:bg-slate-800 ring-1 ring-emerald-500/30 shadow-sm",
                       )}
                     >
                       <div className="flex items-start gap-2">
                         {sourceIcon(c.source)}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-semibold text-gray-100">
+                            <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
                               {c.customer_name}
                             </p>
                             <span
@@ -505,7 +505,7 @@ function InboxPageContent() {
                               {c.risk_score}
                             </span>
                           </div>
-                          <p className="line-clamp-2 text-sm text-gray-400">
+                          <p className="line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
                             {conversationMessageText(c)}
                           </p>
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -519,11 +519,11 @@ function InboxPageContent() {
                               value={c.intent}
                               label={intentBadgeLabel(c.intent)}
                             />
-                            <span className="ml-auto text-xs tabular-nums text-gray-500">
+                            <span className="ml-auto text-xs tabular-nums text-atmospheric-grey/40">
                               {formatCurrency(c.estimated_value)}
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1 text-xs text-atmospheric-grey/40">
                             {formatRelativeTime(c.created_at)}
                           </p>
                         </div>
@@ -538,21 +538,21 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-900/40">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-muted">
         {!selectedConversation ? (
           <EmptyState
             title="Select a message to view details"
             icon={<InboxIcon />}
-            className="m-4 min-h-[320px] flex-1 border-gray-800"
+            className="m-4 min-h-[320px] flex-1 border-gray-200 dark:border-gray-800"
           />
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-semibold text-white">
+                <h1 className="text-2xl font-semibold text-foreground">
                   {selectedConversation.customer_name}
                 </h1>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-400">
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <span className="inline-flex items-center gap-1 capitalize">
                     {sourceIcon(selectedConversation.source)}
                     {selectedConversation.source}
@@ -566,7 +566,7 @@ function InboxPageContent() {
               {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                  className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-[#1B6B3A] transition-colors hover:bg-emerald-500/20"
                 >
                   View Draft Reply
                 </Link>
@@ -574,20 +574,20 @@ function InboxPageContent() {
             </div>
 
             {detailError ? (
-              <p className="mb-4 text-sm text-red-400">{detailError}</p>
+              <p className="mb-4 text-sm text-[#8B1A1A]">{detailError}</p>
             ) : null}
             {detailLoading ? (
-              <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mb-4 flex items-center gap-2 text-sm text-atmospheric-grey/60">
                 <Spinner className="h-4 w-4" label="Loading details" />
                 Loading draft info…
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-xl bg-gray-800 p-4 font-mono text-sm leading-relaxed text-gray-200">
+            <div className="mb-6 rounded-xl border border-[#D8D5CE] bg-surface-input p-4 font-mono text-sm leading-relaxed text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
               {conversationMessageText(selectedConversation)}
             </div>
 
-            <div className="mb-6 rounded-xl border border-gray-800 bg-gray-900/60 p-4">
+            <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-800 surface-card p-4">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
                 Classification
               </h2>
@@ -605,7 +605,7 @@ function InboxPageContent() {
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs text-gray-500">Risk score</p>
+                  <p className="text-xs text-atmospheric-grey/60">Risk score</p>
                   <p
                     className={cn(
                       "text-lg font-semibold tabular-nums",
@@ -614,9 +614,9 @@ function InboxPageContent() {
                   >
                     {selectedConversation.risk_score}
                   </p>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-800">
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                     <div
-                      className="h-full rounded-full bg-emerald-500/80 transition-all"
+                      className="h-full rounded-full bg-trajectory-blue/80 transition-all"
                       style={{
                         width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
                       }}
@@ -625,10 +625,10 @@ function InboxPageContent() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Estimated value</p>
-                  <p className="text-lg font-semibold tabular-nums text-emerald-400">
+                  <p className="text-lg font-semibold tabular-nums text-[#1B6B3A] dark:text-emerald-400">
                     {formatCurrency(selectedConversation.estimated_value)}
                   </p>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-atmospheric-grey/40">
                     {confidencePercent(selectedConversation.confidence)}% confident
                   </p>
                 </div>
@@ -636,7 +636,7 @@ function InboxPageContent() {
             </div>
 
             {stage ? (
-              <div className="mt-auto border-t border-gray-800 pt-6">
+              <div className="mt-auto border-t border-gray-200 dark:border-gray-800 pt-6">
                 <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
                   Status
                 </h2>
@@ -658,15 +658,15 @@ function InboxPageContent() {
                         className={cn(
                           "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-medium tabular-nums",
                           done
-                            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
-                            : "border-gray-700 bg-gray-800 text-gray-500",
+                            ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
+                            : "border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
                         )}
                       >
-                        {done ? "✓" : i + 1}
+                        {done ? <Check className="w-3 h-3" /> : i + 1}
                       </span>
                       <span
                         className={cn(
-                          done ? "text-gray-200" : "text-gray-500",
+                          done ? "text-slate-700 dark:text-slate-200" : "text-slate-500",
                         )}
                       >
                         {label}
@@ -688,7 +688,7 @@ export default function InboxPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-400">
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
           <Spinner className="h-8 w-8" label="Loading inbox" />
           <p className="text-sm">Loading conversations…</p>
         </div>

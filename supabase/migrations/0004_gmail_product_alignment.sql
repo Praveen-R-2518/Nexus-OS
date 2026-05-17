@@ -44,7 +44,7 @@ begin
 
   alter table public.conversations
     add constraint conversations_source_check
-    check (source in ('demo', 'webhook', 'manual', 'gmail', 'email', 'imap', 'whatsapp'));
+    check (source in ('demo', 'webhook', 'manual', 'gmail', 'email', 'imap'));
 end $$;
 
 alter table public.daily_reports
@@ -71,7 +71,7 @@ begin
     alter table public.daily_reports
       alter column summary type text
       using case
-        when jsonb_typeof(summary) = 'string' then trim(both '"' from summary::text)
+        when jsonb_typeof(summary) = 'string' then trim(both chr(34) from summary::text)
         else summary::text
       end;
   end if;
@@ -81,9 +81,20 @@ alter table public.daily_reports
   alter column summary set default '',
   alter column summary set not null;
 
-update public.daily_reports
-set date = coalesce(date, report_date, current_date)
-where date is null;
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'daily_reports'
+      and column_name = 'report_date'
+  ) then
+    execute 'update public.daily_reports set date = coalesce(date, report_date, current_date) where date is null';
+  else
+    execute 'update public.daily_reports set date = coalesce(date, current_date) where date is null';
+  end if;
+end $$;
 
 create index if not exists conversations_created_at_idx
   on public.conversations (created_at desc);

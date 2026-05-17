@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -8,9 +9,55 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-plus-jakarta-sans)", "sans-serif"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        obsidian: "var(--obsidian)",
+        "trajectory-blue": "var(--trajectory-blue)",
+        "atmospheric-grey": "var(--atmospheric-grey)",
+        surface: {
+          'page':     '#F5F3EF',
+          'card':     '#FAFAF8',
+          'elevated': '#FFFFFF',
+          'sidebar':  '#F0EDE8',
+          'input':    '#F7F6F2',
+        },
+        badge: {
+          "pending-bg": "#FDF3E3",
+          "pending-text": "#5A3800",
+          "pending-ring": "#D4A855",
+          "high-bg": "#FDF0E3",
+          "high-text": "#5A2E00",
+          "high-ring": "#C47A2A",
+          "critical-bg": "#FDEAEA",
+          "critical-text": "#6B1A1A",
+          "critical-ring": "#C04040",
+          "low-bg": "#EAF3DE",
+          "low-text": "#2A5010",
+          "low-ring": "#7AAE4A",
+          "medium-bg": "#EEF0F5",
+          "medium-text": "#2A3850",
+          "medium-ring": "#8090B0",
+        },
+        border: {
+          default: "#D8D5CE",
+          active: "#3A6EA8",
+        },
+        light: {
+          'text-primary': '#1A1A1A',
+          'text-secondary': '#5C5C5C',
+          'text-tertiary': '#8A8A8A',
+          'text-positive': '#1B6B3A',
+          'text-warning': '#7A4200',
+          'text-critical': '#8B1A1A',
+          'text-nav': '#2E2E2E',
+        }
+      },
+      letterSpacing: {
+        tightest: "-0.02em",
       },
       keyframes: {
         fadeUp: {

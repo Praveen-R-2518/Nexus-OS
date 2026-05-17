@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import {
   mockReplyDraftsListResult,
@@ -63,6 +64,9 @@ function hasUnsupportedLiveDraftShape(
 }
 
 export async function GET(request: Request) {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status");
   const conversationIdRaw = searchParams.get("conversation_id");

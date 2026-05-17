@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
 import type { WorkflowLog } from "@/types";
@@ -27,6 +28,9 @@ function emptyLogsResponse() {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status");
 
