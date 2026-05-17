@@ -20,6 +20,14 @@ function validatePassword(pw: string): string | undefined {
   return undefined;
 }
 
+/** Canonical email for API + Supabase (trim + lowercase). */
+function normalizeSignupEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+const DUPLICATE_EMAIL_MSG =
+  "An account with this email already exists. Sign in to continue onboarding.";
+
 function mapSignUpError(error: {
   message?: string;
   status?: number;
@@ -48,7 +56,7 @@ function mapSignUpError(error: {
     msg.includes("exists") ||
     msg.includes("user already")
   ) {
-    return "An account with this email already exists. Sign in to continue onboarding.";
+    return DUPLICATE_EMAIL_MSG;
   }
 
   if (msg.includes("password") && msg.includes("weak")) {
@@ -63,7 +71,9 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const [fullName, setFullName] = useState(
     () => snapshot.accountFullName || "",
   );
-  const [email, setEmail] = useState(() => snapshot.accountEmail || "");
+  const [email, setEmail] = useState(() =>
+    normalizeSignupEmail(snapshot.accountEmail || ""),
+  );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [phone, setPhone] = useState(() => snapshot.accountPhone || "");
@@ -73,7 +83,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const [resendMessage, setResendMessage] = useState("");
 
   const verificationPending = snapshot.accountVerificationPending;
-  const lockedEmail = snapshot.accountEmail;
+  const lockedEmail = normalizeSignupEmail(snapshot.accountEmail || "");
 
   const pwError = password ? validatePassword(password) : undefined;
   const confirmError =
@@ -97,9 +107,30 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       return;
     }
     setBusy(true);
+    const normalizedEmail = normalizeSignupEmail(email);
+
+    const checkRes = await fetch("/api/auth/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: normalizedEmail }),
+    });
+    if (!checkRes.ok) {
+      setFormError(
+        "Could not verify if this email is available. Please try again in a moment.",
+      );
+      setBusy(false);
+      return;
+    }
+    const checkJson = (await checkRes.json()) as { registered?: boolean };
+    if (checkJson.registered) {
+      setFormError(DUPLICATE_EMAIL_MSG);
+      setBusy(false);
+      return;
+    }
+
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo: `${origin}/login?next=${encodeURIComponent("/signup")}`,
@@ -143,7 +174,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       }
 
       onPatch({
-        accountEmail: email.trim(),
+        accountEmail: normalizedEmail,
         accountFullName: fullName.trim(),
         accountPhone: phone.trim(),
         accountVerificationPending: false,
@@ -155,7 +186,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
 
     // Email confirmation required — no session; profile is created by DB trigger from user metadata
     onPatch({
-      accountEmail: email.trim(),
+      accountEmail: normalizedEmail,
       accountFullName: fullName.trim(),
       accountPhone: phone.trim(),
       accountVerificationPending: true,
@@ -166,11 +197,27 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   }
 
   async function resendVerification() {
-    const target = lockedEmail.trim();
+    const target = lockedEmail;
     if (!target) return;
     setResendMessage("");
     setFormError("");
     setBusy(true);
+
+    const checkRes = await fetch("/api/auth/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: target }),
+    });
+    if (checkRes.ok) {
+      const checkJson = (await checkRes.json()) as { registered?: boolean };
+      if (checkJson.registered) {
+        onPatch({ accountVerificationPending: false });
+        setFormError(DUPLICATE_EMAIL_MSG);
+        setBusy(false);
+        return;
+      }
+    }
+
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: target,
@@ -216,7 +263,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           type="button"
           disabled={busy}
           onClick={resendVerification}
-          className="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-surface-card py-2.5 text-sm font-semibold text-foreground transition hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
         >
           {busy ? "Sending…" : "Resend verification email"}
         </button>
