@@ -26,8 +26,12 @@ const STEP_LABELS = [
 ] as const;
 
 export default function SignupPage() {
-  const [snapshot, setSnapshot] = useState<SignupSnapshot>(defaultSignupSnapshot);
+  const [snapshot, setSnapshot] = useState<SignupSnapshot>(() => defaultSignupSnapshot());
   const [hydrated, setHydrated] = useState(false);
+
+  const patchSnapshot = useCallback((patch: Partial<SignupSnapshot>) => {
+    setSnapshot((s) => ({ ...s, ...patch }));
+  }, []);
 
   useEffect(() => {
     setSnapshot(loadSignupSnapshot());
@@ -43,17 +47,54 @@ export default function SignupPage() {
     if (!hydrated) return;
     const supabase = createSupabaseBrowserClient();
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
+
+    const reconcile = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (cancelled) return;
-      if (!data.session && snapshot.currentStep > 1) {
-        setSnapshot(defaultSignupSnapshot());
-        saveSignupSnapshot(defaultSignupSnapshot());
+
+      if (session) {
+        setSnapshot((s) => {
+          if (s.currentStep !== 1) return s;
+          return { ...s, currentStep: 2, accountVerificationPending: false };
+        });
+        return;
       }
+
+      setSnapshot((s) => {
+        if (s.accountVerificationPending) {
+          if (s.currentStep !== 1) {
+            return { ...s, currentStep: 1 };
+          }
+          return s;
+        }
+        if (s.currentStep > 1) {
+          return {
+            ...defaultSignupSnapshot(),
+            accountEmail: s.accountEmail,
+            accountFullName: s.accountFullName,
+            accountPhone: s.accountPhone,
+            accountVerificationPending: false,
+          };
+        }
+        return s;
+      });
+    };
+
+    void reconcile();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      void reconcile();
     });
+
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
     };
-  }, [hydrated, snapshot.currentStep]);
+  }, [hydrated]);
 
   const goToStep = useCallback((step: number, patch?: Partial<SignupSnapshot>) => {
     setSnapshot((s) => ({
@@ -81,7 +122,11 @@ export default function SignupPage() {
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
           <div className="mt-8 sm:mt-10">
             {snapshot.currentStep === 1 ? (
-              <StepAccount onNext={() => goToStep(2)} />
+              <StepAccount
+                snapshot={snapshot}
+                onPatch={patchSnapshot}
+                onNext={() => goToStep(2)}
+              />
             ) : null}
             {snapshot.currentStep === 2 ? (
               <StepWorkspace

@@ -244,7 +244,7 @@ export default function ApprovalPage() {
   }, [drafts, selectedDraftId]);
 
   const selectedText = selectedDraft
-    ? editedDraftText[selectedDraft.id] ?? selectedDraft.draft_text
+    ? String(editedDraftText[selectedDraft.id] ?? selectedDraft.draft_text ?? "")
     : "";
 
   async function optimisticallyMoveDraft(

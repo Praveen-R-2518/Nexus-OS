@@ -339,24 +339,12 @@ export default function DashboardPage() {
 
         {/* Two columns */}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-          {/* Live Inbox */}
+          {/* Inbox feed */}
           <section
-            aria-label="Live inbox feed"
+            aria-label="Inbox feed preview"
             className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-card shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
           >
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                  Live Inbox
-                </h2>
-                <span
-                  className="text-[#2D7A4F] dark:text-emerald-400 opacity-80 animate-pulse select-none"
-                  aria-hidden
-                >
-                  ●
-                </span>
-                <span className="sr-only">Real-time updates enabled</span>
-              </div>
+            <div className="flex items-center justify-end border-b border-slate-200 dark:border-slate-800 px-4 py-3">
               <Link
                 href="/inbox"
                 className="text-xs font-medium text-[#1B6B3A] dark:text-emerald-400/90 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { LayoutGroup, motion } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -37,25 +38,41 @@ export default function TopBar() {
 
         {/* Right: Nav Links + Actions */}
         <div className="flex items-center gap-8">
-          <nav className="flex items-center gap-8">
-            {nav.map(({ href, label }) => {
-              const active =
-                pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "text-sm font-medium transition-colors",
-                    active
-                      ? "text-foreground"
-                      : "text-foreground/60 hover:text-foreground"
-                  )}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+          <nav className="relative flex items-center gap-8">
+            <LayoutGroup id="topbar-main-nav">
+              {nav.map(({ href, label }) => {
+                const active =
+                  pathname === href ||
+                  (href !== "/dashboard" && pathname.startsWith(href));
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative inline-flex flex-col items-center gap-1.5 text-sm font-medium transition-colors duration-200",
+                      active
+                        ? "text-foreground"
+                        : "text-foreground/60 hover:text-foreground",
+                    )}
+                  >
+                    <span className="relative z-10 whitespace-nowrap">{label}</span>
+                    {active ? (
+                      <motion.span
+                        layoutId="topNavActiveUnderline"
+                        className="pointer-events-none h-[3px] w-7 shrink-0 rounded-full bg-gradient-to-r from-trajectory-blue to-emerald-500 shadow-[0_0_12px_rgba(0,82,204,0.35)] dark:shadow-[0_0_14px_rgba(91,159,232,0.28)]"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 30,
+                          mass: 0.55,
+                        }}
+                      />
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </LayoutGroup>
           </nav>
 
           <div className="flex items-center gap-4">
