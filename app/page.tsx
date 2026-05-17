@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
 import { motion, useInView } from "framer-motion";
 import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
@@ -89,7 +88,6 @@ export default function LandingPage() {
             <ambientLight intensity={0.5} />
             <directionalLight position={[10, 10, 5]} intensity={1} />
             <DataNexus />
-            <Environment preset="city" />
           </Canvas>
         </div>
 
