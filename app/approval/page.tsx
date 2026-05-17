@@ -408,7 +408,7 @@ export default function ApprovalPage() {
                       "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                       active
                         ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
-                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600",
+                        : "border-slate-200 dark:border-slate-700 bg-surface-card dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600",
                     )}
                   >
                     {filter.label}
@@ -455,7 +455,7 @@ export default function ApprovalPage() {
                         className={cn(
                           "w-full rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-left transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50",
                           selected &&
-                            "border-emerald-500/40 bg-white dark:bg-slate-800 ring-1 ring-emerald-500/30 shadow-sm",
+                            "border-emerald-500/40 bg-surface-elevated dark:bg-slate-800 ring-1 ring-emerald-500/30 shadow-sm",
                           highRisk &&
                             !selected &&
                             "border-l-4 border-l-red-500/50",
@@ -538,7 +538,7 @@ export default function ApprovalPage() {
                     />
                     <span
                       className={cn(
-                        "rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 px-3 py-1.5 text-lg font-bold tabular-nums",
+                        "rounded-lg border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 px-3 py-1.5 text-lg font-bold tabular-nums",
                         getRiskColor(selectedDraft.conversation.risk_score),
                       )}
                     >
@@ -565,7 +565,7 @@ export default function ApprovalPage() {
                       {selectedDraft.conversation.source}
                     </span>
                   </div>
-                  <div className="mt-4 rounded-xl bg-white dark:bg-gray-950 p-4 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-200">
+                  <div className="mt-4 rounded-xl bg-surface-card dark:bg-gray-950 p-4 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-200">
                     {conversationMessageText(selectedDraft.conversation)}
                   </div>
                 </section>
@@ -625,7 +625,7 @@ export default function ApprovalPage() {
                       }))
                     }
                     rows={10}
-                    className="mt-4 w-full resize-none rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 text-sm leading-relaxed text-gray-900 dark:text-gray-100 outline-none transition-colors placeholder:text-gray-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30"
+                    className="mt-4 w-full resize-none rounded-xl border border-[#D8D5CE] dark:border-gray-700 bg-surface-input dark:bg-gray-950 p-4 text-sm leading-relaxed text-gray-900 dark:text-gray-100 outline-none transition-colors placeholder:text-gray-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30"
                   />
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-atmospheric-grey/60">
                     <span>Tone: {toneLabel(selectedDraft.tone)}</span>
@@ -636,9 +636,8 @@ export default function ApprovalPage() {
                 </section>
               </div>
 
-              <div className="sticky bottom-0 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 p-4 backdrop-blur">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="approval-action-bar flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <DollarSign className="h-4 w-4 text-[#1B6B3A]" aria-hidden />
                     <span>
                       Decision impacts{" "}
@@ -682,7 +681,6 @@ export default function ApprovalPage() {
                       Approve & Send
                     </button>
                   </div>
-                </div>
               </div>
             </div>
           )}
@@ -691,7 +689,7 @@ export default function ApprovalPage() {
 
       {rejectingDraft ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-5 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-gray-200 dark:border-gray-800 bg-surface-elevated dark:bg-gray-950 p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
@@ -716,7 +714,7 @@ export default function ApprovalPage() {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={5}
-                className="mt-2 w-full resize-none rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/30"
+                className="mt-2 w-full resize-none rounded-xl border border-[#D8D5CE] dark:border-slate-700 bg-surface-input dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/30"
                 placeholder="What should change before this reply is sent?"
               />
             </label>

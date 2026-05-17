@@ -190,7 +190,7 @@ export default function LogsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/80 text-xs uppercase tracking-wide text-gray-500">
+                <tr className="border-b border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/80 text-xs uppercase tracking-wide text-gray-500">
                   <th className="px-4 py-3 font-medium">Time</th>
                   <th className="px-4 py-3 font-medium">Workflow</th>
                   <th className="px-4 py-3 font-medium">Step</th>

@@ -89,7 +89,7 @@ export default function LandingPage() {
               href="/login"
               className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 dark:bg-atmospheric-grey text-white dark:text-obsidian font-semibold rounded-full overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <div className="absolute inset-0 bg-surface-card/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative">Get Started</span>
               <ChevronsRight className="relative w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>

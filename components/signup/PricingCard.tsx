@@ -38,7 +38,7 @@ export default function PricingCard({
         disabled && "opacity-45 grayscale",
         selected
           ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/5 ring-2 ring-emerald-500/40"
-          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80",
+          : "border-slate-200 dark:border-slate-800 bg-surface-card dark:bg-slate-950/80",
         !disabled && !selected && "hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900/60",
       )}
     >
@@ -73,7 +73,7 @@ export default function PricingCard({
             ? "cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-500"
             : selected
               ? "bg-emerald-600 text-white hover:bg-emerald-500"
-              : "border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:border-emerald-500/60 hover:bg-slate-50 dark:hover:bg-slate-800",
+              : "border border-slate-300 dark:border-slate-700 bg-surface-card dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:border-emerald-500/60 hover:bg-slate-50 dark:hover:bg-slate-800",
         )}
       >
         {ctaLabel}

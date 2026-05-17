@@ -396,7 +396,7 @@ function InboxPageContent() {
                       "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                       active
                         ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
-                        : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600",
+                        : "border-slate-300 dark:border-slate-700 bg-surface-card dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600",
                     )}
                   >
                     {opt.label}
@@ -428,7 +428,7 @@ function InboxPageContent() {
                       "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                       active
                         ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
-                        : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600",
+                        : "border-slate-300 dark:border-slate-700 bg-surface-card dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-600",
                     )}
                   >
                     {opt.label}
@@ -486,7 +486,7 @@ function InboxPageContent() {
                       className={cn(
                         "w-full rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-left transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50",
                         criticalBorder,
-                        selected && "bg-white dark:bg-slate-800 ring-1 ring-emerald-500/30 shadow-sm",
+                        selected && "bg-surface-elevated dark:bg-slate-800 ring-1 ring-emerald-500/30 shadow-sm",
                       )}
                     >
                       <div className="flex items-start gap-2">
@@ -583,7 +583,7 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-xl bg-white dark:bg-slate-950 p-4 font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="mb-6 rounded-xl bg-surface-card dark:bg-slate-950 p-4 font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 shadow-sm">
               {conversationMessageText(selectedConversation)}
             </div>
 
