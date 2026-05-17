@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { Tangerine } from "next/font/google";
@@ -24,17 +24,39 @@ const steps = [
 
 function StepCard({ step, index }: { step: { id: string; title: string; desc: string }; index: number }) {
   const isEven = index % 2 === 0;
+  const ref = useRef<HTMLDivElement | null>(null);
+  const isInView = useInView(ref, {
+    once: false,
+    amount: "some",
+    margin: "0px",
+  });
+  const enterStagger = Math.min(index * 0.05, 0.2);
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: isEven ? -50 : 50, y: 30 }}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
+      ref={ref}
+      initial={false}
+      animate={{
+        opacity: isInView ? 1 : 0,
+        x: isInView ? 0 : isEven ? -28 : 28,
+        y: isInView ? 0 : 16,
+      }}
       transition={{
-        type: "spring",
-        stiffness: 50,
-        damping: 20,
-        delay: 0.1,
+        opacity: {
+          duration: 0.45,
+          ease: [0.25, 0.1, 0.25, 1],
+          delay: isInView ? enterStagger : 0,
+        },
+        x: {
+          duration: 0.45,
+          ease: [0.25, 0.1, 0.25, 1],
+          delay: isInView ? enterStagger : 0,
+        },
+        y: {
+          duration: 0.45,
+          ease: [0.25, 0.1, 0.25, 1],
+          delay: isInView ? enterStagger : 0,
+        },
       }}
       className={`landing-glass-card p-10 md:p-12 rounded-3xl flex flex-col gap-4 relative overflow-hidden group w-full max-w-2xl ${
         isEven ? "md:self-start" : "md:self-end"
@@ -60,7 +82,7 @@ export default function LandingPage() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative flex h-screen items-center justify-center overflow-hidden border-b border-trajectory-blue/15 dark:border-trajectory-blue/25">
         {/* 3D Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
