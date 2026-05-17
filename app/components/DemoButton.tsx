@@ -4,14 +4,38 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-export default function DemoButton() {
+type DemoUrgency = 'critical' | 'high' | 'medium' | 'low';
+type DemoIntent =
+  | 'purchase'
+  | 'complaint'
+  | 'churn_risk'
+  | 'support'
+  | 'unknown';
+
+type DemoMessage = {
+  name: string;
+  description: string;
+  sender: string;
+  text: string;
+  value: number;
+  urgency: DemoUrgency;
+  intent: DemoIntent;
+  riskScore: number;
+  confidence: number;
+};
+
+type DemoButtonProps = {
+  onSent?: () => void | Promise<void>;
+};
+
+export default function DemoButton({ onSent }: DemoButtonProps) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>('');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Test messages with realistic data
-  const testMessages = [
+  const testMessages: DemoMessage[] = [
     {
       name: 'Kasun Hotel - High Value',
       description: 'Hotel ecommerce inquiry',
@@ -19,6 +43,9 @@ export default function DemoButton() {
       text: 'Hi, we run a hotel group with 5 properties. Looking for an ecommerce platform to manage bookings and merchandise sales. Currently doing ~350,000 LKR monthly. Can you help us build something scalable?',
       value: 350000,
       urgency: 'high',
+      intent: 'purchase',
+      riskScore: 62,
+      confidence: 0.88,
     },
     {
       name: 'Angry Customer - Churn Risk',
@@ -27,6 +54,9 @@ export default function DemoButton() {
       text: 'Your service has been terrible lately. Multiple issues with our store, zero response from support. We\'re seriously considering switching to your competitor. This is our last chance to fix this.',
       value: 50000,
       urgency: 'critical',
+      intent: 'churn_risk',
+      riskScore: 92,
+      confidence: 0.91,
     },
     {
       name: 'Support Question - Low Priority',
@@ -35,6 +65,9 @@ export default function DemoButton() {
       text: 'Hi, I\'ve been trying to reset my password but the email isn\'t arriving. Can someone help me with this?',
       value: 10000,
       urgency: 'low',
+      intent: 'support',
+      riskScore: 18,
+      confidence: 0.82,
     },
     {
       name: 'Follow-up Proposal - Medium',
@@ -43,6 +76,9 @@ export default function DemoButton() {
       text: 'Thanks for the proposal last week. We loved the features but had a few questions about pricing and implementation timeline. Can we schedule a call to discuss?',
       value: 200000,
       urgency: 'medium',
+      intent: 'purchase',
+      riskScore: 48,
+      confidence: 0.86,
     },
     {
       name: 'Mobile App Dev - High Value',
@@ -51,6 +87,9 @@ export default function DemoButton() {
       text: 'We\'re launching a new fintech app and need a team to handle frontend development and infrastructure. Budget is ~3-5 million LKR for the first phase. Are you available?',
       value: 5000000,
       urgency: 'high',
+      intent: 'purchase',
+      riskScore: 74,
+      confidence: 0.89,
     },
   ];
 
@@ -78,7 +117,7 @@ export default function DemoButton() {
     return statusText || "Request failed";
   }
 
-  const sendTestMessage = async (message: typeof testMessages[0]) => {
+  const sendTestMessage = async (message: DemoMessage) => {
     setLoading(true);
     setStatus(`Sending: "${message.name}"...`);
     setShowMenu(false);
@@ -94,11 +133,17 @@ export default function DemoButton() {
           channel: "email",
           source: "demo",
           status: "unread",
+          intent: message.intent,
+          urgency: message.urgency,
+          estimated_value: message.value,
+          risk_score: message.riskScore,
+          confidence: message.confidence,
           raw_payload: {
             demo: true,
             testLabel: message.name,
             estimatedValue: message.value,
             urgency: message.urgency,
+            intent: message.intent,
             timestamp: new Date().toISOString(),
             businessProfile: "silva-digital-agency",
           },
@@ -114,13 +159,15 @@ export default function DemoButton() {
         );
       }
 
-      setStatus(`✓ "${message.name}" sent! Watch the dashboard update.`);
+      void onSent?.();
+
+      setStatus(`"${message.name}" sent. Watch the dashboard update.`);
       
       // Clear status after 4 seconds
       setTimeout(() => setStatus(''), 4000);
     } catch (error) {
       console.error('Error:', error);
-      setStatus(`✗ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setTimeout(() => setStatus(''), 4000);
     } finally {
       setLoading(false);
@@ -147,7 +194,6 @@ export default function DemoButton() {
         disabled={loading}
         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
       >
-        <span className="text-lg">🧪</span>
         <span>Demo Messages</span>
         <svg
           className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`}
@@ -204,7 +250,7 @@ export default function DemoButton() {
           </div>
 
           <div className="p-3 bg-gray-800 border-t border-gray-700 text-xs text-gray-400">
-            Messages flow through: WF1 (intake) → WF2 (classify) → WF3 (draft) → Supabase
+            Messages flow through: WF1 (intake) -> WF2 (classify) -> WF3 (draft) -> Supabase
           </div>
         </div>
       )}
@@ -213,11 +259,11 @@ export default function DemoButton() {
       {status && (
         <div
           className={`absolute top-full mt-2 right-0 px-3 py-2 rounded text-sm whitespace-nowrap ${
-            status.includes('✓')
-              ? 'bg-green-900 text-green-200'
-              : status.includes('✗')
-              ? 'bg-red-900 text-red-200'
-              : 'bg-blue-900 text-blue-200'
+            status.startsWith("Error:")
+              ? "bg-red-900 text-red-200"
+              : status.startsWith("Sending:")
+                ? "bg-blue-900 text-blue-200"
+                : "bg-green-900 text-green-200"
           }`}
         >
           {status}

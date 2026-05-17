@@ -279,7 +279,11 @@ export default function DashboardPage() {
                 Command Center
               </h1>
             </div>
-            <DemoButton />
+            <DemoButton
+              onSent={() => {
+                void loadDashboard({ silent: true });
+              }}
+            />
           </div>
           <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400 mb-8">
             Live revenue rescue ops — prioritize revenue at risk, route hot
