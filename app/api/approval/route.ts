@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import {
+  JSON_LIMITS,
+  rateLimit,
+  readJsonObjectWithLimit,
+  requireApiUser,
+} from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import {
   mockReplyDraftById,
@@ -75,9 +81,17 @@ function mockApprovalResponse(
 }
 
 export async function PATCH(request: Request) {
-  const body = (await request.json().catch(() => null)) as ApprovalBody | null;
+  const limited = rateLimit(request, "api:approval:patch", 30, 60_000);
+  if (limited) return limited;
 
-  if (!body?.draft_id || typeof body.draft_id !== "string") {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
+  const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.medium);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body as ApprovalBody;
+
+  if (!body.draft_id || typeof body.draft_id !== "string") {
     return NextResponse.json(
       { error: "Missing or invalid draft_id" },
       { status: 400 },

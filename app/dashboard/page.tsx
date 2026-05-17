@@ -1,5 +1,6 @@
 "use client";
 
+import DemoButton from "@/app/components/DemoButton";
 import Link from "next/link";
 import {
   useCallback,
@@ -271,16 +272,19 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative space-y-8">
-        <header className="flex flex-col gap-4 border-b border-black/10 dark:border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-atmospheric-grey sm:text-4xl">
-              Command Center
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-atmospheric-grey/60">
-              Live revenue rescue ops — prioritize revenue at risk, route hot
-              leads, and intercept churn before it lands.
-            </p>
+        <header className="border-b border-black/10 dark:border-white/10 pb-6">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Command Center
+              </h1>
+            </div>
+            <DemoButton />
           </div>
+          <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400 mb-8">
+            Live revenue rescue ops — prioritize revenue at risk, route hot
+            leads, and intercept churn before it lands.
+          </p>
         </header>
 
         {error ? (

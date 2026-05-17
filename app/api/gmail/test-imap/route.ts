@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import Imap from "imap";
+import {
+  JSON_LIMITS,
+  rateLimit,
+  readJsonObjectWithLimit,
+} from "@/lib/api-security";
 import { encryptSecret, isEncryptionConfigured } from "@/lib/encryption/credential-secret";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 
@@ -61,12 +66,12 @@ function testImap(user: string, password: string): Promise<void> {
 }
 
 export async function POST(request: Request) {
-  let body: Body;
-  try {
-    body = (await request.json()) as Body;
-  } catch {
-    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
-  }
+  const limited = rateLimit(request, "api:gmail:test-imap", 8, 60_000);
+  if (limited) return limited;
+
+  const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body as Body;
 
   const workspaceId =
     typeof body.workspace_id === "string" ? body.workspace_id.trim() : "";
