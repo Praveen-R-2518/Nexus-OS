@@ -52,7 +52,7 @@ export default function FormInput({
           id={id}
           type={inputType}
           className={cn(
-            "h-11 w-full rounded-lg border bg-white dark:bg-slate-950 px-3 text-sm text-slate-900 dark:text-slate-50 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2",
+            "h-11 w-full rounded-lg border border-[#D8D5CE] bg-surface-input dark:bg-slate-950 px-3 text-sm text-slate-900 dark:text-slate-50 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2",
             Icon ? "pl-10" : "",
             isPassword ? "pr-20" : valid || error ? "pr-10" : "",
             error
@@ -121,7 +121,7 @@ export function FormSelect({
       <select
         id={id}
         className={cn(
-          "h-11 w-full rounded-lg border bg-white dark:bg-slate-950 px-3 text-sm text-slate-900 dark:text-slate-50 outline-none transition focus:ring-2",
+          "h-11 w-full rounded-lg border border-[#D8D5CE] bg-surface-input dark:bg-slate-950 px-3 text-sm text-slate-900 dark:text-slate-50 outline-none transition focus:ring-2",
           error
             ? "border-red-500/70 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500/30"
             : "border-slate-200 dark:border-slate-800 focus:border-emerald-500 focus:ring-emerald-500/25",

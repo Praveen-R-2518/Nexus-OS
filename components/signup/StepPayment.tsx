@@ -100,7 +100,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           ready.
         </p>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/80 p-4 text-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/80 p-4 text-sm">
         <p className="font-medium text-gray-700 dark:text-gray-200">Order summary</p>
         <dl className="mt-3 space-y-2 text-gray-500 dark:text-gray-400">
           <div className="flex justify-between gap-4">
@@ -131,12 +131,12 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           </div>
         </dl>
       </div>
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 p-4">
+      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Card details</span>
           <div className="flex h-7 items-center gap-2">
             {brand === "visa" ? (
-              <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-blue-900">
+              <span className="rounded bg-surface-elevated px-1.5 py-0.5 text-[10px] font-bold text-blue-900">
                 VISA
               </span>
             ) : null}

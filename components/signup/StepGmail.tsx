@@ -24,7 +24,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60">
       <button
         type="button"
         onClick={onToggle}

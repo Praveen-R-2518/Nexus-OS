@@ -184,7 +184,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
               "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
               workspaceType === "solo"
                 ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
-                : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
+                : "border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
@@ -207,7 +207,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
               "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
               workspaceType === "team"
                 ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
-                : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
+                : "border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
@@ -226,7 +226,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       </div>
       {workspaceType === "team" ? (
-        <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 p-4">
+        <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 p-4">
           <FormInput
             id="teamSize"
             label="Expected number of users"

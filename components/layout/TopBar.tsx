@@ -27,7 +27,7 @@ export default function TopBar() {
 
   return (
     <div className="px-6 pt-4 pb-2 w-full z-50 sticky top-0">
-      <header className="flex w-full items-center justify-between px-8 py-4 rounded-full bg-white/60 dark:bg-black/20 backdrop-blur-md border border-black/10 dark:border-white/10 shadow-lg transition-all duration-300 hover:bg-white/80 dark:hover:bg-black/40 hover:shadow-xl">
+      <header className="flex w-full items-center justify-between px-8 py-4 rounded-full bg-surface-sidebar/60 dark:bg-black/20 backdrop-blur-md border border-black/10 dark:border-white/10 shadow-lg transition-all duration-300 hover:bg-surface-sidebar/80 dark:hover:bg-black/40 hover:shadow-xl">
         {/* Left: Wordmark */}
         <div className="flex items-center">
           <span className="font-mono text-lg font-bold tracking-[0.2em]">

@@ -428,7 +428,7 @@ export default function ReportPage() {
 
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                  <thead className="bg-white dark:bg-gray-950/50">
+                  <thead className="bg-surface-card dark:bg-gray-950/50">
                     <tr>
                       {[
                         ["customer_name", "Customer"],

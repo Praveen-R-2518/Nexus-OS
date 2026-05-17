@@ -146,7 +146,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
           </p>
         </div>
         <div
-          className="inline-flex rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-1"
+          className="inline-flex rounded-lg border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950 p-1"
           role="group"
           aria-label="Billing cycle"
         >

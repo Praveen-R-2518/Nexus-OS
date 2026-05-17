@@ -31,7 +31,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           Your workspace is configured. Here&apos;s what we set up.
         </p>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/80 p-5 text-left text-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/80 p-5 text-left text-sm">
         <p className="mb-3 font-semibold text-gray-700 dark:text-gray-200">Summary</p>
         <ul className="space-y-2 text-gray-600 dark:text-gray-300">
           <li className="flex items-center"><Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Account created</li>
@@ -52,7 +52,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           </li>
         </ul>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 p-5 text-left text-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 p-5 text-left text-sm">
         <p className="mb-3 font-semibold text-gray-700 dark:text-gray-200">Onboarding checklist</p>
         <ul className="space-y-2 text-gray-500 dark:text-gray-400">
           {snapshot.gmailConnected === true ? (

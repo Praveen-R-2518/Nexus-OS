@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -17,6 +18,13 @@ const config: Config = {
         obsidian: "var(--obsidian)",
         "trajectory-blue": "var(--trajectory-blue)",
         "atmospheric-grey": "var(--atmospheric-grey)",
+        surface: {
+          'page':     '#F5F3EF',
+          'card':     '#FAFAF8',
+          'elevated': '#FFFFFF',
+          'sidebar':  '#F0EDE8',
+          'input':    '#F7F6F2',
+        },
         light: {
           'text-primary': '#1A1A1A',
           'text-secondary': '#5C5C5C',
