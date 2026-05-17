@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import type { Conversation, ReplyDraft } from "@/types";
 import {
@@ -15,6 +16,9 @@ type RouteContext = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
   const id = context.params?.id?.trim();
 
   if (!id) {

@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import {
+  JSON_LIMITS,
+  rateLimit,
+  readJsonObjectWithLimit,
+  requireApiUser,
+} from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import type { Conversation } from "@/types";
 import {
@@ -34,7 +40,50 @@ const CONVERSATION_URGENCIES: ReadonlyArray<Conversation["urgency"]> = [
   "low",
 ];
 
+const CONVERSATION_SOURCES = [
+  "demo",
+  "webhook",
+  "manual",
+  "gmail",
+  "email",
+  "imap",
+] as const;
+
+const POST_STATUSES = [
+  "unread",
+  "new",
+  "classified",
+  "draft_ready",
+  "approved",
+  "sent",
+  "rejected",
+] as const;
+
+function boundedString(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+function pickAllowed<const T extends readonly string[]>(
+  value: unknown,
+  allowed: T,
+  fallback: T[number],
+): T[number] {
+  if (typeof value !== "string") return fallback;
+  if (value === "n8n" && (allowed as readonly string[]).includes("webhook")) {
+    return "webhook" as T[number];
+  }
+  return (allowed as readonly string[]).includes(value)
+    ? (value as T[number])
+    : fallback;
+}
+
 export async function GET(request: Request) {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(request.url);
 
   const statusParam = searchParams.get("status");
@@ -181,6 +230,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const isDev = process.env.NODE_ENV === "development";
+  const limited = rateLimit(request, "api:conversations:post", 60, 60_000);
+  if (limited) return limited;
 
   let supabase;
   try {
@@ -199,30 +250,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid JSON body",
-          ...(isDev && { details: "Request body must be JSON" }),
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid request body",
-          ...(isDev && { details: "Body must be a JSON object" }),
-        },
-        { status: 400 },
-      );
-    }
+    const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.ingest);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.body;
 
     const message = body.message;
     if (typeof message !== "string" || !message.trim()) {
@@ -242,15 +272,12 @@ export async function POST(request: Request) {
       ? body.raw_payload
       : body;
 
-    const source = typeof body.source === "string" ? body.source : "n8n";
-    const customerName =
-      typeof body.customer_name === "string" ? body.customer_name : null;
-    const customerEmail =
-      typeof body.customer_email === "string" ? body.customer_email : null;
-    const customerPhone =
-      typeof body.customer_phone === "string" ? body.customer_phone : null;
-    const channel = typeof body.channel === "string" ? body.channel : "email";
-    const status = typeof body.status === "string" ? body.status : "unread";
+    const source = pickAllowed(body.source, CONVERSATION_SOURCES, "webhook");
+    const customerName = boundedString(body.customer_name, 250);
+    const customerEmail = boundedString(body.customer_email, 320);
+    const customerPhone = boundedString(body.customer_phone, 80);
+    const channel = boundedString(body.channel, 80) ?? "email";
+    const status = pickAllowed(body.status, POST_STATUSES, "unread");
 
     const { data, error } = await supabase
       .from("conversations")
@@ -260,7 +287,7 @@ export async function POST(request: Request) {
         customer_email: customerEmail,
         customer_phone: customerPhone,
         channel,
-        message: message.trim(),
+        message: message.trim().slice(0, 20_000),
         raw_payload: rawPayload,
         status,
         received_at: new Date().toISOString(),

@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  JSON_LIMITS,
+  rateLimit,
+  readJsonObjectWithLimit,
+} from "@/lib/api-security";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -17,16 +22,14 @@ function isValidEmail(email: string): boolean {
  * Uses service_role + RPC check_signup_email_registered (see migration 0009).
  */
 export async function POST(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+  const limited = rateLimit(request, "api:auth:check-email", 10, 60_000);
+  if (limited) return limited;
+
+  const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const raw =
-    typeof body === "object" &&
-    body !== null &&
     "email" in body &&
     typeof (body as { email: unknown }).email === "string"
       ? (body as { email: string }).email
