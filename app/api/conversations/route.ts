@@ -80,6 +80,62 @@ function pickAllowed<const T extends readonly string[]>(
     : fallback;
 }
 
+function pickIntentForInsert(
+  value: unknown,
+): NonNullable<Conversation["intent"]> {
+  if (
+    typeof value === "string" &&
+    CONVERSATION_INTENTS.includes(value as Conversation["intent"])
+  ) {
+    return value as NonNullable<Conversation["intent"]>;
+  }
+  return "unknown";
+}
+
+function pickUrgencyForInsert(
+  value: unknown,
+): NonNullable<Conversation["urgency"]> {
+  if (
+    typeof value === "string" &&
+    CONVERSATION_URGENCIES.includes(value as Conversation["urgency"])
+  ) {
+    return value as NonNullable<Conversation["urgency"]>;
+  }
+  return "low";
+}
+
+function boundedNonNegativeNumber(
+  value: unknown,
+  max: number,
+  fallback: number,
+): number {
+  const n =
+    typeof value === "number" && Number.isFinite(value)
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value)
+        : Number.NaN;
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return Math.min(n, max);
+}
+
+function boundedRiskScore(value: unknown): number {
+  return Math.round(boundedNonNegativeNumber(value, 100, 0));
+}
+
+/** Accepts 0–1 or 0–100 (percent) from clients; stores 0–1. */
+function boundedConfidence(value: unknown): number {
+  const n =
+    typeof value === "number" && Number.isFinite(value)
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value)
+        : Number.NaN;
+  if (!Number.isFinite(n) || n < 0) return 0;
+  if (n > 1 && n <= 100) return Math.min(n / 100, 1);
+  return Math.min(n, 1);
+}
+
 export async function GET(request: Request) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
@@ -279,6 +335,16 @@ export async function POST(request: Request) {
     const channel = boundedString(body.channel, 80) ?? "email";
     const status = pickAllowed(body.status, POST_STATUSES, "unread");
 
+    const intent = pickIntentForInsert(body.intent);
+    const urgency = pickUrgencyForInsert(body.urgency);
+    const estimated_value = boundedNonNegativeNumber(
+      body.estimated_value,
+      1e12,
+      0,
+    );
+    const risk_score = boundedRiskScore(body.risk_score);
+    const confidence = boundedConfidence(body.confidence);
+
     const { data, error } = await supabase
       .from("conversations")
       .insert({
@@ -290,6 +356,11 @@ export async function POST(request: Request) {
         message: message.trim().slice(0, 20_000),
         raw_payload: rawPayload,
         status,
+        intent,
+        urgency,
+        estimated_value,
+        risk_score,
+        confidence,
         received_at: new Date().toISOString(),
       })
       .select("*")
