@@ -85,7 +85,7 @@ export default function LandingPage() {
           </div>
 
           <div className="animate-fade-up [animation-delay:200ms]">
-            <p className="text-lg text-slate-500 dark:text-atmospheric-grey/60 mb-10 max-w-2xl mx-auto font-light">
+            <p className="text-lg font-semibold leading-relaxed text-slate-900 dark:text-atmospheric-grey mb-10 max-w-2xl mx-auto drop-shadow-sm">
               The AI-powered Small Business Management Dashboard for busy founders. 
               Engineered for precision, speed, and absolute control.
             </p>
@@ -128,15 +128,12 @@ export default function LandingPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
           <div className="relative mb-16">
-            {/* Logo Glow */}
-            <div className="absolute inset-0 bg-blue-500/20 blur-[80px] rounded-full scale-150" />
-            {/* Logo */}
-            <div className="relative flex items-center justify-center w-72 h-24">
-              <Image 
-                src="/logo.png" 
-                alt="Nexus OS Logo" 
-                fill 
-                className="object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+            <div className="relative flex h-28 w-80 items-center justify-center md:h-32 md:w-96">
+              <Image
+                src="/logo.png"
+                alt="Nexus OS Logo"
+                fill
+                className="object-contain scale-105 md:scale-110 dark:brightness-125"
                 priority
               />
             </div>
