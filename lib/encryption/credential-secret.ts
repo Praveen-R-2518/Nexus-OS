@@ -4,6 +4,12 @@ const ALGO = "aes-256-gcm";
 const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 
+/** True when the server can encrypt/decrypt stored credentials (e.g. Gmail app passwords). */
+export function isEncryptionConfigured(): boolean {
+  const secret = process.env.ENCRYPTION_KEY;
+  return Boolean(secret && secret.trim() !== "");
+}
+
 function deriveKey(): Buffer {
   const secret = process.env.ENCRYPTION_KEY;
   if (!secret || secret.trim() === "") {

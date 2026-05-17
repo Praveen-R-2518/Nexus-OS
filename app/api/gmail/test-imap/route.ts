@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Imap from "imap";
-import { encryptSecret } from "@/lib/encryption/credential-secret";
+import { encryptSecret, isEncryptionConfigured } from "@/lib/encryption/credential-secret";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 export const runtime = "nodejs";
@@ -74,6 +74,17 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { success: false, error: "workspace_id is required" },
       { status: 400 },
+    );
+  }
+
+  if (!isEncryptionConfigured()) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Server encryption is not configured. Add ENCRYPTION_KEY to your server environment (e.g. .env.local for local dev), restart the dev server, then try again.",
+      },
+      { status: 500 },
     );
   }
 
