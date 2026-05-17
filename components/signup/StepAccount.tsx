@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Mail, Lock, User } from "lucide-react";
 import FormInput from "@/components/signup/FormInput";
@@ -19,6 +20,14 @@ function validatePassword(pw: string): string | undefined {
   return undefined;
 }
 
+/** Canonical email for API + Supabase (trim + lowercase). */
+function normalizeSignupEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+const DUPLICATE_EMAIL_MSG =
+  "An account with this email already exists. Sign in to continue onboarding.";
+
 function mapSignUpError(error: {
   message?: string;
   status?: number;
@@ -36,7 +45,7 @@ function mapSignUpError(error: {
     msg.includes("rate limit")
   ) {
     if (msg.includes("20 seconds") || msg.includes("only request")) {
-      return "Too many attempts. Please wait about 20 seconds before trying again.";
+      return "Too many attempts. Please wait about 20 seconds before requesting another email.";
     }
     return "Too many requests. Please wait a minute and try again.";
   }
@@ -47,7 +56,7 @@ function mapSignUpError(error: {
     msg.includes("exists") ||
     msg.includes("user already")
   ) {
-    return "An account with this email already exists. Sign in to continue onboarding.";
+    return DUPLICATE_EMAIL_MSG;
   }
 
   if (msg.includes("password") && msg.includes("weak")) {
@@ -62,13 +71,19 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const [fullName, setFullName] = useState(
     () => snapshot.accountFullName || "",
   );
-  const [email, setEmail] = useState(() => snapshot.accountEmail || "");
+  const [email, setEmail] = useState(() =>
+    normalizeSignupEmail(snapshot.accountEmail || ""),
+  );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [phone, setPhone] = useState(() => snapshot.accountPhone || "");
   const [terms, setTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
+
+  const verificationPending = snapshot.accountVerificationPending;
+  const lockedEmail = normalizeSignupEmail(snapshot.accountEmail || "");
 
   const pwError = password ? validatePassword(password) : undefined;
   const confirmError =
@@ -77,6 +92,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError("");
+    setResendMessage("");
     if (!terms) {
       setFormError("You must accept the Terms of Service and Privacy Policy.");
       return;
@@ -91,10 +107,33 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       return;
     }
     setBusy(true);
+    const normalizedEmail = normalizeSignupEmail(email);
+
+    const checkRes = await fetch("/api/auth/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: normalizedEmail }),
+    });
+    if (!checkRes.ok) {
+      setFormError(
+        "Could not verify if this email is available. Please try again in a moment.",
+      );
+      setBusy(false);
+      return;
+    }
+    const checkJson = (await checkRes.json()) as { registered?: boolean };
+    if (checkJson.registered) {
+      setFormError(DUPLICATE_EMAIL_MSG);
+      setBusy(false);
+      return;
+    }
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
+        emailRedirectTo: `${origin}/login?next=${encodeURIComponent("/signup")}`,
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
@@ -118,6 +157,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     }
 
     const hasSession = Boolean(data.session);
+
     if (hasSession) {
       const { error: profileError } = await supabase.from("profiles").upsert(
         {
@@ -132,17 +172,113 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       if (profileError) {
         console.error("[signup] profile update:", profileError.message);
       }
+
+      onPatch({
+        accountEmail: normalizedEmail,
+        accountFullName: fullName.trim(),
+        accountPhone: phone.trim(),
+        accountVerificationPending: false,
+      });
+      setBusy(false);
+      onNext();
+      return;
     }
 
+    // Email confirmation required — no session; profile is created by DB trigger from user metadata
     onPatch({
-      accountEmail: email.trim(),
+      accountEmail: normalizedEmail,
       accountFullName: fullName.trim(),
       accountPhone: phone.trim(),
+      accountVerificationPending: true,
     });
     setPassword("");
     setConfirm("");
     setBusy(false);
-    onNext();
+  }
+
+  async function resendVerification() {
+    const target = lockedEmail;
+    if (!target) return;
+    setResendMessage("");
+    setFormError("");
+    setBusy(true);
+
+    const checkRes = await fetch("/api/auth/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: target }),
+    });
+    if (checkRes.ok) {
+      const checkJson = (await checkRes.json()) as { registered?: boolean };
+      if (checkJson.registered) {
+        onPatch({ accountVerificationPending: false });
+        setFormError(DUPLICATE_EMAIL_MSG);
+        setBusy(false);
+        return;
+      }
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: target,
+      options: {
+        emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/login?next=${encodeURIComponent("/signup")}`,
+      },
+    });
+    setBusy(false);
+    if (error) {
+      setFormError(mapSignUpError(error));
+      return;
+    }
+    setResendMessage("Verification email sent. Check your inbox.");
+  }
+
+  if (verificationPending) {
+    return (
+      <div className="mx-auto max-w-lg space-y-5">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Verify your email</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            We sent a confirmation link to{" "}
+            <span className="font-medium text-foreground">{lockedEmail}</span>. After you
+            confirm, sign in to continue workspace setup.
+          </p>
+        </div>
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-foreground">
+          <p className="font-medium">Next steps</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
+            <li>Open the email and click the confirmation link.</li>
+            <li>
+              Sign in on the login page — you&apos;ll return here to finish onboarding.
+            </li>
+          </ol>
+        </div>
+        <Link
+          href="/login?next=%2Fsignup"
+          className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+        >
+          Go to sign in
+        </Link>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={resendVerification}
+          className="inline-flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        >
+          {busy ? "Sending…" : "Resend verification email"}
+        </button>
+        {formError ? (
+          <p className="text-sm text-[#8B1A1A]" role="alert">
+            {formError}
+          </p>
+        ) : null}
+        {resendMessage ? (
+          <p className="text-sm text-[#1B6B3A]" role="status">
+            {resendMessage}
+          </p>
+        ) : null}
+      </div>
+    );
   }
 
   return (
@@ -150,7 +286,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <div>
         <h2 className="text-xl font-semibold text-foreground">Create your account</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Create your account, then continue with workspace setup on the next steps.
+          After you create your account, we&apos;ll email you a verification link. Once
+          your email is confirmed, sign in to continue with workspace setup.
         </p>
       </div>
       <FormInput

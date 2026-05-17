@@ -2,13 +2,10 @@ export type PlanTier = "starter" | "pro" | "team" | "enterprise";
 export type BillingCycle = "monthly" | "annual";
 export type WorkspaceType = "solo" | "team";
 
-/** v3: account fields only (no verification gate); do not store passwords */
-export const SIGNUP_STORAGE_KEY = "nexus-os-signup-state-v3";
+/** v2: adds account verification fields; do not store passwords here */
+export const SIGNUP_STORAGE_KEY = "nexus-os-signup-state-v2";
 
-const LEGACY_SIGNUP_STORAGE_KEYS = [
-  "nexus-os-signup-state-v2",
-  "nexus-os-signup-state-v1",
-] as const;
+const LEGACY_SIGNUP_STORAGE_KEY = "nexus-os-signup-state-v1";
 
 export type SignupSnapshot = {
   currentStep: number;
@@ -23,9 +20,11 @@ export type SignupSnapshot = {
   planTier: PlanTier | null;
   billingCycle: BillingCycle | null;
   gmailConnected: boolean | null;
+  /** Set after signUp when email confirmation is required (no session yet). Never store passwords. */
   accountEmail: string;
   accountFullName: string;
   accountPhone: string;
+  accountVerificationPending: boolean;
 };
 
 export const defaultSignupSnapshot = (): SignupSnapshot => ({
@@ -44,35 +43,32 @@ export const defaultSignupSnapshot = (): SignupSnapshot => ({
   accountEmail: "",
   accountFullName: "",
   accountPhone: "",
+  accountVerificationPending: false,
 });
 
-function mergeSnapshot(parsed: Record<string, unknown>): SignupSnapshot {
-  const { accountVerificationPending, ...rest } = parsed;
-  void accountVerificationPending;
-  return { ...defaultSignupSnapshot(), ...(rest as Partial<SignupSnapshot>) };
+function mergeSnapshot(parsed: Partial<SignupSnapshot>): SignupSnapshot {
+  return { ...defaultSignupSnapshot(), ...parsed };
 }
 
 export function loadSignupSnapshot(): SignupSnapshot {
   if (typeof window === "undefined") return defaultSignupSnapshot();
   try {
-    const rawV3 = sessionStorage.getItem(SIGNUP_STORAGE_KEY);
-    if (rawV3) {
-      const parsed = JSON.parse(rawV3) as Record<string, unknown>;
+    const rawV2 = sessionStorage.getItem(SIGNUP_STORAGE_KEY);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2) as Partial<SignupSnapshot>;
       return mergeSnapshot(parsed);
     }
-    for (const legacyKey of LEGACY_SIGNUP_STORAGE_KEYS) {
-      const raw = sessionStorage.getItem(legacyKey);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const merged = mergeSnapshot(parsed);
-        try {
-          sessionStorage.setItem(SIGNUP_STORAGE_KEY, JSON.stringify(merged));
-          sessionStorage.removeItem(legacyKey);
-        } catch {
-          // ignore quota / private mode
-        }
-        return merged;
+    const rawV1 = sessionStorage.getItem(LEGACY_SIGNUP_STORAGE_KEY);
+    if (rawV1) {
+      const parsed = JSON.parse(rawV1) as Partial<SignupSnapshot>;
+      const merged = mergeSnapshot(parsed);
+      try {
+        sessionStorage.setItem(SIGNUP_STORAGE_KEY, JSON.stringify(merged));
+        sessionStorage.removeItem(LEGACY_SIGNUP_STORAGE_KEY);
+      } catch {
+        // ignore quota / private mode
       }
+      return merged;
     }
     return defaultSignupSnapshot();
   } catch {

@@ -156,7 +156,12 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           <li>Go to myaccount.google.com/security</li>
           <li>Enable 2-Step Verification if not already on</li>
           <li>Search &quot;App passwords&quot;</li>
-          <li>App: Mail → Device: Other → Name: NexusOS</li>
+          <li>
+            When Google asks for a name, enter a short label (for example,{" "}
+            <span className="font-medium text-foreground">NexusOS</span>). You only
+            need this app name — you do not have to pick Mail, Other, or a specific
+            device.
+          </li>
           <li>Copy the 16-character password shown</li>
         </ol>
         <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
