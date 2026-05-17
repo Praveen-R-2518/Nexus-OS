@@ -8,6 +8,7 @@ import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { Tangerine } from "next/font/google";
 import DataNexus from "@/components/landing/DataNexus";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 
 const tangerine = Tangerine({ subsets: ["latin"], weight: ["400", "700"] });
@@ -52,6 +53,12 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-obsidian selection:bg-trajectory-blue/30" ref={containerRef}>
+      <div className="pointer-events-auto fixed right-4 top-4 z-50 md:right-6 md:top-6">
+        <div className="rounded-xl border border-slate-200/80 bg-white/85 p-1 shadow-md backdrop-blur-sm dark:border-white/15 dark:bg-slate-950/70">
+          <ThemeToggle />
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* 3D Background */}
@@ -135,7 +142,9 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <blockquote className={`text-5xl md:text-7xl text-slate-800 dark:text-atmospheric-grey/90 leading-relaxed ${tangerine.className}`}>
+          <blockquote
+            className={`text-5xl md:text-7xl text-slate-800 leading-relaxed dark:text-neutral-100 dark:[text-shadow:0_2px_24px_rgba(0,0,0,0.45)] ${tangerine.className}`}
+          >
             &quot;We built Nexus OS because founders shouldn&apos;t have to choose between saving time and saving revenue.&quot;
           </blockquote>
           <div className="mt-12 flex flex-col items-center gap-3">
