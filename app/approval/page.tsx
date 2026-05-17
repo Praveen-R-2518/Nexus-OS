@@ -536,12 +536,12 @@ export default function ApprovalPage() {
                       value={selectedDraft.approval_status}
                       label={STATUS_LABELS[selectedDraft.approval_status]}
                     />
-                    <span
-                      className={cn(
-                        "rounded-lg border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 px-3 py-1.5 text-lg font-bold tabular-nums",
-                        getRiskColor(selectedDraft.conversation.risk_score),
-                      )}
-                    >
+                      <span
+                        className={cn(
+                          "rounded-lg border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 px-3 py-1.5 text-lg font-bold tabular-nums",
+                          getRiskColor(selectedDraft.conversation.risk_score),
+                        )}
+                      >
                       Risk {selectedDraft.conversation.risk_score}
                     </span>
                     <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-lg font-bold tabular-nums text-[#1B6B3A] dark:text-emerald-300">
@@ -565,7 +565,7 @@ export default function ApprovalPage() {
                       {selectedDraft.conversation.source}
                     </span>
                   </div>
-                  <div className="mt-4 rounded-xl bg-surface-card dark:bg-gray-950 p-4 font-mono text-sm leading-relaxed text-gray-700 dark:text-gray-200">
+                  <div className="mt-4 rounded-xl border border-[#D8D5CE] bg-surface-input p-4 font-mono text-sm leading-relaxed text-slate-900 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
                     {conversationMessageText(selectedDraft.conversation)}
                   </div>
                 </section>
@@ -636,20 +636,20 @@ export default function ApprovalPage() {
                 </section>
               </div>
 
-              <div className="approval-action-bar flex items-center justify-between">
+              <div className="approval-action-bar flex items-center justify-between bg-[#FAFAF8] border-t border-[#D8D5CE] px-5 py-3 dark:bg-slate-950/95 dark:border-slate-800">
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <DollarSign className="h-4 w-4 text-[#1B6B3A]" aria-hidden />
-                    <span>
-                      Decision impacts{" "}
-                      <strong className="text-[#1B6B3A] dark:text-emerald-300">
-                        {formatCurrency(
-                          selectedDraft.conversation.estimated_value,
-                        )}
-                      </strong>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
+                  <DollarSign className="h-4 w-4 text-[#1B6B3A]" aria-hidden />
+                  <span>
+                    Decision impacts{" "}
+                    <strong className="text-[#1B6B3A] dark:text-emerald-300">
+                      {formatCurrency(
+                        selectedDraft.conversation.estimated_value,
+                      )}
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
                       type="button"
                       onClick={() => {
                         setRejectingDraft(selectedDraft);

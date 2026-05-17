@@ -121,7 +121,7 @@ function LoginForm() {
           <label className="block space-y-2 text-sm">
             <span className="text-slate-700 dark:text-slate-300">Email</span>
             <input
-              className="h-10 w-full rounded-lg border border-[#D8D5CE] bg-surface-input dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
+              className="h-10 w-full rounded-lg border border-[#D8D5CE] dark:border-slate-800 bg-surface-input dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -132,7 +132,7 @@ function LoginForm() {
           <label className="block space-y-2 text-sm">
             <span className="text-slate-700 dark:text-slate-300">Password</span>
             <input
-              className="h-10 w-full rounded-lg border border-[#D8D5CE] bg-surface-input dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
+              className="h-10 w-full rounded-lg border border-[#D8D5CE] dark:border-slate-800 bg-surface-input dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -144,7 +144,7 @@ function LoginForm() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-[#D8D5CE] bg-surface-input dark:bg-slate-950 text-[#1B6B3A] focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-950"
+              className="rounded border-[#D8D5CE] dark:border-slate-700 bg-surface-input dark:bg-slate-950 text-[#1B6B3A] focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-950"
             />
             Remember me
           </label>

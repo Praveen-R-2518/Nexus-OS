@@ -583,7 +583,7 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-xl bg-surface-card dark:bg-slate-950 p-4 font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="mb-6 rounded-xl border border-[#D8D5CE] bg-surface-input p-4 font-mono text-sm leading-relaxed text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
               {conversationMessageText(selectedConversation)}
             </div>
 

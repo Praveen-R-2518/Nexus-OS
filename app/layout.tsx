@@ -23,8 +23,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-obsidian font-sans text-atmospheric-grey antialiased transition-colors duration-300">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+      <body className="min-h-screen bg-surface-page dark:bg-obsidian font-sans text-atmospheric-grey antialiased transition-colors duration-300">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>

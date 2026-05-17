@@ -9,6 +9,31 @@
     --obsidian: #F8FAFC;
     --atmospheric-grey: #1E293B;
     --trajectory-blue: #1E3667; /* Logo dark blue */
+    --bg-card: #FAFAF8;
+
+    /* Light surfaces + text (default / first paint before next-themes hydrates) */
+    --text-primary: #1A1A1A;
+    --text-secondary: #5C5C5C;
+    --text-tertiary: #8A8A8A;
+    --text-positive: #1B6B3A;
+    --text-warning: #7A4200;
+    --text-critical: #8B1A1A;
+    --bg-page: #F5F3EF;
+    --bg-elevated: #FFFFFF;
+    --bg-sidebar: #F0EDE8;
+    --bg-input: #F7F6F2;
+  }
+
+  html:not(.dark) .logo-nexus,
+  .light .logo-nexus,
+  [data-theme="light"] .logo-nexus {
+    color: #1a1a1a;
+  }
+  html:not(.dark) .logo-os,
+  .light .logo-os,
+  [data-theme="light"] .logo-os {
+    color: #1a5fb4;
+    letter-spacing: 0;
   }
 
   .light, [data-theme="light"] {
@@ -18,17 +43,12 @@
     --text-positive: #1B6B3A;
     --text-warning: #7A4200;
     --text-critical: #8B1A1A;
-    --border-default: #D8D5CE;
-    --border-active: #3A6EA8;
-    --border-critical: rgba(168, 50, 50, 0.6);
-    --bg-page: #F5F3EF;
-    --bg-card: #FAFAF8;
-    --bg-elevated: #FFFFFF;
-    --bg-sidebar: #F0EDE8;
-    --bg-input: #F7F6F2;
 
-    .logo-nexus { color: #1A1A1A; }
-    .logo-os    { color: #1A5FB4; letter-spacing: 0; }
+    --bg-page:     #F5F3EF;
+    --bg-card:     #FAFAF8;
+    --bg-elevated: #FFFFFF;
+    --bg-sidebar:  #F0EDE8;
+    --bg-input:    #F7F6F2;
   }
 
   .dark {
@@ -37,17 +57,18 @@
     --obsidian: #0D1521;
     --atmospheric-grey: #F6F6F6;
     --trajectory-blue: #0052CC; /* Original blue */
+    --bg-card: #0D1521;
+    --bg-page: #0D1521;
 
     .logo-os { color: #5B9FE8; }  /* lighter blue for dark bg */
   }
 
   body {
-    @apply bg-obsidian text-atmospheric-grey antialiased;
+    background-color: var(--bg-page, var(--obsidian));
+    @apply text-atmospheric-grey antialiased;
   }
-
-  html, body {
-    background-color: var(--bg-page);
-  }
+  
+  html, body { background-color: var(--bg-page, var(--obsidian)); }
 }
 
 @layer utilities {
@@ -57,6 +78,21 @@
     border: 1px solid rgba(15, 23, 42, 0.10);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   }
+
+  /* Landing page only: clearer edges on warm light backgrounds */
+  .landing-glass-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(71, 66, 58, 0.22);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  }
+  .dark .landing-glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+  }
+
   .dark .glass-panel {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -82,7 +118,7 @@
   }
 
   .space-bg {
-    background-color: var(--background);
+    background-color: var(--bg-page, var(--background));
     background-image: 
       radial-gradient(circle at 15% 50%, rgba(0, 82, 204, 0.08) 0%, transparent 40%),
       radial-gradient(circle at 85% 30%, rgba(0, 82, 204, 0.06) 0%, transparent 40%);
@@ -104,11 +140,11 @@
   }
 
   .surface-card {
-    @apply bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-white/10;
+    @apply bg-surface-card dark:bg-slate-950/60 border border-slate-200 dark:border-white/10;
   }
   
   .surface-muted {
-    @apply bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10;
+    @apply bg-surface-sidebar dark:bg-white/5 border border-slate-200 dark:border-white/10;
   }
 
   .text-muted {

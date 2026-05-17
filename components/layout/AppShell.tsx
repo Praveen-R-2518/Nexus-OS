@@ -27,7 +27,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-obsidian">
+    <div className="flex min-h-screen flex-col bg-surface-page dark:bg-obsidian">
       <TopBar />
       <main className="flex-1 p-6">{children}</main>
     </div>

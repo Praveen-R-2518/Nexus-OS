@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/dashboard", label: "Command Center" },
@@ -26,7 +27,7 @@ export default function TopBar() {
 
   return (
     <div className="px-6 pt-4 pb-2 w-full z-50 sticky top-0">
-      <header className="flex w-full items-center justify-between px-8 py-4 rounded-full bg-surface-sidebar dark:bg-black/20 backdrop-blur-md border border-black/10 dark:border-white/10 shadow-lg transition-all duration-300 hover:bg-surface-sidebar/80 dark:hover:bg-black/40 hover:shadow-xl">
+      <header className="flex w-full items-center justify-between px-8 py-4 rounded-full bg-surface-sidebar/60 dark:bg-black/20 backdrop-blur-md border border-black/10 dark:border-white/10 shadow-lg transition-all duration-300 hover:bg-surface-sidebar/80 dark:hover:bg-black/40 hover:shadow-xl">
         {/* Left: Wordmark */}
         <div className="flex items-center">
           <span className="font-mono text-lg font-bold tracking-[0.2em]">
@@ -44,8 +45,12 @@ export default function TopBar() {
                 <Link
                   key={href}
                   href={href}
-                  aria-current={active ? "page" : undefined}
-                  className="text-sm text-[#2E2E2E] px-[10px] py-[6px] rounded-[6px] transition-colors duration-150 hover:bg-[#EBEBEB] hover:text-[#111111] aria-[current=page]:bg-[#E0E0E0] aria-[current=page]:text-[#111111] aria-[current=page]:font-medium cursor-pointer no-underline nav-link"
+                  className={cn(
+                    "text-sm font-medium transition-colors",
+                    active
+                      ? "text-foreground"
+                      : "text-foreground/60 hover:text-foreground"
+                  )}
                 >
                   {label}
                 </Link>
@@ -58,7 +63,7 @@ export default function TopBar() {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="inline-flex cursor-pointer items-center justify-center rounded-full border border-transparent bg-[#E54D2E] px-5 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#FDEAEA] hover:text-[#8B1A1A] hover:border-[#C0392B]/50"
+              className="inline-flex cursor-pointer items-center justify-center rounded-full bg-[#E54D2E] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#E54D2E]/90"
             >
               Logout <span className="ml-1">→</span>
             </button>

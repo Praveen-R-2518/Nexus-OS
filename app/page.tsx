@@ -35,7 +35,7 @@ function StepCard({ step, index }: { step: { id: string; title: string; desc: st
         damping: 20,
         delay: 0.1,
       }}
-      className={`glass-panel p-10 md:p-12 rounded-3xl flex flex-col gap-4 relative overflow-hidden group w-full max-w-2xl ${
+      className={`landing-glass-card p-10 md:p-12 rounded-3xl flex flex-col gap-4 relative overflow-hidden group w-full max-w-2xl ${
         isEven ? "md:self-start" : "md:self-end"
       }`}
     >
@@ -89,7 +89,7 @@ export default function LandingPage() {
               href="/login"
               className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 dark:bg-atmospheric-grey text-white dark:text-obsidian font-semibold rounded-full overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              <div className="absolute inset-0 bg-surface-card/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <div className="absolute inset-0 bg-surface-elevated/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <span className="relative">Get Started</span>
               <ChevronsRight className="relative w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -107,7 +107,7 @@ export default function LandingPage() {
 
         <div className="relative flex flex-col gap-16 md:gap-24">
           {/* Central connecting line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-trajectory-blue/0 via-trajectory-blue/20 to-trajectory-blue/0 hidden md:block -translate-x-1/2" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-trajectory-blue/0 via-trajectory-blue/35 dark:via-trajectory-blue/20 to-trajectory-blue/0 hidden md:block -translate-x-1/2" />
           
           {steps.map((step, index) => (
             <StepCard key={step.id} step={step} index={index} />
@@ -116,7 +116,7 @@ export default function LandingPage() {
       </section>
 
       {/* Quote & Logo Section */}
-      <section className="relative py-32 px-6 flex flex-col items-center justify-center border-t border-slate-200 dark:border-white/5 overflow-hidden">
+      <section className="relative py-32 px-6 flex flex-col items-center justify-center border-t-2 border-[#BDB6AD] dark:border-white/5 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-50 dark:from-obsidian via-trajectory-blue/5 to-slate-50 dark:to-obsidian pointer-events-none" />
         
         <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
@@ -139,14 +139,14 @@ export default function LandingPage() {
             &quot;We built Nexus OS because founders shouldn&apos;t have to choose between saving time and saving revenue.&quot;
           </blockquote>
           <div className="mt-12 flex flex-col items-center gap-3">
-            <div className="w-12 h-[1px] bg-trajectory-blue/50" />
+            <div className="w-12 h-0.5 rounded-full bg-trajectory-blue/55 dark:bg-trajectory-blue/50" />
             <span className="text-sm font-medium uppercase tracking-widest text-trajectory-blue">The Nexus Team</span>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-obsidian py-12 px-6">
+      <footer className="border-t-2 border-[#BDB6AD] dark:border-white/10 bg-slate-50 dark:bg-obsidian py-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
             <span className="font-mono text-sm font-bold tracking-widest text-slate-900 dark:text-atmospheric-grey">NEXUS OS</span>

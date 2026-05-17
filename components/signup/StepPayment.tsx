@@ -136,7 +136,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Card details</span>
           <div className="flex h-7 items-center gap-2">
             {brand === "visa" ? (
-              <span className="rounded bg-surface-card px-1.5 py-0.5 text-[10px] font-bold text-blue-900">
+              <span className="rounded bg-surface-elevated px-1.5 py-0.5 text-[10px] font-bold text-blue-900">
                 VISA
               </span>
             ) : null}

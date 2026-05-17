@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -18,11 +19,11 @@ const config: Config = {
         "trajectory-blue": "var(--trajectory-blue)",
         "atmospheric-grey": "var(--atmospheric-grey)",
         surface: {
-          "page": "#F5F3EF",
-          "card": "#FAFAF8",
-          "elevated": "#FFFFFF",
-          "sidebar": "#F0EDE8",
-          "input": "#F7F6F2",
+          'page':     '#F5F3EF',
+          'card':     '#FAFAF8',
+          'elevated': '#FFFFFF',
+          'sidebar':  '#F0EDE8',
+          'input':    '#F7F6F2',
         },
         badge: {
           "pending-bg": "#FDF3E3",
