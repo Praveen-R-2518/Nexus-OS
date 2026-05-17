@@ -350,7 +350,7 @@ export default function DashboardPage() {
                   Live Inbox
                 </h2>
                 <span
-                  className="text-[#1B6B3A] dark:text-emerald-400 animate-pulse-dot select-none"
+                  className="text-[#2D7A4F] dark:text-emerald-400 opacity-80 animate-pulse select-none"
                   aria-hidden
                 >
                   ●
@@ -547,7 +547,7 @@ export default function DashboardPage() {
                               className={cn(
                                 "h-full rounded-full transition-all",
                                 c.risk_score >= 80
-                                  ? "bg-red-500/80"
+                                  ? "bg-[#C0392B] opacity-70"
                                   : c.risk_score >= 60
                                     ? "bg-orange-500/80"
                                     : c.risk_score >= 40
