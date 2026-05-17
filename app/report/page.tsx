@@ -116,29 +116,30 @@ function csvEscape(value: string | number): string {
   return `"${str.replace(/"/g, '""')}"`;
 }
 
-function TypewriterSummary({ text }: { text: string }) {
+function TypewriterSummary({ text }: { text: string | null | undefined }) {
+  const safeText = text ?? "";
   const [visibleText, setVisibleText] = useState("");
 
   useEffect(() => {
     setVisibleText("");
-    if (!text) return;
+    if (!safeText) return;
 
     let index = 0;
     const timer = window.setInterval(() => {
       index += 1;
-      setVisibleText(text.slice(0, index));
-      if (index >= text.length) {
+      setVisibleText(safeText.slice(0, index));
+      if (index >= safeText.length) {
         window.clearInterval(timer);
       }
     }, 14);
 
     return () => window.clearInterval(timer);
-  }, [text]);
+  }, [safeText]);
 
   return (
     <p className="whitespace-pre-line text-base leading-8 text-gray-700 dark:text-gray-200">
       {visibleText}
-      {visibleText.length < text.length ? (
+      {safeText.length > 0 && visibleText.length < safeText.length ? (
         <span className="ml-0.5 animate-pulse text-[#1B6B3A]">|</span>
       ) : null}
     </p>
