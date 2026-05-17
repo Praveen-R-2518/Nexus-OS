@@ -10,22 +10,22 @@ export interface BadgeProps {
 
 const urgencyColors: Record<string, string> = {
   critical:
-    "border-red-500/50 bg-red-50 dark:bg-red-500/15 text-[#8B1A1A] dark:text-red-300",
+    "border-badge-critical-ring bg-badge-critical-bg dark:bg-red-500/15 text-badge-critical-text dark:text-red-300",
   high:
-    "border-orange-500/40 bg-orange-50 dark:bg-orange-500/10 text-[#7A4200] dark:text-orange-300",
+    "border-badge-high-ring bg-badge-high-bg dark:bg-orange-500/10 text-badge-high-text dark:text-orange-300",
   medium:
-    "border-yellow-500/40 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+    "border-badge-medium-ring bg-badge-medium-bg dark:bg-yellow-500/10 text-badge-medium-text dark:text-yellow-300",
   low:
-    "border-green-500/40 bg-green-50 dark:bg-green-500/10 text-[#1B6B3A] dark:text-green-300",
+    "border-badge-low-ring bg-badge-low-bg dark:bg-green-500/10 text-badge-low-text dark:text-green-300",
 };
 
 const intentColors: Record<string, string> = {
   purchase:
     "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-400",
   complaint:
-    "border-red-500/40 bg-red-50 dark:bg-red-500/10 text-[#8B1A1A] dark:text-red-400",
+    "border-badge-critical-ring bg-badge-critical-bg dark:bg-red-500/10 text-badge-critical-text dark:text-red-400",
   churn_risk:
-    "border-orange-500/40 bg-orange-50 dark:bg-orange-500/10 text-[#7A4200] dark:text-orange-400",
+    "border-badge-high-ring bg-badge-high-bg dark:bg-orange-500/10 text-badge-high-text dark:text-orange-400",
   support:
     "border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400",
   unknown:
@@ -36,9 +36,9 @@ const statusColors: Record<string, string> = {
   approved:
     "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-400",
   pending:
-    "border-yellow-500/40 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+    "border-badge-pending-ring bg-badge-pending-bg dark:bg-yellow-500/10 text-badge-pending-text dark:text-yellow-400",
   rejected:
-    "border-red-500/40 bg-red-50 dark:bg-red-500/10 text-[#8B1A1A] dark:text-red-400",
+    "border-badge-critical-ring bg-badge-critical-bg dark:bg-red-500/10 text-badge-critical-text dark:text-red-400",
   sent:
     "border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400",
 };

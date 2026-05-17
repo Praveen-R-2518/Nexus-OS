@@ -201,7 +201,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
                   "rounded-lg border px-3 py-2 text-sm flex items-center",
                   banner.type === "ok"
                     ? "border-emerald-500/40 bg-emerald-500/10 text-[#1B6B3A]"
-                    : "border-red-500/40 bg-red-500/10 text-[#8B1A1A]",
+                    : "border-badge-critical-ring bg-badge-critical-bg text-badge-critical-text",
                 )}
                 role="status"
               >
