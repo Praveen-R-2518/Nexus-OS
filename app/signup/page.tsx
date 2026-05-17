@@ -57,25 +57,18 @@ export default function SignupPage() {
       if (session) {
         setSnapshot((s) => {
           if (s.currentStep !== 1) return s;
-          return { ...s, currentStep: 2, accountVerificationPending: false };
+          return { ...s, currentStep: 2 };
         });
         return;
       }
 
       setSnapshot((s) => {
-        if (s.accountVerificationPending) {
-          if (s.currentStep !== 1) {
-            return { ...s, currentStep: 1 };
-          }
-          return s;
-        }
         if (s.currentStep > 1) {
           return {
             ...defaultSignupSnapshot(),
             accountEmail: s.accountEmail,
             accountFullName: s.accountFullName,
             accountPhone: s.accountPhone,
-            accountVerificationPending: false,
           };
         }
         return s;
