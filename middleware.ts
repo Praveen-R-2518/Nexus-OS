@@ -7,6 +7,7 @@ const PROTECTED_PREFIXES = [
   "/approval",
   "/report",
   "/logs",
+  "/onboarding",
 ] as const;
 
 function isProtectedPath(pathname: string): boolean {
@@ -52,6 +53,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  if (pathname.startsWith("/auth/callback")) {
+    return response;
+  }
+
   if (pathname === "/login" || pathname.startsWith("/login/")) {
     if (user) {
       const nextParam = request.nextUrl.searchParams.get("next");
@@ -92,5 +97,8 @@ export const config = {
     "/logs/:path*",
     "/login",
     "/login/:path*",
+    "/onboarding",
+    "/onboarding/:path*",
+    "/auth/callback",
   ],
 };

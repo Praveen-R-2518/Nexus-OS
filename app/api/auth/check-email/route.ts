@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  resolveSignupEmailStatus,
+  type SignupEmailStatus,
+} from "@/lib/auth/signup-email-status";
+import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
@@ -8,6 +12,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+export type { SignupEmailStatus };
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -18,8 +24,9 @@ function isValidEmail(email: string): boolean {
 }
 
 /**
- * POST { email: string } -> { registered: boolean }
- * Uses service_role + RPC check_signup_email_registered (see migration 0009).
+ * POST { email: string } -> { status, registered }
+ * `registered` is true only when email is confirmed (backward compatible).
+ * Uses service_role + RPC check_signup_email_status.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:auth:check-email", 10, 60_000);
@@ -41,19 +48,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { data, error } = await supabaseAdmin.rpc("check_signup_email_registered", {
-      email_input: email,
+    const normalized = await resolveSignupEmailStatus(supabaseAdmin, email);
+
+    return NextResponse.json({
+      status: normalized,
+      registered: normalized === "confirmed",
     });
-
-    if (error) {
-      console.error("[api/auth/check-email] rpc error:", error.message);
-      return NextResponse.json(
-        { error: "Unable to verify email availability" },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({ registered: Boolean(data) });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[api/auth/check-email]", message);
