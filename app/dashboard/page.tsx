@@ -1,5 +1,6 @@
 "use client";
 
+import DemoButton from "@/app/components/DemoButton";
 import Link from "next/link";
 import {
   useCallback,
@@ -261,12 +262,28 @@ export default function DashboardPage() {
   }, [conversations]);
 
   return (
-    <div className="min-h-[calc(100vh-6rem)] space-y-8">
+    <div className="relative min-h-[calc(100vh-6rem)] overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.55]"
+        aria-hidden
+      >
+        <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-violet-500/20 dark:bg-violet-500/10 blur-3xl" />
+      </div>
+
+      <div className="relative space-y-8">
         <header className="border-b border-black/10 dark:border-white/10 pb-6">
-          <div className="mb-2">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Command Center
-            </h1>
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Command Center
+              </h1>
+            </div>
+            <DemoButton
+              onSent={() => {
+                void loadDashboard({ silent: true });
+              }}
+            />
           </div>
           <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400 mb-8">
             Live revenue rescue ops — prioritize revenue at risk, route hot
@@ -559,6 +576,7 @@ export default function DashboardPage() {
             </section>
           </div>
         </div>
+      </div>
     </div>
   );
 }

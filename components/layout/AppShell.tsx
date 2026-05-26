@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { SessionGate } from "@/components/auth/SessionGate";
 import TopBar from "@/components/layout/TopBar";
 
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
@@ -30,9 +29,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-surface-page dark:bg-obsidian">
       <TopBar />
-      <main className="flex-1 p-6">
-        <SessionGate>{children}</SessionGate>
-      </main>
+      <main className="flex-1 p-6">{children}</main>
     </div>
   );
 }
