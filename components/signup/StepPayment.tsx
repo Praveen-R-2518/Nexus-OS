@@ -27,7 +27,7 @@ type StepPaymentProps = {
 };
 
 const fieldClass =
-  "h-11 w-full border border-black bg-white px-3 font-mono text-sm text-gray-900 outline-none transition focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]";
+  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none transition focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]";
 
 export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -90,7 +90,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <div className="border border-dashed border-black bg-[#eef6fb] px-4 py-3 font-mono text-xs text-black dark:border-white dark:bg-[#0c141f] dark:text-white">
+      <div className="border border-dashed border-border bg-[#eef6fb] px-4 py-3 font-mono text-xs text-black dark:border-border dark:bg-surface-elevated dark:text-white">
         <p className="flex items-center gap-2 font-semibold uppercase tracking-widest">
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
           Sandbox — payment not processed
@@ -105,7 +105,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           Styled like a card form. Replace submit handler when payment API keys are ready.
         </p>
       </div>
-      <div className="border border-black bg-white p-4 font-mono text-sm dark:border-white dark:bg-[#0a1018]">
+      <div className="border border-border bg-white p-4 font-mono text-sm dark:border-border dark:bg-surface-card">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
           Order summary
         </p>
@@ -132,7 +132,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
               14 days free, then {recurring}
             </dd>
           </div>
-          <div className="flex justify-between gap-4 border-t border-dashed border-black pt-2 font-semibold text-black dark:border-white dark:text-white">
+          <div className="flex justify-between gap-4 border-t border-dashed border-border pt-2 font-semibold text-black dark:border-border dark:text-white">
             <dt>Total due today</dt>
             <dd className="tabular-nums">$0.00</dd>
           </div>
@@ -140,7 +140,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
       </div>
       <form
         onSubmit={onSubmit}
-        className="space-y-4 border border-black bg-white p-4 dark:border-white dark:bg-[#0a1018]"
+        className="space-y-4 border border-border bg-white p-4 dark:border-border dark:bg-surface-card"
       >
         <div className="flex items-center justify-between">
           <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/80 dark:text-white/75">
@@ -148,12 +148,12 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           </span>
           <div className="flex h-7 items-center gap-2">
             {brand === "visa" ? (
-              <span className="border border-black px-1.5 py-0.5 font-mono text-[10px] font-bold text-black dark:border-white dark:text-white">
+              <span className="border border-border px-1.5 py-0.5 font-mono text-[10px] font-bold text-black dark:border-border dark:text-white">
                 VISA
               </span>
             ) : null}
             {brand === "mastercard" ? (
-              <span className="border border-black bg-[#0f2336] px-1.5 py-0.5 font-mono text-[10px] font-bold text-white dark:border-white">
+              <span className="border border-border bg-[#0f2336] px-1.5 py-0.5 font-mono text-[10px] font-bold text-white dark:border-border">
                 MC
               </span>
             ) : null}
@@ -234,7 +234,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-60 dark:border-white"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-60 dark:border-border"
         >
           {busy ? <Spinner className="h-5 w-5" label="Processing" /> : null}
           {busy ? "Processing…" : "Start free trial"}

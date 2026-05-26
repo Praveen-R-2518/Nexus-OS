@@ -287,18 +287,18 @@ function InboxPageContent() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {listError && conversations.length > 0 ? (
-        <p className="mb-3 shrink-0 border border-status-warning-border bg-status-warning-surface px-3 py-2 font-mono text-xs text-status-warning">
+        <p className="mb-3 shrink-0 rounded-xl border border-status-warning-border bg-status-warning-surface px-3 py-2 font-mono text-xs text-status-warning">
           Could not refresh inbox: {listError}
         </p>
       ) : null}
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden border border-black bg-white dark:border-white dark:bg-[#0a1018]">
-        <div className="relative shrink-0 border-b border-black bg-ref-mint p-4 dark:border-white dark:bg-[#0c141f]">
+      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border dark:bg-surface-card">
+        <div className="relative shrink-0 hairline-b bg-ref-mint p-4 dark:bg-surface-elevated">
           <div className="relative z-10">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 font-sans text-3xl font-black tabular-nums tracking-tight text-ref-cta sm:text-4xl dark:text-emerald-300/90">
+            <p className="mt-2 font-sans text-3xl font-black tabular-nums tracking-tight text-ref-cta sm:text-4xl dark:text-sky-300/90">
               {formatCurrency(revenueAtRisk)}
             </p>
             <p className="mt-1.5 font-mono text-xs text-muted">
@@ -307,7 +307,7 @@ function InboxPageContent() {
           </div>
         </div>
 
-        <div className="max-h-[min(38vh,320px)] shrink-0 space-y-4 overflow-y-auto overscroll-y-contain border-b border-black p-4 dark:border-white">
+        <div className="max-h-[min(38vh,320px)] shrink-0 space-y-4 overflow-y-auto overscroll-y-contain hairline-b p-4">
           <div>
             <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
               Urgency
@@ -322,7 +322,7 @@ function InboxPageContent() {
                     type="button"
                     onClick={() => setActiveUrgencyFilter(opt.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
                         ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
                         : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
@@ -331,7 +331,7 @@ function InboxPageContent() {
                     {opt.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center border border-black/10 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-white/10",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border border-border/50 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-border/60",
                         active
                           ? "bg-status-positive-surface font-bold text-status-positive"
                           : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
@@ -358,7 +358,7 @@ function InboxPageContent() {
                     type="button"
                     onClick={() => setActiveIntentFilter(opt.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
                         ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
                         : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
@@ -367,7 +367,7 @@ function InboxPageContent() {
                     {opt.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center border border-black/10 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-white/10",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border border-border/50 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-border/60",
                         active
                           ? "bg-status-positive-surface font-bold text-status-positive"
                           : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
@@ -389,12 +389,12 @@ function InboxPageContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Name or message…"
-              className="h-11 w-full border border-black bg-surface-input px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-white dark:focus:border-emerald-300/70 dark:focus:ring-emerald-300/50"
+              className="h-11 w-full rounded-xl border border-border bg-surface-input px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border dark:focus:border-sky-400/55 dark:focus:ring-sky-400/45"
             />
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-t border-black p-2 dark:border-white">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain hairline-t p-2">
           {filteredConversations.length === 0 ? (
             <EmptyState
               title="No messages match"
@@ -419,10 +419,10 @@ function InboxPageContent() {
                       type="button"
                       onClick={() => setSelectedConversationId(c.id)}
                       className={cn(
-                        "w-full cursor-pointer border border-black/15 bg-white p-3 text-left transition-colors duration-interaction hover:border-black hover:bg-ref-mint dark:border-white/15 dark:bg-[#0c141f] dark:hover:border-white/40 dark:hover:bg-[#0f1810]",
+                        "w-full cursor-pointer rounded-xl border border-border/60 bg-white p-3 text-left transition-colors duration-interaction hover:border-border hover:bg-ref-mint dark:border-border/70 dark:bg-surface-elevated dark:hover:border-border-strong dark:hover:bg-surface-muted",
                         criticalBorder,
                         selected &&
-                          "border-black bg-ref-ice ring-1 ring-ref-cta dark:border-white dark:bg-[#0f1810] dark:ring-emerald-300/70",
+                          "border-border bg-ref-ice ring-1 ring-ref-cta dark:border-border-strong dark:bg-surface-muted dark:ring-sky-400/40",
                       )}
                     >
                       <div className="flex items-start gap-3">
@@ -474,12 +474,12 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden border border-black bg-white dark:border-white dark:bg-[#0a1018]">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border dark:bg-surface-card">
         {!selectedConversation ? (
           <EmptyState
             title="Select a message to view details"
             icon={<InboxIcon />}
-              className="m-4 min-h-[320px] flex-1 border border-dashed border-black/30 dark:border-white/25"
+              className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
           />
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
@@ -502,7 +502,7 @@ function InboxPageContent() {
               {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0a1018]"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-surface-card"
                 >
                   View Draft Reply
                 </Link>
@@ -519,11 +519,11 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 border border-black bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey dark:border-white">
+            <div className="mb-6 rounded-xl border border-border bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey dark:border-border/70">
               {conversationMessageText(selectedConversation)}
             </div>
 
-            <div className="mb-6 border border-black bg-white p-4 dark:border-white dark:bg-[#0c141f]">
+            <div className="mb-6 rounded-xl border border-border bg-white p-4 dark:border-border/70 dark:bg-surface-elevated">
               <h2 className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                 Classification
               </h2>
@@ -552,9 +552,9 @@ function InboxPageContent() {
                       {selectedConversation.risk_score}
                     </span>
                   </div>
-                  <div className="mt-3 h-2 w-full overflow-hidden border border-black/10 bg-surface-muted dark:border-white/10">
+                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full border border-border/40 bg-surface-muted dark:border-border/50">
                     <div
-                      className="h-full bg-ref-cta transition-all dark:bg-emerald-400/80"
+                      className="h-full bg-ref-cta transition-all dark:bg-sky-400/72"
                       style={{
                         width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
                       }}
@@ -574,7 +574,7 @@ function InboxPageContent() {
             </div>
 
             {stage ? (
-              <div className="mt-auto border-t border-black pt-8 dark:border-white">
+              <div className="mt-auto hairline-t pt-8">
                 <h2 className="mb-5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                   Status
                 </h2>
@@ -594,7 +594,7 @@ function InboxPageContent() {
                     >
                       <span
                         className={cn(
-                          "flex h-10 w-10 shrink-0 items-center justify-center border text-sm font-bold tabular-nums transition-colors duration-interaction",
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-bold tabular-nums transition-colors duration-interaction",
                           done
                             ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                             : "border-border bg-surface-muted text-muted",

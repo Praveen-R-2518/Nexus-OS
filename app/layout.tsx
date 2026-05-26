@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
+import { Source_Sans_3 } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
@@ -19,6 +21,13 @@ const geistMono = localFont({
   display: "swap",
 });
 
+const sourceSans3 = Source_Sans_3({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-source-sans-3",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Nexus OS",
   description: "AI inbox and revenue rescue command center",
@@ -32,10 +41,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${sourceSans3.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-surface-page font-sans text-atmospheric-grey antialiased transition-colors duration-300 dark:bg-obsidian">
+      <body className="min-h-screen bg-surface-page font-chrome text-atmospheric-grey antialiased transition-colors duration-300 dark:bg-obsidian">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.classList.toggle('dark',r==='dark');}catch(e){document.documentElement.classList.add('dark');}})();`}
+        </Script>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <QueryProvider>
             <SmoothScrollProvider>

@@ -45,7 +45,7 @@ function CountTile({
   return (
     <div
       className={cn(
-        "border border-black bg-white px-4 py-4 dark:border-white dark:bg-[#0a1018]",
+        "rounded-xl border border-border bg-white px-4 py-4 dark:border-border/60 dark:bg-surface-card",
         accent,
       )}
     >
@@ -84,9 +84,9 @@ export default function LogsPage() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-4 border-b border-black pb-8 dark:border-white sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-4 hairline-b pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-emerald-300/90">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-sky-300/90">
             Nexus OS
           </p>
           <h1 className="mt-3 flex items-center gap-3 font-sans text-2xl font-black uppercase tracking-tight text-atmospheric-grey sm:text-3xl">
@@ -101,7 +101,7 @@ export default function LogsPage() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 self-start border border-black bg-white px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-atmospheric-grey transition-colors duration-interaction hover:bg-ref-mint disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-[#0a1018] dark:hover:bg-[#0c141f]"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-xl border border-border bg-white px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-atmospheric-grey transition-colors duration-interaction hover:bg-ref-mint disabled:cursor-not-allowed disabled:opacity-50 dark:border-border/60 dark:bg-surface-card dark:hover:bg-surface-elevated"
         >
           <RefreshCw
             className={cn("h-5 w-5", loading && "animate-spin")}
@@ -113,7 +113,7 @@ export default function LogsPage() {
 
       {error ? (
         <div
-          className="flex items-start gap-4 border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical"
+          className="flex items-start gap-4 rounded-xl border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical"
           role="alert"
         >
           <AlertCircle className="mt-0.5 h-6 w-6 shrink-0" aria-hidden />
@@ -157,10 +157,10 @@ export default function LogsPage() {
             type="button"
             onClick={() => setFilter(value)}
             className={cn(
-              "inline-flex min-h-11 cursor-pointer items-center border px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+              "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
               filter === value
-                ? "border-ref-cta bg-ref-mint text-ref-cta dark:border-emerald-300/70 dark:bg-[#0c141f] dark:text-emerald-200"
-                : "border-black/20 bg-white text-muted hover:border-black hover:text-atmospheric-grey dark:border-white/20 dark:bg-[#0a1018] dark:hover:border-white/50",
+                ? "border-ref-cta bg-ref-mint text-ref-cta dark:border-sky-400/45 dark:bg-surface-elevated dark:text-sky-200"
+                : "border-border/60 bg-white text-muted hover:border-border hover:text-atmospheric-grey dark:border-border/60 dark:bg-surface-card dark:hover:border-border-strong",
             )}
           >
             {label}
@@ -169,7 +169,7 @@ export default function LogsPage() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex min-h-[260px] items-center justify-center border border-black bg-white dark:border-white dark:bg-[#0a1018]">
+        <div className="flex min-h-[260px] items-center justify-center rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card">
           <Spinner className="h-10 w-10 text-status-positive" />
         </div>
       ) : logs.length === 0 ? (
@@ -179,11 +179,11 @@ export default function LogsPage() {
           className="border-border surface-card"
         />
       ) : (
-        <div className="overflow-hidden border border-black bg-white dark:border-white dark:bg-[#0a1018]">
+        <div className="overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-base">
               <thead>
-                <tr className="border-b border-border bg-surface-muted/80 text-sm font-bold uppercase tracking-brand text-muted">
+                <tr className="hairline-b bg-surface-muted/80 text-sm font-bold uppercase tracking-brand text-muted">
                   <th className="px-5 py-4">Time</th>
                   <th className="px-5 py-4">Workflow</th>
                   <th className="px-5 py-4">Step</th>
@@ -191,11 +191,11 @@ export default function LogsPage() {
                   <th className="px-5 py-4">Error</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody>
                 {logs.map((row) => (
                   <tr
                     key={row.id}
-                    className="transition-colors hover:bg-surface-muted/50"
+                    className="hairline-b transition-colors last:border-b-0 hover:bg-surface-muted/50"
                   >
                     <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-muted">
                       {new Date(row.timestamp).toLocaleString()}
@@ -209,7 +209,7 @@ export default function LogsPage() {
                     <td className="px-5 py-4">
                       <span
                         className={cn(
-                          "inline-flex border px-2 py-1 font-mono text-xs font-semibold uppercase",
+                          "inline-flex rounded-md border px-2 py-1 font-mono text-xs font-semibold uppercase",
                           resultBadgeClass(row.result),
                         )}
                       >

@@ -24,7 +24,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border border-black bg-white dark:border-white dark:bg-[#0a1018]">
+    <div className="border border-border bg-white dark:border-border dark:bg-surface-card">
       <button
         type="button"
         onClick={onToggle}
@@ -38,7 +38,7 @@ function Section({
         )}
       </button>
       {open ? (
-        <div className="border-t border-black px-4 py-3 font-mono text-sm dark:border-white">{children}</div>
+        <div className="border-t border-border px-4 py-3 font-mono text-sm dark:border-border">{children}</div>
       ) : null}
     </div>
   );
@@ -146,7 +146,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
         <label className="mt-4 flex cursor-pointer items-center gap-2 font-mono text-xs text-gray-700 dark:text-gray-200">
           <input
             type="checkbox"
-            className="h-4 w-4 border border-black bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+            className="h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
             checked={chkA}
             onChange={(e) => setChkA(e.target.checked)}
           />
@@ -169,7 +169,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
         <label className="mt-4 flex cursor-pointer items-center gap-2 font-mono text-xs text-gray-700 dark:text-gray-200">
           <input
             type="checkbox"
-            className="h-4 w-4 border border-black bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+            className="h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
             checked={chkB}
             onChange={(e) => setChkB(e.target.checked)}
           />
@@ -207,7 +207,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
                 className={cn(
                   "flex items-center border border-dashed px-3 py-2 font-mono text-xs",
                   banner.type === "ok"
-                    ? "border-black bg-[#e3eef6] text-[#0f2336] dark:border-white dark:bg-[#0c141f] dark:text-[#a8bdd4]"
+                    ? "border-border bg-[#e3eef6] text-[#0f2336] dark:border-border dark:bg-surface-elevated dark:text-[#a8bdd4]"
                     : "border-badge-critical-ring bg-badge-critical-bg text-badge-critical-text",
                 )}
                 role="status"
@@ -220,7 +220,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
               type="button"
               disabled={busy}
               onClick={testConnection}
-              className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-white"
+              className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border"
             >
               {busy ? "Testing…" : "Test Connection"}
             </button>

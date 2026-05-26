@@ -8,9 +8,27 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    borderRadius: {
+      none: "0",
+      sm: "0.5rem",
+      DEFAULT: "0.75rem",
+      md: "0.75rem",
+      lg: "0.875rem",
+      xl: "1rem",
+      "2xl": "1.25rem",
+      "3xl": "1.5rem",
+      full: "9999px",
+    },
     extend: {
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        chrome: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        body: [
+          "var(--font-source-sans-3)",
+          '"Source Sans 3"',
+          "system-ui",
+          "sans-serif",
+        ],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
       colors: {

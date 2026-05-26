@@ -106,7 +106,7 @@ function LoginForm() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 surface-card p-6 shadow-2xl shadow-black/10 dark:shadow-black/40">
         <div className="mb-6 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1B6B3A] dark:text-emerald-400">
+          <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1B6B3A] dark:text-sky-300">
             Founder Access
           </p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
@@ -177,7 +177,7 @@ function LoginForm() {
           Need an account?{" "}
           <a
             href="/signup"
-            className="text-[#1B6B3A] dark:text-emerald-400 underline decoration-emerald-500/40 underline-offset-2 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
+            className="text-[#1B6B3A] dark:text-sky-300 underline decoration-emerald-500/40 underline-offset-2 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
           >
             Start signup
           </a>

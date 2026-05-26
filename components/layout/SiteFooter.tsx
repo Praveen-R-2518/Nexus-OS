@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-black bg-white text-black dark:border-white dark:bg-[#05080c] dark:text-white">
+    <footer className="rounded-t-xl hairline-t bg-white text-black dark:bg-surface-page dark:text-white">
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-4 py-10 md:flex-row md:items-center md:px-8">
         <div className="space-y-2 font-mono text-xs text-black/70 dark:text-white/65">
           <p className="font-bold uppercase tracking-[0.28em] text-black dark:text-white">
@@ -16,19 +16,19 @@ export default function SiteFooter() {
         <div className="flex flex-wrap gap-x-8 gap-y-3 font-mono text-xs uppercase tracking-widest text-black dark:text-white">
           <Link
             href="#"
-            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#142911] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-emerald-200/80 dark:focus-visible:ring-offset-[#05080c]"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-sky-400/55 dark:focus-visible:ring-offset-surface-page"
           >
             Privacy
           </Link>
           <Link
             href="#"
-            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#142911] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-emerald-200/80 dark:focus-visible:ring-offset-[#05080c]"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-sky-400/55 dark:focus-visible:ring-offset-surface-page"
           >
             Terms
           </Link>
           <Link
             href="/login"
-            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#142911] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-emerald-200/80 dark:focus-visible:ring-offset-[#05080c]"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-sky-400/55 dark:focus-visible:ring-offset-surface-page"
           >
             Support
           </Link>

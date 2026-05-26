@@ -108,7 +108,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 border-b border-black pb-8 text-center sm:mb-10 dark:border-white">
+        <header className="mb-8 hairline-b pb-8 text-center sm:mb-10">
           <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/55 dark:text-white/50">
             [ ONBOARD / WORKSPACE ]
           </p>
@@ -125,9 +125,9 @@ export default function SignupPage() {
             </Link>
           </p>
         </header>
-        <div className="border border-black bg-white p-4 sm:p-8 dark:border-white dark:bg-[#0a1018]">
+        <div className="border border-border bg-white p-4 sm:p-8 dark:border-border dark:bg-surface-card">
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
-          <div className="mt-8 border-t border-dashed border-black pt-8 sm:mt-10 dark:border-white">
+          <div className="mt-8 border-t border-dashed border-border pt-8 sm:mt-10 dark:border-border">
             {snapshot.currentStep === 1 ? (
               <StepAccount
                 snapshot={snapshot}
