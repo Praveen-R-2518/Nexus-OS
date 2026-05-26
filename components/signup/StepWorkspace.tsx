@@ -79,53 +79,38 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
       return;
     }
 
-    const baseSlug = companyName
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    const slug = `${baseSlug || "workspace"}-${Date.now()}`;
+    const inviteEmails = teamEmails.map((s) => s.trim().toLowerCase()).filter(Boolean);
 
-    const { data, error: wsError } = await supabase
-      .from("workspaces")
-      .insert({
-        name: companyName.trim(),
-        slug,
-        workspace_type: workspaceType,
-        industry,
-        company_size: companySize,
-        owner_user_id: user.id,
-      })
-      .select("id")
-      .single();
+    const { data: rpcData, error: rpcError } = await supabase.rpc("launch_workspace", {
+      company_name: companyName.trim(),
+      invite_emails: inviteEmails,
+      workspace_type: workspaceType,
+      industry,
+      company_size: companySize,
+    });
 
-    if (wsError || !data?.id) {
-      setError(wsError?.message || "Could not create workspace.");
+    if (rpcError) {
+      setError(rpcError.message || "Could not create workspace.");
       setBusy(false);
       return;
     }
 
-    const { error: memError } = await supabase.from("workspace_members").insert({
-      workspace_id: data.id,
-      user_id: user.id,
-      role: "owner",
-    });
-
-    if (memError) {
-      setError(memError.message);
+    const wid = (rpcData as { workspace_id?: string } | null)?.workspace_id;
+    if (!wid) {
+      setError("Could not create workspace.");
       setBusy(false);
       return;
     }
 
     setBusy(false);
     onComplete({
-      workspaceId: data.id,
+      workspaceId: wid,
       companyName: companyName.trim(),
       industry,
       companySize,
       workspaceType,
       teamSize: workspaceType === "team" ? teamSize : 2,
-      teamEmails: teamEmails.map((s) => s.trim()).filter(Boolean),
+      teamEmails: inviteEmails,
     });
   }
 

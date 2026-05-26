@@ -17,9 +17,12 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+export type SignupEmailStatus = "available" | "pending_verification" | "confirmed";
+
 /**
- * POST { email: string } -> { registered: boolean }
- * Uses service_role + RPC check_signup_email_registered (see migration 0009).
+ * POST { email: string } -> { status, registered }
+ * `registered` is true only when email is confirmed (backward compatible).
+ * Uses service_role + RPC check_signup_email_status.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:auth:check-email", 10, 60_000);
@@ -41,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { data, error } = await supabaseAdmin.rpc("check_signup_email_registered", {
+    const { data, error } = await supabaseAdmin.rpc("check_signup_email_status", {
       email_input: email,
     });
 
@@ -53,7 +56,16 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ registered: Boolean(data) });
+    const status = (data as string | null)?.trim() as SignupEmailStatus | undefined;
+    const normalized: SignupEmailStatus =
+      status === "pending_verification" || status === "confirmed" || status === "available"
+        ? status
+        : "available";
+
+    return NextResponse.json({
+      status: normalized,
+      registered: normalized === "confirmed",
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[api/auth/check-email]", message);

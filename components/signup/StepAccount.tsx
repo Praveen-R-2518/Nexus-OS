@@ -28,6 +28,9 @@ function normalizeSignupEmail(email: string): string {
 const DUPLICATE_EMAIL_MSG =
   "An account with this email already exists. Sign in to continue onboarding.";
 
+const PENDING_VERIFICATION_MSG =
+  "This email already has a pending signup. Check your inbox or resend the verification link below.";
+
 function mapSignUpError(error: {
   message?: string;
   status?: number;
@@ -121,19 +124,28 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       setBusy(false);
       return;
     }
-    const checkJson = (await checkRes.json()) as { registered?: boolean };
-    if (checkJson.registered) {
+    const checkJson = (await checkRes.json()) as {
+      registered?: boolean;
+      status?: string;
+    };
+    if (checkJson.status === "confirmed" || checkJson.registered) {
       setFormError(DUPLICATE_EMAIL_MSG);
+      setBusy(false);
+      return;
+    }
+    if (checkJson.status === "pending_verification") {
+      setFormError(PENDING_VERIFICATION_MSG);
       setBusy(false);
       return;
     }
 
     const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const verifyNext = encodeURIComponent("/onboarding");
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: `${origin}/login?next=${encodeURIComponent("/signup")}`,
+        emailRedirectTo: `${origin}/auth/callback?next=${verifyNext}`,
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
@@ -209,8 +221,11 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       body: JSON.stringify({ email: target }),
     });
     if (checkRes.ok) {
-      const checkJson = (await checkRes.json()) as { registered?: boolean };
-      if (checkJson.registered) {
+      const checkJson = (await checkRes.json()) as {
+        registered?: boolean;
+        status?: string;
+      };
+      if (checkJson.status === "confirmed" || checkJson.registered) {
         onPatch({ accountVerificationPending: false });
         setFormError(DUPLICATE_EMAIL_MSG);
         setBusy(false);
@@ -218,11 +233,14 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       }
     }
 
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const verifyNext = encodeURIComponent("/onboarding");
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: target,
       options: {
-        emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/login?next=${encodeURIComponent("/signup")}`,
+        emailRedirectTo: `${origin}/auth/callback?next=${verifyNext}`,
       },
     });
     setBusy(false);
