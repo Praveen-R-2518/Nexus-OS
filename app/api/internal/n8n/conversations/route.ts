@@ -11,6 +11,7 @@ import { parseWorkspaceId } from "@/lib/workspace-id";
 export const dynamic = "force-dynamic";
 
 const CONVERSATION_SOURCES = [
+  "demo",
   "webhook",
   "manual",
   "gmail",

@@ -1,5 +1,6 @@
 "use client";
 
+import DemoButton from "@/app/components/DemoButton";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -211,10 +212,16 @@ export default function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-brand text-status-positive">
             Operations
           </p>
-          <div className="mt-2">
+          <div className="mt-2 flex items-start justify-between">
             <h1 className="text-4xl font-bold tracking-tight text-atmospheric-grey sm:text-5xl">
               Command Center
             </h1>
+            <DemoButton
+              onSent={() => {
+                void refetchMetrics();
+                void refetchConversations();
+              }}
+            />
           </div>
           <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
             Live revenue rescue ops — prioritize revenue at risk, route hot
