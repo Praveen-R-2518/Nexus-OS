@@ -2,6 +2,14 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { Style_Script } from "next/font/google";
+
+const styleScript = Style_Script({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-style-script",
+  display: "swap",
+});
 
 const steps = [
   {
@@ -61,10 +69,10 @@ export default function LandingPage() {
   const reduce = useReducedMotion();
 
   return (
-    <div className="min-h-screen flex-1 bg-[#111111] text-white selection:bg-white/20">
+    <div className={`min-h-screen flex-1 bg-surface-page text-atmospheric-grey selection:bg-black/10 dark:selection:bg-white/20 ${styleScript.variable}`}>
       <ScrollReveal className="flex min-h-screen flex-col items-center justify-center px-4 py-20 text-center">
         <div className="relative flex flex-col items-center">
-          <h1 className="relative z-10 max-w-5xl font-sans text-4xl font-black uppercase leading-[1.15] tracking-[0.2em] bg-gradient-to-b from-[#a5acb9] to-[#303643] bg-clip-text text-transparent sm:text-5xl md:text-6xl lg:text-[4.6rem]">
+          <h1 className="relative z-10 max-w-5xl font-sans text-4xl font-black uppercase leading-[1.15] tracking-[0.2em] bg-gradient-to-b from-[#334155] to-[#0f172a] dark:from-[#a5acb9] dark:to-[#303643] bg-clip-text text-transparent sm:text-5xl md:text-6xl lg:text-[4.6rem]">
             THE REVENUE &amp; AI
             <br />
             ENGINE FOR MODERN
@@ -76,21 +84,15 @@ export default function LandingPage() {
             <img
               src="/coin-sketch.png"
               alt="Coin Sketch"
-              className="w-full h-full object-contain mix-blend-screen"
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert-0 invert"
             />
           </div>
         </div>
 
         <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
           <Link
-            href="/signup"
-            className="rounded-full border border-white/20 bg-white/5 px-8 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
-          >
-            Initialize workspace
-          </Link>
-          <Link
             href="/login"
-            className="rounded-full px-8 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-gray-300 transition-all duration-300 hover:text-white hover:bg-white/10"
+            className="rounded-full border border-black/20 bg-black/5 px-8 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-black backdrop-blur-md transition-all duration-300 hover:bg-black hover:text-white dark:border-white/20 dark:bg-white/5 dark:text-white dark:hover:bg-white dark:hover:text-black dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
           >
             Sign in
           </Link>
@@ -99,10 +101,10 @@ export default function LandingPage() {
 
       <ScrollReveal className="px-4 py-24 md:px-8">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="font-sans text-4xl font-medium tracking-tight text-white md:text-5xl">
+          <h2 className="font-sans text-4xl font-medium tracking-tight text-atmospheric-grey md:text-5xl">
             The Process
           </h2>
-          <p className="mt-4 text-lg text-gray-300">
+          <p className="mt-4 text-lg text-muted">
             A six-step protocol to reclaim your time and revenue.
           </p>
         </div>
@@ -115,14 +117,14 @@ export default function LandingPage() {
                 key={step.id}
                 className={`flex ${isEven ? "justify-start" : "justify-end"}`}
               >
-                <div className="w-full md:w-[60%] rounded-[2rem] border border-white/15 bg-[#161a22] p-8 shadow-xl backdrop-blur-md transition-all hover:bg-[#1c212b] hover:border-white/35">
-                  <span className="font-mono text-sm font-bold tracking-widest bg-gradient-to-b from-slate-100 to-slate-400 bg-clip-text text-transparent">
+                <div className="w-full md:w-[60%] rounded-[2rem] border border-border bg-white dark:border-white/15 dark:bg-[#161616] p-8 shadow-xl backdrop-blur-md transition-all hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-[#1f1f1f] dark:hover:border-white/35">
+                  <span className="font-mono text-sm font-bold tracking-widest bg-gradient-to-b from-slate-500 to-slate-800 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
                     {step.id}
                   </span>
-                  <h3 className="mt-4 font-sans text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                  <h3 className="mt-4 font-sans text-2xl font-semibold tracking-tight text-atmospheric-grey md:text-3xl">
                     {step.title}
                   </h3>
-                  <p className="mt-4 text-base leading-relaxed text-slate-200">
+                  <p className="mt-4 text-base leading-relaxed text-muted dark:text-slate-200">
                     {step.desc}
                   </p>
                 </div>
@@ -133,13 +135,16 @@ export default function LandingPage() {
       </ScrollReveal>
 
       <ScrollReveal className="px-4 py-32 md:px-8">
-        <div className="mx-auto max-w-4xl overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/10 p-12 md:p-20 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:border-white/35">
-          <blockquote className="text-center font-sans text-2xl font-light leading-relaxed tracking-wider text-white/90 md:text-3xl lg:text-4xl">
-            "We built Nexus OS so founders do not trade time for revenue — they run both on one grid."
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-[2.5rem] border border-border bg-[#f8fafc] dark:border-white/20 dark:bg-[#1c1c1c] p-12 md:p-20 backdrop-blur-xl shadow-2xl transition-all duration-500 hover:border-slate-300 hover:bg-[#f1f5f9] dark:hover:border-white/35 dark:hover:bg-[#252525]">
+          <blockquote
+            className="text-center text-4xl font-normal leading-relaxed tracking-normal text-slate-900 dark:text-white/90 md:text-5xl lg:text-6xl"
+            style={{ fontFamily: "var(--font-style-script), cursive" }}
+          >
+            "We built Nexus OS because founders shouldn't have to choose between saving time and saving revenue."
           </blockquote>
-          <div className="mt-16 flex justify-center">
-             <div className="rounded-full border border-white/20 bg-white/10 px-6 py-2.5 font-mono text-xs uppercase tracking-widest text-gray-300 backdrop-blur-sm">
-               Origin: Nexus Team
+          <div className="mt-12 flex justify-center">
+             <div className="font-mono text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-[#a5acb9]">
+               The Nexus Team
              </div>
           </div>
         </div>
