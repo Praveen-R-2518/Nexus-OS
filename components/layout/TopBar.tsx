@@ -44,7 +44,7 @@ function appNavLinkClass(active: boolean) {
     "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] transition-opacity duration-interaction",
     active
       ? "text-atmospheric-grey"
-      : "text-atmospheric-grey/50 hover:text-atmospheric-grey",
+      : "text-atmospheric-grey/75 hover:text-atmospheric-grey",
   );
 }
 

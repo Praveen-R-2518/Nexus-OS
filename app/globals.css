@@ -26,12 +26,12 @@
     --app-chrome-bg: color-mix(in srgb, var(--surface-card) 94%, transparent);
     --app-chrome-border: rgba(10, 22, 40, 0.07);
 
-    --border-subtle: rgba(10, 15, 12, 0.05);
-    --border-strong: rgba(10, 15, 12, 0.1);
+    --border-subtle: rgba(10, 15, 12, 0.12);
+    --border-strong: rgba(10, 15, 12, 0.25);
 
     --text-primary: #0a0f0c;
-    --text-secondary: #4a5450;
-    --text-tertiary: #5f6962;
+    --text-secondary: #334155;
+    --text-tertiary: #475569;
 
     --status-positive-fg: #1a5580;
     --status-positive-surface: rgba(10, 79, 138, 0.06);
@@ -85,30 +85,30 @@
   .light,
   [data-theme="light"] {
     --text-primary: #0a0f0c;
-    --text-secondary: #4a5450;
-    --text-tertiary: #5f6962;
+    --text-secondary: #334155;
+    --text-tertiary: #475569;
     --surface-page: var(--ref-mint);
     --surface-card: #ffffff;
     --surface-elevated: #ffffff;
     --surface-sidebar: #ffffff;
     --surface-input: #e8eef5;
     --surface-muted: #e4ebf3;
-    --border-subtle: rgba(10, 15, 12, 0.05);
-    --border-strong: rgba(10, 15, 12, 0.1);
-    --selectable-card-border: rgb(40, 40, 40);
-    --selectable-card-border-selected: rgb(255, 255, 255);
-    --selectable-card-border-hover: rgb(55, 55, 55);
+    --border-subtle: rgba(10, 15, 12, 0.12);
+    --border-strong: rgba(10, 15, 12, 0.25);
+    --selectable-card-border: rgba(10, 15, 12, 0.12);
+    --selectable-card-border-selected: rgb(0, 0, 0);
+    --selectable-card-border-hover: rgba(10, 15, 12, 0.25);
   }
 
   .dark {
     --background: #121212;
-    --foreground: #e2e2e2;
+    --foreground: #ffffff;
     --obsidian: #121212;
-    --atmospheric-grey: #e2e2e2;
-    --trajectory-blue: #a3a3a3;
+    --atmospheric-grey: #ffffff;
+    --trajectory-blue: #cbd5e1;
 
     --app-chrome-bg: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
-    --app-chrome-border: rgba(255, 255, 255, 0.055);
+    --app-chrome-border: rgba(255, 255, 255, 0.12);
 
     --surface-page: #121212;
     --surface-card: #161616;
@@ -117,13 +117,13 @@
     --surface-input: #1a1a1a;
     --surface-muted: #141414;
 
-    --border-subtle: rgba(255, 255, 255, 0.055);
-    --border-strong: rgba(255, 255, 255, 0.1);
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    --border-strong: rgba(255, 255, 255, 0.22);
 
-    --text-primary: #e2e2e2;
-    --text-secondary: #b4b4b4;
-    --text-tertiary: #8f8f8f;
-    --text-accent: #bababa;
+    --text-primary: #ffffff;
+    --text-secondary: #d1d5db;
+    --text-tertiary: #94a3b8;
+    --text-accent: #e2e8f0;
 
     --status-positive-fg: #a5a8b0;
     --status-positive-surface: rgba(130, 140, 160, 0.09);
@@ -156,9 +156,9 @@
     --text-warning: var(--status-warning-fg);
     --text-critical: var(--status-critical-fg);
 
-    --selectable-card-border: rgb(40, 40, 40);
+    --selectable-card-border: rgba(255, 255, 255, 0.12);
     --selectable-card-border-selected: rgb(255, 255, 255);
-    --selectable-card-border-hover: rgb(60, 60, 60);
+    --selectable-card-border-hover: rgba(255, 255, 255, 0.25);
 
     .logo-os {
       color: var(--text-secondary);
