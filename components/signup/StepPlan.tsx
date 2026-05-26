@@ -146,7 +146,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
           </p>
         </div>
         <div
-          className="inline-flex border border-black bg-white p-0.5 dark:border-white dark:bg-[#0a1018]"
+          className="inline-flex border border-border bg-white p-0.5 dark:border-border dark:bg-surface-card"
           role="group"
           aria-label="Billing cycle"
         >
@@ -156,7 +156,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             className={cn(
               "cursor-pointer px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-widest transition",
               cycle === "monthly"
-                ? "bg-[#e3eef6] text-foreground dark:bg-[#0c141f] dark:text-white"
+                ? "bg-[#e3eef6] text-foreground dark:bg-surface-elevated dark:text-white"
                 : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200",
             )}
           >

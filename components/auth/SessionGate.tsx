@@ -7,16 +7,16 @@ import { waitForServerSession } from "@/lib/auth/session-ready";
 function SessionGateSkeleton() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-0">
-      <div className="h-9 w-52 animate-pulse border border-black/15 bg-surface-muted dark:border-white/15" />
+      <div className="h-9 w-52 animate-pulse border border-border/60 bg-surface-muted dark:border-border" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-[120px] animate-pulse border border-black/15 bg-surface-muted dark:border-white/15"
+            className="h-[120px] animate-pulse border border-border/60 bg-surface-muted dark:border-border"
           />
         ))}
       </div>
-      <div className="h-64 animate-pulse border border-black/15 bg-surface-muted dark:border-white/15" />
+      <div className="h-64 animate-pulse border border-border/60 bg-surface-muted dark:border-border" />
     </div>
   );
 }

@@ -260,9 +260,9 @@ export default function ReportPage() {
   return (
     <div className="relative min-h-0 space-y-10">
       <div className="relative space-y-10">
-        <header className="flex flex-col gap-5 border-b border-black pb-6 dark:border-white lg:flex-row lg:items-end lg:justify-between">
+        <header className="flex flex-col gap-5 hairline-b pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-emerald-300/90 sm:text-[11px]">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-sky-300/90 sm:text-[11px]">
               Revenue Recovery Intelligence
             </p>
             <h1 className="mt-3 font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl">
@@ -300,7 +300,7 @@ export default function ReportPage() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-40 animate-pulse border border-black/15 bg-surface-muted dark:border-white/15"
+                className="h-40 animate-pulse border border-border/60 bg-surface-muted dark:border-border"
               />
             ))}
           </div>
@@ -346,16 +346,16 @@ export default function ReportPage() {
                   Executive Summary
                 </h2>
               </div>
-              <div className="border border-status-positive-border/40 bg-status-positive-surface/30 p-5 dark:border-status-positive-border/30">
+              <div className="rounded-xl border border-status-positive-border/40 bg-status-positive-surface/30 p-5 dark:border-status-positive-border/25">
                 <TypewriterSummary text={report.summary_text} />
               </div>
             </section>
 
             <section
               aria-labelledby="conversation-breakdown"
-              className="overflow-hidden border border-black bg-white dark:border-white dark:bg-[#0a1018]"
+              className="overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card"
             >
-              <div className="flex flex-col gap-3 border-b border-black px-4 py-4 dark:border-white sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 hairline-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2
                     id="conversation-breakdown"
@@ -371,7 +371,7 @@ export default function ReportPage() {
                   type="button"
                   onClick={handleExportCsv}
                   disabled={sortedRows.length === 0}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
                 >
                   <Download className="h-5 w-5 shrink-0" />
                   Export CSV
@@ -379,9 +379,9 @@ export default function ReportPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border text-base">
+                <table className="min-w-full text-base">
                   <thead className="bg-surface-card">
-                    <tr>
+                    <tr className="hairline-b">
                       {[
                         ["customer_name", "Customer"],
                         ["intent", "Intent"],
@@ -410,7 +410,7 @@ export default function ReportPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {sortedRows.length === 0 ? (
                       <tr>
                         <td
@@ -425,7 +425,7 @@ export default function ReportPage() {
                         <tr
                           key={row.id}
                           className={cn(
-                            "border-l-2 transition-colors",
+                            "hairline-b border-l-2 transition-colors last:border-b-0",
                             rowTone(row.status),
                           )}
                         >
@@ -481,7 +481,7 @@ export default function ReportPage() {
             Could not load the daily report. {reportErrorMsg}
           </div>
         ) : (
-          <div className="border border-black bg-ref-mint p-6 dark:border-white dark:bg-[#080c10]">
+          <div className="border border-border bg-ref-mint p-6 dark:border-border dark:bg-surface-page">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-status-caution-border bg-status-caution-surface text-status-caution">
                 <Clock className="h-6 w-6" />

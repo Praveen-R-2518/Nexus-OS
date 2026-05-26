@@ -20,7 +20,7 @@ export type FormInputProps = {
 } & InputHTMLAttributes<HTMLInputElement>;
 
 const baseInput =
-  "h-11 w-full border border-black bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:ring-1 dark:border-white dark:bg-[#0a1018] dark:text-white dark:placeholder:text-white/40";
+  "h-11 w-full rounded-lg border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:ring-1 dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/40";
 
 export default function FormInput({
   id,
@@ -73,7 +73,7 @@ export default function FormInput({
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer border border-transparent p-1.5 text-black/45 transition hover:border-black/20 hover:bg-[#eef6fb] hover:text-black dark:text-white/45 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white"
+            className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer border border-transparent p-1.5 text-black/45 transition hover:border-border/70 hover:bg-[#eef6fb] hover:text-black dark:text-white/45 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (

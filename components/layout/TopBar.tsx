@@ -77,11 +77,11 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black bg-white/95 backdrop-blur-sm dark:border-white dark:bg-[#05080c]/95">
+    <header className="app-chrome-bar sticky top-0 z-50 rounded-b-xl font-chrome">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 md:gap-8 md:px-8">
         <Link
           href="/"
-          className="shrink-0 font-sans text-base font-black uppercase tracking-tight text-black dark:text-white md:text-lg"
+          className="shrink-0 font-chrome text-base font-black uppercase tracking-tight text-black dark:text-white md:text-lg"
         >
           <span className="logo-nexus">Nexus</span>
           <span className="logo-os"> OS</span>
@@ -98,7 +98,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
                 aria-expanded={solutionsOpen}
                 aria-haspopup="menu"
                 onClick={() => setSolutionsOpen((o) => !o)}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-black transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-white dark:focus-visible:ring-white dark:focus-visible:ring-offset-[#05080c]"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-black transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-white dark:focus-visible:ring-sky-400/60 dark:focus-visible:ring-offset-surface-page"
               >
                 Solutions
                 <ChevronDown
@@ -112,14 +112,14 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
               {solutionsOpen ? (
                 <div
                   role="menu"
-                  className="absolute left-1/2 top-full z-50 mt-2 min-w-[12rem] -translate-x-1/2 border border-black bg-white py-1 shadow-sm dark:border-white dark:bg-[#0a1018]"
+                  className="absolute left-1/2 top-full z-50 mt-2 min-w-[12rem] -translate-x-1/2 rounded-lg border border-border bg-white py-1 shadow-sm dark:border-border dark:bg-surface-card"
                 >
                   {solutionsLinks.map(({ href, label }) => (
                     <Link
                       key={href}
                       role="menuitem"
                       href={href}
-                      className="block cursor-pointer px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:bg-ref-mint dark:text-white dark:hover:bg-[#0c141f]"
+                      className="block cursor-pointer px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:bg-ref-mint dark:text-white dark:hover:bg-surface-elevated"
                       onClick={() => setSolutionsOpen(false)}
                     >
                       {label}
@@ -166,7 +166,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
                     {active ? (
                       <motion.span
                         layoutId="topNavActiveBar"
-                        className="pointer-events-none h-0.5 w-full max-w-[2.5rem] shrink-0 bg-ref-cta dark:bg-emerald-300/90"
+                        className="pointer-events-none h-0.5 w-full max-w-[2.5rem] shrink-0 bg-ref-cta dark:bg-[color:var(--trajectory-blue)]"
                         transition={{
                           type: "spring",
                           stiffness: 380,
@@ -187,13 +187,13 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <>
               <Link
                 href="mailto:support@example.com"
-                className="hidden cursor-pointer border border-black/25 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-black hover:bg-ref-mint sm:inline-flex dark:border-white/30 dark:text-white dark:hover:border-white dark:hover:bg-[#0c141f]"
+                className="hidden cursor-pointer rounded-lg border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-white dark:hover:border-border-strong dark:hover:bg-surface-elevated"
               >
                 Contact sales
               </Link>
               <Link
                 href="/login"
-                className="hidden cursor-pointer border border-black bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f3f6f1] transition-opacity hover:opacity-90 sm:inline-flex dark:border-white dark:bg-[#1a2e22]"
+                className="hidden cursor-pointer border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-[#153d5c]"
               >
                 Access console
               </Link>
@@ -202,20 +202,20 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-black bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-white dark:text-white dark:hover:bg-[#0c141f] dark:focus-visible:ring-white dark:focus-visible:ring-offset-[#05080c]"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-sky-400/60 dark:focus-visible:ring-offset-surface-page"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span className="hidden sm:inline">Log out</span>
             </button>
           )}
-          <div className="border border-black p-0.5 dark:border-white">
+          <div className="rounded-lg border border-border p-0.5 dark:border-border">
             <ThemeToggle />
           </div>
         </div>
       </div>
 
       {marketing ? (
-        <div className="border-t border-black/10 px-4 py-2 md:hidden dark:border-white/10">
+        <div className="hairline-t px-4 py-2 md:hidden">
           <nav className="flex flex-wrap items-center justify-center gap-3" aria-label="Primary mobile">
             <Link href="/#protocol" className={marketingNavLinkClass(false)}>
               Protocol

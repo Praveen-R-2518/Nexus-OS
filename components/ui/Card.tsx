@@ -49,8 +49,8 @@ export function Card({
   return (
     <div
       className={cn(
-        "relative overflow-hidden border border-black bg-white p-6 sm:p-7 dark:border-white dark:bg-[#0a1018]",
-        isCritical ? "border-black dark:border-white" : "",
+        "relative overflow-hidden rounded-xl border border-border bg-white p-6 sm:p-7 dark:border-border dark:bg-surface-card",
+        isCritical ? "border-border dark:border-border" : "",
         className,
       )}
     >
@@ -76,7 +76,7 @@ export function Card({
             <span
               className={cn(
                 "[&>svg]:h-5 [&>svg]:w-5",
-                isCritical ? "text-ref-cta dark:text-emerald-300/90" : "text-muted",
+                isCritical ? "text-ref-cta dark:text-sky-300/90" : "text-muted",
               )}
             >
               {icon}

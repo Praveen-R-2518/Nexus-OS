@@ -7,7 +7,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClass =
-  "h-11 w-full border border-black bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-white dark:placeholder:text-white/40 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]";
+  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/40 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]";
 
 function LoginForm() {
   const router = useRouter();
@@ -108,8 +108,8 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md border border-black bg-white p-6 dark:border-white dark:bg-[#0a1018]">
-        <div className="mb-6 border-b border-dashed border-black pb-6 dark:border-white">
+      <div className="w-full max-w-md border border-border bg-white p-6 dark:border-border dark:bg-surface-card">
+        <div className="mb-6 border-b border-dashed border-border pb-6 dark:border-border">
           <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/55 dark:text-white/50">
             [ AUTH / SESSION ]
           </p>
@@ -151,13 +151,13 @@ function LoginForm() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 shrink-0 border border-black bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+              className="h-4 w-4 shrink-0 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
             />
             Remember me
           </label>
           {message ? (
             <p
-              className="border border-dashed border-black bg-[#e3eef6] px-3 py-2 font-mono text-xs text-black dark:border-white dark:bg-[#0c141f] dark:text-white"
+              className="border border-dashed border-border bg-[#e3eef6] px-3 py-2 font-mono text-xs text-black dark:border-border dark:bg-surface-elevated dark:text-white"
               role="alert"
             >
               {message}
@@ -167,7 +167,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex cursor-pointer items-center gap-2 border border-black bg-[#0f2336] px-4 py-2.5 font-mono text-xs font-medium uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-white"
+              className="inline-flex cursor-pointer items-center gap-2 border border-border bg-[#0f2336] px-4 py-2.5 font-mono text-xs font-medium uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               Sign in
@@ -176,14 +176,14 @@ function LoginForm() {
               type="button"
               disabled={busy || !email}
               onClick={sendMagicLink}
-              className="inline-flex cursor-pointer items-center gap-2 border border-black bg-white px-4 py-2.5 font-mono text-xs uppercase tracking-widest text-black transition hover:bg-[#e3eef6] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-[#0a1018] dark:text-white dark:hover:bg-white/5"
+              className="inline-flex cursor-pointer items-center gap-2 border border-border bg-white px-4 py-2.5 font-mono text-xs uppercase tracking-widest text-black transition hover:bg-[#e3eef6] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-white/5"
             >
               <Mail className="h-4 w-4 shrink-0" aria-hidden />
               Magic link
             </button>
           </div>
         </form>
-        <p className="mt-8 border-t border-black pt-6 text-center font-mono text-[10px] uppercase tracking-widest text-black/60 dark:border-white dark:text-white/55">
+        <p className="mt-8 hairline-t pt-6 text-center font-mono text-[10px] uppercase tracking-widest text-black/60 dark:text-white/55">
           Need an account?{" "}
           <Link
             href="/signup"

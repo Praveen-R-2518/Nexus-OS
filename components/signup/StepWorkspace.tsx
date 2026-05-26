@@ -183,10 +183,10 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("solo")}
             className={cn(
-              "flex cursor-pointer items-start gap-3 border border-black bg-white p-4 text-left transition dark:border-white dark:bg-[#0a1018]",
+              "flex cursor-pointer items-start gap-3 border border-border bg-white p-4 text-left transition dark:border-border dark:bg-surface-card",
               workspaceType === "solo"
-                ? "bg-[#e3eef6] ring-1 ring-black dark:bg-[#0c141f] dark:ring-white"
-                : "hover:bg-[#eef6fb] dark:hover:bg-[#0c141f]",
+                ? "bg-[#e3eef6] ring-1 ring-border-strong dark:bg-surface-elevated dark:ring-trajectory-blue/50"
+                : "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
@@ -206,10 +206,10 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("team")}
             className={cn(
-              "flex cursor-pointer items-start gap-3 border border-black bg-white p-4 text-left transition dark:border-white dark:bg-[#0a1018]",
+              "flex cursor-pointer items-start gap-3 border border-border bg-white p-4 text-left transition dark:border-border dark:bg-surface-card",
               workspaceType === "team"
-                ? "bg-[#e3eef6] ring-1 ring-black dark:bg-[#0c141f] dark:ring-white"
-                : "hover:bg-[#eef6fb] dark:hover:bg-[#0c141f]",
+                ? "bg-[#e3eef6] ring-1 ring-border-strong dark:bg-surface-elevated dark:ring-trajectory-blue/50"
+                : "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
@@ -228,7 +228,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       </div>
       {workspaceType === "team" ? (
-        <div className="space-y-4 border border-black bg-[#eef6fb] p-4 dark:border-white dark:bg-[#0c141f]">
+        <div className="space-y-4 border border-border bg-[#eef6fb] p-4 dark:border-border dark:bg-surface-elevated">
           <FormInput
             id="teamSize"
             label="Expected number of users"
@@ -247,7 +247,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
               <button
                 type="button"
                 onClick={addEmailRow}
-                className="inline-flex cursor-pointer items-center gap-1 border border-black bg-white px-2 py-1 font-mono text-xs text-gray-700 transition hover:bg-[#e3eef6] dark:border-white dark:bg-[#0a1018] dark:text-gray-200 dark:hover:bg-[#0c141f]"
+                className="inline-flex cursor-pointer items-center gap-1 border border-border bg-white px-2 py-1 font-mono text-xs text-gray-700 transition hover:bg-[#e3eef6] dark:border-border dark:bg-surface-card dark:text-gray-200 dark:hover:bg-surface-elevated"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add
@@ -258,7 +258,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                 <div key={i} className="flex gap-2">
                   <input
                     type="email"
-                    className="h-10 flex-1 border border-black bg-white px-3 font-mono text-sm text-gray-900 outline-none focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+                    className="h-10 flex-1 border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
                     placeholder="teammate@company.com"
                     value={row}
                     onChange={(e) => updateEmailRow(i, e.target.value)}
@@ -268,7 +268,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                       type="button"
                       aria-label="Remove row"
                       onClick={() => removeEmailRow(i)}
-                      className="cursor-pointer border border-black p-2 text-gray-500 transition hover:bg-[#eef6fb] dark:border-white dark:text-gray-400 dark:hover:bg-[#0c141f]"
+                      className="cursor-pointer border border-border p-2 text-gray-500 transition hover:bg-[#eef6fb] dark:border-border dark:text-gray-400 dark:hover:bg-surface-elevated"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -287,7 +287,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-white"
+        className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border"
       >
         {busy ? "Saving…" : "Continue"}
       </button>

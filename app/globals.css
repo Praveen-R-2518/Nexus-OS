@@ -4,51 +4,56 @@
 
 @layer base {
   :root {
-    --ref-cta: #142911;
-    --ref-ice: #e3eef6;
-    --ref-mint: #f3f6f1;
+    /* Brand: sapphire (replaces forest green) */
+    --ref-cta: #0c4a6e;
+    --ref-ice: #e8f0fa;
+    --ref-mint: #f1f5f9;
 
     --background: var(--ref-mint);
     --foreground: #0a0f0c;
-    --obsidian: #05080c;
+    --obsidian: #1f1f1e;
     --atmospheric-grey: #0a0f0c;
-    --trajectory-blue: #142911;
+    --trajectory-blue: #0c4a6e;
 
     --surface-page: var(--ref-mint);
     --surface-card: #ffffff;
     --surface-elevated: #ffffff;
     --surface-sidebar: #ffffff;
-    --surface-input: #eef2ed;
-    --surface-muted: #e8ece6;
+    --surface-input: #e8eef5;
+    --surface-muted: #e4ebf3;
 
-    --border-subtle: rgba(10, 15, 12, 0.12);
-    --border-strong: rgba(10, 15, 12, 0.22);
+    /* App chrome (nav): follows tokens — no Tailwind dark: needed for base fill */
+    --app-chrome-bg: color-mix(in srgb, var(--surface-card) 94%, transparent);
+    --app-chrome-border: rgba(10, 22, 40, 0.07);
+
+    --border-subtle: rgba(10, 15, 12, 0.06);
+    --border-strong: rgba(10, 15, 12, 0.12);
 
     --text-primary: #0a0f0c;
     --text-secondary: #3d4a42;
     --text-tertiary: #5c6b62;
 
-    --status-positive-fg: #0d3d1f;
-    --status-positive-surface: rgba(13, 61, 31, 0.08);
-    --status-positive-border: rgba(13, 61, 31, 0.22);
-    --status-positive-glow: rgba(20, 41, 17, 0.12);
+    --status-positive-fg: #0a4f8a;
+    --status-positive-surface: rgba(10, 79, 138, 0.09);
+    --status-positive-border: rgba(10, 79, 138, 0.2);
+    --status-positive-glow: rgba(20, 90, 160, 0.12);
 
     --status-neutral-fg: #1e3a5f;
-    --status-neutral-surface: rgba(30, 58, 95, 0.08);
-    --status-neutral-border: rgba(30, 58, 95, 0.2);
+    --status-neutral-surface: rgba(30, 58, 95, 0.06);
+    --status-neutral-border: rgba(30, 58, 95, 0.14);
 
     --status-warning-fg: #6b4200;
-    --status-warning-surface: rgba(107, 66, 0, 0.1);
-    --status-warning-border: rgba(107, 66, 0, 0.24);
+    --status-warning-surface: rgba(107, 66, 0, 0.08);
+    --status-warning-border: rgba(107, 66, 0, 0.18);
 
     --status-caution-fg: #7a5a00;
-    --status-caution-surface: rgba(122, 90, 0, 0.1);
-    --status-caution-border: rgba(122, 90, 0, 0.22);
+    --status-caution-surface: rgba(122, 90, 0, 0.08);
+    --status-caution-border: rgba(122, 90, 0, 0.16);
 
     --status-critical-fg: #8b1f2d;
-    --status-critical-surface: rgba(139, 31, 45, 0.1);
-    --status-critical-border: rgba(139, 31, 45, 0.28);
-    --status-critical-glow: rgba(139, 31, 45, 0.1);
+    --status-critical-surface: rgba(139, 31, 45, 0.08);
+    --status-critical-border: rgba(139, 31, 45, 0.2);
+    --status-critical-glow: rgba(139, 31, 45, 0.08);
 
     --bg-card: var(--surface-card);
     --bg-page: var(--surface-page);
@@ -81,54 +86,57 @@
     --surface-card: #ffffff;
     --surface-elevated: #ffffff;
     --surface-sidebar: #ffffff;
-    --surface-input: #eef2ed;
-    --surface-muted: #e8ece6;
-    --border-subtle: rgba(10, 15, 12, 0.12);
-    --border-strong: rgba(10, 15, 12, 0.22);
+    --surface-input: #e8eef5;
+    --surface-muted: #e4ebf3;
+    --border-subtle: rgba(10, 15, 12, 0.06);
+    --border-strong: rgba(10, 15, 12, 0.12);
   }
 
   .dark {
-    --background: #05080c;
+    --background: rgb(31, 31, 30);
     --foreground: #e8eaef;
-    --obsidian: #05080c;
+    --obsidian: rgb(31, 31, 30);
     --atmospheric-grey: #e8eaef;
-    --trajectory-blue: #9ec8a8;
+    --trajectory-blue: #7eb8f0;
 
-    --surface-page: #05080c;
-    --surface-card: #0a1018;
-    --surface-elevated: #0c141f;
-    --surface-sidebar: #080c10;
-    --surface-input: #0f1520;
-    --surface-muted: #0d131c;
+    --app-chrome-bg: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
+    --app-chrome-border: rgba(255, 255, 255, 0.05);
 
-    --border-subtle: rgba(232, 234, 239, 0.1);
-    --border-strong: rgba(232, 234, 239, 0.18);
+    --surface-page: rgb(31, 31, 30);
+    --surface-card: #2a2a29;
+    --surface-elevated: #323231;
+    --surface-sidebar: #2d2d2c;
+    --surface-input: #363635;
+    --surface-muted: #2e2e2d;
+
+    --border-subtle: rgba(255, 255, 255, 0.045);
+    --border-strong: rgba(255, 255, 255, 0.078);
 
     --text-primary: #e8eaef;
-    --text-secondary: #a8b5ad;
-    --text-tertiary: #7a8a80;
+    --text-secondary: #b8bcb8;
+    --text-tertiary: #8a908a;
 
-    --status-positive-fg: #8fd4a8;
-    --status-positive-surface: rgba(143, 212, 168, 0.12);
-    --status-positive-border: rgba(143, 212, 168, 0.28);
-    --status-positive-glow: rgba(143, 212, 168, 0.15);
+    --status-positive-fg: #8ec8f5;
+    --status-positive-surface: rgba(110, 180, 240, 0.12);
+    --status-positive-border: rgba(126, 190, 245, 0.26);
+    --status-positive-glow: rgba(110, 180, 240, 0.14);
 
     --status-neutral-fg: #9ec8ff;
-    --status-neutral-surface: rgba(158, 200, 255, 0.1);
-    --status-neutral-border: rgba(158, 200, 255, 0.26);
+    --status-neutral-surface: rgba(158, 200, 255, 0.08);
+    --status-neutral-border: rgba(158, 200, 255, 0.2);
 
     --status-warning-fg: #f0c674;
-    --status-warning-surface: rgba(240, 198, 116, 0.12);
-    --status-warning-border: rgba(240, 198, 116, 0.28);
+    --status-warning-surface: rgba(240, 198, 116, 0.1);
+    --status-warning-border: rgba(240, 198, 116, 0.22);
 
     --status-caution-fg: #e8d96a;
-    --status-caution-surface: rgba(232, 217, 106, 0.1);
-    --status-caution-border: rgba(232, 217, 106, 0.24);
+    --status-caution-surface: rgba(232, 217, 106, 0.08);
+    --status-caution-border: rgba(232, 217, 106, 0.2);
 
     --status-critical-fg: #f4a8b5;
-    --status-critical-surface: rgba(244, 168, 181, 0.12);
-    --status-critical-border: rgba(244, 168, 181, 0.3);
-    --status-critical-glow: rgba(244, 168, 181, 0.15);
+    --status-critical-surface: rgba(244, 168, 181, 0.1);
+    --status-critical-border: rgba(244, 168, 181, 0.24);
+    --status-critical-glow: rgba(244, 168, 181, 0.12);
 
     --bg-card: var(--surface-card);
     --bg-page: var(--surface-page);
@@ -140,7 +148,7 @@
     --text-critical: var(--status-critical-fg);
 
     .logo-os {
-      color: #9ec8a8;
+      color: var(--trajectory-blue);
     }
   }
 
@@ -154,6 +162,24 @@
     background-color: var(--surface-page, var(--background));
   }
 
+  /* Source Sans 3 for main app content only (nav/footer use Geist / mono via components) */
+  main[data-app-body] {
+    font-family: var(--font-source-sans-3), "Source Sans 3", system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  main[data-app-body] :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-source-sans-3), "Source Sans 3", system-ui, sans-serif;
+    font-weight: 600;
+  }
+  main[data-app-body] .font-sans {
+    font-family: var(--font-source-sans-3), "Source Sans 3", system-ui, sans-serif;
+  }
+  main[data-app-body] .font-mono {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -162,10 +188,25 @@
 }
 
 @layer utilities {
-  /* Flat editorial panels — replaces glass for product chrome */
+  /* Top navigation: always matches theme via CSS variables */
+  .app-chrome-bar {
+    background-color: var(--app-chrome-bg);
+    border-bottom: 1px solid var(--app-chrome-border);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Softer than border-border: section / list separation */
+  .hairline-b {
+    border-bottom: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent);
+  }
+  .hairline-t {
+    border-top: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent);
+  }
+
   .glass-panel {
     background-color: var(--surface-card);
     border: 1px solid var(--border-strong);
+    border-radius: 0.75rem;
     box-shadow: none;
     backdrop-filter: none;
   }
@@ -178,7 +219,8 @@
   .landing-glass-card {
     background-color: var(--surface-card);
     border: 1px solid var(--border-strong);
-    box-shadow: 0 1px 0 rgba(10, 15, 12, 0.06);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(10, 15, 12, 0.04);
   }
   .dark .landing-glass-card {
     background-color: var(--surface-card);
@@ -194,6 +236,7 @@
   .glass-input {
     background: var(--surface-input);
     border: 1px solid var(--border-strong);
+    border-radius: 0.75rem;
     color: var(--foreground);
     backdrop-filter: none;
   }
@@ -219,7 +262,7 @@
   }
 
   .surface-card {
-    @apply border;
+    @apply rounded-xl border;
     background-color: var(--surface-card);
     border-color: var(--border-strong);
   }
@@ -229,7 +272,7 @@
   }
 
   .surface-muted {
-    @apply border;
+    @apply rounded-xl border;
     background-color: var(--surface-muted);
     border-color: var(--border-subtle);
   }
@@ -252,7 +295,7 @@
 
   .approval-action-bar {
     background: var(--surface-elevated);
-    border-top: 1px solid var(--border-strong);
+    border-top: 1px solid var(--border-subtle);
     padding: 14px 20px;
     flex-shrink: 0;
     backdrop-filter: none;
@@ -264,7 +307,7 @@
   .revenue-at-risk-glow {
     position: relative;
     overflow: hidden;
-    border-radius: 0;
+    border-radius: 0.75rem;
     border: 1px solid var(--border-strong);
     background: var(--surface-card);
   }
@@ -277,33 +320,34 @@
   }
 
   .risk-heat-pin {
-    @apply inline-flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center border px-2.5 py-1 text-sm font-bold tabular-nums transition-colors;
-    border-radius: 0;
+    @apply inline-flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums transition-colors;
     box-shadow: none;
   }
 
   .ref-hairline-border {
-    border-color: rgba(10, 15, 12, 0.92);
+    border-color: var(--border-strong);
   }
   .dark .ref-hairline-border {
-    border-color: rgba(232, 234, 239, 0.92);
+    border-color: var(--border-strong);
   }
 
   .ref-panel {
-    border: 1px solid rgba(10, 15, 12, 0.92);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.75rem;
     background: var(--surface-card);
   }
   .dark .ref-panel {
-    border-color: rgba(232, 234, 239, 0.92);
+    border-color: var(--border-strong);
     background: var(--surface-card);
   }
 
   .ref-cta {
     background-color: var(--ref-cta);
-    color: #f3f6f1;
+    color: #f4f8fc;
+    border-radius: 0.75rem;
   }
   .dark .ref-cta {
-    background-color: #1a2e22;
-    color: #f3f6f1;
+    background-color: #153d5c;
+    color: #f4f8fc;
   }
 }

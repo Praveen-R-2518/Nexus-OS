@@ -26,7 +26,7 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 <div
                   className={cn(
                     "absolute left-[calc(50%+14px)] top-[15px] h-0 w-[calc(100%-28px)] border-t border-dashed",
-                    done ? "border-black dark:border-white" : "border-black/25 dark:border-white/25",
+                    done ? "border-border dark:border-border" : "border-border/80 dark:border-border",
                   )}
                   aria-hidden
                 />
@@ -35,13 +35,13 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 className={cn(
                   "relative z-10 flex h-7 w-7 items-center justify-center border text-[10px] font-bold tabular-nums",
                   done &&
-                    "border-black bg-[#0f2336] text-white dark:border-white dark:bg-[#0f2336] dark:text-white",
+                    "border-border bg-[#0f2336] text-white dark:border-border dark:bg-[#0f2336] dark:text-white",
                   active &&
                     !done &&
-                    "border-black bg-[#e3eef6] text-black ring-1 ring-black dark:border-white dark:bg-[#0c141f] dark:text-white dark:ring-white",
+                    "border-border bg-[#e3eef6] text-black ring-1 ring-border-strong dark:border-border dark:bg-surface-elevated dark:text-white dark:ring-trajectory-blue/50",
                   !active &&
                     !done &&
-                    "border-black/30 bg-white text-black/45 dark:border-white/30 dark:bg-[#0a1018] dark:text-white/45",
+                    "border-border bg-white text-black/45 dark:border-border dark:bg-surface-card dark:text-white/45",
                 )}
               >
                 {done ? <Check className="h-3.5 w-3.5" aria-hidden /> : stepNumber}

@@ -189,7 +189,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
         type="button"
         onClick={() => setShowMenu(!showMenu)}
         disabled={loading}
-        className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-black bg-ref-cta px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#f3f6f1] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-[#1a2e22]"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-border bg-ref-cta px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-[#153d5c]"
       >
         <Send className="h-4 w-4 shrink-0" aria-hidden />
         <span>Demo</span>
@@ -203,8 +203,8 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
       </button>
 
       {showMenu ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,24rem)] border border-black bg-white shadow-sm dark:border-white dark:bg-[#0a1018]">
-          <div className="border-b border-black px-4 py-3 dark:border-white">
+        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,24rem)] border border-border bg-white shadow-sm dark:border-border dark:bg-surface-card">
+          <div className="hairline-b px-4 py-3">
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
               Inject test payload
             </p>
@@ -220,7 +220,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
                 type="button"
                 onClick={() => sendTestMessage(msg)}
                 disabled={loading}
-                className="flex w-full cursor-pointer border-b border-black/10 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-ref-mint disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:hover:bg-[#0c141f]"
+                className="flex w-full cursor-pointer hairline-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-ref-mint disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-surface-elevated"
               >
                 <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -247,7 +247,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
                     >
                       {msg.urgency}
                     </span>
-                    <span className="font-mono text-[10px] font-semibold tabular-nums text-ref-cta dark:text-emerald-300/90">
+                    <span className="font-mono text-[10px] font-semibold tabular-nums text-ref-cta dark:text-sky-300/90">
                       ${(msg.value / 1000).toFixed(0)}k
                     </span>
                   </div>
@@ -256,7 +256,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
             ))}
           </div>
 
-          <div className="border-t border-dashed border-black/20 px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-muted dark:border-white/20">
+          <div className="border-t border-dashed border-border/70 px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-muted dark:border-border">
             WF1 → WF2 → WF3 → Supabase
           </div>
         </div>

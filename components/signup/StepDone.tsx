@@ -35,7 +35,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           Your workspace is configured. Summary below.
         </p>
       </div>
-      <div className="border border-black bg-white p-5 text-left font-mono text-sm dark:border-white dark:bg-[#0a1018]">
+      <div className="border border-border bg-white p-5 text-left font-mono text-sm dark:border-border dark:bg-surface-card">
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
           Summary
         </p>
@@ -64,7 +64,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           </li>
         </ul>
       </div>
-      <div className="border border-black bg-[#eef6fb] p-5 text-left font-mono text-sm dark:border-white dark:bg-[#0c141f]">
+      <div className="border border-border bg-[#eef6fb] p-5 text-left font-mono text-sm dark:border-border dark:bg-surface-elevated">
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
           Onboarding checklist
         </p>
@@ -85,7 +85,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-3 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] sm:w-auto sm:px-8 dark:border-white"
+        className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-3 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] sm:w-auto sm:px-8 dark:border-border"
       >
         Go to dashboard →
       </button>

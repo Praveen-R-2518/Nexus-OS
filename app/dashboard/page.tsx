@@ -69,7 +69,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-36 animate-pulse border border-black/15 bg-surface-muted dark:border-white/15"
+          className="h-36 animate-pulse rounded-xl border border-border/50 bg-surface-muted dark:border-border/50"
         />
       ))}
     </div>
@@ -82,14 +82,14 @@ function FeedSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse gap-3 border border-black/10 bg-surface-muted/80 p-3 dark:border-white/10"
+          className="flex animate-pulse gap-3 rounded-xl border border-border/50 bg-surface-muted/80 p-3 dark:border-border/50"
         >
-          <div className="h-6 w-14 shrink-0 border border-black/10 bg-white/50 dark:border-white/10 dark:bg-[#0a1018]/80" />
+          <div className="h-6 w-14 shrink-0 rounded-md border border-border/40 bg-white/50 dark:border-border/40 dark:bg-surface-card/80" />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-3 w-1/3 border border-black/10 bg-white/50 dark:border-white/10 dark:bg-[#0a1018]/80" />
-            <div className="h-3 w-full border border-black/10 bg-white/40 dark:border-white/10 dark:bg-[#0a1018]/60" />
+            <div className="h-3 w-1/3 rounded-md border border-border/40 bg-white/50 dark:border-border/40 dark:bg-surface-card/80" />
+            <div className="h-3 w-full rounded-md border border-border/40 bg-white/40 dark:border-border/40 dark:bg-surface-card/60" />
           </div>
-          <div className="hidden h-8 w-12 shrink-0 border border-black/10 bg-white/50 dark:border-white/10 dark:bg-[#0a1018]/80 sm:block" />
+          <div className="hidden h-8 w-12 shrink-0 rounded-md border border-border/40 bg-white/50 dark:border-border/40 dark:bg-surface-card/80 sm:block" />
         </div>
       ))}
     </div>
@@ -98,13 +98,13 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="animate-pulse border border-black/15 bg-surface-muted p-4 dark:border-white/15">
-      <div className="mb-4 h-4 w-36 border border-black/10 bg-white/40 dark:border-white/10 dark:bg-[#0a1018]/60" />
+    <div className="animate-pulse rounded-xl border border-border/50 bg-surface-muted p-4 dark:border-border/50">
+      <div className="mb-4 h-4 w-36 rounded-md border border-border/40 bg-white/40 dark:border-border/40 dark:bg-surface-card/60" />
       <div className="space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-12 border border-black/10 bg-white/40 dark:border-white/10 dark:bg-[#0a1018]/50"
+            className="h-12 rounded-md border border-border/40 bg-white/40 dark:border-border/40 dark:bg-surface-card/50"
           />
         ))}
       </div>
@@ -211,8 +211,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-0 space-y-10">
-        <header className="border-b border-black pb-8 dark:border-white">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-emerald-300/90">
+        <header className="hairline-b pb-8">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-sky-300/90">
             Operations
           </p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -318,12 +318,12 @@ export default function DashboardPage() {
           {/* Inbox feed */}
           <section
             aria-label="Inbox feed preview"
-            className="overflow-hidden border border-black bg-white dark:border-white dark:bg-[#0a1018]"
+            className="overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card"
           >
-            <div className="flex items-center justify-end border-b border-black px-4 py-3 dark:border-white">
+            <div className="flex items-center justify-end hairline-b px-4 py-3">
               <Link
                 href="/inbox"
-                className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[11px] font-semibold uppercase tracking-widest text-ref-cta transition-opacity hover:opacity-80 dark:text-emerald-300/90"
+                className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[11px] font-semibold uppercase tracking-widest text-ref-cta transition-opacity hover:opacity-80 dark:text-sky-300/90"
               >
                 Open inbox →
               </Link>
@@ -338,11 +338,14 @@ export default function DashboardPage() {
                 className="border-0 bg-transparent py-12"
               />
             ) : (
-              <ul className="divide-y divide-black/10 dark:divide-white/10">
+              <ul className="flex flex-col gap-px bg-black/[0.04] p-px dark:bg-white/[0.05]">
                 {feedPreview.map((c) => {
                   const highlighted = highlightIds.has(c.id);
                   return (
-                    <li key={c.id}>
+                    <li
+                      key={c.id}
+                      className="bg-white dark:bg-surface-card"
+                    >
                       <div
                         className={cn(
                           "flex flex-col gap-4 px-5 py-4 transition-colors sm:flex-row sm:items-center sm:gap-5",
@@ -389,7 +392,7 @@ export default function DashboardPage() {
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border border-black bg-ref-mint text-atmospheric-grey transition-colors duration-interaction hover:border-ref-cta hover:bg-white dark:border-white dark:bg-[#0c141f] dark:hover:border-emerald-300/60"
+                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-ref-mint text-atmospheric-grey transition-colors duration-interaction hover:border-ref-cta hover:bg-white dark:border-border/60 dark:bg-surface-elevated dark:hover:border-sky-400/38"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-5 w-5" />
@@ -408,9 +411,9 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden border border-status-warning-border bg-status-warning-surface/30 dark:bg-[#0a1018]"
+              className="overflow-hidden rounded-xl border border-status-warning-border bg-status-warning-surface/30 dark:border-border/50 dark:bg-surface-card"
             >
-              <div className="flex items-center justify-between border-b border-black px-4 py-3 dark:border-white">
+              <div className="flex items-center justify-between hairline-b px-4 py-3">
                 <h2 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-atmospheric-grey">
                   <Flame className="h-4 w-4 text-status-warning" aria-hidden />{" "}
                   Hot Leads
@@ -433,7 +436,7 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="border border-black/15 bg-white px-3 py-3 dark:border-white/15 dark:bg-[#0c141f]">
+                        <div className="rounded-xl border border-border/50 bg-white px-3 py-3 dark:border-border/50 dark:bg-surface-elevated">
                           <div className="flex items-start justify-between gap-3">
                             <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
@@ -470,9 +473,9 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden border border-status-caution-border bg-status-caution-surface/25 dark:bg-[#0a1018]"
+              className="overflow-hidden rounded-xl border border-status-caution-border bg-status-caution-surface/25 dark:border-border/50 dark:bg-surface-card"
             >
-              <div className="flex items-center justify-between border-b border-black px-4 py-3 dark:border-white">
+              <div className="flex items-center justify-between hairline-b px-4 py-3">
                 <h2 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-atmospheric-grey">
                   <AlertTriangle
                     className="h-4 w-4 text-status-caution"
@@ -498,7 +501,7 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="border border-black/15 bg-white px-3 py-3 dark:border-white/15 dark:bg-[#0c141f]">
+                        <div className="rounded-xl border border-border/50 bg-white px-3 py-3 dark:border-border/50 dark:bg-surface-elevated">
                           <div className="flex items-start justify-between gap-3">
                             <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
@@ -512,7 +515,7 @@ export default function DashboardPage() {
                               {c.risk_score}
                             </span>
                           </div>
-                          <div className="mt-3 h-2 overflow-hidden border border-black/10 bg-surface-muted dark:border-white/10">
+                          <div className="mt-3 h-2 overflow-hidden rounded-full border border-border/40 bg-surface-muted dark:border-border/50">
                             <div
                               className={cn(
                                 "h-full transition-all",
