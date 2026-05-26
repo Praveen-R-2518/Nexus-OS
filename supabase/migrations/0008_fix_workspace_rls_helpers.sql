@@ -1,64 +1,125 @@
 -- Break RLS recursion between workspaces and workspace_members using SECURITY DEFINER helpers.
+-- Keeps team-wide visibility: teammates share workspace rows via profiles.team_id.
 
-CREATE OR REPLACE FUNCTION public.is_workspace_owner(p_workspace_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.workspaces w
-    WHERE w.id = p_workspace_id
-      AND w.owner_user_id = auth.uid()
+create or replace function public.is_workspace_owner(p_workspace_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select
+      1
+    from
+      public.workspaces w
+    where
+      w.id = p_workspace_id
+      and w.owner_user_id = (select auth.uid())
   );
 $$;
 
-CREATE OR REPLACE FUNCTION public.is_workspace_member(p_workspace_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.workspace_members m
-    WHERE m.workspace_id = p_workspace_id
-      AND m.user_id = auth.uid()
+create or replace function public.is_workspace_member(p_workspace_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select
+      1
+    from
+      public.workspace_members m
+    where
+      m.workspace_id = p_workspace_id
+      and m.user_id = (select auth.uid())
   );
 $$;
 
-REVOKE ALL ON FUNCTION public.is_workspace_owner(uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.is_workspace_member(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_workspace_owner(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.is_workspace_member(uuid) TO authenticated;
+revoke all on function public.is_workspace_owner(uuid) from public;
 
-DROP POLICY IF EXISTS "Members view workspace" ON public.workspaces;
-CREATE POLICY "Members view workspace"
-  ON public.workspaces FOR SELECT
-  USING (public.is_workspace_member(id));
+revoke all on function public.is_workspace_member(uuid) from public;
 
-DROP POLICY IF EXISTS "Workspace members visible to members" ON public.workspace_members;
-CREATE POLICY "Workspace members visible to members"
-  ON public.workspace_members FOR SELECT
-  USING (
-    user_id = auth.uid()
-    OR public.is_workspace_owner(workspace_id)
-  );
+grant execute on function public.is_workspace_owner(uuid) to authenticated;
 
-DROP POLICY IF EXISTS "Owners insert workspace members" ON public.workspace_members;
-CREATE POLICY "Owners insert workspace members"
-  ON public.workspace_members FOR INSERT
-  WITH CHECK (public.is_workspace_owner(workspace_id));
+grant execute on function public.is_workspace_member(uuid) to authenticated;
 
-DROP POLICY IF EXISTS "Owner views subscription" ON public.subscriptions;
-CREATE POLICY "Owner views subscription"
-  ON public.subscriptions FOR ALL
-  USING (public.is_workspace_owner(workspace_id));
+drop policy if exists "Members view workspace" on public.workspaces;
 
-DROP POLICY IF EXISTS "Owner manages gmail credentials" ON public.gmail_credentials;
-CREATE POLICY "Owner manages gmail credentials"
-  ON public.gmail_credentials FOR ALL
-  USING (public.is_workspace_owner(workspace_id));
+create policy "Members view workspace" on public.workspaces for
+select to authenticated using (
+  public.is_workspace_member(id)
+  or (
+    team_id is not null
+    and team_id = (
+      select
+        p.team_id
+      from
+        public.profiles p
+      where
+        p.id = (select auth.uid())
+    )
+  )
+);
+
+drop policy if exists "Workspace members visible to members" on public.workspace_members;
+
+create policy "Workspace members visible to members" on public.workspace_members for
+select to authenticated using (
+  user_id = (select auth.uid())
+  or public.is_workspace_owner(workspace_id)
+  or (
+    team_id is not null
+    and team_id = (
+      select
+        p.team_id
+      from
+        public.profiles p
+      where
+        p.id = (select auth.uid())
+    )
+  )
+);
+
+drop policy if exists "Owners insert workspace members" on public.workspace_members;
+
+create policy "Owners insert workspace members" on public.workspace_members for insert to authenticated with check (public.is_workspace_owner(workspace_id));
+
+drop policy if exists "Owner views subscription" on public.subscriptions;
+
+create policy "Owner views subscription" on public.subscriptions for all to authenticated using (public.is_workspace_owner(workspace_id));
+
+drop policy if exists "Team members read subscriptions" on public.subscriptions;
+
+create policy "Team members read subscriptions" on public.subscriptions for
+select to authenticated using (
+  team_id is not null
+  and team_id = (
+    select
+      p.team_id
+    from
+      public.profiles p
+    where
+      p.id = (select auth.uid())
+  )
+);
+
+drop policy if exists "Owner manages gmail credentials" on public.gmail_credentials;
+
+create policy "Owner manages gmail credentials" on public.gmail_credentials for all to authenticated using (public.is_workspace_owner(workspace_id));
+
+drop policy if exists "Team members read gmail credentials" on public.gmail_credentials;
+
+create policy "Team members read gmail credentials" on public.gmail_credentials for
+select to authenticated using (
+  team_id is not null
+  and team_id = (
+    select
+      p.team_id
+    from
+      public.profiles p
+    where
+      p.id = (select auth.uid())
+  )
+);
