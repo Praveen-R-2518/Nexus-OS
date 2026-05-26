@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import type { TenantScopeValue } from "@/components/tenant/TenantScope";
 import {
   conversationsQuery,
   dailyReportQuery,
@@ -11,15 +12,24 @@ import { queryKeys } from "@/lib/queries/keys";
 const STALE = 30_000;
 const REPORT_STALE = 60_000;
 
-export function prefetchNavRoute(queryClient: QueryClient, href: string): void {
+export function prefetchNavRoute(
+  queryClient: QueryClient,
+  href: string,
+  tenant: Pick<TenantScopeValue, "ready" | "teamId"> | null,
+): void {
+  if (!tenant?.ready || !tenant.teamId) {
+    return;
+  }
+  const teamId = tenant.teamId;
+
   if (href === "/dashboard" || href.startsWith("/dashboard")) {
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.conversations(100),
+      queryKey: queryKeys.conversations(teamId, 100),
       queryFn: () => conversationsQuery(100),
       staleTime: STALE,
     });
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.metrics(),
+      queryKey: queryKeys.metrics(teamId),
       queryFn: metricsQuery,
       staleTime: STALE,
     });
@@ -28,7 +38,7 @@ export function prefetchNavRoute(queryClient: QueryClient, href: string): void {
 
   if (href === "/inbox" || href.startsWith("/inbox")) {
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.conversations(100),
+      queryKey: queryKeys.conversations(teamId, 100),
       queryFn: () => conversationsQuery(100),
       staleTime: STALE,
     });
@@ -37,12 +47,12 @@ export function prefetchNavRoute(queryClient: QueryClient, href: string): void {
 
   if (href === "/approval" || href.startsWith("/approval")) {
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.replyDrafts(),
+      queryKey: queryKeys.replyDrafts(teamId),
       queryFn: () => replyDraftsQuery(),
       staleTime: STALE,
     });
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.conversations(100),
+      queryKey: queryKeys.conversations(teamId, 100),
       queryFn: () => conversationsQuery(100),
       staleTime: STALE,
     });
@@ -51,12 +61,12 @@ export function prefetchNavRoute(queryClient: QueryClient, href: string): void {
 
   if (href === "/report" || href.startsWith("/report")) {
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.dailyReport(),
+      queryKey: queryKeys.dailyReport(teamId),
       queryFn: dailyReportQuery,
       staleTime: REPORT_STALE,
     });
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.conversations(100),
+      queryKey: queryKeys.conversations(teamId, 100),
       queryFn: () => conversationsQuery(100),
       staleTime: STALE,
     });
@@ -65,7 +75,7 @@ export function prefetchNavRoute(queryClient: QueryClient, href: string): void {
 
   if (href === "/logs" || href.startsWith("/logs")) {
     void queryClient.prefetchQuery({
-      queryKey: queryKeys.workflowLogs(""),
+      queryKey: queryKeys.workflowLogs(teamId, ""),
       queryFn: () => workflowLogsWithMetaQuery(),
       staleTime: STALE,
     });

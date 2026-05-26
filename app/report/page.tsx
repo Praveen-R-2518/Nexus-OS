@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
+import { Spinner } from "@/components/ui/Spinner";
+import { useTenantScope } from "@/components/tenant/TenantScope";
 import { cn, formatCurrency } from "@/lib/utils";
 import { conversationsQuery, dailyReportQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
@@ -139,13 +142,18 @@ function TypewriterSummary({ text }: { text: string | null | undefined }) {
 }
 
 export default function ReportPage() {
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
+
   const {
     data: report = null,
     isPending: reportPending,
     error: reportErr,
   } = useQuery({
-    queryKey: queryKeys.dailyReport(),
+    queryKey: queryKeys.dailyReport(teamId),
     queryFn: dailyReportQuery,
+    enabled: queriesEnabled,
     staleTime: 60_000,
   });
 
@@ -154,12 +162,13 @@ export default function ReportPage() {
     isPending: conversationsPending,
     error: conversationsErr,
   } = useQuery({
-    queryKey: queryKeys.conversations(100),
+    queryKey: queryKeys.conversations(teamId, 100),
     queryFn: () => conversationsQuery(100),
+    enabled: queriesEnabled,
     staleTime: 30_000,
   });
 
-  const loading = reportPending || conversationsPending;
+  const loading = queriesEnabled && (reportPending || conversationsPending);
   const reportErrorMsg =
     reportErr instanceof Error ? reportErr.message : null;
   const conversationsErrorMsg =
@@ -256,6 +265,26 @@ export default function ReportPage() {
   }, [report?.report_date, sortedRows]);
 
   const reportDateLabel = formatReportDate(report?.report_date);
+
+  if (tenant.loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 font-mono text-xs uppercase tracking-widest text-muted">
+        <Spinner className="h-8 w-8" label="Loading report" />
+        <p>Loading daily report…</p>
+      </div>
+    );
+  }
+
+  if (!queriesEnabled && tenant.ready) {
+    return (
+      <ExecutiveEmptyState
+        title="Workspace setup required"
+        description="Complete onboarding to view daily buy-back reports for your team."
+        icon={<FileText className="shrink-0" aria-hidden />}
+        className="min-h-[50vh] surface-card"
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-0 space-y-10">
@@ -413,11 +442,13 @@ export default function ReportPage() {
                   <tbody>
                     {sortedRows.length === 0 ? (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-10 text-center text-sm text-atmospheric-grey/60"
-                        >
-                          No conversations found for this report day.
+                        <td colSpan={6} className="p-6">
+                          <ExecutiveEmptyState
+                            title="No conversations found for this report window."
+                            description="Adjust filters or check back after new conversations are processed."
+                            icon={<MessageSquareText className="shrink-0" aria-hidden />}
+                            className="border-none bg-transparent dark:bg-transparent"
+                          />
                         </td>
                       </tr>
                     ) : (
@@ -481,21 +512,12 @@ export default function ReportPage() {
             Could not load the daily report. {reportErrorMsg}
           </div>
         ) : (
-          <div className="border border-border bg-ref-mint p-6 dark:border-border dark:bg-surface-page">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-status-caution-border bg-status-caution-surface text-status-caution">
-                <Clock className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="font-sans text-lg font-black uppercase tracking-tight text-atmospheric-grey">
-                  No report generated yet today.
-                </h2>
-                <p className="mt-1 font-mono text-xs text-muted">
-                  Reports are generated daily at 9 AM.
-                </p>
-              </div>
-            </div>
-          </div>
+          <ExecutiveEmptyState
+            title="No report generated yet today."
+            description="Reports are generated daily at 9 AM."
+            icon={<Clock className="shrink-0" aria-hidden />}
+            className="surface-card"
+          />
         )}
       </div>
     </div>

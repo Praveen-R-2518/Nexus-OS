@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { Activity, AlertCircle, RefreshCw } from "lucide-react";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { useTenantScope } from "@/components/tenant/TenantScope";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { workflowLogsWithMetaQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
@@ -33,6 +34,8 @@ function resultBadgeClass(result: string): string {
   return "border-border-strong bg-surface-muted text-muted";
 }
 
+const ZERO_LOG_COUNTS = { success: 0, failed: 0, running: 0 };
+
 function CountTile({
   label,
   value,
@@ -60,6 +63,10 @@ function CountTile({
 }
 
 export default function LogsPage() {
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
+
   const [filter, setFilter] = useState<ResultFilter>("");
 
   const filterKey = filter === "" ? "" : filter;
@@ -69,18 +76,39 @@ export default function LogsPage() {
     error: errObj,
     refetch,
   } = useQuery({
-    queryKey: queryKeys.workflowLogs(filterKey),
+    queryKey: queryKeys.workflowLogs(teamId, filterKey),
     queryFn: () =>
       workflowLogsWithMetaQuery(filter === "" ? undefined : filter),
+    enabled: queriesEnabled,
   });
 
   const logs = data?.logs ?? [];
-  const counts = data?.counts ?? null;
+  const counts = data?.counts ?? ZERO_LOG_COUNTS;
   const error = errObj instanceof Error ? errObj.message : null;
 
   const load = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  if (tenant.loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 font-mono text-xs uppercase tracking-widest text-muted">
+        <Spinner className="h-8 w-8" label="Loading logs" />
+        <p>Loading workflow logs…</p>
+      </div>
+    );
+  }
+
+  if (!queriesEnabled && tenant.ready) {
+    return (
+      <ExecutiveEmptyState
+        title="Workspace setup required"
+        description="Complete onboarding to view workflow executions for your team."
+        icon={<Activity className="shrink-0" aria-hidden />}
+        className="min-h-[50vh] surface-card"
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -124,28 +152,26 @@ export default function LogsPage() {
         </div>
       ) : null}
 
-      {counts ? (
-        <section
-          aria-label="Log counts"
-          className="grid gap-4 sm:grid-cols-3"
-        >
-          <CountTile
-            label="Success"
-            value={counts.success}
-            accent="border border-status-positive-border/50 bg-status-positive-surface/25"
-          />
-          <CountTile
-            label="Failed"
-            value={counts.failed}
-            accent="border border-status-critical-border/50 bg-status-critical-surface/25"
-          />
-          <CountTile
-            label="Running"
-            value={counts.running}
-            accent="border border-status-warning-border/50 bg-status-warning-surface/25"
-          />
-        </section>
-      ) : null}
+      <section
+        aria-label="Log counts"
+        className="grid gap-4 sm:grid-cols-3"
+      >
+        <CountTile
+          label="Success"
+          value={counts.success}
+          accent="border border-status-positive-border/50 bg-status-positive-surface/25"
+        />
+        <CountTile
+          label="Failed"
+          value={counts.failed}
+          accent="border border-status-critical-border/50 bg-status-critical-surface/25"
+        />
+        <CountTile
+          label="Running"
+          value={counts.running}
+          accent="border border-status-warning-border/50 bg-status-warning-surface/25"
+        />
+      </section>
 
       <div className="flex flex-wrap items-center gap-3">
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted">
@@ -173,9 +199,10 @@ export default function LogsPage() {
           <Spinner className="h-10 w-10 text-status-positive" />
         </div>
       ) : logs.length === 0 ? (
-        <EmptyState
-          title="No workflow logs"
-          description="When n8n workflows write to `workflow_logs`, they will show up here."
+        <ExecutiveEmptyState
+          title="No executions detected. Core pipelines standing by."
+          description="When n8n workflows write to workflow_logs, they will show up here."
+          icon={<Activity className="shrink-0" aria-hidden />}
           className="border-border surface-card"
         />
       ) : (

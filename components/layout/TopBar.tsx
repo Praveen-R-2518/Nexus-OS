@@ -9,6 +9,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { prefetchNavRoute } from "@/lib/queries/nav-prefetch";
+import { useTenantScopeOptional } from "@/components/tenant/TenantScope";
 import { cn } from "@/lib/utils";
 
 const appNav = [
@@ -52,6 +53,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
+  const tenant = useTenantScopeOptional();
   const [solutionsOpen, setSolutionsOpen] = useState(false);
   const solutionsRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +72,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
   }, [pathname]);
 
   async function signOut() {
+    queryClient.clear();
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -158,8 +161,12 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
                     key={href}
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    onMouseEnter={() => prefetchNavRoute(queryClient, href)}
-                    onFocus={() => prefetchNavRoute(queryClient, href)}
+                    onMouseEnter={() =>
+                      prefetchNavRoute(queryClient, href, tenant)
+                    }
+                    onFocus={() =>
+                      prefetchNavRoute(queryClient, href, tenant)
+                    }
                     className={appNavLinkClass(active)}
                   >
                     <span className="relative z-10 whitespace-nowrap">{label}</span>

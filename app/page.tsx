@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { Style_Script } from "next/font/google";
 
@@ -66,8 +67,6 @@ function ScrollReveal({
 }
 
 export default function LandingPage() {
-  const reduce = useReducedMotion();
-
   return (
     <div className={`min-h-screen flex-1 bg-surface-page text-atmospheric-grey selection:bg-black/10 dark:selection:bg-white/20 ${styleScript.variable}`}>
       <ScrollReveal className="flex min-h-screen flex-col items-center justify-center px-4 py-20 text-center">
@@ -81,10 +80,12 @@ export default function LandingPage() {
           </h1>
 
           <div className="relative -mt-16 h-[340px] w-full max-w-[240px] z-0 opacity-20 pointer-events-none select-none">
-            <img
+            <Image
               src="/coin-sketch.png"
               alt="Coin Sketch"
-              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert-0 invert"
+              width={240}
+              height={340}
+              className="h-full w-full object-contain mix-blend-multiply dark:mix-blend-screen dark:invert-0 invert"
             />
           </div>
         </div>
@@ -140,7 +141,7 @@ export default function LandingPage() {
             className="text-center text-4xl font-normal leading-relaxed tracking-normal text-slate-900 dark:text-white/90 md:text-5xl lg:text-6xl"
             style={{ fontFamily: "var(--font-style-script), cursive" }}
           >
-            "We built Nexus OS because founders shouldn't have to choose between saving time and saving revenue."
+            &ldquo;We built Nexus OS because founders shouldn&rsquo;t have to choose between saving time and saving revenue.&rdquo;
           </blockquote>
           <div className="mt-12 flex justify-center">
              <div className="font-mono text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-[#a5acb9]">

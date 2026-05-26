@@ -4,14 +4,8 @@ import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireApiUser,
+  requireApiTenantContext,
 } from "@/lib/api-security";
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
-import {
-  mockReplyDraftById,
-  shouldFallbackToMockAfterEmptyLiveData,
-  shouldUseMockConversations,
-} from "@/lib/conversations-mock";
 import type { ReplyDraft } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +29,7 @@ function approvalWebhookUrl(): string | null {
 async function insertApprovalWorkflowLog(
   supabase: SupabaseClient,
   meta: {
+    team_id: string;
     workspace_id: string;
     draft_id: string;
     conversation_id: string;
@@ -42,6 +37,7 @@ async function insertApprovalWorkflowLog(
   },
 ) {
   const { error } = await supabase.from("workflow_logs").insert({
+    team_id: meta.team_id,
     workspace_id: meta.workspace_id,
     workflow_name: "approval-trigger",
     step: "human_approval",
@@ -57,42 +53,14 @@ async function insertApprovalWorkflowLog(
   }
 }
 
-function mockApprovalResponse(
-  draftId: string,
-  action: ApprovalBody["action"],
-  draftText?: string,
-  rejectionReason?: string,
-): NextResponse | null {
-  if (!shouldUseMockConversations() && !shouldFallbackToMockAfterEmptyLiveData()) {
-    return null;
-  }
-
-  const draft = mockReplyDraftById(draftId);
-  if (!draft) return null;
-
-  const nowIso = new Date().toISOString();
-  const updatedDraft: ReplyDraft = {
-    ...draft,
-    draft_text: draftText ?? draft.draft_text,
-    approval_status: action === "approve" ? "approved" : "rejected",
-    approved_at: action === "approve" ? nowIso : undefined,
-    rejected_at: action === "reject" ? nowIso : undefined,
-    rejection_reason: action === "reject" ? rejectionReason : undefined,
-  };
-
-  return NextResponse.json({
-    success: true,
-    draft: updatedDraft,
-    source: "mock",
-  });
-}
-
 export async function PATCH(request: Request) {
   const limited = rateLimit(request, "api:approval:patch", 30, 60_000);
   if (limited) return limited;
 
-  const auth = await requireApiUser();
-  if (!auth.ok) return auth.response;
+  const tenant = await requireApiTenantContext();
+  if (!tenant.ok) return tenant.response;
+
+  const { supabase, teamId } = tenant;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.medium);
   if (!parsed.ok) return parsed.response;
@@ -122,15 +90,6 @@ export async function PATCH(request: Request) {
     );
   }
 
-  let supabase: SupabaseClient;
-  try {
-    supabase = createSupabaseRouteHandlerClient();
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Server configuration error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-
   const draftId = body.draft_id.trim();
   const nowIso = new Date().toISOString();
   const draftText =
@@ -145,6 +104,7 @@ export async function PATCH(request: Request) {
     .from("reply_drafts")
     .select("*")
     .eq("id", draftId)
+    .eq("team_id", teamId)
     .maybeSingle();
 
   if (fetchError) {
@@ -154,16 +114,6 @@ export async function PATCH(request: Request) {
     );
   }
   if (!existing) {
-    const mockResponse = mockApprovalResponse(
-      draftId,
-      body.action,
-      draftText,
-      body.rejection_reason?.trim(),
-    );
-    if (mockResponse) {
-      return mockResponse;
-    }
-
     return NextResponse.json({ error: "Draft not found" }, { status: 404 });
   }
 
@@ -181,6 +131,7 @@ export async function PATCH(request: Request) {
     .from("conversations")
     .select("workspace_id")
     .eq("id", conversationId)
+    .eq("team_id", teamId)
     .maybeSingle();
 
   if (convFetchErr) {
@@ -217,6 +168,7 @@ export async function PATCH(request: Request) {
         ...(draftText ? { draft_text: draftText } : {}),
       })
       .eq("id", draftId)
+      .eq("team_id", teamId)
       .select()
       .single();
 
@@ -227,7 +179,8 @@ export async function PATCH(request: Request) {
     const { error: convErr } = await supabase
       .from("conversations")
       .update({ status: "approved", updated_at: nowIso })
-      .eq("id", conversationId);
+      .eq("id", conversationId)
+      .eq("team_id", teamId);
 
     if (convErr) {
       return NextResponse.json({ error: convErr.message }, { status: 500 });
@@ -265,6 +218,7 @@ export async function PATCH(request: Request) {
     }
 
     await insertApprovalWorkflowLog(supabase, {
+      team_id: teamId,
       workspace_id: workspaceId,
       draft_id: draftId,
       conversation_id: conversationId,
@@ -288,6 +242,7 @@ export async function PATCH(request: Request) {
       approved_at: null,
     })
     .eq("id", draftId)
+    .eq("team_id", teamId)
     .select()
     .single();
 
@@ -298,13 +253,15 @@ export async function PATCH(request: Request) {
   const { error: convErr } = await supabase
     .from("conversations")
     .update({ status: "rejected", updated_at: nowIso })
-    .eq("id", conversationId);
+    .eq("id", conversationId)
+    .eq("team_id", teamId);
 
   if (convErr) {
     return NextResponse.json({ error: convErr.message }, { status: 500 });
   }
 
   await insertApprovalWorkflowLog(supabase, {
+    team_id: teamId,
     workspace_id: workspaceId,
     draft_id: draftId,
     conversation_id: conversationId,

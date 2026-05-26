@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
+import { useTenantScope } from "@/components/tenant/TenantScope";
 import { conversationDraftsQuery, conversationsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 import type { Conversation } from "@/types";
@@ -114,16 +116,20 @@ function timelineCompletion(status: Conversation["status"]): {
 function InboxPageContent() {
   const searchParams = useSearchParams();
   const prevQsRef = useRef<string | null>(null);
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
 
   const {
     data: conversations = [],
     isPending: listLoading,
     error: listErr,
   } = useQuery({
-    queryKey: queryKeys.conversations(FETCH_LIMIT),
+    queryKey: queryKeys.conversations(teamId, FETCH_LIMIT),
     queryFn: () => conversationsQuery(FETCH_LIMIT),
+    enabled: queriesEnabled,
     staleTime: 30_000,
-    refetchInterval: REFRESH_MS,
+    refetchInterval: queriesEnabled ? REFRESH_MS : false,
   });
 
   const listError = listErr instanceof Error ? listErr.message : null;
@@ -142,11 +148,9 @@ function InboxPageContent() {
     isFetching: detailLoading,
     error: detailErrObj,
   } = useQuery({
-    queryKey: queryKeys.conversationDetail(
-      selectedConversationId ?? "nil",
-    ),
+    queryKey: queryKeys.conversationDetail(teamId, selectedConversationId ?? "nil"),
     queryFn: () => conversationDraftsQuery(selectedConversationId!),
-    enabled: Boolean(selectedConversationId),
+    enabled: Boolean(selectedConversationId) && queriesEnabled,
   });
 
   const detailError =
@@ -187,7 +191,7 @@ function InboxPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (listLoading) return;
+    if (listLoading || !queriesEnabled) return;
     if (filteredConversations.length === 0) {
       setSelectedConversationId(null);
       return;
@@ -217,6 +221,7 @@ function InboxPageContent() {
   }, [
     filteredConversations,
     listLoading,
+    queriesEnabled,
     selectedConversationId,
     searchParams,
   ]);
@@ -264,7 +269,16 @@ function InboxPageContent() {
     ? timelineCompletion(selectedConversation.status)
     : null;
 
-  if (listLoading && conversations.length === 0) {
+  if (tenant.loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
+        <Spinner className="h-8 w-8" label="Loading inbox" />
+        <p className="text-sm">Loading conversations…</p>
+      </div>
+    );
+  }
+
+  if (queriesEnabled && listLoading && conversations.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
         <Spinner className="h-8 w-8" label="Loading inbox" />
@@ -395,7 +409,24 @@ function InboxPageContent() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain hairline-t p-2">
-          {filteredConversations.length === 0 ? (
+          {!queriesEnabled && tenant.ready ? (
+            <ExecutiveEmptyState
+              title="Workspace setup required"
+              description="Complete onboarding to load your tenant inbox."
+              icon={<InboxIcon className="shrink-0" aria-hidden />}
+              className="border-0 bg-transparent py-10"
+            />
+          ) : filteredConversations.length === 0 &&
+            conversations.length === 0 &&
+            queriesEnabled &&
+            !listLoading ? (
+            <ExecutiveEmptyState
+              title="No conversations detected"
+              description="Intake channels standing by."
+              icon={<InboxIcon className="shrink-0" aria-hidden />}
+              className="border-gray-200 dark:border-gray-800 bg-transparent py-10"
+            />
+          ) : filteredConversations.length === 0 ? (
             <EmptyState
               title="No messages match"
               description="Try adjusting filters or search."
@@ -471,11 +502,27 @@ function InboxPageContent() {
       {/* Right panel */}
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
         {!selectedConversation ? (
-          <EmptyState
-            title="Select a message to view details"
-            icon={<InboxIcon />}
+          !queriesEnabled && tenant.ready ? (
+            <ExecutiveEmptyState
+              title="Workspace setup required"
+              description="Finish onboarding to open message details."
+              icon={<InboxIcon />}
               className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
-          />
+            />
+          ) : conversations.length === 0 && queriesEnabled && !listLoading ? (
+            <ExecutiveEmptyState
+              title="No conversations detected"
+              description="Intake channels standing by."
+              icon={<InboxIcon />}
+              className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
+            />
+          ) : (
+            <EmptyState
+              title="Select a message to view details"
+              icon={<InboxIcon />}
+              className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
+            />
+          )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">

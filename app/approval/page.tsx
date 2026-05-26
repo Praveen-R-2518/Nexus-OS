@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
+import { useTenantScope } from "@/components/tenant/TenantScope";
 import {
   approveReply,
   rejectReply,
@@ -155,6 +157,10 @@ function MiniCard({
 
 export default function ApprovalPage() {
   const queryClient = useQueryClient();
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
+
   const [draftOverride, setDraftOverride] = useState<DraftItem[] | null>(null);
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<ApprovalFilter>("pending");
@@ -171,14 +177,16 @@ export default function ApprovalPage() {
     isPending: draftsPending,
     error: draftsErr,
   } = useQuery({
-    queryKey: queryKeys.replyDrafts(),
+    queryKey: queryKeys.replyDrafts(teamId),
     queryFn: () => replyDraftsQuery(),
+    enabled: queriesEnabled,
     staleTime: 30_000,
   });
 
   const { data: convRows = [] } = useQuery({
-    queryKey: queryKeys.conversations(100),
+    queryKey: queryKeys.conversations(teamId, 100),
     queryFn: () => conversationsQuery(100),
+    enabled: queriesEnabled,
     staleTime: 30_000,
   });
 
@@ -278,9 +286,9 @@ export default function ApprovalPage() {
     try {
       await action();
       showToast({ kind: "success", message: successMessage });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.replyDrafts() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.replyDrafts(teamId) });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.conversations(100),
+        queryKey: queryKeys.conversations(teamId, 100),
       });
       setDraftOverride(null);
     } catch (e) {
@@ -321,6 +329,26 @@ export default function ApprovalPage() {
       "rejected",
       () => rejectReply(draft.id, reason),
       "Draft rejected",
+    );
+  }
+
+  if (tenant.loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 font-mono text-xs uppercase tracking-widest text-muted">
+        <Spinner className="h-8 w-8" label="Loading approvals" />
+        <p>Loading approval queue…</p>
+      </div>
+    );
+  }
+
+  if (!queriesEnabled && tenant.ready) {
+    return (
+      <ExecutiveEmptyState
+        title="Workspace setup required"
+        description="Complete onboarding to access the approval queue."
+        icon={<CheckCircle />}
+        className="min-h-[50vh] surface-card"
+      />
     );
   }
 
@@ -428,18 +456,18 @@ export default function ApprovalPage() {
 
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {filteredDrafts.length === 0 ? (
-              <EmptyState
+              <ExecutiveEmptyState
                 title={
                   activeFilter === "pending"
-                    ? "All caught up! No pending approvals."
+                    ? "Inbox Zero. Your workspace is optimized."
                     : "No drafts in this tab"
                 }
                 description={
                   activeFilter === "pending"
-                    ? "Approved and rejected drafts remain available in their tabs."
+                    ? "No pending approvals. Approved and rejected drafts remain available in their tabs."
                     : "Try another approval status."
                 }
-                icon={<CheckCircle />}
+                icon={<CheckCircle className="shrink-0" aria-hidden />}
                 className="border border-dashed border-border/80 bg-transparent py-12 dark:border-border/50"
               />
             ) : (
@@ -506,14 +534,18 @@ export default function ApprovalPage() {
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
           {!selectedDraft ? (
-            <EmptyState
+            <ExecutiveEmptyState
               title={
                 counts.pending === 0
-                  ? "All caught up! No pending approvals."
+                  ? "Inbox Zero. Your workspace is optimized."
                   : "Select a draft to review"
               }
-              description="Choose a draft from the queue to inspect the customer message, classification, and AI reply."
-              icon={<CheckCircle />}
+              description={
+                counts.pending === 0
+                  ? "No pending approvals. Choose another tab to review history."
+                  : "Choose a draft from the queue to inspect the customer message, classification, and AI reply."
+              }
+              icon={<CheckCircle className="shrink-0" aria-hidden />}
               className="m-4 min-h-[420px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
             />
           ) : (
