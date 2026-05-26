@@ -8,43 +8,60 @@ export interface BadgeProps {
   className?: string;
 }
 
+const badgeShell =
+  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm transition-colors duration-interaction sm:text-sm";
+
 const urgencyColors: Record<string, string> = {
-  critical:
-    "border-badge-critical-ring bg-badge-critical-bg dark:bg-red-500/15 text-badge-critical-text dark:text-red-300",
-  high:
-    "border-badge-high-ring bg-badge-high-bg dark:bg-orange-500/10 text-badge-high-text dark:text-orange-300",
-  medium:
-    "border-badge-medium-ring bg-badge-medium-bg dark:bg-yellow-500/10 text-badge-medium-text dark:text-yellow-300",
-  low:
-    "border-badge-low-ring bg-badge-low-bg dark:bg-green-500/10 text-badge-low-text dark:text-green-300",
+  critical: cn(
+    "border-status-critical-border bg-status-critical-surface text-status-critical",
+  ),
+  high: cn(
+    "border-status-warning-border bg-status-warning-surface text-status-warning",
+  ),
+  medium: cn(
+    "border-status-caution-border bg-status-caution-surface text-status-caution",
+  ),
+  low: cn(
+    "border-status-positive-border bg-status-positive-surface text-status-positive",
+  ),
 };
 
 const intentColors: Record<string, string> = {
-  purchase:
-    "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-400",
-  complaint:
-    "border-badge-critical-ring bg-badge-critical-bg dark:bg-red-500/10 text-badge-critical-text dark:text-red-400",
-  churn_risk:
-    "border-badge-high-ring bg-badge-high-bg dark:bg-orange-500/10 text-badge-high-text dark:text-orange-400",
-  support:
-    "border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  unknown:
-    "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+  purchase: cn(
+    "border-status-positive-border bg-status-positive-surface text-status-positive",
+  ),
+  complaint: cn(
+    "border-status-critical-border bg-status-critical-surface text-status-critical",
+  ),
+  churn_risk: cn(
+    "border-status-warning-border bg-status-warning-surface text-status-warning",
+  ),
+  support: cn(
+    "border-status-neutral-border bg-status-neutral-surface text-status-neutral",
+  ),
+  unknown: cn(
+    "border-border-strong bg-surface-muted text-slate-600 dark:text-slate-400",
+  ),
 };
 
 const statusColors: Record<string, string> = {
-  approved:
-    "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-400",
-  pending:
-    "border-badge-pending-ring bg-badge-pending-bg dark:bg-yellow-500/10 text-badge-pending-text dark:text-yellow-400",
-  rejected:
-    "border-badge-critical-ring bg-badge-critical-bg dark:bg-red-500/10 text-badge-critical-text dark:text-red-400",
-  sent:
-    "border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  approved: cn(
+    "border-status-positive-border bg-status-positive-surface text-status-positive",
+  ),
+  pending: cn(
+    "border-status-caution-border bg-status-caution-surface text-status-caution",
+  ),
+  rejected: cn(
+    "border-status-critical-border bg-status-critical-surface text-status-critical",
+  ),
+  sent: cn(
+    "border-status-neutral-border bg-status-neutral-surface text-status-neutral",
+  ),
 };
 
-const fallback =
-  "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+const fallback = cn(
+  "border-border-strong bg-surface-muted text-slate-600 dark:text-slate-400",
+);
 
 function stylesForVariant(
   variant: BadgeProps["variant"],
@@ -70,7 +87,7 @@ export function Badge({ label, variant, value, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium backdrop-blur-md",
+        badgeShell,
         stylesForVariant(variant, value),
         className,
       )}

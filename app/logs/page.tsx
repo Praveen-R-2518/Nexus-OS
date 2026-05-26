@@ -21,10 +21,16 @@ const FILTER_OPTIONS: { value: ResultFilter; label: string }[] = [
 
 function resultBadgeClass(result: string): string {
   const r = result.toLowerCase();
-  if (r === "success") return "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300";
-  if (r === "failed") return "border-red-500/40 bg-red-50 dark:bg-red-500/15 text-[#8B1A1A] dark:text-red-300";
-  if (r === "running") return "border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 text-[#7A4200] dark:text-amber-200";
-  return "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+  if (r === "success") {
+    return "border-status-positive-border bg-status-positive-surface text-status-positive";
+  }
+  if (r === "failed") {
+    return "border-status-critical-border bg-status-critical-surface text-status-critical";
+  }
+  if (r === "running") {
+    return "border-status-warning-border bg-status-warning-surface text-status-warning";
+  }
+  return "border-border-strong bg-surface-muted text-muted";
 }
 
 function CountTile({
@@ -39,14 +45,14 @@ function CountTile({
   return (
     <div
       className={cn(
-        "rounded-xl border border-slate-200 dark:border-slate-800 surface-card px-4 py-3",
+        "rounded-2xl border border-border surface-card px-5 py-4 shadow-sm",
         accent,
       )}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-atmospheric-grey/60">
+      <p className="text-xs font-bold uppercase tracking-brand text-muted">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+      <p className="mt-2 text-3xl font-bold tabular-nums text-atmospheric-grey">
         {value}
       </p>
     </div>
@@ -77,17 +83,17 @@ export default function LogsPage() {
   }, [refetch]);
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 border-b border-gray-200 dark:border-gray-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-8">
+      <header className="flex flex-col gap-4 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1B6B3A]">
+          <p className="text-xs font-bold uppercase tracking-brand text-status-positive">
             Nexus OS
           </p>
-          <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-            <Activity className="h-7 w-7 text-[#1B6B3A]" aria-hidden />
+          <h1 className="mt-3 flex items-center gap-3 text-3xl font-bold tracking-tight text-atmospheric-grey">
+            <Activity className="h-8 w-8 text-status-positive" aria-hidden />
             Workflow Logs
           </h1>
-          <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-2 max-w-xl text-base text-muted">
             Latest workflow executions from Supabase.
           </p>
         </div>
@@ -95,10 +101,10 @@ export default function LogsPage() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex cursor-pointer items-center gap-2 self-start rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 transition hover:border-emerald-500/40 hover:bg-gray-100 dark:bg-gray-800 disabled:opacity-50"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-xl border border-border bg-surface-muted px-5 py-2.5 text-base font-semibold text-atmospheric-grey transition-colors duration-interaction hover:border-status-positive-border hover:bg-status-positive-surface hover:text-status-positive disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw
-            className={cn("h-4 w-4", loading && "animate-spin")}
+            className={cn("h-5 w-5", loading && "animate-spin")}
             aria-hidden
           />
           Refresh
@@ -107,13 +113,13 @@ export default function LogsPage() {
 
       {error ? (
         <div
-          className="flex items-start gap-3 rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A]"
+          className="flex items-start gap-4 rounded-2xl border border-status-critical-border bg-status-critical-surface px-5 py-4 text-base text-status-critical"
           role="alert"
         >
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+          <AlertCircle className="mt-0.5 h-6 w-6 shrink-0" aria-hidden />
           <div>
-            <p className="font-medium">Could not load logs</p>
-            <p className="mt-1 text-[#8B1A1A]">{error}</p>
+            <p className="font-bold">Could not load logs</p>
+            <p className="mt-1">{error}</p>
           </div>
         </div>
       ) : null}
@@ -121,28 +127,28 @@ export default function LogsPage() {
       {counts ? (
         <section
           aria-label="Log counts"
-          className="grid gap-3 sm:grid-cols-3"
+          className="grid gap-4 sm:grid-cols-3"
         >
           <CountTile
             label="Success"
             value={counts.success}
-            accent="border-emerald-900/40"
+            accent="ring-1 ring-status-positive-border/30"
           />
           <CountTile
             label="Failed"
             value={counts.failed}
-            accent="border-red-900/40"
+            accent="ring-1 ring-status-critical-border/30"
           />
           <CountTile
             label="Running"
             value={counts.running}
-            accent="border-amber-900/40"
+            accent="ring-1 ring-status-warning-border/30"
           />
         </section>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-bold uppercase tracking-brand text-muted">
           Filter
         </span>
         {FILTER_OPTIONS.map(({ value, label }) => (
@@ -151,10 +157,10 @@ export default function LogsPage() {
             type="button"
             onClick={() => setFilter(value)}
             className={cn(
-              "cursor-pointer rounded-lg border px-3 py-1.5 text-sm font-medium transition",
+              "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-5 py-2 text-base font-semibold transition-colors duration-interaction",
               filter === value
-                ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
-                : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-700 dark:hover:text-slate-200",
+                ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
+                : "border-border bg-surface-card text-muted hover:border-border-strong hover:bg-surface-muted hover:text-atmospheric-grey",
             )}
           >
             {label}
@@ -163,51 +169,54 @@ export default function LogsPage() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex min-h-[240px] items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 surface-card">
-          <Spinner className="h-8 w-8 text-[#1B6B3A] dark:text-emerald-400" />
+        <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-border surface-card">
+          <Spinner className="h-10 w-10 text-status-positive" />
         </div>
       ) : logs.length === 0 ? (
         <EmptyState
           title="No workflow logs"
           description="When n8n workflows write to `workflow_logs`, they will show up here."
-          className="border-slate-200 dark:border-slate-800 surface-card"
+          className="border-border surface-card"
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-card">
+        <div className="overflow-hidden rounded-2xl border border-border surface-card shadow-card-halo-light dark:shadow-card-halo">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[680px] text-left text-base">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/80 text-xs uppercase tracking-wide text-gray-500">
-                  <th className="px-4 py-3 font-medium">Time</th>
-                  <th className="px-4 py-3 font-medium">Workflow</th>
-                  <th className="px-4 py-3 font-medium">Step</th>
-                  <th className="px-4 py-3 font-medium">Result</th>
-                  <th className="px-4 py-3 font-medium">Error</th>
+                <tr className="border-b border-border bg-surface-muted/80 text-sm font-bold uppercase tracking-brand text-muted">
+                  <th className="px-5 py-4">Time</th>
+                  <th className="px-5 py-4">Workflow</th>
+                  <th className="px-5 py-4">Step</th>
+                  <th className="px-5 py-4">Result</th>
+                  <th className="px-5 py-4">Error</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800/80">
+              <tbody className="divide-y divide-border">
                 {logs.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-100 dark:hover:bg-slate-800/30">
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  <tr
+                    key={row.id}
+                    className="transition-colors hover:bg-surface-muted/50"
+                  >
+                    <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-muted">
                       {new Date(row.timestamp).toLocaleString()}
                     </td>
-                    <td className="max-w-[180px] truncate px-4 py-3 text-gray-700 dark:text-gray-200">
+                    <td className="max-w-[200px] truncate px-5 py-4 font-medium text-atmospheric-grey">
                       {row.workflow_name}
                     </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-gray-600 dark:text-gray-300">
+                    <td className="max-w-[220px] truncate px-5 py-4 text-muted">
                       {row.step}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <span
                         className={cn(
-                          "inline-flex rounded-full border px-2 py-0.5 text-xs font-medium",
+                          "inline-flex rounded-full border px-3 py-1 text-sm font-semibold",
                           resultBadgeClass(row.result),
                         )}
                       >
                         {row.result}
                       </span>
                     </td>
-                    <td className="max-w-xs truncate px-4 py-3 text-xs text-[#8B1A1A]">
+                    <td className="max-w-xs truncate px-5 py-4 text-sm font-medium text-status-critical">
                       {row.error ?? "—"}
                     </td>
                   </tr>
@@ -218,8 +227,11 @@ export default function LogsPage() {
         </div>
       )}
 
-      <p className="text-center text-xs text-gray-600">
-        <Link href="/dashboard" className="text-[#1B6B3A] hover:underline">
+      <p className="text-center text-sm text-muted">
+        <Link
+          href="/dashboard"
+          className="font-semibold text-status-positive underline-offset-4 hover:underline"
+        >
           ← Command Center
         </Link>
       </p>

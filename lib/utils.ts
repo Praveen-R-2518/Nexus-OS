@@ -44,24 +44,38 @@ export function formatRelativeTime(dateStr: string): string {
 }
 
 export function getRiskColor(score: number): string {
-  if (score >= 80) return "text-[#8B1A1A] dark:text-red-400";
-  if (score >= 60) return "text-[#7A4200] dark:text-orange-400";
-  if (score >= 40) return "text-yellow-500 dark:text-yellow-400";
-  return "text-[#1B6B3A] dark:text-green-400";
+  if (score >= 80) return "text-status-critical";
+  if (score >= 60) return "text-status-warning";
+  if (score >= 40) return "text-status-caution";
+  return "text-status-positive";
+}
+
+/** Heat-map style container for risk scores (inbox / lists). */
+export function getRiskHeatPinClass(score: number): string {
+  if (score >= 80) {
+    return "border-status-critical-border bg-status-critical-surface text-status-critical shadow-glow-critical";
+  }
+  if (score >= 60) {
+    return "border-status-warning-border bg-status-warning-surface text-status-warning";
+  }
+  if (score >= 40) {
+    return "border-status-caution-border bg-status-caution-surface text-status-caution";
+  }
+  return "border-status-positive-border bg-status-positive-surface text-status-positive";
 }
 
 /** Full pill styles for urgency badges */
 export function getUrgencyBadgeClass(urgency: string): string {
   switch (urgency.toLowerCase()) {
     case "critical":
-      return "border-red-500/50 bg-red-500/15 text-[#8B1A1A]";
+      return "border-status-critical-border bg-status-critical-surface text-status-critical";
     case "high":
-      return "border-orange-500/40 bg-orange-500/10 text-[#7A4200]";
+      return "border-status-warning-border bg-status-warning-surface text-status-warning";
     case "medium":
-      return "border-yellow-500/40 bg-yellow-500/10 text-yellow-300";
+      return "border-status-caution-border bg-status-caution-surface text-status-caution";
     case "low":
-      return "border-green-500/40 bg-green-500/10 text-[#1B6B3A]";
+      return "border-status-positive-border bg-status-positive-surface text-status-positive";
     default:
-      return "border-gray-600 bg-gray-800 text-gray-400";
+      return "border-border-strong bg-surface-muted text-slate-600 dark:text-slate-400";
   }
 }

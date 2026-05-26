@@ -27,7 +27,7 @@ import {
   conversationMessagePreview,
   formatCurrency,
   formatRelativeTime,
-  getRiskColor,
+  getRiskHeatPinClass,
 } from "@/lib/utils";
 
 const GLOBAL_REFRESH_MS = 30_000;
@@ -68,7 +68,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-[132px] animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800/40"
+          className="h-40 animate-pulse rounded-2xl border border-border bg-surface-muted"
         />
       ))}
     </div>
@@ -207,37 +207,40 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-[calc(100vh-6rem)] space-y-8">
-        <header className="border-b border-black/10 dark:border-white/10 pb-6">
-          <div className="mb-2">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <header className="border-b border-border pb-8">
+          <p className="text-xs font-bold uppercase tracking-brand text-status-positive">
+            Operations
+          </p>
+          <div className="mt-2">
+            <h1 className="text-4xl font-bold tracking-tight text-atmospheric-grey sm:text-5xl">
               Command Center
             </h1>
           </div>
-          <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400 mb-8">
+          <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
             Live revenue rescue ops — prioritize revenue at risk, route hot
             leads, and intercept churn before it lands.
           </p>
         </header>
 
         {metricsErrorMsg ? (
-          <div className="rounded-xl border border-red-200 dark:border-red-500/35 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A] dark:text-red-200">
+          <div className="rounded-2xl border border-status-critical-border bg-status-critical-surface px-4 py-3 text-base text-status-critical">
             <span>Metrics: {metricsErrorMsg}</span>{" "}
             <button
               type="button"
               onClick={() => void refetchMetrics()}
-              className="ml-2 font-medium text-[#1B6B3A] underline dark:text-emerald-400"
+              className="ml-2 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-2 font-semibold text-status-positive underline-offset-4 hover:underline"
             >
               Retry
             </button>
           </div>
         ) : null}
         {conversationsErrorMsg ? (
-          <div className="rounded-xl border border-red-200 dark:border-red-500/35 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A] dark:text-red-200">
+          <div className="rounded-2xl border border-status-critical-border bg-status-critical-surface px-4 py-3 text-base text-status-critical">
             <span>Inbox feed: {conversationsErrorMsg}</span>{" "}
             <button
               type="button"
               onClick={() => void refetchConversations()}
-              className="ml-2 font-medium text-[#1B6B3A] underline dark:text-emerald-400"
+              className="ml-2 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-2 font-semibold text-status-positive underline-offset-4 hover:underline"
             >
               Retry
             </button>
@@ -252,10 +255,10 @@ export default function DashboardPage() {
             <EmptyState
               title="Metrics unavailable"
               description={metricsErrorMsg}
-              className="border-gray-200 dark:border-gray-800 bg-obsidian/40"
+              className="border-border bg-surface-muted/50"
             />
           ) : metrics ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <Card
                 title="Revenue at Risk"
                 value={formatCurrency(metrics.revenue_at_risk)}
@@ -278,6 +281,7 @@ export default function DashboardPage() {
                 subtitle="customers showing churn signals"
                 icon={<AlertTriangle />}
                 variant="support"
+                accent="text-status-warning"
                 className="animate-fade-up [animation-delay:150ms]"
               />
               <Card
@@ -286,6 +290,7 @@ export default function DashboardPage() {
                 subtitle="saved by AI drafting"
                 icon={<Clock />}
                 variant="support"
+                accent="text-status-neutral"
                 className="animate-fade-up [animation-delay:225ms]"
               />
             </div>
@@ -293,7 +298,7 @@ export default function DashboardPage() {
             <EmptyState
               title="No metrics yet"
               description="Connect Supabase or check API configuration."
-              className="border-gray-200 dark:border-gray-800 bg-obsidian/40"
+              className="border-border bg-surface-muted/50"
             />
           )}
         </section>
@@ -303,12 +308,12 @@ export default function DashboardPage() {
           {/* Inbox feed */}
           <section
             aria-label="Inbox feed preview"
-            className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-card shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+            className="overflow-hidden rounded-2xl border border-border surface-card shadow-card-halo-light dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
           >
-            <div className="flex items-center justify-end border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+            <div className="flex items-center justify-end border-b border-border px-5 py-4">
               <Link
                 href="/inbox"
-                className="text-xs font-medium text-[#1B6B3A] dark:text-emerald-400/90 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
+                className="inline-flex min-h-11 items-center text-base font-semibold text-status-positive transition-colors duration-interaction hover:text-trajectory-blue"
               >
                 Open inbox →
               </Link>
@@ -323,19 +328,20 @@ export default function DashboardPage() {
                 className="border-0 bg-transparent py-12"
               />
             ) : (
-              <ul className="divide-y divide-slate-200 dark:divide-slate-800/80">
+              <ul className="divide-y divide-border">
                 {feedPreview.map((c) => {
                   const highlighted = highlightIds.has(c.id);
                   return (
                     <li key={c.id}>
                       <div
                         className={cn(
-                          "flex flex-col gap-3 px-4 py-3 transition-colors sm:flex-row sm:items-center sm:gap-4",
-                          c.urgency === "critical" && "bg-red-50 dark:bg-red-950/30",
+                          "flex flex-col gap-4 px-5 py-4 transition-colors sm:flex-row sm:items-center sm:gap-5",
+                          c.urgency === "critical" &&
+                            "bg-status-critical-surface/60 dark:bg-status-critical-surface/40",
                           highlighted && "animate-slide-down-row",
                         )}
                       >
-                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className="flex min-w-0 flex-1 items-start gap-4">
                           <div className="shrink-0 pt-0.5">
                             <Badge
                               variant="urgency"
@@ -344,39 +350,39 @@ export default function DashboardPage() {
                             />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
+                            <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
                             </p>
-                            <p className="line-clamp-1 text-xs text-atmospheric-grey/60">
+                            <p className="line-clamp-1 text-sm text-muted">
                               {conversationMessagePreview(c)}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 sm:justify-end">
+                        <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 sm:justify-end">
                           <span
                             className={cn(
-                              "text-sm font-semibold tabular-nums sm:w-12 sm:text-right",
-                              getRiskColor(c.risk_score),
+                              "risk-heat-pin text-sm sm:w-14",
+                              getRiskHeatPinClass(c.risk_score),
                             )}
                           >
                             {c.risk_score}
                           </span>
-                          <span className="text-sm font-medium tabular-nums text-[#1B6B3A] dark:text-emerald-400/90 sm:w-24 sm:text-right">
+                          <span className="text-base font-bold tabular-nums text-status-positive sm:w-28 sm:text-right">
                             {formatCurrency(c.estimated_value)}
                           </span>
                           <time
-                            className="text-xs tabular-nums text-slate-500 sm:w-28 sm:text-right"
+                            className="text-sm tabular-nums text-muted sm:w-32 sm:text-right"
                             dateTime={c.updated_at}
                           >
                             {formatRelativeTime(c.updated_at)}
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition-colors hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
+                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface-muted text-atmospheric-grey transition-colors duration-interaction hover:border-status-positive-border hover:bg-status-positive-surface hover:text-status-positive"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
-                            <ArrowRight className="h-4 w-4" />
+                            <ArrowRight className="h-5 w-5" />
                           </Link>
                         </div>
                       </div>
@@ -392,20 +398,21 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-b from-orange-50 dark:from-orange-500/5 to-transparent"
+              className="overflow-hidden rounded-2xl border border-status-warning-border bg-gradient-to-b from-status-warning-surface to-transparent shadow-card-halo-light dark:shadow-card-halo"
             >
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  <Flame className="h-4 w-4 text-[#7A4200] dark:text-orange-400" /> Hot Leads
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 className="flex items-center gap-2 text-base font-bold text-atmospheric-grey">
+                  <Flame className="h-5 w-5 text-status-warning" aria-hidden />{" "}
+                  Hot Leads
                 </h2>
                 <Link
                   href="/inbox?intent=purchase"
-                  className="text-xs font-medium text-[#7A4200] dark:text-orange-400 hover:text-[#7A4200] dark:hover:text-[#7A4200]"
+                  className="inline-flex min-h-11 items-center text-sm font-semibold text-status-warning transition-colors hover:text-status-caution"
                 >
                   View all →
                 </Link>
               </div>
-              <div className="p-4">
+              <div className="p-5">
                 {conversationsPending && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
                 ) : hotLeadsList.length === 0 ? (
@@ -416,16 +423,16 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 surface-card px-3 py-2.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-medium text-slate-900 dark:text-slate-100">
+                        <div className="rounded-xl border border-border surface-card px-4 py-3 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
                             </p>
-                            <span className="shrink-0 text-sm font-semibold tabular-nums text-[#1B6B3A] dark:text-emerald-400">
+                            <span className="shrink-0 text-base font-bold tabular-nums text-status-positive">
                               {formatCurrency(c.estimated_value)}
                             </span>
                           </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
                             <Badge
                               variant="urgency"
                               value={c.urgency}
@@ -433,10 +440,10 @@ export default function DashboardPage() {
                             />
                             <span
                               className={cn(
-                                "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                                "rounded-full border px-3 py-1 text-xs font-semibold",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-emerald-500/35 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-300"
-                                  : "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+                                  ? "border-status-positive-border bg-status-positive-surface text-status-positive"
+                                  : "border-border bg-surface-muted text-muted",
                               )}
                             >
                               {hotLeadDraftTag(c.status)}
@@ -453,20 +460,24 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden rounded-xl border border-yellow-500/20 bg-gradient-to-b from-yellow-50 dark:from-yellow-500/5 to-transparent"
+              className="overflow-hidden rounded-2xl border border-status-caution-border bg-gradient-to-b from-status-caution-surface to-transparent shadow-card-halo-light dark:shadow-card-halo"
             >
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" /> Churn Risks
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 className="flex items-center gap-2 text-base font-bold text-atmospheric-grey">
+                  <AlertTriangle
+                    className="h-5 w-5 text-status-caution"
+                    aria-hidden
+                  />{" "}
+                  Churn Risks
                 </h2>
                 <Link
                   href="/inbox?intent=churn_risk"
-                  className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 dark:hover:text-yellow-300"
+                  className="inline-flex min-h-11 items-center text-sm font-semibold text-status-caution transition-colors hover:text-status-warning"
                 >
                   View all →
                 </Link>
               </div>
-              <div className="p-4">
+              <div className="p-5">
                 {conversationsPending && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
                 ) : churnRisksList.length === 0 ? (
@@ -477,44 +488,44 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 surface-card px-3 py-2.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="truncate font-medium text-slate-900 dark:text-slate-100">
+                        <div className="rounded-xl border border-border surface-card px-4 py-3 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
                             </p>
                             <span
                               className={cn(
-                                "shrink-0 text-sm font-semibold tabular-nums",
-                                getRiskColor(c.risk_score),
+                                "risk-heat-pin shrink-0 text-sm",
+                                getRiskHeatPinClass(c.risk_score),
                               )}
                             >
                               {c.risk_score}
                             </span>
                           </div>
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-surface-muted">
                             <div
                               className={cn(
                                 "h-full rounded-full transition-all",
                                 c.risk_score >= 80
-                                  ? "bg-[#C0392B] opacity-70"
+                                  ? "bg-status-critical"
                                   : c.risk_score >= 60
-                                    ? "bg-orange-500/80"
+                                    ? "bg-status-warning"
                                     : c.risk_score >= 40
-                                      ? "bg-yellow-500/80"
-                                      : "bg-trajectory-blue/70",
+                                      ? "bg-status-caution"
+                                      : "bg-trajectory-blue",
                               )}
                               style={{
                                 width: `${Math.min(100, Math.max(0, c.risk_score))}%`,
                               }}
                             />
                           </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={cn(
-                                "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+                                "rounded-full border px-3 py-1 text-xs font-semibold",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-emerald-500/35 bg-emerald-50 dark:bg-emerald-500/10 text-[#1B6B3A] dark:text-emerald-300"
-                                  : "border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+                                  ? "border-status-positive-border bg-status-positive-surface text-status-positive"
+                                  : "border-border bg-surface-muted text-muted",
                               )}
                             >
                               {churnDraftTag(c.status)}
