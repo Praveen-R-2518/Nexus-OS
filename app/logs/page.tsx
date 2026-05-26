@@ -45,7 +45,7 @@ function CountTile({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-white px-4 py-4 dark:border-border/60 dark:bg-surface-card",
+        "rounded-xl border border-selectable-edge bg-white px-4 py-4 dark:bg-surface-card",
         accent,
       )}
     >
@@ -159,8 +159,8 @@ export default function LogsPage() {
             className={cn(
               "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
               filter === value
-                ? "border-2 border-ref-cta bg-ref-mint text-ref-cta dark:border-border-strong dark:bg-surface-muted dark:text-muted"
-                : "border-border/60 bg-white text-muted hover:border-border hover:text-atmospheric-grey dark:border-border/60 dark:bg-surface-card dark:hover:border-border-strong",
+                ? "border border-selectable-edge-selected bg-ref-mint text-ref-cta dark:bg-surface-muted dark:text-muted"
+                : "border border-selectable-edge bg-white text-muted hover:border-selectable-edge-hover hover:text-atmospheric-grey dark:bg-surface-card",
             )}
           >
             {label}
@@ -169,7 +169,7 @@ export default function LogsPage() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex min-h-[260px] items-center justify-center rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card">
+        <div className="flex min-h-[260px] items-center justify-center rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
           <Spinner className="h-10 w-10 text-status-positive" />
         </div>
       ) : logs.length === 0 ? (
@@ -179,7 +179,7 @@ export default function LogsPage() {
           className="border-border surface-card"
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card">
+        <div className="overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-base">
               <thead>

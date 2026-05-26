@@ -292,9 +292,9 @@ function InboxPageContent() {
         </p>
       ) : null}
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border dark:bg-surface-card">
+      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
         <div className="shrink-0 px-3 pt-3 pb-2">
-          <div className="rounded-xl border border-border/70 bg-surface-muted p-4 dark:border-border/60 dark:bg-surface-muted">
+          <div className="rounded-xl border border-selectable-edge bg-surface-muted p-4 dark:bg-surface-muted">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
               Revenue at Risk
             </p>
@@ -324,17 +324,17 @@ function InboxPageContent() {
                     className={cn(
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive"
-                        : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
+                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
                     {opt.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border border-border/50 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-border/60",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "bg-status-positive-surface font-bold text-status-positive"
-                          : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {count}
@@ -360,17 +360,17 @@ function InboxPageContent() {
                     className={cn(
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive"
-                        : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
+                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
                     {opt.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border border-border/50 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-border/60",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "bg-status-positive-surface font-bold text-status-positive"
-                          : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {pillCount}
@@ -414,12 +414,10 @@ function InboxPageContent() {
                       className={cn(
                         "w-full cursor-pointer rounded-xl p-3 text-left transition-colors duration-interaction",
                         selected
-                          ? "border-2 border-ref-cta bg-ref-ice dark:border-border-strong dark:bg-surface-muted"
-                          : c.urgency === "critical"
-                            ? "border border-status-critical-border/50 bg-white dark:border-status-critical-border/40 dark:bg-surface-elevated"
-                            : "border border-border/60 bg-white dark:border-border/70 dark:bg-surface-elevated",
+                          ? "border border-selectable-edge-selected bg-ref-ice dark:bg-surface-muted"
+                          : "border border-selectable-edge bg-white dark:bg-surface-elevated",
                         !selected &&
-                          "hover:border-border hover:bg-ref-mint dark:hover:border-border-strong dark:hover:bg-surface-muted",
+                          "hover:bg-ref-mint dark:hover:bg-surface-muted hover:border-selectable-edge-hover",
                       )}
                     >
                       <div className="flex items-start gap-3">
@@ -471,7 +469,7 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border dark:bg-surface-card">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
         {!selectedConversation ? (
           <EmptyState
             title="Select a message to view details"
@@ -516,11 +514,11 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-xl border border-border bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey dark:border-border/70">
+            <div className="mb-6 rounded-xl border border-selectable-edge bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey">
               {conversationMessageText(selectedConversation)}
             </div>
 
-            <div className="mb-6 rounded-xl border border-border bg-white p-4 dark:border-border/70 dark:bg-surface-elevated">
+            <div className="mb-6 rounded-xl border border-selectable-edge bg-white p-4 dark:bg-surface-elevated">
               <h2 className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                 Classification
               </h2>
@@ -536,7 +534,7 @@ function InboxPageContent() {
                   label={`Urgency: ${urgencyBadgeLabel(selectedConversation.urgency)}`}
                 />
               </div>
-              <div className="mt-6 rounded-lg border border-border/60 bg-surface-muted/90 p-4 dark:border-border/50 dark:bg-surface-muted/60">
+              <div className="mt-6 rounded-lg border border-selectable-edge bg-surface-muted/90 p-4 dark:bg-surface-muted/60">
                 <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-muted">Risk score</p>

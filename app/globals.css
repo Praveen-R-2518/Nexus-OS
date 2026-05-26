@@ -63,6 +63,11 @@
     --text-positive: var(--status-positive-fg);
     --text-warning: var(--status-warning-fg);
     --text-critical: var(--status-critical-fg);
+
+    /* List / card rows: 1px — non-selected rgb(40,40,40), selected thin white */
+    --selectable-card-border: rgb(40, 40, 40);
+    --selectable-card-border-selected: rgb(255, 255, 255);
+    --selectable-card-border-hover: rgb(55, 55, 55);
   }
 
   html:not(.dark) .logo-nexus,
@@ -90,6 +95,9 @@
     --surface-muted: #e4ebf3;
     --border-subtle: rgba(10, 15, 12, 0.05);
     --border-strong: rgba(10, 15, 12, 0.1);
+    --selectable-card-border: rgb(40, 40, 40);
+    --selectable-card-border-selected: rgb(255, 255, 255);
+    --selectable-card-border-hover: rgb(55, 55, 55);
   }
 
   .dark {
@@ -147,6 +155,10 @@
     --text-positive: var(--status-positive-fg);
     --text-warning: var(--status-warning-fg);
     --text-critical: var(--status-critical-fg);
+
+    --selectable-card-border: rgb(40, 40, 40);
+    --selectable-card-border-selected: rgb(255, 255, 255);
+    --selectable-card-border-hover: rgb(60, 60, 60);
 
     .logo-os {
       color: var(--text-secondary);

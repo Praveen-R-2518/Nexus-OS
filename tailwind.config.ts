@@ -100,6 +100,11 @@ const config: Config = {
           ice: "var(--ref-ice)",
           mint: "var(--ref-mint)",
         },
+        selectable: {
+          edge: "var(--selectable-card-border)",
+          "edge-selected": "var(--selectable-card-border-selected)",
+          "edge-hover": "var(--selectable-card-border-hover)",
+        },
       },
       boxShadow: {
         "glow-positive": "none",

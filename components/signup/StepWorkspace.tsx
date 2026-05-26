@@ -183,9 +183,9 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("solo")}
             className={cn(
-              "flex cursor-pointer items-start gap-3 border border-border bg-white p-4 text-left transition dark:border-border dark:bg-surface-card",
+              "flex cursor-pointer items-start gap-3 border border-selectable-edge bg-white p-4 text-left transition dark:bg-surface-card",
               workspaceType === "solo"
-                ? "border-2 border-ref-cta bg-[#e3eef6] dark:border-border-strong dark:bg-surface-elevated"
+                ? "border border-selectable-edge-selected bg-[#e3eef6] dark:bg-surface-elevated"
                 : "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
             )}
           >
@@ -206,9 +206,9 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("team")}
             className={cn(
-              "flex cursor-pointer items-start gap-3 border border-border bg-white p-4 text-left transition dark:border-border dark:bg-surface-card",
+              "flex cursor-pointer items-start gap-3 border border-selectable-edge bg-white p-4 text-left transition dark:bg-surface-card",
               workspaceType === "team"
-                ? "border-2 border-ref-cta bg-[#e3eef6] dark:border-border-strong dark:bg-surface-elevated"
+                ? "border border-selectable-edge-selected bg-[#e3eef6] dark:bg-surface-elevated"
                 : "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
             )}
           >

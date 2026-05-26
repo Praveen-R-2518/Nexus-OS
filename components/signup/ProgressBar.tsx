@@ -38,10 +38,10 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                     "border-border bg-[#0f2336] text-white dark:border-border dark:bg-surface-elevated dark:text-white",
                   active &&
                     !done &&
-                    "border-2 border-ref-cta bg-[#e3eef6] text-black dark:border-border-strong dark:bg-surface-elevated dark:text-white",
+                    "border border-selectable-edge-selected bg-[#e3eef6] text-black dark:bg-surface-elevated dark:text-white",
                   !active &&
                     !done &&
-                    "border-border bg-white text-black/45 dark:border-border dark:bg-surface-card dark:text-white/45",
+                    "border border-selectable-edge bg-white text-black/45 dark:bg-surface-card dark:text-white/45",
                 )}
               >
                 {done ? <Check className="h-3.5 w-3.5" aria-hidden /> : stepNumber}

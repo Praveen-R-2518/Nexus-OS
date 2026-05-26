@@ -353,7 +353,7 @@ export default function ReportPage() {
 
             <section
               aria-labelledby="conversation-breakdown"
-              className="overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card"
+              className="overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card"
             >
               <div className="flex flex-col gap-3 hairline-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
