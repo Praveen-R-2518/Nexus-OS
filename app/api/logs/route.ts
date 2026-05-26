@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import type { WorkflowLog } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
   let supabase;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Server configuration error";

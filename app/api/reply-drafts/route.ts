@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { requireApiUser } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import type { ReplyDraft, ReplyDraftWithConversation } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -75,9 +75,9 @@ export async function GET(request: Request) {
     );
   }
 
-  let supabase: ReturnType<typeof createServerClient>;
+  let supabase: ReturnType<typeof createSupabaseRouteHandlerClient>;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Server configuration error";

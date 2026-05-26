@@ -20,8 +20,9 @@ export function createBrowserClient(): SupabaseClient {
 }
 
 /**
- * Server Supabase client with service role (API routes, Server Components, Route Handlers).
- * Do not expose responses containing service-role data to the browser.
+ * Server Supabase client with **service role** (bypasses RLS).
+ * Use only for trusted automation (e.g. `/api/internal/n8n/*`) — not for user-facing reads/writes.
+ * For dashboard APIs, use `createSupabaseRouteHandlerClient()` from `@/lib/supabase/route-handler`.
  */
 export function createServerClient(): SupabaseClient {
   return createClient(
