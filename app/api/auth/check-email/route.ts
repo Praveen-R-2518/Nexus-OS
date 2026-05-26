@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  resolveSignupEmailStatus,
+  type SignupEmailStatus,
+} from "@/lib/auth/signup-email-status";
+import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
@@ -9,6 +13,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+export type { SignupEmailStatus };
+
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -16,8 +22,6 @@ function normalizeEmail(email: string): string {
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
-export type SignupEmailStatus = "available" | "pending_verification" | "confirmed";
 
 /**
  * POST { email: string } -> { status, registered }
@@ -44,23 +48,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { data, error } = await supabaseAdmin.rpc("check_signup_email_status", {
-      email_input: email,
-    });
-
-    if (error) {
-      console.error("[api/auth/check-email] rpc error:", error.message);
-      return NextResponse.json(
-        { error: "Unable to verify email availability" },
-        { status: 500 },
-      );
-    }
-
-    const status = (data as string | null)?.trim() as SignupEmailStatus | undefined;
-    const normalized: SignupEmailStatus =
-      status === "pending_verification" || status === "confirmed" || status === "available"
-        ? status
-        : "available";
+    const normalized = await resolveSignupEmailStatus(supabaseAdmin, email);
 
     return NextResponse.json({
       status: normalized,
