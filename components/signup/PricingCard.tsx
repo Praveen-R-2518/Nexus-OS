@@ -36,8 +36,8 @@ export default function PricingCard({
       className={cn(
         "relative flex h-full flex-col rounded-xl border bg-white p-4 transition sm:p-5 dark:bg-surface-card",
         selected
-          ? "border-2 border-ref-cta dark:border-border-strong"
-          : "border-border dark:border-border",
+          ? "border border-selectable-edge-selected"
+          : "border border-selectable-edge",
         disabled && "opacity-45 grayscale",
         !disabled && !selected && "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
       )}

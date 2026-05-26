@@ -360,7 +360,7 @@ export default function ApprovalPage() {
       ) : null}
 
       <div className="flex min-h-[560px] flex-1 flex-col gap-4 lg:flex-row">
-        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card lg:w-[420px]">
+        <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card lg:w-[420px]">
           <div className="hairline-b p-5">
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
               Approval Queue
@@ -405,17 +405,17 @@ export default function ApprovalPage() {
                     className={cn(
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive"
-                        : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300",
+                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
                     {filter.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border border-border/50 px-2 py-0.5 font-mono text-xs tabular-nums dark:border-border/60",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "bg-status-positive-surface font-bold text-status-positive"
-                          : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {counts[filter.value]}
@@ -446,19 +446,17 @@ export default function ApprovalPage() {
               <ul className="space-y-2">
                 {filteredDrafts.map((draft) => {
                   const selected = draft.id === selectedDraftId;
-                  const highRisk = draft.conversation.risk_score >= 80;
                   return (
                     <li key={draft.id}>
                       <button
                         type="button"
                         onClick={() => setSelectedDraftId(draft.id)}
                         className={cn(
-                          "w-full cursor-pointer rounded-xl border border-border/60 bg-white p-4 text-left transition-colors duration-interaction hover:border-border hover:bg-ref-mint dark:border-border/70 dark:bg-surface-elevated dark:hover:border-border-strong",
-                          selected &&
-                            "border-2 border-ref-cta bg-ref-ice dark:border-border-strong dark:bg-surface-muted",
-                          highRisk &&
-                            !selected &&
-                            "border border-status-critical-border/50 dark:border-status-critical-border/40",
+                          "w-full cursor-pointer rounded-xl border bg-white p-4 text-left transition-colors duration-interaction hover:bg-ref-mint dark:bg-surface-elevated dark:hover:bg-surface-muted",
+                          selected
+                            ? "border-selectable-edge-selected bg-ref-ice dark:bg-surface-muted"
+                            : "border-selectable-edge",
+                          !selected && "hover:border-selectable-edge-hover",
                         )}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -506,7 +504,7 @@ export default function ApprovalPage() {
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border/60 dark:bg-surface-card">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
           {!selectedDraft ? (
             <EmptyState
               title={
