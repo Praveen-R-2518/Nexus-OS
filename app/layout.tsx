@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
-import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -26,9 +25,7 @@ export default function RootLayout({
     <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-surface-page dark:bg-obsidian font-sans text-atmospheric-grey antialiased transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <QueryProvider>
-            <AppShell>{children}</AppShell>
-          </QueryProvider>
+          <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>
     </html>
