@@ -41,7 +41,7 @@ function marketingNavLinkClass(active: boolean) {
 
 function appNavLinkClass(active: boolean) {
   return cn(
-    "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] transition-opacity duration-interaction",
+    "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 font-mono text-[11px] uppercase tracking-[0.18em] transition-opacity duration-interaction",
     active
       ? "text-atmospheric-grey"
       : "text-atmospheric-grey/75 hover:text-atmospheric-grey",
@@ -187,13 +187,13 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <>
               <Link
                 href="mailto:support@example.com"
-                className="hidden cursor-pointer rounded-lg border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-white dark:hover:border-border-strong dark:hover:bg-surface-elevated"
+                className="hidden cursor-pointer rounded-full border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-white dark:hover:border-border-strong dark:hover:bg-surface-elevated"
               >
                 Contact sales
               </Link>
               <Link
                 href="/login"
-                className="hidden cursor-pointer border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
+                className="hidden cursor-pointer rounded-full border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
               >
                 Access console
               </Link>
@@ -202,7 +202,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-border-strong"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-border-strong"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span className="hidden sm:inline">Log out</span>
