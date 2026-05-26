@@ -10,7 +10,6 @@ import { createServerClient } from "@/lib/supabase";
 export const dynamic = "force-dynamic";
 
 const CONVERSATION_SOURCES = [
-  "demo",
   "webhook",
   "manual",
   "gmail",

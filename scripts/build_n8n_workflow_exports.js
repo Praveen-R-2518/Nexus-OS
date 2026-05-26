@@ -366,7 +366,7 @@ const gmailWebhook = {
 
 const nodesGmail = [
   sticky(
-    "## Nexus OS - WF0a Gmail Intake\n\nPrimary path: enable `Gmail IMAP Trigger` after adding an IMAP credential.\n\nFallback path: POST Gmail-shaped payloads to `/webhook/gmail-inbound`.\n\nNormalizer supports **gmail** (IMAP/webhook) and **demo** webhook payloads only.",
+    "## Nexus OS - WF0a Gmail Intake\n\nPrimary path: enable `Gmail IMAP Trigger` after adding an IMAP credential.\n\nFallback path: POST Gmail-shaped payloads to `/webhook/gmail-inbound`.\n\nNormalizer supports **gmail** (IMAP/webhook) and generic JSON ingest with a `message` field (routed as **webhook**).",
     [-220, 0],
     460,
   ),

@@ -1,7 +1,7 @@
 /**
- * Nexus OS - Gmail and fallback intake normalizer (n8n Code node)
+ * Nexus OS - Gmail and API intake normalizer (n8n Code node)
  *
- * Converts real Gmail/IMAP trigger payloads and the legacy demo webhook shape
+ * Converts Gmail/IMAP trigger payloads and generic JSON ingest bodies
  * into the canonical object consumed by the noise filter and WF2.
  */
 
@@ -120,13 +120,14 @@ function threadKey(raw, headers) {
   return null;
 }
 
+const EXPLICIT_SOURCES = ["gmail", "webhook", "manual", "email", "imap"];
+
 function detectSource(rawInput) {
   const raw = unwrapBody(rawInput) || {};
   const explicit = raw.__source || raw.source;
-  if (explicit && ["gmail", "demo"].includes(String(explicit).toLowerCase())) {
+  if (explicit && EXPLICIT_SOURCES.includes(String(explicit).toLowerCase())) {
     return String(explicit).toLowerCase();
   }
-  if (raw.customer_email && raw.message) return "demo";
   if (
     raw.from ||
     raw.From ||
@@ -138,7 +139,12 @@ function detectSource(rawInput) {
   ) {
     return "gmail";
   }
-  throw new Error("multi_channel_normalizer: could not detect gmail or demo payload");
+  if (typeof raw.message === "string" && raw.message.trim()) {
+    return "webhook";
+  }
+  throw new Error(
+    "multi_channel_normalizer: expected a Gmail-style payload or JSON with a non-empty message field",
+  );
 }
 
 function parseGmail(rawInput) {
@@ -180,10 +186,13 @@ function parseGmail(rawInput) {
   };
 }
 
-function parseDemo(rawInput) {
+function parseWebhookIngest(rawInput, source) {
   const raw = unwrapBody(rawInput) || {};
+  const resolvedSource = ["webhook", "manual", "email", "imap"].includes(source)
+    ? source
+    : "webhook";
   return {
-    source: raw.source || "demo",
+    source: resolvedSource,
     customer_name: String(raw.customer_name || "").trim(),
     customer_email_or_phone: String(raw.customer_email || raw.customer_email_or_phone || "").trim().toLowerCase(),
     message: String(raw.message || "").trim(),
@@ -204,8 +213,7 @@ function parseDemo(rawInput) {
 function normalizeItem(raw) {
   const source = detectSource(raw);
   if (source === "gmail") return parseGmail(raw);
-  if (source === "demo") return parseDemo(raw);
-  throw new Error(`multi_channel_normalizer: unsupported source "${source}"`);
+  return parseWebhookIngest(raw, source);
 }
 
 if (typeof $input !== "undefined") {
@@ -229,7 +237,7 @@ if (typeof module !== "undefined" && module.exports) {
     normalizeItem,
     detectSource,
     parseGmail,
-    parseDemo,
+    parseWebhookIngest,
     stripHtml,
     stripSignatureAndQuotes,
     parseFromHeader,

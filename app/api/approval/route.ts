@@ -6,11 +6,6 @@ import {
   requireApiUser,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
-import {
-  mockReplyDraftById,
-  shouldFallbackToMockAfterEmptyLiveData,
-  shouldUseMockConversations,
-} from "@/lib/conversations-mock";
 import type { ReplyDraft } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -48,36 +43,6 @@ async function insertApprovalWorkflowLog(
   if (error) {
     console.error("[approval] workflow_logs insert failed:", error.message);
   }
-}
-
-function mockApprovalResponse(
-  draftId: string,
-  action: ApprovalBody["action"],
-  draftText?: string,
-  rejectionReason?: string,
-): NextResponse | null {
-  if (!shouldUseMockConversations() && !shouldFallbackToMockAfterEmptyLiveData()) {
-    return null;
-  }
-
-  const draft = mockReplyDraftById(draftId);
-  if (!draft) return null;
-
-  const nowIso = new Date().toISOString();
-  const updatedDraft: ReplyDraft = {
-    ...draft,
-    draft_text: draftText ?? draft.draft_text,
-    approval_status: action === "approve" ? "approved" : "rejected",
-    approved_at: action === "approve" ? nowIso : undefined,
-    rejected_at: action === "reject" ? nowIso : undefined,
-    rejection_reason: action === "reject" ? rejectionReason : undefined,
-  };
-
-  return NextResponse.json({
-    success: true,
-    draft: updatedDraft,
-    source: "mock",
-  });
 }
 
 export async function PATCH(request: Request) {
@@ -147,16 +112,6 @@ export async function PATCH(request: Request) {
     );
   }
   if (!existing) {
-    const mockResponse = mockApprovalResponse(
-      draftId,
-      body.action,
-      draftText,
-      body.rejection_reason?.trim(),
-    );
-    if (mockResponse) {
-      return mockResponse;
-    }
-
     return NextResponse.json({ error: "Draft not found" }, { status: 404 });
   }
 

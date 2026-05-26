@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
-import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
 import type { WorkflowLog } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -12,20 +11,6 @@ const WORKFLOW_LOG_RESULTS: ReadonlyArray<string> = [
   "failed",
   "running",
 ];
-
-const EMPTY_COUNTS = {
-  success: 0,
-  failed: 0,
-  running: 0,
-};
-
-function emptyLogsResponse() {
-  return NextResponse.json({
-    logs: [],
-    counts: EMPTY_COUNTS,
-    source: "mock",
-  });
-}
 
 export async function GET(request: Request) {
   const auth = await requireApiUser();
@@ -46,10 +31,6 @@ export async function GET(request: Request) {
   try {
     supabase = createServerClient();
   } catch (err) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return emptyLogsResponse();
-    }
-
     const message =
       err instanceof Error ? err.message : "Server configuration error";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -83,40 +64,24 @@ export async function GET(request: Request) {
     ]);
 
   if (logsResult.error) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return emptyLogsResponse();
-    }
-
     return NextResponse.json(
       { error: logsResult.error.message },
       { status: 500 },
     );
   }
   if (successCount.error) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return emptyLogsResponse();
-    }
-
     return NextResponse.json(
       { error: successCount.error.message },
       { status: 500 },
     );
   }
   if (failedCount.error) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return emptyLogsResponse();
-    }
-
     return NextResponse.json(
       { error: failedCount.error.message },
       { status: 500 },
     );
   }
   if (runningCount.error) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return emptyLogsResponse();
-    }
-
     return NextResponse.json(
       { error: runningCount.error.message },
       { status: 500 },

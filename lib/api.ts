@@ -143,7 +143,6 @@ export type WorkflowLogsCounts = {
 export type WorkflowLogsWithMeta = {
   logs: WorkflowLog[];
   counts: WorkflowLogsCounts;
-  source?: string;
 };
 
 /** GET /api/logs — optional `status` filters by `result` (success | failed | running). */
@@ -158,7 +157,6 @@ export async function fetchWorkflowLogsWithMeta(
   const json = await requestJson<{
     logs: WorkflowLog[];
     counts?: WorkflowLogsCounts;
-    source?: string;
   }>(`/api/logs${qs ? `?${qs}` : ""}`);
   if (!Array.isArray(json.logs)) {
     throw new Error(
@@ -170,7 +168,7 @@ export async function fetchWorkflowLogsWithMeta(
     failed: 0,
     running: 0,
   };
-  return { logs: json.logs, counts, source: json.source };
+  return { logs: json.logs, counts };
 }
 
 export async function fetchDailyReport(): Promise<DailyReport | null> {

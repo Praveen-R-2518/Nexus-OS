@@ -1,11 +1,11 @@
 export interface Conversation {
   id: string;
-  source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form";
+  source: "gmail" | "email" | "imap" | "webhook" | "manual" | "chat" | "form";
   customer_name: string;
   customer_email?: string;
   /** Ingest/plain text column from Supabase. */
   message?: string;
-  /** Legacy / mock inbox body (prefer `message` when both exist). */
+  /** Legacy inbox body (prefer `message` when both exist). */
   raw_message?: string;
   intent?:
     | "purchase"
