@@ -13,5 +13,5 @@ begin
 
   alter table public.conversations
     add constraint conversations_source_check
-    check (source in ('demo', 'webhook', 'manual', 'gmail', 'email', 'imap'));
+    check (source in ('webhook', 'manual', 'gmail', 'email', 'imap'));
 end $$;

@@ -1,11 +1,21 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import type { User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 type ApiAuthResult =
   | { ok: true; user: User }
+  | { ok: false; response: NextResponse };
+
+export type ApiTenantContextResult =
+  | {
+      ok: true;
+      user: User;
+      supabase: SupabaseClient;
+      teamId: string;
+      workspaceId: string | null;
+    }
   | { ok: false; response: NextResponse };
 
 type RateLimitBucket = {
@@ -50,6 +60,65 @@ export async function requireApiUser(): Promise<ApiAuthResult> {
   } catch {
     return { ok: false, response: jsonError("Unauthorized", 401) };
   }
+}
+
+/**
+ * Authenticated user + tenant row scope. Defense-in-depth with RLS (`team_id` via
+ * `private.current_team_id()`). Returns 403 when `profiles.team_id` is unset.
+ */
+export async function requireApiTenantContext(): Promise<ApiTenantContextResult> {
+  let supabase: SupabaseClient;
+  try {
+    supabase = createSupabaseRouteHandlerClient();
+  } catch {
+    return { ok: false, response: jsonError("Unauthorized", 401) };
+  }
+
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser();
+
+  if (authErr || !user) {
+    return { ok: false, response: jsonError("Unauthorized", 401) };
+  }
+
+  const { data: profile, error: profileErr } = await supabase
+    .from("profiles")
+    .select("team_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileErr) {
+    return { ok: false, response: jsonError(profileErr.message, 500) };
+  }
+
+  const teamIdRaw = profile && (profile as { team_id?: unknown }).team_id;
+  const teamId =
+    typeof teamIdRaw === "string" && teamIdRaw.trim() ? teamIdRaw.trim() : "";
+
+  if (!teamId) {
+    return {
+      ok: false,
+      response: jsonError("Complete workspace setup", 403),
+    };
+  }
+
+  let workspaceId: string | null = null;
+  const { data: ws, error: wsErr } = await supabase
+    .from("workspaces")
+    .select("id")
+    .eq("team_id", teamId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!wsErr && ws && typeof (ws as { id?: unknown }).id === "string") {
+    const id = (ws as { id: string }).id.trim();
+    workspaceId = id || null;
+  }
+
+  return { ok: true, user, supabase, teamId, workspaceId };
 }
 
 function clientKey(request: Request): string {

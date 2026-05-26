@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
+import { Source_Sans_3 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const geistSans = localFont({
+  src: "./fonts/GeistVF.woff",
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const geistMono = localFont({
+  src: "./fonts/GeistMonoVF.woff",
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
+const sourceSans3 = Source_Sans_3({
   subsets: ["latin"],
-  variable: "--font-plus-jakarta-sans",
+  weight: ["400", "600"],
+  variable: "--font-source-sans-3",
   display: "swap",
 });
 
@@ -22,10 +39,21 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-surface-page dark:bg-obsidian font-sans text-atmospheric-grey antialiased transition-colors duration-300">
+    <html
+      lang="en"
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${sourceSans3.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-screen bg-surface-page font-chrome text-atmospheric-grey antialiased transition-colors duration-300 dark:bg-obsidian">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.classList.toggle('dark',r==='dark');}catch(e){document.documentElement.classList.add('dark');}})();`}
+        </Script>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AppShell>{children}</AppShell>
+          <QueryProvider>
+            <SmoothScrollProvider>
+              <AppShell>{children}</AppShell>
+            </SmoothScrollProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

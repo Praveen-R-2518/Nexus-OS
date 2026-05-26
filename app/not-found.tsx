@@ -2,26 +2,27 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 text-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1B6B3A]">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center border border-dashed border-border bg-ref-mint px-4 py-16 text-center dark:border-border dark:bg-surface-page">
+      <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/55 dark:text-white/50">
         Nexus OS
       </p>
-      <h1 className="mt-4 text-4xl font-bold tabular-nums text-gray-900 dark:text-gray-100">404</h1>
-      <p className="mt-2 max-w-md text-gray-500 dark:text-gray-400">
-        This page isn&apos;t part of the command center. Check the URL or use
-        the sidebar.
+      <h1 className="mt-6 font-sans text-4xl font-black tabular-nums tracking-tighter text-black dark:text-white">
+        404
+      </h1>
+      <p className="mx-auto mt-4 max-w-md font-mono text-sm leading-relaxed text-black/75 dark:text-white/70">
+        This route is not mapped in the command center. Verify the path or return to a known node.
       </p>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/dashboard"
           prefetch={true}
-          className="rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600"
+          className="cursor-pointer border border-border bg-[#0f2336] px-4 py-2.5 font-mono text-xs uppercase tracking-widest text-white transition hover:bg-[#172f45] dark:border-border"
         >
-          Command Center
+          Command center
         </Link>
         <Link
           href="/login"
-          className="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition hover:border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:bg-gray-800"
+          className="cursor-pointer border border-border bg-white px-4 py-2.5 font-mono text-xs uppercase tracking-widest text-black transition hover:bg-[#e3eef6] dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-white/5"
         >
           Sign in
         </Link>

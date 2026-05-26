@@ -13,7 +13,7 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="h-11 w-11 shrink-0" aria-hidden />;
+    return <div className="h-11 w-11 shrink-0 rounded-lg border border-transparent" aria-hidden />;
   }
 
   return (
@@ -22,7 +22,7 @@ export function ThemeToggle() {
       onClick={() =>
         setTheme(resolvedTheme === "dark" ? "light" : "dark")
       }
-      className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface-muted/80 text-foreground/70 transition-colors duration-interaction hover:border-border-strong hover:bg-surface-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-neutral-border focus-visible:ring-offset-2 focus-visible:ring-offset-surface-sidebar dark:focus-visible:ring-offset-surface-card"
+      className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-white text-black/70 transition-colors duration-interaction hover:bg-ref-mint hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:border-border dark:bg-surface-card dark:text-white/70 dark:hover:bg-surface-elevated dark:focus-visible:ring-border-strong"
       aria-label="Toggle theme"
     >
       {resolvedTheme === "dark" ? (

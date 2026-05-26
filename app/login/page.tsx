@@ -3,7 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Mail } from "lucide-react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+const inputClass =
+  "h-11 w-full rounded-xl border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/55 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/55 dark:focus:border-border-strong dark:focus:ring-border-strong";
 
 function LoginForm() {
   const router = useRouter();
@@ -96,7 +100,7 @@ function LoginForm() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/80">
         Loading secure workspace…
       </div>
     );
@@ -104,24 +108,25 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 surface-card p-6 shadow-2xl shadow-black/10 dark:shadow-black/40">
-        <div className="mb-6 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1B6B3A] dark:text-emerald-400">
-            Founder Access
+      <div className="w-full max-w-md rounded-[2rem] border border-border bg-white p-8 md:p-10 shadow-2xl dark:border-white/10 dark:bg-[#161616]">
+        <div className="mb-6 border-b border-dashed border-border pb-6 dark:border-border">
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/75 dark:text-white/75">
+            [ AUTH / SESSION ]
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
-            Sign in to Nexus OS
+          <h1 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-black dark:text-white">
+            Sign in
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Live Gmail and fallback webhook data stay behind the founder
-            dashboard.
+          <p className="mt-3 font-mono text-xs leading-relaxed text-black/90 dark:text-white/90">
+            Gmail and webhook data stay behind the founder dashboard. Monospace fields, navy actions.
           </p>
         </div>
-        <form className="space-y-4" onSubmit={signInWithPassword}>
-          <label className="block space-y-2 text-sm">
-            <span className="text-slate-700 dark:text-slate-300">Email</span>
+        <form className="space-y-5" onSubmit={signInWithPassword}>
+          <label className="block space-y-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-black/95 dark:text-white/95">
+              Email
+            </span>
             <input
-              className="h-10 w-full rounded-lg border border-[#D8D5CE] dark:border-slate-800 bg-surface-input dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
+              className={inputClass}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -129,35 +134,40 @@ function LoginForm() {
               required
             />
           </label>
-          <label className="block space-y-2 text-sm">
-            <span className="text-slate-700 dark:text-slate-300">Password</span>
+          <label className="block space-y-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-black/95 dark:text-white/95">
+              Password
+            </span>
             <input
-              className="h-10 w-full rounded-lg border border-[#D8D5CE] dark:border-slate-800 bg-surface-input dark:bg-slate-950 px-3 text-slate-900 dark:text-slate-50 outline-none transition focus:border-emerald-500"
+              className={inputClass}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-3 font-mono text-xs text-black dark:text-white">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-[#D8D5CE] dark:border-slate-700 bg-surface-input dark:bg-slate-950 text-[#1B6B3A] focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-950"
+              className="h-4 w-4 shrink-0 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
             />
             Remember me
           </label>
           {message ? (
-            <p className="text-sm text-[#7A4200] dark:text-amber-300" role="alert">
+            <p
+              className="border border-dashed border-border bg-[#e3eef6] px-3 py-2 font-mono text-xs text-black dark:border-border dark:bg-surface-elevated dark:text-white"
+              role="alert"
+            >
               {message}
             </p>
           ) : null}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3 pt-1">
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-[#0f2336] px-6 py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               Sign in
@@ -166,21 +176,21 @@ function LoginForm() {
               type="button"
               disabled={busy || !email}
               onClick={sendMagicLink}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-surface-card dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 transition hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-white px-6 py-3 font-mono text-xs uppercase tracking-widest text-black transition hover:bg-[#e3eef6] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-white/5"
             >
               <Mail className="h-4 w-4 shrink-0" aria-hidden />
               Magic link
             </button>
           </div>
         </form>
-        <p className="mt-6 text-center text-xs text-slate-500">
+        <p className="mt-8 hairline-t pt-6 text-center font-mono text-[10px] uppercase tracking-widest text-black/80 dark:text-white/80">
           Need an account?{" "}
-          <a
+          <Link
             href="/signup"
-            className="text-[#1B6B3A] dark:text-emerald-400 underline decoration-emerald-500/40 underline-offset-2 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
+            className="cursor-pointer text-[#0f2336] underline underline-offset-4 hover:text-black dark:text-muted dark:hover:text-white"
           >
             Start signup
-          </a>
+          </Link>
         </p>
       </div>
     </div>
@@ -191,7 +201,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/80">
           Loading…
         </div>
       }

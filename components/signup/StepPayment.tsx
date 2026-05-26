@@ -26,6 +26,9 @@ type StepPaymentProps = {
   onNext: () => void;
 };
 
+const fieldClass =
+  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none transition focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-border-strong dark:focus:ring-border-strong";
+
 export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [name, setName] = useState("");
@@ -87,61 +90,70 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[#7A4200]">
-        <p className="font-semibold flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Sandbox Mode — Payment not processed</p>
-        <p className="mt-1 text-xs text-[#7A4200]">
-          Payment UI only. No charges will be made.
+      <div className="border border-dashed border-border bg-[#eef6fb] px-4 py-3 font-mono text-xs text-black dark:border-border dark:bg-surface-elevated dark:text-white">
+        <p className="flex items-center gap-2 font-semibold uppercase tracking-widest">
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+          Sandbox — payment not processed
+        </p>
+        <p className="mt-2 text-[10px] uppercase tracking-wider text-black/70 dark:text-white/65">
+          UI only. No charges will be made.
         </p>
       </div>
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Mock checkout</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Styled like a card form. Replace submit handler when Dodo API keys are
-          ready.
+        <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Mock checkout</h2>
+        <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
+          Styled like a card form. Replace submit handler when payment API keys are ready.
         </p>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/80 p-4 text-sm">
-        <p className="font-medium text-gray-700 dark:text-gray-200">Order summary</p>
-        <dl className="mt-3 space-y-2 text-gray-500 dark:text-gray-400">
+      <div className="border border-border bg-white p-4 font-mono text-sm dark:border-border dark:bg-surface-card">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
+          Order summary
+        </p>
+        <dl className="mt-3 space-y-2 text-xs text-black/80 dark:text-white/75">
           <div className="flex justify-between gap-4">
             <dt>Plan</dt>
-            <dd className="text-right text-gray-900 dark:text-gray-100">{planLabel(tier)}</dd>
+            <dd className="text-right text-black dark:text-white">{planLabel(tier)}</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt>Billing</dt>
-            <dd className="text-right text-gray-900 dark:text-gray-100">
+            <dd className="text-right text-black dark:text-white">
               {cycle === "monthly" ? "Monthly" : "Annual"}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt>Amount</dt>
-            <dd className="text-right text-gray-900 dark:text-gray-100">
+            <dd className="text-right text-black dark:text-white">
               {tier === "enterprise" ? "Custom" : `$${amount}/${period}`}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt>Trial</dt>
-            <dd className="text-right text-gray-900 dark:text-gray-100">
+            <dd className="text-right text-black dark:text-white">
               14 days free, then {recurring}
             </dd>
           </div>
-          <div className="flex justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-2 font-semibold text-foreground">
+          <div className="flex justify-between gap-4 border-t border-dashed border-border pt-2 font-semibold text-black dark:border-border dark:text-white">
             <dt>Total due today</dt>
-            <dd>$0.00</dd>
+            <dd className="tabular-nums">$0.00</dd>
           </div>
         </dl>
       </div>
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 p-4">
+      <form
+        onSubmit={onSubmit}
+        className="space-y-4 border border-border bg-white p-4 dark:border-border dark:bg-surface-card"
+      >
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Card details</span>
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/80 dark:text-white/75">
+            Card details
+          </span>
           <div className="flex h-7 items-center gap-2">
             {brand === "visa" ? (
-              <span className="rounded bg-surface-elevated px-1.5 py-0.5 text-[10px] font-bold text-blue-900">
+              <span className="border border-border px-1.5 py-0.5 font-mono text-[10px] font-bold text-black dark:border-border dark:text-white">
                 VISA
               </span>
             ) : null}
             {brand === "mastercard" ? (
-              <span className="rounded bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              <span className="border border-border bg-[#0f2336] px-1.5 py-0.5 font-mono text-[10px] font-bold text-white dark:border-border">
                 MC
               </span>
             ) : null}
@@ -150,20 +162,24 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
             ) : null}
           </div>
         </div>
-        <label className="block space-y-1.5 text-sm">
-          <span className="text-gray-600 dark:text-gray-300">Cardholder name</span>
+        <label className="block space-y-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+            Cardholder name
+          </span>
           <input
-            className="h-11 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 text-gray-900 dark:text-gray-100 outline-none focus:border-emerald-500"
+            className={fieldClass}
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="cc-name"
             required
           />
         </label>
-        <label className="block space-y-1.5 text-sm">
-          <span className="text-gray-600 dark:text-gray-300">Card number</span>
+        <label className="block space-y-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+            Card number
+          </span>
           <input
-            className="h-11 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 font-mono text-gray-900 dark:text-gray-100 outline-none focus:border-emerald-500"
+            className={fieldClass}
             inputMode="numeric"
             placeholder="4242 4242 4242 4242"
             value={card}
@@ -173,10 +189,12 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           />
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block space-y-1.5 text-sm">
-            <span className="text-gray-600 dark:text-gray-300">Expiry</span>
+          <label className="block space-y-1.5">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+              Expiry
+            </span>
             <input
-              className="h-11 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 font-mono text-gray-900 dark:text-gray-100 outline-none focus:border-emerald-500"
+              className={fieldClass}
               placeholder="MM/YY"
               value={expiry}
               onChange={(e) => setExpiry(e.target.value)}
@@ -184,10 +202,12 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
               required
             />
           </label>
-          <label className="block space-y-1.5 text-sm">
-            <span className="text-gray-600 dark:text-gray-300">CVV</span>
+          <label className="block space-y-1.5">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+              CVV
+            </span>
             <input
-              className="h-11 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 font-mono text-gray-900 dark:text-gray-100 outline-none focus:border-emerald-500"
+              className={fieldClass}
               type="password"
               inputMode="numeric"
               maxLength={4}
@@ -202,22 +222,22 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         {doneMsg ? (
           <p
             className={cn(
-              "text-sm flex items-center gap-1",
-              doneMsg === "Trial started!" ? "text-[#1B6B3A]" : "text-[#8B1A1A]",
+              "flex items-center gap-1 font-mono text-xs",
+              doneMsg === "Trial started!" ? "text-[#0f2336] dark:text-muted" : "text-[#8B1A1A]",
             )}
             role="status"
           >
-            {doneMsg === "Trial started!" ? <Check className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+            {doneMsg === "Trial started!" ? <Check className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
             {doneMsg}
           </p>
         ) : null}
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-60"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-60 dark:border-border"
         >
           {busy ? <Spinner className="h-5 w-5" label="Processing" /> : null}
-          {busy ? "Processing…" : "Start Free Trial"}
+          {busy ? "Processing…" : "Start free trial"}
         </button>
       </form>
     </div>

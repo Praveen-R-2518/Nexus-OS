@@ -53,7 +53,7 @@ export function getRiskColor(score: number): string {
 /** Heat-map style container for risk scores (inbox / lists). */
 export function getRiskHeatPinClass(score: number): string {
   if (score >= 80) {
-    return "border-status-critical-border bg-status-critical-surface text-status-critical shadow-glow-critical";
+    return "border-status-critical-border bg-status-critical-surface text-status-critical";
   }
   if (score >= 60) {
     return "border-status-warning-border bg-status-warning-surface text-status-warning";

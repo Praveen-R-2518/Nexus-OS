@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import ProgressBar from "@/components/signup/ProgressBar";
 import StepAccount from "@/components/signup/StepAccount";
 import StepDone from "@/components/signup/StepDone";
@@ -105,22 +106,28 @@ export default function SignupPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-b dark:from-slate-950 dark:to-slate-900 px-4 py-8 sm:py-12">
+    <div className="min-h-screen px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 text-center sm:mb-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1B6B3A] dark:text-emerald-400">
-            NexusOS
+        <header className="mb-8 hairline-b pb-8 text-center sm:mb-10">
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/75 dark:text-white/75">
+            [ ONBOARD / WORKSPACE ]
           </p>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-foreground sm:text-3xl">
-            Revenue Command Center
+          <h1 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-black sm:text-3xl dark:text-white">
+            Revenue command center
           </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Multi-step signup — optimized for a clean live demo.
+          <p className="mx-auto mt-3 max-w-lg font-mono text-xs leading-relaxed text-black/90 dark:text-white/90">
+            Multi-step signup — flat panels, monospace labels, navy primary actions.
+          </p>
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-black/70 dark:text-white/70">
+            Already registered?{" "}
+            <Link href="/login" className="cursor-pointer text-[#0f2336] underline underline-offset-4 dark:text-muted">
+              Sign in
+            </Link>
           </p>
         </header>
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 surface-card p-4 shadow-xl shadow-black/5 dark:shadow-black/30 sm:p-8">
+        <div className="border border-border bg-white p-4 sm:p-8 dark:border-border dark:bg-surface-card">
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
-          <div className="mt-8 sm:mt-10">
+          <div className="mt-8 border-t border-dashed border-border pt-8 sm:mt-10 dark:border-border">
             {snapshot.currentStep === 1 ? (
               <StepAccount
                 snapshot={snapshot}

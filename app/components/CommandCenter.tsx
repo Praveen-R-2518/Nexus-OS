@@ -2,7 +2,6 @@
 
 'use client';
 
-import DemoButton from '@/app/components/DemoButton';
 import { useRealtimeConversations, useRealtimeLeads } from '@/app/hooks/useRealtimeData';
 
 export default function CommandCenter() {
@@ -27,7 +26,6 @@ export default function CommandCenter() {
         <div>
           <h1 className="text-4xl font-bold text-white">Command Center</h1>
         </div>
-        <DemoButton />
       </div>
 
       {/* Subtitle */}
@@ -96,7 +94,7 @@ export default function CommandCenter() {
               />
             </svg>
           </div>
-          <p className="text-4xl font-bold text-green-400 mb-2">{churnRisks}</p>
+          <p className="text-4xl font-bold text-ref-cta dark:text-muted mb-2">{churnRisks}</p>
           <p className="text-gray-500 text-sm">customers showing churn signals</p>
         </div>
 
@@ -118,7 +116,7 @@ export default function CommandCenter() {
               />
             </svg>
           </div>
-          <p className="text-4xl font-bold text-green-400 mb-2">{hoursSaved}h</p>
+          <p className="text-4xl font-bold text-ref-cta dark:text-muted mb-2">{hoursSaved}h</p>
           <p className="text-gray-500 text-sm">saved by AI drafting</p>
         </div>
       </div>
@@ -130,9 +128,9 @@ export default function CommandCenter() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               LIVE INBOX
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse"></span>
             </h2>
-            <a href="/inbox" className="text-green-400 text-sm hover:underline">
+            <a href="/inbox" className="text-gray-400 text-sm hover:underline">
               Open inbox →
             </a>
           </div>
@@ -195,7 +193,7 @@ export default function CommandCenter() {
                   .map((lead) => (
                     <div key={lead.id} className="p-2 bg-gray-800 rounded text-sm">
                       <p className="font-medium text-white">{lead.company_name}</p>
-                      <p className="text-green-400">${lead.estimated_value}</p>
+                      <p className="text-gray-300">${lead.estimated_value}</p>
                     </div>
                   ))}
               </div>

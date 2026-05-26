@@ -49,44 +49,34 @@ export function Card({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-border p-7 sm:p-8",
-        isCritical
-          ? "glass-panel shadow-glow-positive dark:shadow-glow-positive"
-          : "surface-card shadow-card-halo-light dark:shadow-card-halo",
+        "relative overflow-hidden rounded-xl border border-border bg-white p-6 sm:p-7 dark:border-border dark:bg-surface-card",
+        isCritical ? "border-border dark:border-border" : "",
         className,
       )}
     >
-      {isCritical ? (
-        <>
-          <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-trajectory-blue/25 blur-3xl dark:bg-trajectory-blue/20" />
-          <div className="pointer-events-none absolute -bottom-12 -right-10 h-44 w-44 rounded-full bg-trajectory-blue/10 blur-3xl dark:bg-status-positive-surface" />
-        </>
-      ) : (
-        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-trajectory-blue/10 blur-2xl dark:bg-status-neutral-surface" />
-      )}
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-brand text-muted sm:text-sm">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
             {title}
           </p>
           <p
             className={cn(
-              "mt-3 text-4xl font-bold tabular-nums tracking-tight sm:text-5xl",
+              "mt-3 text-3xl font-bold tabular-nums tracking-tight sm:text-4xl",
               isCritical ? "text-atmospheric-grey" : accent,
             )}
           >
             {value}
           </p>
           {subtitle ? (
-            <p className="mt-3 text-base leading-relaxed text-muted">{subtitle}</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{subtitle}</p>
           ) : null}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-3">
           {icon ? (
             <span
               className={cn(
-                "[&>svg]:h-6 [&>svg]:w-6",
-                isCritical ? "text-trajectory-blue" : "text-muted",
+                "[&>svg]:h-5 [&>svg]:w-5",
+                isCritical ? "text-ref-cta dark:text-muted" : "text-muted",
               )}
             >
               {icon}

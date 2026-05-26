@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireApiUser,
+  requireApiTenantContext,
 } from "@/lib/api-security";
 import type { Conversation } from "@/types";
-import {
-  mockConversationsListResult,
-  shouldFallbackToMockAfterEmptyLiveData,
-  shouldFallbackToMockAfterSupabaseError,
-  shouldUseMockConversations,
-} from "@/lib/conversations-mock";
 
 export const dynamic = "force-dynamic";
 
@@ -137,8 +130,10 @@ function boundedConfidence(value: unknown): number {
 }
 
 export async function GET(request: Request) {
-  const auth = await requireApiUser();
-  if (!auth.ok) return auth.response;
+  const tenant = await requireApiTenantContext();
+  if (!tenant.ok) return tenant.response;
+
+  const { supabase, teamId } = tenant;
 
   const { searchParams } = new URL(request.url);
 
@@ -166,26 +161,6 @@ export async function GET(request: Request) {
     !CONVERSATION_URGENCIES.includes(urgencyParam as Conversation["urgency"])
   ) {
     return NextResponse.json({ error: "Invalid urgency" }, { status: 400 });
-  }
-
-  if (shouldUseMockConversations()) {
-    try {
-      const { data, count } = mockConversationsListResult(searchParams);
-      return NextResponse.json({ data, count, source: "mock" });
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "Invalid query parameters";
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-  }
-
-  let supabase;
-  try {
-    supabase = createSupabaseRouteHandlerClient();
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Server configuration error";
-    return NextResponse.json({ error: message }, { status: 500 });
   }
 
   const limitParam = searchParams.get("limit");
@@ -222,6 +197,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from("conversations")
     .select("*", { count: "exact" })
+    .eq("team_id", teamId)
     .order("risk_score", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -241,41 +217,10 @@ export async function GET(request: Request) {
   const { data, error, count } = await query;
 
   if (error) {
-    if (shouldFallbackToMockAfterSupabaseError(error)) {
-      try {
-        const { data: mockData, count: mockCount } =
-          mockConversationsListResult(searchParams);
-        return NextResponse.json({
-          data: mockData,
-          count: mockCount,
-          source: "mock",
-        });
-      } catch {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
-    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   const rows = (data ?? []) as Conversation[];
-
-  if (rows.length === 0 && shouldFallbackToMockAfterEmptyLiveData()) {
-    try {
-      const { data: mockData, count: mockCount } =
-        mockConversationsListResult(searchParams);
-      return NextResponse.json({
-        data: mockData,
-        count: mockCount,
-        source: "mock",
-      });
-    } catch {
-      return NextResponse.json({
-        data: rows,
-        count: count ?? rows.length,
-        source: "live",
-      });
-    }
-  }
 
   return NextResponse.json({
     data: rows,
@@ -289,21 +234,10 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "api:conversations:post", 60, 60_000);
   if (limited) return limited;
 
-  let supabase;
-  try {
-    supabase = createSupabaseRouteHandlerClient();
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Server configuration error";
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to create conversation",
-        ...(isDev && { details: message }),
-      },
-      { status: 500 },
-    );
-  }
+  const tenant = await requireApiTenantContext();
+  if (!tenant.ok) return tenant.response;
+
+  const { supabase, teamId } = tenant;
 
   try {
     const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.ingest);
@@ -348,6 +282,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("conversations")
       .insert({
+        team_id: teamId,
         source,
         customer_name: customerName,
         customer_email: customerEmail,

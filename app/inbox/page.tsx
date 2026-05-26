@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
+import { useTenantScope } from "@/components/tenant/TenantScope";
 import { conversationDraftsQuery, conversationsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 import type { Conversation } from "@/types";
@@ -49,7 +51,7 @@ const INTENT_OPTIONS: { value: IntentFilter; label: string }[] = [
 
 function sourceIcon(source: Conversation["source"]) {
   const common =
-    "h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400";
+    "h-5 w-5 shrink-0 text-muted";
   switch (source) {
     case "email":
     case "gmail":
@@ -114,16 +116,20 @@ function timelineCompletion(status: Conversation["status"]): {
 function InboxPageContent() {
   const searchParams = useSearchParams();
   const prevQsRef = useRef<string | null>(null);
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
 
   const {
     data: conversations = [],
     isPending: listLoading,
     error: listErr,
   } = useQuery({
-    queryKey: queryKeys.conversations(FETCH_LIMIT),
+    queryKey: queryKeys.conversations(teamId, FETCH_LIMIT),
     queryFn: () => conversationsQuery(FETCH_LIMIT),
+    enabled: queriesEnabled,
     staleTime: 30_000,
-    refetchInterval: REFRESH_MS,
+    refetchInterval: queriesEnabled ? REFRESH_MS : false,
   });
 
   const listError = listErr instanceof Error ? listErr.message : null;
@@ -142,11 +148,9 @@ function InboxPageContent() {
     isFetching: detailLoading,
     error: detailErrObj,
   } = useQuery({
-    queryKey: queryKeys.conversationDetail(
-      selectedConversationId ?? "nil",
-    ),
+    queryKey: queryKeys.conversationDetail(teamId, selectedConversationId ?? "nil"),
     queryFn: () => conversationDraftsQuery(selectedConversationId!),
-    enabled: Boolean(selectedConversationId),
+    enabled: Boolean(selectedConversationId) && queriesEnabled,
   });
 
   const detailError =
@@ -187,7 +191,7 @@ function InboxPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (listLoading) return;
+    if (listLoading || !queriesEnabled) return;
     if (filteredConversations.length === 0) {
       setSelectedConversationId(null);
       return;
@@ -217,6 +221,7 @@ function InboxPageContent() {
   }, [
     filteredConversations,
     listLoading,
+    queriesEnabled,
     selectedConversationId,
     searchParams,
   ]);
@@ -264,7 +269,16 @@ function InboxPageContent() {
     ? timelineCompletion(selectedConversation.status)
     : null;
 
-  if (listLoading && conversations.length === 0) {
+  if (tenant.loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
+        <Spinner className="h-8 w-8" label="Loading inbox" />
+        <p className="text-sm">Loading conversations…</p>
+      </div>
+    );
+  }
+
+  if (queriesEnabled && listLoading && conversations.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
         <Spinner className="h-8 w-8" label="Loading inbox" />
@@ -287,29 +301,29 @@ function InboxPageContent() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {listError && conversations.length > 0 ? (
-        <p className="mb-3 shrink-0 rounded-lg border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning">
+        <p className="mb-3 shrink-0 rounded-xl border border-status-warning-border bg-status-warning-surface px-3 py-2 font-mono text-xs text-status-warning">
           Could not refresh inbox: {listError}
         </p>
       ) : null}
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-border surface-muted">
-        <div className="revenue-at-risk-glow relative shrink-0 p-4">
-          <div className="relative z-10">
-            <p className="text-xs font-semibold uppercase tracking-brand text-muted">
+      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
+        <div className="shrink-0 px-3 pt-3 pb-2">
+          <div className="rounded-xl border border-selectable-edge bg-surface-muted p-4 dark:bg-surface-muted">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 text-3xl font-bold tabular-nums tracking-tight text-trajectory-blue sm:text-4xl">
+            <p className="mt-2 font-sans text-3xl font-black tabular-nums tracking-tight text-ref-cta sm:text-4xl dark:text-muted">
               {formatCurrency(revenueAtRisk)}
             </p>
-            <p className="mt-1.5 text-sm text-muted">
+            <p className="mt-1.5 font-mono text-xs text-muted">
               Unresolved pipeline exposure
             </p>
           </div>
         </div>
 
-        <div className="max-h-[min(38vh,320px)] shrink-0 space-y-4 overflow-y-auto overscroll-y-contain border-t border-border p-4">
+        <div className="max-h-[min(38vh,320px)] shrink-0 space-y-4 overflow-y-auto overscroll-y-contain hairline-b p-4">
           <div>
-            <p className="mb-2 text-sm font-medium text-atmospheric-grey/80 dark:text-atmospheric-grey/70">
+            <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
               Urgency
             </p>
             <div className="flex flex-wrap gap-2">
@@ -322,19 +336,19 @@ function InboxPageContent() {
                     type="button"
                     onClick={() => setActiveUrgencyFilter(opt.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
-                        : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
+                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
                     {opt.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-md px-2 py-0.5 text-sm tabular-nums",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "bg-status-positive-surface font-bold text-status-positive"
-                          : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {count}
@@ -345,7 +359,7 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <p className="mb-2 text-sm font-medium text-atmospheric-grey/80 dark:text-atmospheric-grey/70">
+            <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
               Intent
             </p>
             <div className="flex flex-wrap gap-2">
@@ -358,19 +372,19 @@ function InboxPageContent() {
                     type="button"
                     onClick={() => setActiveIntentFilter(opt.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
-                        : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
+                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
                     {opt.label}
                     <span
                       className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-md px-2 py-0.5 text-sm tabular-nums",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "bg-status-positive-surface font-bold text-status-positive"
-                          : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {pillCount}
@@ -381,7 +395,7 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-atmospheric-grey/80 dark:text-atmospheric-grey/70">
+            <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
               Search
             </label>
             <input
@@ -389,13 +403,30 @@ function InboxPageContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Name or message…"
-              className="w-full rounded-xl border border-border bg-surface-input px-4 py-3 text-base text-atmospheric-grey placeholder:text-slate-500 focus:border-status-positive-border focus:outline-none focus:ring-2 focus:ring-status-positive-border/40 dark:placeholder:text-slate-500"
+              className="h-11 w-full rounded-xl border border-border bg-surface-input px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border dark:focus:border-border-strong dark:focus:ring-border-strong"
             />
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-t border-border p-2">
-          {filteredConversations.length === 0 ? (
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain hairline-t p-2">
+          {!queriesEnabled && tenant.ready ? (
+            <ExecutiveEmptyState
+              title="Workspace setup required"
+              description="Complete onboarding to load your tenant inbox."
+              icon={<InboxIcon className="shrink-0" aria-hidden />}
+              className="border-0 bg-transparent py-10"
+            />
+          ) : filteredConversations.length === 0 &&
+            conversations.length === 0 &&
+            queriesEnabled &&
+            !listLoading ? (
+            <ExecutiveEmptyState
+              title="No conversations detected"
+              description="Intake channels standing by."
+              icon={<InboxIcon className="shrink-0" aria-hidden />}
+              className="border-gray-200 dark:border-gray-800 bg-transparent py-10"
+            />
+          ) : filteredConversations.length === 0 ? (
             <EmptyState
               title="No messages match"
               description="Try adjusting filters or search."
@@ -406,30 +437,25 @@ function InboxPageContent() {
             <ul className="space-y-2">
               {filteredConversations.map((c) => {
                 const selected = c.id === selectedConversationId;
-                const criticalBorder =
-                  c.urgency === "critical" && !selected
-                    ? "border-l-4 border-status-critical-border"
-                    : selected
-                      ? "border-l-4 border-status-positive bg-surface-elevated dark:bg-surface-card"
-                      : "border-l-4 border-transparent";
-
                 return (
                   <li key={c.id}>
                     <button
                       type="button"
                       onClick={() => setSelectedConversationId(c.id)}
                       className={cn(
-                        "w-full cursor-pointer rounded-xl border border-border p-4 text-left transition-colors duration-interaction hover:border-border-strong hover:bg-surface-muted/80 dark:hover:bg-surface-muted/40",
-                        criticalBorder,
-                        selected &&
-                          "bg-surface-elevated ring-2 ring-status-positive-border shadow-card-halo-light dark:shadow-card-halo",
+                        "w-full cursor-pointer rounded-xl p-3 text-left transition-colors duration-interaction",
+                        selected
+                          ? "border border-selectable-edge-selected bg-ref-ice dark:bg-surface-muted"
+                          : "border border-selectable-edge bg-white dark:bg-surface-elevated",
+                        !selected &&
+                          "hover:bg-ref-mint dark:hover:bg-surface-muted hover:border-selectable-edge-hover",
                       )}
                     >
                       <div className="flex items-start gap-3">
                         {sourceIcon(c.source)}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-3">
-                            <p className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+                            <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
                             </p>
                             <span
@@ -441,7 +467,7 @@ function InboxPageContent() {
                               {c.risk_score}
                             </span>
                           </div>
-                          <p className="line-clamp-2 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+                          <p className="line-clamp-2 text-sm leading-relaxed text-muted">
                             {conversationMessageText(c)}
                           </p>
                           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -474,18 +500,34 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border surface-muted">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
         {!selectedConversation ? (
-          <EmptyState
-            title="Select a message to view details"
-            icon={<InboxIcon />}
-            className="m-4 min-h-[320px] flex-1 border-gray-200 dark:border-gray-800"
-          />
+          !queriesEnabled && tenant.ready ? (
+            <ExecutiveEmptyState
+              title="Workspace setup required"
+              description="Finish onboarding to open message details."
+              icon={<InboxIcon />}
+              className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
+            />
+          ) : conversations.length === 0 && queriesEnabled && !listLoading ? (
+            <ExecutiveEmptyState
+              title="No conversations detected"
+              description="Intake channels standing by."
+              icon={<InboxIcon />}
+              className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
+            />
+          ) : (
+            <EmptyState
+              title="Select a message to view details"
+              icon={<InboxIcon />}
+              className="m-4 min-h-[320px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
+            />
+          )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                <h1 className="font-sans text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
                   {selectedConversation.customer_name}
                 </h1>
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-base text-muted">
@@ -502,7 +544,7 @@ function InboxPageContent() {
               {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-status-positive-border bg-status-positive-surface px-5 py-2.5 text-base font-semibold text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-2 focus-visible:ring-offset-surface-card dark:focus-visible:ring-offset-surface-card"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
                 >
                   View Draft Reply
                 </Link>
@@ -519,12 +561,12 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-2xl border border-border bg-surface-input p-5 font-mono text-base leading-relaxed text-atmospheric-grey shadow-card-halo-light dark:shadow-none">
+            <div className="mb-6 rounded-xl border border-selectable-edge bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey">
               {conversationMessageText(selectedConversation)}
             </div>
 
-            <div className="mb-6 rounded-2xl border border-border surface-card p-5 shadow-card-halo-light dark:shadow-card-halo">
-              <h2 className="mb-4 text-sm font-bold uppercase tracking-brand text-muted">
+            <div className="mb-6 rounded-xl border border-selectable-edge bg-white p-4 dark:bg-surface-elevated">
+              <h2 className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                 Classification
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -539,7 +581,8 @@ function InboxPageContent() {
                   label={`Urgency: ${urgencyBadgeLabel(selectedConversation.urgency)}`}
                 />
               </div>
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <div className="mt-6 rounded-lg border border-selectable-edge bg-surface-muted/90 p-4 dark:bg-surface-muted/60">
+                <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-muted">Risk score</p>
                   <div className="mt-2 flex items-center gap-3">
@@ -552,9 +595,9 @@ function InboxPageContent() {
                       {selectedConversation.risk_score}
                     </span>
                   </div>
-                  <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-surface-muted">
+                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full border border-border/50 bg-surface-input dark:border-border/50 dark:bg-surface-card">
                     <div
-                      className="h-full rounded-full bg-trajectory-blue transition-all"
+                      className="h-full bg-ref-cta transition-all dark:bg-foreground/22"
                       style={{
                         width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
                       }}
@@ -570,12 +613,13 @@ function InboxPageContent() {
                     {confidencePercent(selectedConversation.confidence)}% confident
                   </p>
                 </div>
+                </div>
               </div>
             </div>
 
             {stage ? (
-              <div className="mt-auto border-t border-border pt-8">
-                <h2 className="mb-5 text-sm font-bold uppercase tracking-brand text-muted">
+              <div className="mt-auto hairline-t pt-8">
+                <h2 className="mb-5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                   Status
                 </h2>
                 <ol className="space-y-4">
@@ -594,7 +638,7 @@ function InboxPageContent() {
                     >
                       <span
                         className={cn(
-                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold tabular-nums transition-colors duration-interaction",
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-sm font-bold tabular-nums transition-colors duration-interaction",
                           done
                             ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                             : "border-border bg-surface-muted text-muted",
@@ -628,7 +672,7 @@ export default function InboxPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-gray-500 dark:text-gray-400">
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 font-mono text-xs uppercase tracking-widest text-muted">
           <Spinner className="h-8 w-8" label="Loading inbox" />
           <p className="text-sm">Loading conversations…</p>
         </div>

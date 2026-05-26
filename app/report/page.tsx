@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
+import { Spinner } from "@/components/ui/Spinner";
+import { useTenantScope } from "@/components/tenant/TenantScope";
 import { cn, formatCurrency } from "@/lib/utils";
 import { conversationsQuery, dailyReportQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
@@ -92,12 +95,12 @@ function actionTaken(status: Conversation["status"]): string {
 
 function rowTone(status: Conversation["status"]): string {
   if (status === "approved" || status === "sent") {
-    return "border-status-positive-border/20 bg-status-positive-surface/50 hover:bg-status-positive-surface dark:hover:bg-status-positive-surface/30";
+    return "bg-status-positive-surface/30 hover:bg-status-positive-surface/45 dark:hover:bg-status-positive-surface/20";
   }
   if (status === "rejected") {
-    return "border-status-critical-border/20 bg-status-critical-surface/50 hover:bg-status-critical-surface dark:hover:bg-status-critical-surface/30";
+    return "bg-status-critical-surface/30 hover:bg-status-critical-surface/45 dark:hover:bg-status-critical-surface/20";
   }
-  return "border-status-caution-border/20 bg-status-caution-surface/40 hover:bg-status-caution-surface/80 dark:hover:bg-status-caution-surface/25";
+  return "bg-status-caution-surface/25 hover:bg-status-caution-surface/40 dark:hover:bg-status-caution-surface/15";
 }
 
 function csvEscape(value: string | number): string {
@@ -129,7 +132,7 @@ function TypewriterSummary({ text }: { text: string | null | undefined }) {
   }, [safeText]);
 
   return (
-    <p className="whitespace-pre-line text-base leading-8 text-gray-700 dark:text-gray-200">
+    <p className="whitespace-pre-line font-mono text-sm leading-relaxed text-atmospheric-grey">
       {visibleText}
       {safeText.length > 0 && visibleText.length < safeText.length ? (
         <span className="ml-0.5 animate-pulse text-status-positive">|</span>
@@ -139,13 +142,18 @@ function TypewriterSummary({ text }: { text: string | null | undefined }) {
 }
 
 export default function ReportPage() {
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
+
   const {
     data: report = null,
     isPending: reportPending,
     error: reportErr,
   } = useQuery({
-    queryKey: queryKeys.dailyReport(),
+    queryKey: queryKeys.dailyReport(teamId),
     queryFn: dailyReportQuery,
+    enabled: queriesEnabled,
     staleTime: 60_000,
   });
 
@@ -154,12 +162,13 @@ export default function ReportPage() {
     isPending: conversationsPending,
     error: conversationsErr,
   } = useQuery({
-    queryKey: queryKeys.conversations(100),
+    queryKey: queryKeys.conversations(teamId, 100),
     queryFn: () => conversationsQuery(100),
+    enabled: queriesEnabled,
     staleTime: 30_000,
   });
 
-  const loading = reportPending || conversationsPending;
+  const loading = queriesEnabled && (reportPending || conversationsPending);
   const reportErrorMsg =
     reportErr instanceof Error ? reportErr.message : null;
   const conversationsErrorMsg =
@@ -257,22 +266,42 @@ export default function ReportPage() {
 
   const reportDateLabel = formatReportDate(report?.report_date);
 
+  if (tenant.loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 font-mono text-xs uppercase tracking-widest text-muted">
+        <Spinner className="h-8 w-8" label="Loading report" />
+        <p>Loading daily report…</p>
+      </div>
+    );
+  }
+
+  if (!queriesEnabled && tenant.ready) {
+    return (
+      <ExecutiveEmptyState
+        title="Workspace setup required"
+        description="Complete onboarding to view daily buy-back reports for your team."
+        icon={<FileText className="shrink-0" aria-hidden />}
+        className="min-h-[50vh] surface-card"
+      />
+    );
+  }
+
   return (
-    <div className="relative min-h-[calc(100vh-6rem)] overflow-hidden">
-      <div className="relative space-y-8">
-        <header className="flex flex-col gap-5 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="relative min-h-0 space-y-10">
+      <div className="relative space-y-10">
+        <header className="flex flex-col gap-5 hairline-b pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-brand text-status-positive sm:text-sm">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-muted sm:text-[11px]">
               Revenue Recovery Intelligence
             </p>
-            <h1 className="mt-2 bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
+            <h1 className="mt-3 font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl">
               Daily Buy-Back Report
             </h1>
-            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{reportDateLabel}</p>
+            <p className="mt-3 font-mono text-xs text-muted">{reportDateLabel}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex min-h-11 items-center gap-2 rounded-full border border-status-positive-border bg-status-positive-surface px-4 py-2 text-base font-semibold text-status-positive">
+            <span className="inline-flex min-h-11 items-center gap-2 border border-status-positive-border bg-status-positive-surface px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-status-positive">
               <Sparkles className="h-4 w-4" />
               Generated by AI
             </span>
@@ -285,12 +314,12 @@ export default function ReportPage() {
         </header>
 
         {reportErrorMsg ? (
-          <div className="rounded-xl border border-status-critical-border bg-status-critical-surface px-4 py-3 text-base text-status-critical">
+          <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
             Report: {reportErrorMsg}
           </div>
         ) : null}
         {conversationsErrorMsg ? (
-          <div className="rounded-xl border border-status-critical-border bg-status-critical-surface px-4 py-3 text-base text-status-critical">
+          <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
             Conversations: {conversationsErrorMsg}
           </div>
         ) : null}
@@ -300,7 +329,7 @@ export default function ReportPage() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-40 animate-pulse rounded-2xl border border-border bg-surface-muted"
+                className="h-40 animate-pulse border border-border/60 bg-surface-muted dark:border-border"
               />
             ))}
           </div>
@@ -314,8 +343,8 @@ export default function ReportPage() {
                 title="Messages Processed"
                 value={report.messages_processed}
                 subtitle="customer conversations analyzed"
-                accent="text-blue-600 dark:text-blue-300"
-                icon={<MessageSquareText className="text-blue-600 dark:text-blue-300" />}
+                accent="text-blue-600 dark:text-muted"
+                icon={<MessageSquareText className="text-blue-600 dark:text-muted" />}
                 className="surface-card"
               />
               <Card
@@ -330,8 +359,8 @@ export default function ReportPage() {
                 title="Drafts Approved"
                 value={report.drafts_approved}
                 subtitle="human-approved AI responses"
-                accent="text-violet-600 dark:text-violet-300"
-                icon={<FileText className="text-violet-600 dark:text-violet-300" />}
+                accent="text-violet-600 dark:text-muted"
+                icon={<FileText className="text-violet-600 dark:text-muted" />}
                 className="surface-card"
               />
             </section>
@@ -341,25 +370,25 @@ export default function ReportPage() {
                 <Sparkles className="h-5 w-5 text-status-positive" />
                 <h2
                   id="executive-summary"
-                  className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+                  className="font-mono text-sm font-bold uppercase tracking-widest text-atmospheric-grey"
                 >
                   Executive Summary
                 </h2>
               </div>
-              <div className="rounded-2xl border border-status-positive-border/30 bg-status-positive-surface/40 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] dark:bg-gradient-to-br dark:from-surface-card dark:via-surface-muted dark:to-status-positive-surface/20">
+              <div className="rounded-xl border border-status-positive-border/40 bg-status-positive-surface/30 p-5 dark:border-status-positive-border/25">
                 <TypewriterSummary text={report.summary_text} />
               </div>
             </section>
 
             <section
               aria-labelledby="conversation-breakdown"
-              className="overflow-hidden rounded-2xl border border-border bg-surface-muted/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] dark:bg-surface-card/40"
+              className="overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card"
             >
-              <div className="flex flex-col gap-3 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 hairline-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2
                     id="conversation-breakdown"
-                    className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                    className="text-lg font-black uppercase tracking-tight text-atmospheric-grey"
                   >
                     Today&apos;s Conversation Breakdown
                   </h2>
@@ -371,7 +400,7 @@ export default function ReportPage() {
                   type="button"
                   onClick={handleExportCsv}
                   disabled={sortedRows.length === 0}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-status-positive-border bg-status-positive-surface px-5 py-2.5 text-base font-semibold text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
                 >
                   <Download className="h-5 w-5 shrink-0" />
                   Export CSV
@@ -379,9 +408,9 @@ export default function ReportPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border text-base">
+                <table className="min-w-full text-base">
                   <thead className="bg-surface-card">
-                    <tr>
+                    <tr className="hairline-b">
                       {[
                         ["customer_name", "Customer"],
                         ["intent", "Intent"],
@@ -394,7 +423,7 @@ export default function ReportPage() {
                           <button
                             type="button"
                             onClick={() => handleSort(key as SortKey)}
-                            className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-1 text-sm font-bold uppercase tracking-brand text-muted transition-colors hover:text-atmospheric-grey"
+                            className="inline-flex min-h-10 cursor-pointer items-center gap-2 px-1 font-mono text-[10px] font-bold uppercase tracking-widest text-muted transition-colors hover:text-atmospheric-grey"
                           >
                             {label}
                             <ArrowUpDown
@@ -410,14 +439,16 @@ export default function ReportPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {sortedRows.length === 0 ? (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-10 text-center text-sm text-atmospheric-grey/60"
-                        >
-                          No conversations found for this report day.
+                        <td colSpan={6} className="p-6">
+                          <ExecutiveEmptyState
+                            title="No conversations found for this report window."
+                            description="Adjust filters or check back after new conversations are processed."
+                            icon={<MessageSquareText className="shrink-0" aria-hidden />}
+                            className="border-none bg-transparent dark:bg-transparent"
+                          />
                         </td>
                       </tr>
                     ) : (
@@ -425,13 +456,13 @@ export default function ReportPage() {
                         <tr
                           key={row.id}
                           className={cn(
-                            "border-l-2 transition-colors",
+                            "hairline-b transition-colors last:border-b-0",
                             rowTone(row.status),
                           )}
                         >
                           <td className="whitespace-nowrap px-4 py-3">
                             <div>
-                              <p className="font-medium text-gray-900 dark:text-gray-100">
+                              <p className="font-medium text-atmospheric-grey">
                                 {row.customer_name}
                               </p>
                               {row.customer_email ? (
@@ -465,7 +496,7 @@ export default function ReportPage() {
                               label={labelize(row.status)}
                             />
                           </td>
-                          <td className="min-w-[220px] px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                          <td className="min-w-[220px] px-4 py-3 font-mono text-xs text-muted">
                             {row.action}
                           </td>
                         </tr>
@@ -477,25 +508,16 @@ export default function ReportPage() {
             </section>
           </>
         ) : reportErrorMsg ? (
-          <div className="rounded-2xl border border-red-500/35 bg-red-500/10 p-8 text-sm text-[#8B1A1A]">
+          <div className="border border-status-critical-border bg-status-critical-surface p-6 font-mono text-sm text-status-critical">
             Could not load the daily report. {reportErrorMsg}
           </div>
         ) : (
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/70 p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300">
-                <Clock className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  No report generated yet today.
-                </h2>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Reports are generated daily at 9 AM.
-                </p>
-              </div>
-            </div>
-          </div>
+          <ExecutiveEmptyState
+            title="No report generated yet today."
+            description="Reports are generated daily at 9 AM."
+            icon={<Clock className="shrink-0" aria-hidden />}
+            className="surface-card"
+          />
         )}
       </div>
     </div>

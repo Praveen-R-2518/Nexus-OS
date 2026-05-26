@@ -9,7 +9,7 @@ export interface BadgeProps {
 }
 
 const badgeShell =
-  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm transition-colors duration-interaction sm:text-sm";
+  "inline-flex min-h-[1.75rem] items-center border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction sm:text-xs";
 
 const urgencyColors: Record<string, string> = {
   critical: cn(
@@ -40,7 +40,7 @@ const intentColors: Record<string, string> = {
     "border-status-neutral-border bg-status-neutral-surface text-status-neutral",
   ),
   unknown: cn(
-    "border-border-strong bg-surface-muted text-slate-600 dark:text-slate-400",
+    "border-border-strong bg-surface-muted text-atmospheric-grey/70 dark:text-atmospheric-grey/60",
   ),
 };
 
@@ -60,7 +60,7 @@ const statusColors: Record<string, string> = {
 };
 
 const fallback = cn(
-  "border-border-strong bg-surface-muted text-slate-600 dark:text-slate-400",
+  "border-border-strong bg-surface-muted text-atmospheric-grey/70 dark:text-atmospheric-grey/60",
 );
 
 function stylesForVariant(
