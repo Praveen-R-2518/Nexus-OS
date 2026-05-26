@@ -4,82 +4,165 @@
 
 @layer base {
   :root {
-    --background: #F8FAFC;
-    --foreground: #1E293B;
-    --obsidian: #F8FAFC;
-    --atmospheric-grey: #1E293B;
-    --trajectory-blue: #1E3667; /* Logo dark blue */
-    --bg-card: #FAFAF8;
+    /* Alabaster warm gallery — light */
+    --background: #faf9f6;
+    --foreground: #14181f;
+    --obsidian: #060a12;
+    --atmospheric-grey: #14181f;
+    --trajectory-blue: #1e3a5f;
 
-    /* Light surfaces + text (default / first paint before next-themes hydrates) */
-    --text-primary: #1A1A1A;
-    --text-secondary: #5C5C5C;
-    --text-tertiary: #8A8A8A;
-    --text-positive: #1B6B3A;
-    --text-warning: #7A4200;
-    --text-critical: #8B1A1A;
-    --bg-page: #F5F3EF;
-    --bg-elevated: #FFFFFF;
-    --bg-sidebar: #F0EDE8;
-    --bg-input: #F7F6F2;
+    --surface-page: #faf9f6;
+    --surface-card: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-sidebar: #f4f3ee;
+    --surface-input: #f0efea;
+    --surface-muted: #ebe9e3;
+
+    --border-subtle: rgba(20, 24, 31, 0.1);
+    --border-strong: rgba(20, 24, 31, 0.16);
+
+    --text-primary: #14181f;
+    --text-secondary: #4a505c;
+    --text-tertiary: #6b7280;
+
+    /* Semantic status — light */
+    --status-positive-fg: #0d4d2e;
+    --status-positive-surface: rgba(13, 77, 46, 0.1);
+    --status-positive-border: rgba(13, 77, 46, 0.22);
+    --status-positive-glow: rgba(45, 138, 96, 0.18);
+
+    --status-neutral-fg: #1e3a5f;
+    --status-neutral-surface: rgba(30, 58, 95, 0.08);
+    --status-neutral-border: rgba(30, 58, 95, 0.2);
+
+    --status-warning-fg: #6b4200;
+    --status-warning-surface: rgba(107, 66, 0, 0.1);
+    --status-warning-border: rgba(107, 66, 0, 0.24);
+
+    --status-caution-fg: #7a5a00;
+    --status-caution-surface: rgba(122, 90, 0, 0.1);
+    --status-caution-border: rgba(122, 90, 0, 0.22);
+
+    --status-critical-fg: #8b1f2d;
+    --status-critical-surface: rgba(139, 31, 45, 0.1);
+    --status-critical-border: rgba(139, 31, 45, 0.28);
+    --status-critical-glow: rgba(220, 90, 110, 0.15);
+
+    /* Legacy aliases used in a few places */
+    --bg-card: var(--surface-card);
+    --bg-page: var(--surface-page);
+    --bg-elevated: var(--surface-elevated);
+    --bg-sidebar: var(--surface-sidebar);
+    --bg-input: var(--surface-input);
+    --text-positive: var(--status-positive-fg);
+    --text-warning: var(--status-warning-fg);
+    --text-critical: var(--status-critical-fg);
   }
 
   html:not(.dark) .logo-nexus,
   .light .logo-nexus,
   [data-theme="light"] .logo-nexus {
-    color: #1a1a1a;
+    color: #14181f;
   }
   html:not(.dark) .logo-os,
   .light .logo-os,
   [data-theme="light"] .logo-os {
-    color: #1a5fb4;
+    color: #2a5f9e;
     letter-spacing: 0;
   }
 
-  .light, [data-theme="light"] {
-    --text-primary: #1A1A1A;
-    --text-secondary: #5C5C5C;
-    --text-tertiary: #8A8A8A;
-    --text-positive: #1B6B3A;
-    --text-warning: #7A4200;
-    --text-critical: #8B1A1A;
-
-    --bg-page:     #F5F3EF;
-    --bg-card:     #FAFAF8;
-    --bg-elevated: #FFFFFF;
-    --bg-sidebar:  #F0EDE8;
-    --bg-input:    #F7F6F2;
+  .light,
+  [data-theme="light"] {
+    --text-primary: #14181f;
+    --text-secondary: #4a505c;
+    --text-tertiary: #6b7280;
+    --surface-page: #faf9f6;
+    --surface-card: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-sidebar: #f4f3ee;
+    --surface-input: #f0efea;
+    --surface-muted: #ebe9e3;
+    --border-subtle: rgba(20, 24, 31, 0.1);
+    --border-strong: rgba(20, 24, 31, 0.16);
   }
 
+  /* Obsidian cyber dark */
   .dark {
-    --background: #0D1521;
-    --foreground: #F6F6F6;
-    --obsidian: #0D1521;
-    --atmospheric-grey: #F6F6F6;
-    --trajectory-blue: #0052CC; /* Original blue */
-    --bg-card: #0D1521;
-    --bg-page: #0D1521;
+    --background: #060a12;
+    --foreground: #e8eaef;
+    --obsidian: #060a12;
+    --atmospheric-grey: #e8eaef;
+    --trajectory-blue: #7ab8ff;
 
-    .logo-os { color: #5B9FE8; }  /* lighter blue for dark bg */
+    --surface-page: #060a12;
+    --surface-card: #0b111c;
+    --surface-elevated: #101827;
+    --surface-sidebar: #0a0f18;
+    --surface-input: #0f1522;
+    --surface-muted: #0d1420;
+
+    --border-subtle: rgba(232, 234, 239, 0.08);
+    --border-strong: rgba(232, 234, 239, 0.14);
+
+    --text-primary: #e8eaef;
+    --text-secondary: #a8b0c0;
+    --text-tertiary: #7a8499;
+
+    --status-positive-fg: #7dd4b0;
+    --status-positive-surface: rgba(125, 212, 176, 0.12);
+    --status-positive-border: rgba(125, 212, 176, 0.28);
+    --status-positive-glow: rgba(125, 212, 176, 0.22);
+
+    --status-neutral-fg: #9ec8ff;
+    --status-neutral-surface: rgba(158, 200, 255, 0.1);
+    --status-neutral-border: rgba(158, 200, 255, 0.26);
+
+    --status-warning-fg: #f0c674;
+    --status-warning-surface: rgba(240, 198, 116, 0.12);
+    --status-warning-border: rgba(240, 198, 116, 0.28);
+
+    --status-caution-fg: #e8d96a;
+    --status-caution-surface: rgba(232, 217, 106, 0.1);
+    --status-caution-border: rgba(232, 217, 106, 0.24);
+
+    --status-critical-fg: #f4a8b5;
+    --status-critical-surface: rgba(244, 168, 181, 0.12);
+    --status-critical-border: rgba(244, 168, 181, 0.3);
+    --status-critical-glow: rgba(244, 168, 181, 0.2);
+
+    --bg-card: var(--surface-card);
+    --bg-page: var(--surface-page);
+    --bg-elevated: var(--surface-elevated);
+    --bg-sidebar: var(--surface-sidebar);
+    --bg-input: var(--surface-input);
+    --text-positive: var(--status-positive-fg);
+    --text-warning: var(--status-warning-fg);
+    --text-critical: var(--status-critical-fg);
+
+    .logo-os {
+      color: #9ec8ff;
+    }
   }
 
   body {
-    background-color: var(--bg-page, var(--obsidian));
+    background-color: var(--surface-page, var(--background));
     @apply text-atmospheric-grey antialiased;
   }
-  
-  html, body { background-color: var(--bg-page, var(--obsidian)); }
+
+  html,
+  body {
+    background-color: var(--surface-page, var(--background));
+  }
 }
 
 @layer utilities {
   .glass-panel {
     background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(15, 23, 42, 0.10);
+    border: 1px solid rgba(15, 23, 42, 0.1);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   }
 
-  /* Landing page only: clearer edges on warm light backgrounds */
   .landing-glass-card {
     background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(12px);
@@ -87,17 +170,19 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   }
   .dark .landing-glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    /* Avoid `transition: all` — it fights Framer Motion opacity/transform on landing cards */
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .dark .glass-panel {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
+    background: rgba(15, 23, 34, 0.55);
+    border: 1px solid var(--border-subtle);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .glass-button:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -110,57 +195,116 @@
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--foreground);
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
   }
   .glass-input:focus {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(158, 200, 255, 0.45);
+    background: rgba(0, 0, 0, 0.28);
     outline: none;
   }
 
   .space-bg {
-    background-color: var(--bg-page, var(--background));
-    background-image: 
-      radial-gradient(circle at 15% 50%, rgba(0, 82, 204, 0.08) 0%, transparent 40%),
-      radial-gradient(circle at 85% 30%, rgba(0, 82, 204, 0.06) 0%, transparent 40%);
+    background-color: var(--surface-page, var(--background));
+    background-image:
+      radial-gradient(circle at 18% 42%, rgba(30, 58, 95, 0.12) 0%, transparent 42%),
+      radial-gradient(circle at 82% 28%, rgba(45, 138, 96, 0.08) 0%, transparent 40%);
+  }
+  .dark .space-bg {
+    background-image:
+      radial-gradient(circle at 15% 45%, rgba(122, 184, 255, 0.14) 0%, transparent 45%),
+      radial-gradient(circle at 88% 22%, rgba(125, 212, 176, 0.08) 0%, transparent 38%);
   }
 
   .starfield {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: 
-      radial-gradient(1px 1px at 15% 15%, rgba(255, 255, 255, 0.8) 1px, transparent 0),
-      radial-gradient(1px 1px at 25% 45%, rgba(255, 255, 255, 0.6) 1px, transparent 0),
-      radial-gradient(1.5px 1.5px at 45% 75%, rgba(255, 255, 255, 0.9) 1px, transparent 0),
-      radial-gradient(1px 1px at 65% 25%, rgba(255, 255, 255, 0.5) 1px, transparent 0),
-      radial-gradient(2px 2px at 85% 55%, rgba(255, 255, 255, 0.7) 1px, transparent 0),
-      radial-gradient(1px 1px at 95% 85%, rgba(255, 255, 255, 0.8) 1px, transparent 0);
+    background-image:
+      radial-gradient(1px 1px at 15% 15%, rgba(255, 255, 255, 0.75) 1px, transparent 0),
+      radial-gradient(1px 1px at 25% 45%, rgba(255, 255, 255, 0.55) 1px, transparent 0),
+      radial-gradient(1.5px 1.5px at 45% 75%, rgba(255, 255, 255, 0.85) 1px, transparent 0),
+      radial-gradient(1px 1px at 65% 25%, rgba(255, 255, 255, 0.45) 1px, transparent 0),
+      radial-gradient(2px 2px at 85% 55%, rgba(255, 255, 255, 0.65) 1px, transparent 0),
+      radial-gradient(1px 1px at 95% 85%, rgba(255, 255, 255, 0.75) 1px, transparent 0);
     background-size: 250px 250px;
-    opacity: 0.4;
+    opacity: 0.35;
   }
 
   .surface-card {
-    @apply bg-surface-card dark:bg-slate-950/60 border border-slate-200 dark:border-white/10;
+    @apply border;
+    background-color: var(--surface-card);
+    border-color: var(--border-subtle);
   }
-  
+  .dark .surface-card {
+    background-color: color-mix(in srgb, var(--surface-card) 92%, transparent);
+    border-color: var(--border-subtle);
+  }
+
   .surface-muted {
-    @apply bg-surface-sidebar dark:bg-white/5 border border-slate-200 dark:border-white/10;
+    @apply border;
+    background-color: var(--surface-muted);
+    border-color: var(--border-subtle);
+  }
+  .dark .surface-muted {
+    background-color: color-mix(in srgb, var(--surface-muted) 85%, #000 15%);
+    border-color: var(--border-subtle);
   }
 
   .text-muted {
-    @apply text-slate-600 dark:text-slate-400;
+    color: var(--text-secondary);
   }
 
   .nav-link:focus-visible {
-    outline: 2px solid #3A6EA8;
+    outline: 2px solid var(--trajectory-blue);
     outline-offset: 2px;
   }
 
   .approval-action-bar {
-    background: var(--bg-card);
-    border-top: 0.5px solid #D8D5CE;
-    padding: 12px 20px;
+    background: var(--surface-elevated);
+    border-top: 1px solid var(--border-subtle);
+    padding: 14px 20px;
     flex-shrink: 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .dark .approval-action-bar {
+    background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+  }
+
+  /* Revenue / KPI emphasis */
+  .revenue-at-risk-glow {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-subtle);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--status-neutral-surface) 100%, transparent) 0%,
+      color-mix(in srgb, var(--status-positive-surface) 80%, transparent) 100%
+    );
+  }
+  .revenue-at-risk-glow::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(
+      circle at 30% 20%,
+      var(--status-positive-glow),
+      transparent 55%
+    );
+    pointer-events: none;
+    opacity: 0.85;
+  }
+  .dark .revenue-at-risk-glow {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-card) 90%, transparent) 0%,
+      color-mix(in srgb, var(--status-positive-surface) 120%, #000) 100%
+    );
+    box-shadow: 0 0 48px -12px var(--status-positive-glow);
+  }
+
+  .risk-heat-pin {
+    @apply inline-flex min-h-[2rem] min-w-[2rem] items-center justify-center rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums shadow-sm transition-colors;
   }
 }
