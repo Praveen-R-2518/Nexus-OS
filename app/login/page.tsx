@@ -7,7 +7,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClass =
-  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/40 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]";
+  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/40 dark:focus:border-border-strong dark:focus:ring-border-strong";
 
 function LoginForm() {
   const router = useRouter();
@@ -151,7 +151,7 @@ function LoginForm() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 shrink-0 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+              className="h-4 w-4 shrink-0 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
             />
             Remember me
           </label>
@@ -187,7 +187,7 @@ function LoginForm() {
           Need an account?{" "}
           <Link
             href="/signup"
-            className="cursor-pointer text-[#0f2336] underline underline-offset-4 hover:text-black dark:text-[#a8bdd4] dark:hover:text-white"
+            className="cursor-pointer text-[#0f2336] underline underline-offset-4 hover:text-black dark:text-muted dark:hover:text-white"
           >
             Start signup
           </Link>

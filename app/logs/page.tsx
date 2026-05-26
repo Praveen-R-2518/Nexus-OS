@@ -86,7 +86,7 @@ export default function LogsPage() {
     <div className="space-y-8">
       <header className="flex flex-col gap-4 hairline-b pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-sky-300/90">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-muted">
             Nexus OS
           </p>
           <h1 className="mt-3 flex items-center gap-3 font-sans text-2xl font-black uppercase tracking-tight text-atmospheric-grey sm:text-3xl">
@@ -132,17 +132,17 @@ export default function LogsPage() {
           <CountTile
             label="Success"
             value={counts.success}
-            accent="border-l-4 border-l-status-positive"
+            accent="border border-status-positive-border/50 bg-status-positive-surface/25"
           />
           <CountTile
             label="Failed"
             value={counts.failed}
-            accent="border-l-4 border-l-status-critical"
+            accent="border border-status-critical-border/50 bg-status-critical-surface/25"
           />
           <CountTile
             label="Running"
             value={counts.running}
-            accent="border-l-4 border-l-status-warning"
+            accent="border border-status-warning-border/50 bg-status-warning-surface/25"
           />
         </section>
       ) : null}
@@ -159,7 +159,7 @@ export default function LogsPage() {
             className={cn(
               "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
               filter === value
-                ? "border-ref-cta bg-ref-mint text-ref-cta dark:border-sky-400/45 dark:bg-surface-elevated dark:text-sky-200"
+                ? "border-2 border-ref-cta bg-ref-mint text-ref-cta dark:border-border-strong dark:bg-surface-muted dark:text-muted"
                 : "border-border/60 bg-white text-muted hover:border-border hover:text-atmospheric-grey dark:border-border/60 dark:bg-surface-card dark:hover:border-border-strong",
             )}
           >

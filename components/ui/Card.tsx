@@ -76,7 +76,7 @@ export function Card({
             <span
               className={cn(
                 "[&>svg]:h-5 [&>svg]:w-5",
-                isCritical ? "text-ref-cta dark:text-sky-300/90" : "text-muted",
+                isCritical ? "text-ref-cta dark:text-muted" : "text-muted",
               )}
             >
               {icon}

@@ -212,7 +212,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-0 space-y-10">
         <header className="hairline-b pb-8">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-sky-300/90">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-muted">
             Operations
           </p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -323,7 +323,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-end hairline-b px-4 py-3">
               <Link
                 href="/inbox"
-                className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[11px] font-semibold uppercase tracking-widest text-ref-cta transition-opacity hover:opacity-80 dark:text-sky-300/90"
+                className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[11px] font-semibold uppercase tracking-widest text-ref-cta transition-opacity hover:opacity-80 dark:text-muted"
               >
                 Open inbox →
               </Link>
@@ -392,7 +392,7 @@ export default function DashboardPage() {
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-ref-mint text-atmospheric-grey transition-colors duration-interaction hover:border-ref-cta hover:bg-white dark:border-border/60 dark:bg-surface-elevated dark:hover:border-sky-400/38"
+                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-ref-mint text-atmospheric-grey transition-colors duration-interaction hover:border-ref-cta hover:bg-white dark:border-border/60 dark:bg-surface-elevated dark:hover:border-border-strong"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-5 w-5" />

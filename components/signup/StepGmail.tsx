@@ -146,7 +146,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
         <label className="mt-4 flex cursor-pointer items-center gap-2 font-mono text-xs text-gray-700 dark:text-gray-200">
           <input
             type="checkbox"
-            className="h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+            className="h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
             checked={chkA}
             onChange={(e) => setChkA(e.target.checked)}
           />
@@ -169,7 +169,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
         <label className="mt-4 flex cursor-pointer items-center gap-2 font-mono text-xs text-gray-700 dark:text-gray-200">
           <input
             type="checkbox"
-            className="h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+            className="h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
             checked={chkB}
             onChange={(e) => setChkB(e.target.checked)}
           />
@@ -207,7 +207,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
                 className={cn(
                   "flex items-center border border-dashed px-3 py-2 font-mono text-xs",
                   banner.type === "ok"
-                    ? "border-border bg-[#e3eef6] text-[#0f2336] dark:border-border dark:bg-surface-elevated dark:text-[#a8bdd4]"
+                    ? "border-border bg-[#e3eef6] text-[#0f2336] dark:border-border dark:bg-surface-elevated dark:text-muted"
                     : "border-badge-critical-ring bg-badge-critical-bg text-badge-critical-text",
                 )}
                 role="status"

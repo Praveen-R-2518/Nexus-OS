@@ -119,7 +119,7 @@ export default function LandingPage() {
   const reduce = useReducedMotion();
 
   return (
-    <div className="min-h-0 flex-1 bg-ref-mint text-black selection:bg-ref-cta/15 dark:bg-surface-page dark:text-white dark:selection:bg-sky-500/22">
+    <div className="min-h-0 flex-1 bg-ref-mint text-black selection:bg-ref-cta/15 dark:bg-surface-page dark:text-white dark:selection:bg-foreground/12">
       <ScrollReveal>
         <section className="relative hairline-b px-4 py-12 md:px-8 md:py-20">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-12 lg:items-start lg:gap-6">
@@ -291,7 +291,7 @@ export default function LandingPage() {
                     <TechPanel
                       className={`w-full max-w-xl p-7 md:p-10 ${isEven ? "md:mr-[8%]" : "md:ml-[8%]"}`}
                     >
-                      <span className="font-mono text-sm font-bold tabular-nums tracking-widest text-ref-cta dark:text-sky-300/90">
+                      <span className="font-mono text-sm font-bold tabular-nums tracking-widest text-ref-cta dark:text-muted">
                         {step.id}
                       </span>
                       <h3 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-black md:text-3xl dark:text-white">

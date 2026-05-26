@@ -92,12 +92,12 @@ function actionTaken(status: Conversation["status"]): string {
 
 function rowTone(status: Conversation["status"]): string {
   if (status === "approved" || status === "sent") {
-    return "border-l-2 border-status-positive-border/40 bg-status-positive-surface/40 hover:bg-status-positive-surface/60 dark:hover:bg-status-positive-surface/25";
+    return "bg-status-positive-surface/30 hover:bg-status-positive-surface/45 dark:hover:bg-status-positive-surface/20";
   }
   if (status === "rejected") {
-    return "border-l-2 border-status-critical-border/40 bg-status-critical-surface/40 hover:bg-status-critical-surface/60 dark:hover:bg-status-critical-surface/25";
+    return "bg-status-critical-surface/30 hover:bg-status-critical-surface/45 dark:hover:bg-status-critical-surface/20";
   }
-  return "border-l-2 border-status-caution-border/40 bg-status-caution-surface/35 hover:bg-status-caution-surface/70 dark:hover:bg-status-caution-surface/20";
+  return "bg-status-caution-surface/25 hover:bg-status-caution-surface/40 dark:hover:bg-status-caution-surface/15";
 }
 
 function csvEscape(value: string | number): string {
@@ -262,7 +262,7 @@ export default function ReportPage() {
       <div className="relative space-y-10">
         <header className="flex flex-col gap-5 hairline-b pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-sky-300/90 sm:text-[11px]">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-muted sm:text-[11px]">
               Revenue Recovery Intelligence
             </p>
             <h1 className="mt-3 font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl">
@@ -314,8 +314,8 @@ export default function ReportPage() {
                 title="Messages Processed"
                 value={report.messages_processed}
                 subtitle="customer conversations analyzed"
-                accent="text-blue-600 dark:text-blue-300"
-                icon={<MessageSquareText className="text-blue-600 dark:text-blue-300" />}
+                accent="text-blue-600 dark:text-muted"
+                icon={<MessageSquareText className="text-blue-600 dark:text-muted" />}
                 className="surface-card"
               />
               <Card
@@ -330,8 +330,8 @@ export default function ReportPage() {
                 title="Drafts Approved"
                 value={report.drafts_approved}
                 subtitle="human-approved AI responses"
-                accent="text-violet-600 dark:text-violet-300"
-                icon={<FileText className="text-violet-600 dark:text-violet-300" />}
+                accent="text-violet-600 dark:text-muted"
+                icon={<FileText className="text-violet-600 dark:text-muted" />}
                 className="surface-card"
               />
             </section>
@@ -425,7 +425,7 @@ export default function ReportPage() {
                         <tr
                           key={row.id}
                           className={cn(
-                            "hairline-b border-l-2 transition-colors last:border-b-0",
+                            "hairline-b transition-colors last:border-b-0",
                             rowTone(row.status),
                           )}
                         >

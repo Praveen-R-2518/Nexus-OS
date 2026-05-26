@@ -27,7 +27,7 @@ type StepPaymentProps = {
 };
 
 const fieldClass =
-  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none transition focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]";
+  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none transition focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-border-strong dark:focus:ring-border-strong";
 
 export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -223,7 +223,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           <p
             className={cn(
               "flex items-center gap-1 font-mono text-xs",
-              doneMsg === "Trial started!" ? "text-[#0f2336] dark:text-[#a8bdd4]" : "text-[#8B1A1A]",
+              doneMsg === "Trial started!" ? "text-[#0f2336] dark:text-muted" : "text-[#8B1A1A]",
             )}
             role="status"
           >

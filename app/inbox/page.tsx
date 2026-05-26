@@ -293,12 +293,12 @@ function InboxPageContent() {
       ) : null}
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
       <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-white dark:border-border dark:bg-surface-card">
-        <div className="relative shrink-0 hairline-b bg-ref-mint p-4 dark:bg-surface-elevated">
-          <div className="relative z-10">
+        <div className="shrink-0 px-3 pt-3 pb-2">
+          <div className="rounded-xl border border-border/70 bg-surface-muted p-4 dark:border-border/60 dark:bg-surface-muted">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 font-sans text-3xl font-black tabular-nums tracking-tight text-ref-cta sm:text-4xl dark:text-sky-300/90">
+            <p className="mt-2 font-sans text-3xl font-black tabular-nums tracking-tight text-ref-cta sm:text-4xl dark:text-muted">
               {formatCurrency(revenueAtRisk)}
             </p>
             <p className="mt-1.5 font-mono text-xs text-muted">
@@ -324,7 +324,7 @@ function InboxPageContent() {
                     className={cn(
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
+                        ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                         : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
                     )}
                   >
@@ -360,7 +360,7 @@ function InboxPageContent() {
                     className={cn(
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
+                        ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                         : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300 dark:hover:border-border-strong",
                     )}
                   >
@@ -389,7 +389,7 @@ function InboxPageContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Name or message…"
-              className="h-11 w-full rounded-xl border border-border bg-surface-input px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border dark:focus:border-sky-400/55 dark:focus:ring-sky-400/45"
+              className="h-11 w-full rounded-xl border border-border bg-surface-input px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border dark:focus:border-border-strong dark:focus:ring-border-strong"
             />
           </div>
         </div>
@@ -406,23 +406,20 @@ function InboxPageContent() {
             <ul className="space-y-2">
               {filteredConversations.map((c) => {
                 const selected = c.id === selectedConversationId;
-                const criticalBorder =
-                  c.urgency === "critical" && !selected
-                    ? "border-l-4 border-status-critical-border"
-                    : selected
-                      ? "border-l-4 border-status-positive bg-surface-elevated dark:bg-surface-card"
-                      : "border-l-4 border-transparent";
-
                 return (
                   <li key={c.id}>
                     <button
                       type="button"
                       onClick={() => setSelectedConversationId(c.id)}
                       className={cn(
-                        "w-full cursor-pointer rounded-xl border border-border/60 bg-white p-3 text-left transition-colors duration-interaction hover:border-border hover:bg-ref-mint dark:border-border/70 dark:bg-surface-elevated dark:hover:border-border-strong dark:hover:bg-surface-muted",
-                        criticalBorder,
-                        selected &&
-                          "border-border bg-ref-ice ring-1 ring-ref-cta dark:border-border-strong dark:bg-surface-muted dark:ring-sky-400/40",
+                        "w-full cursor-pointer rounded-xl p-3 text-left transition-colors duration-interaction",
+                        selected
+                          ? "border-2 border-ref-cta bg-ref-ice dark:border-border-strong dark:bg-surface-muted"
+                          : c.urgency === "critical"
+                            ? "border border-status-critical-border/50 bg-white dark:border-status-critical-border/40 dark:bg-surface-elevated"
+                            : "border border-border/60 bg-white dark:border-border/70 dark:bg-surface-elevated",
+                        !selected &&
+                          "hover:border-border hover:bg-ref-mint dark:hover:border-border-strong dark:hover:bg-surface-muted",
                       )}
                     >
                       <div className="flex items-start gap-3">
@@ -502,7 +499,7 @@ function InboxPageContent() {
               {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-surface-card"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
                 >
                   View Draft Reply
                 </Link>
@@ -539,7 +536,8 @@ function InboxPageContent() {
                   label={`Urgency: ${urgencyBadgeLabel(selectedConversation.urgency)}`}
                 />
               </div>
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <div className="mt-6 rounded-lg border border-border/60 bg-surface-muted/90 p-4 dark:border-border/50 dark:bg-surface-muted/60">
+                <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-muted">Risk score</p>
                   <div className="mt-2 flex items-center gap-3">
@@ -552,9 +550,9 @@ function InboxPageContent() {
                       {selectedConversation.risk_score}
                     </span>
                   </div>
-                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full border border-border/40 bg-surface-muted dark:border-border/50">
+                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full border border-border/50 bg-surface-input dark:border-border/50 dark:bg-surface-card">
                     <div
-                      className="h-full bg-ref-cta transition-all dark:bg-sky-400/72"
+                      className="h-full bg-ref-cta transition-all dark:bg-foreground/22"
                       style={{
                         width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
                       }}
@@ -569,6 +567,7 @@ function InboxPageContent() {
                   <p className="mt-2 text-sm text-muted">
                     {confidencePercent(selectedConversation.confidence)}% confident
                   </p>
+                </div>
                 </div>
               </div>
             </div>

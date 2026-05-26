@@ -42,7 +42,7 @@ export default function FormInput({
     <div className="space-y-1.5">
       <label htmlFor={id} className="block font-mono text-xs font-medium uppercase tracking-widest text-black/85 dark:text-white/80">
         {label}
-        {rest.required ? <span className="text-[#8B1A1A] dark:text-red-400"> *</span> : null}
+        {rest.required ? <span className="text-[#8B1A1A] dark:text-status-critical"> *</span> : null}
       </label>
       <div className="relative">
         {Icon ? (
@@ -56,7 +56,7 @@ export default function FormInput({
           type={inputType}
           className={cn(
             baseInput,
-            "focus:border-[#0f2336] focus:ring-[#0f2336] dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]",
+            "focus:border-[#0f2336] focus:ring-[#0f2336] dark:focus:border-border-strong dark:focus:ring-border-strong",
             Icon ? "pl-10" : "",
             isPassword ? "pr-20" : valid || error ? "pr-10" : "",
             error
@@ -85,7 +85,7 @@ export default function FormInput({
         ) : null}
         {!isPassword && valid ? (
           <Check
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0f2336] dark:text-[#a8bdd4]"
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0f2336] dark:text-muted"
             aria-hidden
           />
         ) : null}
@@ -96,7 +96,7 @@ export default function FormInput({
         </p>
       ) : null}
       {error ? (
-        <p className="font-mono text-xs text-[#8B1A1A] dark:text-red-400" role="alert">
+        <p className="font-mono text-xs text-[#8B1A1A] dark:text-status-critical" role="alert">
           {error}
         </p>
       ) : null}
@@ -120,13 +120,13 @@ export function FormSelect({
     <div className="space-y-1.5">
       <label htmlFor={id} className="block font-mono text-xs font-medium uppercase tracking-widest text-black/85 dark:text-white/80">
         {label}
-        {rest.required ? <span className="text-[#8B1A1A] dark:text-red-400"> *</span> : null}
+        {rest.required ? <span className="text-[#8B1A1A] dark:text-status-critical"> *</span> : null}
       </label>
       <select
         id={id}
         className={cn(
           baseInput,
-          "cursor-pointer focus:border-[#0f2336] focus:ring-[#0f2336] dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]",
+          "cursor-pointer focus:border-[#0f2336] focus:ring-[#0f2336] dark:focus:border-border-strong dark:focus:ring-border-strong",
           error
             ? "border-red-600/80 focus:border-red-600 focus:ring-red-600/40 dark:border-red-400/70 dark:focus:border-red-400"
             : "",
@@ -136,7 +136,7 @@ export function FormSelect({
         {children}
       </select>
       {error ? (
-        <p className="font-mono text-xs text-[#8B1A1A] dark:text-red-400" role="alert">
+        <p className="font-mono text-xs text-[#8B1A1A] dark:text-status-critical" role="alert">
           {error}
         </p>
       ) : null}

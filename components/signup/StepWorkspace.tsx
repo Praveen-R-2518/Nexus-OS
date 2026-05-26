@@ -185,7 +185,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             className={cn(
               "flex cursor-pointer items-start gap-3 border border-border bg-white p-4 text-left transition dark:border-border dark:bg-surface-card",
               workspaceType === "solo"
-                ? "bg-[#e3eef6] ring-1 ring-border-strong dark:bg-surface-elevated dark:ring-trajectory-blue/50"
+                ? "border-2 border-ref-cta bg-[#e3eef6] dark:border-border-strong dark:bg-surface-elevated"
                 : "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
             )}
           >
@@ -194,7 +194,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             </span>
             <span>
               <span className="flex items-center gap-2 font-sans font-semibold text-foreground">
-                <User className="h-4 w-4 text-[#0f2336] dark:text-[#a8bdd4]" />
+                <User className="h-4 w-4 text-[#0f2336] dark:text-muted" />
                 Solo
               </span>
               <span className="mt-1 block font-mono text-xs text-gray-500 dark:text-gray-400">
@@ -208,7 +208,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             className={cn(
               "flex cursor-pointer items-start gap-3 border border-border bg-white p-4 text-left transition dark:border-border dark:bg-surface-card",
               workspaceType === "team"
-                ? "bg-[#e3eef6] ring-1 ring-border-strong dark:bg-surface-elevated dark:ring-trajectory-blue/50"
+                ? "border-2 border-ref-cta bg-[#e3eef6] dark:border-border-strong dark:bg-surface-elevated"
                 : "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
             )}
           >
@@ -217,7 +217,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             </span>
             <span>
               <span className="flex items-center gap-2 font-sans font-semibold text-foreground">
-                <Users className="h-4 w-4 text-[#0f2336] dark:text-[#a8bdd4]" />
+                <Users className="h-4 w-4 text-[#0f2336] dark:text-muted" />
                 Team
               </span>
               <span className="mt-1 block font-mono text-xs text-gray-500 dark:text-gray-400">
@@ -258,7 +258,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                 <div key={i} className="flex gap-2">
                   <input
                     type="email"
-                    className="h-10 flex-1 border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+                    className="h-10 flex-1 border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-border-strong dark:focus:ring-border-strong"
                     placeholder="teammate@company.com"
                     value={row}
                     onChange={(e) => updateEmailRow(i, e.target.value)}
