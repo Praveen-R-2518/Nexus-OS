@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { prefetchNavRoute } from "@/lib/queries/nav-prefetch";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -18,6 +20,7 @@ const nav = [
 export default function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
 
   async function signOut() {
     const supabase = createSupabaseBrowserClient();
@@ -49,6 +52,8 @@ export default function TopBar() {
                     key={href}
                     href={href}
                     aria-current={active ? "page" : undefined}
+                    onMouseEnter={() => prefetchNavRoute(queryClient, href)}
+                    onFocus={() => prefetchNavRoute(queryClient, href)}
                     className={cn(
                       "relative inline-flex flex-col items-center gap-1.5 text-sm font-medium transition-colors duration-200",
                       active

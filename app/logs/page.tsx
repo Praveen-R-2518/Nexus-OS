@@ -1,16 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 import { Activity, AlertCircle, RefreshCw } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
-import {
-  fetchWorkflowLogsWithMeta,
-  type WorkflowLogsCounts,
-} from "@/lib/api";
+import { workflowLogsWithMetaQuery } from "@/lib/queries/fetchers";
+import { queryKeys } from "@/lib/queries/keys";
 import { cn } from "@/lib/utils";
-import type { WorkflowLog } from "@/types";
 
 type ResultFilter = "" | "success" | "failed" | "running";
 
@@ -57,39 +55,26 @@ function CountTile({
 
 export default function LogsPage() {
   const [filter, setFilter] = useState<ResultFilter>("");
-  const [logs, setLogs] = useState<WorkflowLog[]>([]);
-  const [counts, setCounts] = useState<WorkflowLogsCounts | null>(null);
-  const [source, setSource] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchWorkflowLogsWithMeta(
-        filter === "" ? undefined : filter,
-      );
-      setLogs(data.logs);
-      setCounts(data.counts);
-      setSource(data.source);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load logs");
-      setLogs([]);
-      setCounts(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [filter]);
+  const filterKey = filter === "" ? "" : filter;
+  const {
+    data,
+    isPending: loading,
+    error: errObj,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.workflowLogs(filterKey),
+    queryFn: () =>
+      workflowLogsWithMetaQuery(filter === "" ? undefined : filter),
+  });
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const logs = data?.logs ?? [];
+  const counts = data?.counts ?? null;
+  const error = errObj instanceof Error ? errObj.message : null;
 
-  const headingSubtitle = useMemo(() => {
-    if (source === "mock") return "Showing mock data (dev fallback).";
-    return "Latest workflow executions from Supabase.";
-  }, [source]);
+  const load = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-6">
@@ -102,7 +87,9 @@ export default function LogsPage() {
             <Activity className="h-7 w-7 text-[#1B6B3A]" aria-hidden />
             Workflow Logs
           </h1>
-          <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-gray-400">{headingSubtitle}</p>
+          <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-gray-400">
+            Latest workflow executions from Supabase.
+          </p>
         </div>
         <button
           type="button"
