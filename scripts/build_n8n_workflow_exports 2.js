@@ -11,6 +11,13 @@ const path = require("path");
 const root = path.join(__dirname, "..");
 const n8nLogic = path.join(root, "n8n_logic");
 
+function stripTenantResolverForN8n() {
+  let src = fs.readFileSync(path.join(n8nLogic, "tenant_route_resolver.js"), "utf8");
+  src = src.replace(/^\/\*\*[\s\S]*?\*\/\s*/, "");
+  src = src.replace(/\nif \(typeof module !== "undefined" && module\.exports\) \{[\s\S]*$/m, "\n");
+  return `${src.trim()}\n`;
+}
+
 function stripForN8nCodeNode(filePath) {
   let src = fs.readFileSync(filePath, "utf8");
   // Drop file-level block comment (first /** ... */ only)
@@ -33,15 +40,81 @@ function stripForN8nCodeNode(filePath) {
   return src.trim() + "\n";
 }
 
+const tenantRouteExtractJs =
+  `${stripTenantResolverForN8n()}try {
+  const trigger = $input.first().json;
+  const __intake = buildIntakeEnvelope(trigger);
+  const _route = resolveRouteFromIntake(trigger);
+  const lookup_path = buildBusinessProfileLookupPath(_route);
+  return [{ json: { __intake, _route, lookup_path } }];
+} catch (error) {
+  return [
+    {
+      json: {
+        error: error.message,
+        node: 'TenantRouteExtract',
+        timestamp: new Date().toISOString(),
+      },
+    },
+  ];
+}
+`.trim();
+
+const verifyTenantJs =
+  `${stripTenantResolverForN8n()}try {
+  const http = $input.first().json;
+  const prev = $('Tenant Route Extract').first().json;
+  if (prev.error) return [{ json: prev }];
+  const rows = Array.isArray(http)
+    ? http
+    : Array.isArray(http.body)
+      ? http.body
+      : http && http.id
+        ? [http]
+        : [];
+  const profile = verifySingleBusinessProfile(rows);
+  const envWs = getEnv('NEXUS_WORKSPACE_ID');
+  const workspaceId = profile.workspace_id || (isUuid(envWs) ? envWs : null);
+  const intake = prev.__intake || {};
+  return [
+    {
+      json: {
+        ...intake,
+        _tenant: {
+          team_id: profile.team_id,
+          workspace_id: workspaceId,
+          business_profile_id: profile.id,
+          route_source: prev._route.type,
+          route_key: prev._route.value,
+        },
+      },
+    },
+  ];
+} catch (error) {
+  return [
+    {
+      json: {
+        error: error.message,
+        node: 'VerifyTenantContext',
+        timestamp: new Date().toISOString(),
+      },
+    },
+  ];
+}
+`.trim();
+
 const dedupLookupQuery = `
 try {
   const normalized = $input.first().json;
+  const teamId = normalized.team_id || '';
+  if (!teamId) throw new Error('DedupLookupQuery: missing team_id');
   const id = normalized.customer_email_or_phone || '';
   if (!id) throw new Error('DedupLookupQuery: missing customer_email_or_phone');
   const variants = [...new Set([id, id.toLowerCase()].filter(Boolean))];
   const orInner = variants.map((v) => 'customer_email.eq.' + encodeURIComponent(v)).join(',');
   const lookup_path =
     '?select=id,status,updated_at' +
+    '&team_id=eq.' + encodeURIComponent(teamId) +
     '&status=in.(new,in_progress)' +
     '&or=(' + orInner + ')' +
     '&order=updated_at.desc&limit=1';
@@ -317,7 +390,10 @@ function wf2TriggerBody(sourceNodeName, includeLeadId) {
   conversation_id: $('${sourceNodeName}').first().json.body[0].id,
 ${leadLine}  message: $('Dedup Decision').first().json.normalized.message,
   customer_name: $('Dedup Decision').first().json.normalized.customer_name,
-  customer_email: $('Dedup Decision').first().json.normalized.customer_email_or_phone
+  customer_email: $('Dedup Decision').first().json.normalized.customer_email_or_phone,
+  team_id: $('Dedup Decision').first().json.normalized.team_id,
+  workspace_id: $('Dedup Decision').first().json.normalized.workspace_id,
+  channel: $('Dedup Decision').first().json.normalized.channel || 'email'
 } }}`;
 }
 
@@ -366,25 +442,36 @@ const gmailWebhook = {
 
 const nodesGmail = [
   sticky(
-    "## Nexus OS - WF0a Gmail Intake\n\nPrimary path: enable `Gmail IMAP Trigger` after adding an IMAP credential.\n\nFallback path: POST Gmail-shaped payloads to `/webhook/gmail-inbound`.\n\nNormalizer supports **gmail** (IMAP/webhook) and **demo** webhook payloads only.",
+    "## Nexus OS - WF0a Gmail Intake\n\n**Tenant routing:** `Tenant Route Extract` resolves `business_profiles` via `gmail_destination_email`, `whatsapp_routing_number`, or `webhook_route_token` (see migration `0012_business_profiles_integration_routing.sql`).\n\n**n8n env:** `NEXUS_GMAIL_DESTINATION_MAILBOX` (IMAP), `NEXUS_WHATSAPP_DESTINATION_NUMBER`, `NEXUS_WHATSAPP_TOKEN_HEADER` (default `x-nexus-webhook-token`), `NEXUS_WORKSPACE_ID` (fallback if profile has no workspace).\n\nPrimary path: IMAP trigger. Fallback: POST to `/webhook/gmail-inbound`. Normalizer requires verified `_tenant` from **Verify Tenant Context**.",
     [-220, 0],
-    460,
+    520,
   ),
   emailTrigger,
   gmailWebhook,
-  codeNode(uuid(32), "Multi-Channel Normalizer", [500, 360], normalizerJs),
-  codeNode(uuid(33), "Noise Filter", [740, 360], noiseJs),
-  ifKeepNode(uuid(34), "IF Keep", [980, 360]),
-  httpNode(uuid(35), "Log Noise Drop", [1220, 160], {
+  codeNode(uuid(501), "Tenant Route Extract", [220, 360], tenantRouteExtractJs),
+  httpNode(uuid(502), "Supabase GET Business Profile", [460, 360], {
+    method: "GET",
+    url: `=${supabaseBaseUrl}/business_profiles{{ $json.lookup_path }}`,
+    supabaseCredential: true,
+    headers: [{ name: "Content-Type", value: "application/json" }],
+    options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
+    alwaysOutputData: true,
+    retries: { maxTries: 4, waitMs: 1200 },
+  }),
+  codeNode(uuid(503), "Verify Tenant Context", [700, 360], verifyTenantJs),
+  codeNode(uuid(32), "Multi-Channel Normalizer", [940, 360], normalizerJs),
+  codeNode(uuid(33), "Noise Filter", [1180, 360], noiseJs),
+  ifKeepNode(uuid(34), "IF Keep", [1420, 360]),
+  httpNode(uuid(35), "Log Noise Drop", [1660, 160], {
     method: "POST",
     url: `${supabaseBaseUrl}/workflow_logs`,
     supabaseCredential: true,
     headers: supabaseMinimalHeaders,
-    body: '={{ { workflow_name: "WF0a Gmail Intake", step: "noise_filter_dropped", result: "skipped", payload: $json } }}',
+    body: '={{ { workflow_name: "WF0a Gmail Intake", step: "noise_filter_dropped", result: "skipped", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: $json } }}',
     onError: "continueRegularOutput",
   }),
-  codeNode(uuid(36), "Dedup Lookup Query", [1220, 400], dedupLookupQuery),
-  httpNode(uuid(37), "Supabase GET Lead Dedup", [1460, 400], {
+  codeNode(uuid(36), "Dedup Lookup Query", [1660, 400], dedupLookupQuery),
+  httpNode(uuid(37), "Supabase GET Lead Dedup", [1900, 400], {
     method: "GET",
     url: `=${supabaseBaseUrl}/leads{{ $json.lookup_path }}`,
     supabaseCredential: true,
@@ -393,38 +480,38 @@ const nodesGmail = [
     alwaysOutputData: true,
     retries: { maxTries: 5, waitMs: 1500 },
   }),
-  codeNode(uuid(38), "Dedup Decision", [1700, 400], dedupDecision),
-  switchNode(uuid(39), "Switch Action", [1940, 380], "extra"),
-  httpNode(uuid(40), "POST Conversation (append)", [2180, 260], {
+  codeNode(uuid(38), "Dedup Decision", [2140, 400], dedupDecision),
+  switchNode(uuid(39), "Switch Action", [2380, 380], "extra"),
+  httpNode(uuid(40), "POST Conversation (append)", [2620, 260], {
     method: "POST",
     url: `${supabaseBaseUrl}/conversations`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
-    body: '={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}',
+    body: '={{ { source: $json.normalized.source, channel: $json.normalized.channel || "email", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}',
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
     retries: { maxTries: 4, waitMs: 1500 },
     onError: "continueErrorOutput",
   }),
-  httpNode(uuid(41), "PATCH Lead Touch", [2420, 260], {
+  httpNode(uuid(41), "PATCH Lead Touch", [2860, 260], {
     method: "PATCH",
-    url: `=${supabaseBaseUrl}/leads?id=eq.{{ $('Dedup Decision').first().json.lead_id }}`,
+    url: `=${supabaseBaseUrl}/leads?id=eq.{{ $('Dedup Decision').first().json.lead_id }}&team_id=eq.{{ $('Dedup Decision').first().json.normalized.team_id }}`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
     body: "={{ { updated_at: new Date().toISOString() } }}",
     options: { response: { response: { neverError: true, responseFormat: "json" } } },
     onError: "continueRegularOutput",
   }),
-  httpNode(uuid(42), "POST Conversation (new)", [2180, 500], {
+  httpNode(uuid(42), "POST Conversation (new)", [2620, 500], {
     method: "POST",
     url: `${supabaseBaseUrl}/conversations`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
-    body: '={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}',
+    body: '={{ { source: $json.normalized.source, channel: $json.normalized.channel || "email", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}',
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
     retries: { maxTries: 4, waitMs: 1500 },
     onError: "continueErrorOutput",
   }),
-  httpNode(uuid(43), "Trigger WF2 Classification (append)", [2660, 260], {
+  httpNode(uuid(43), "Trigger WF2 Classification (append)", [3100, 260], {
     method: "POST",
     url: wf2WebhookUrl,
     headers: [{ name: "Content-Type", value: "application/json" }],
@@ -433,7 +520,7 @@ const nodesGmail = [
     onError: "continueRegularOutput",
     alwaysOutputData: true,
   }),
-  httpNode(uuid(431), "Trigger WF2 Classification (new)", [2660, 500], {
+  httpNode(uuid(431), "Trigger WF2 Classification (new)", [3100, 500], {
     method: "POST",
     url: wf2WebhookUrl,
     headers: [{ name: "Content-Type", value: "application/json" }],
@@ -442,34 +529,37 @@ const nodesGmail = [
     onError: "continueRegularOutput",
     alwaysOutputData: true,
   }),
-  httpNode(uuid(44), "Log Intake OK", [2900, 380], {
+  httpNode(uuid(44), "Log Intake OK", [3340, 380], {
     method: "POST",
     url: `${supabaseBaseUrl}/workflow_logs`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
-    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}",
+    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}",
     onError: "continueRegularOutput",
   }),
-  httpNode(uuid(45), "Log Intake Error", [2420, 80], {
+  httpNode(uuid(45), "Log Intake Error", [2860, 80], {
     method: "POST",
     url: `${supabaseBaseUrl}/workflow_logs`,
     supabaseCredential: true,
     headers: supabaseMinimalHeaders,
-    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}",
+    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}",
     onError: "continueRegularOutput",
     retries: { maxTries: 2, waitMs: 800 },
   }),
   stopAndErrNode(
     uuid(46),
     "Stop on Intake DB Error",
-    [2660, 80],
+    [3100, 80],
     "WF0a: conversation persistence failed after retries. Inspect workflow_logs (gmail_intake_error) and the failed execution.",
   ),
 ];
 
 const connGmail = buildConnections({
-  "Gmail IMAP Trigger (configure credential)": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
-  "Gmail Test Webhook": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
+  "Gmail IMAP Trigger (configure credential)": [[{ node: "Tenant Route Extract", type: "main", index: 0 }]],
+  "Gmail Test Webhook": [[{ node: "Tenant Route Extract", type: "main", index: 0 }]],
+  "Tenant Route Extract": [[{ node: "Supabase GET Business Profile", type: "main", index: 0 }]],
+  "Supabase GET Business Profile": [[{ node: "Verify Tenant Context", type: "main", index: 0 }]],
+  "Verify Tenant Context": [[{ node: "Multi-Channel Normalizer", type: "main", index: 0 }]],
   "Multi-Channel Normalizer": [[{ node: "Noise Filter", type: "main", index: 0 }]],
   "Noise Filter": [[{ node: "IF Keep", type: "main", index: 0 }]],
   "IF Keep": [

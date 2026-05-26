@@ -3,6 +3,7 @@
  *
  * Looks up an **active** lead whose `customer_email` column matches the incoming
  * identity (plain email in the Gmail-first build, stored in `customer_email`).
+ * Queries are **scoped by `team_id`** to prevent cross-tenant matches.
  *
  * ### n8n graph placement
  *
@@ -28,12 +29,15 @@
  *
  * ```javascript
  * const normalized = $input.first().json;
+ * const teamId = normalized.team_id || '';
+ * if (!teamId) throw new Error('DedupLookupQuery: missing team_id');
  * const id = normalized.customer_email_or_phone || '';
  * if (!id) throw new Error('DedupLookupQuery: missing customer_email_or_phone');
  * const variants = [...new Set([id, id.toLowerCase()].filter(Boolean))];
  * const orInner = variants.map((v) => `customer_email.eq.${encodeURIComponent(v)}`).join(',');
  * const lookup_path =
  *   '?select=id,status,updated_at' +
+ *   '&team_id=eq.' + encodeURIComponent(teamId) +
  *   '&status=in.(new,in_progress)' +
  *   '&or=(' + orInner + ')' +
  *   '&order=updated_at.desc&limit=1';
@@ -43,7 +47,14 @@
  * ### Paste B — Code node `Dedup Decision` (run once, **after** HTTP GET)
  *
  * ```javascript
- * const rows = $input.first().json;
+ * const response = $input.first().json;
+ * const rows = Array.isArray(response)
+ *   ? response
+ *   : Array.isArray(response.body)
+ *     ? response.body
+ *     : response && response.id
+ *       ? [response]
+ *       : [];
  * const normalized = $('Multi-Channel Normalizer').first().json;
  * const hit = Array.isArray(rows) && rows[0] && rows[0].id;
  * if (hit) {
@@ -55,6 +66,21 @@
  * @see {@link ./multi_channel_normalizer.js}
  */
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value) {
+  return typeof value === "string" && UUID_RE.test(value.trim());
+}
+
+function requireTeamId(normalized) {
+  const tid = normalized && normalized.team_id;
+  if (!tid || !isUuid(String(tid))) {
+    throw new Error("deduplication_lookup: missing or invalid team_id on normalized payload");
+  }
+  return String(tid).trim();
+}
+
 /**
  * Builds the query string for `/rest/v1/leads` (starts with `?`).
  *
@@ -62,6 +88,7 @@
  * @returns {string}
  */
 function buildLookupPath(normalized) {
+  const teamId = requireTeamId(normalized);
   const id = (normalized && normalized.customer_email_or_phone) || "";
   if (!id) throw new Error("deduplication_lookup: missing customer_email_or_phone");
 
@@ -72,6 +99,8 @@ function buildLookupPath(normalized) {
 
   return (
     "?select=id,status,updated_at" +
+    "&team_id=eq." +
+    encodeURIComponent(teamId) +
     "&status=in.(new,in_progress)" +
     "&or=(" +
     orInner +
@@ -116,5 +145,7 @@ if (typeof module !== "undefined" && module.exports) {
     buildLookupPath,
     buildLookupUrl,
     decide,
+    requireTeamId,
+    isUuid,
   };
 }
