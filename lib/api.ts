@@ -1,4 +1,3 @@
-import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import type {
   Conversation,
   DailyReport,
@@ -59,7 +58,7 @@ async function requestJson<T>(
 
   let response: Response;
   try {
-    response = await authenticatedFetch(url, { ...init, headers });
+    response = await fetch(url, { ...init, headers });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Network error calling ${path}: ${message}`);
@@ -144,6 +143,7 @@ export type WorkflowLogsCounts = {
 export type WorkflowLogsWithMeta = {
   logs: WorkflowLog[];
   counts: WorkflowLogsCounts;
+  source?: string;
 };
 
 /** GET /api/logs — optional `status` filters by `result` (success | failed | running). */
@@ -158,6 +158,7 @@ export async function fetchWorkflowLogsWithMeta(
   const json = await requestJson<{
     logs: WorkflowLog[];
     counts?: WorkflowLogsCounts;
+    source?: string;
   }>(`/api/logs${qs ? `?${qs}` : ""}`);
   if (!Array.isArray(json.logs)) {
     throw new Error(
@@ -169,7 +170,7 @@ export async function fetchWorkflowLogsWithMeta(
     failed: 0,
     running: 0,
   };
-  return { logs: json.logs, counts };
+  return { logs: json.logs, counts, source: json.source };
 }
 
 export async function fetchDailyReport(): Promise<DailyReport | null> {

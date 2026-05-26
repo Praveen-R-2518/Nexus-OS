@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
+import {
+  mockReplyDraftsListResult,
+  shouldFallbackToMockAfterEmptyLiveData,
+  shouldFallbackToMockAfterSupabaseError,
+  shouldUseMockConversations,
+} from "@/lib/conversations-mock";
 import type { ReplyDraft, ReplyDraftWithConversation } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +53,16 @@ function isRelationshipEmbedError(error: PostgrestError): boolean {
   );
 }
 
+function hasUnsupportedLiveDraftShape(
+  rows: ReplyDraftWithConversation[],
+): boolean {
+  return rows.some(
+    (draft) =>
+      typeof draft.conversation_id !== "string" ||
+      draft.conversation_id.trim() === "",
+  );
+}
+
 export async function GET(request: Request) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
@@ -73,6 +89,17 @@ export async function GET(request: Request) {
       { error: "conversation_id must not be empty when provided" },
       { status: 400 },
     );
+  }
+
+  if (shouldUseMockConversations()) {
+    try {
+      const data = mockReplyDraftsListResult(searchParams);
+      return NextResponse.json({ data, source: "mock" });
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "Invalid query parameters";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
   }
 
   let supabase: ReturnType<typeof createServerClient>;
@@ -129,16 +156,48 @@ export async function GET(request: Request) {
         },
       }));
 
-      return NextResponse.json({ data: dataOut });
+      if (
+        hasUnsupportedLiveDraftShape(dataOut) &&
+        shouldFallbackToMockAfterEmptyLiveData()
+      ) {
+        try {
+          const mockData = mockReplyDraftsListResult(searchParams);
+          return NextResponse.json({ data: mockData, source: "mock" });
+        } catch {
+          return NextResponse.json({ data: dataOut, source: "live" });
+        }
+      }
+
+      return NextResponse.json({ data: dataOut, source: "live" });
     }
   }
 
   if (error) {
+    if (shouldFallbackToMockAfterSupabaseError(error)) {
+      try {
+        const mockData = mockReplyDraftsListResult(searchParams);
+        return NextResponse.json({ data: mockData, source: "mock" });
+      } catch {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   const rows = (data ?? []) as ReplyDraftRow[];
   const dataOut = mapRowsToReplyDraftWithConversation(rows);
 
-  return NextResponse.json({ data: dataOut });
+  if (
+    (dataOut.length === 0 || hasUnsupportedLiveDraftShape(dataOut)) &&
+    shouldFallbackToMockAfterEmptyLiveData()
+  ) {
+    try {
+      const mockData = mockReplyDraftsListResult(searchParams);
+      return NextResponse.json({ data: mockData, source: "mock" });
+    } catch {
+      return NextResponse.json({ data: dataOut, source: "live" });
+    }
+  }
+
+  return NextResponse.json({ data: dataOut, source: "live" });
 }

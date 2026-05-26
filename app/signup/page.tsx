@@ -20,7 +20,7 @@ const STEP_LABELS = [
   "Account",
   "Workspace",
   "Plan",
-  "Trial",
+  "Payment",
   "Gmail",
   "Done",
 ] as const;
@@ -115,7 +115,7 @@ export default function SignupPage() {
             Revenue Command Center
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Create your workspace, pick a plan, and start your trial.
+            Multi-step signup — optimized for a clean live demo.
           </p>
         </header>
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 surface-card p-4 shadow-xl shadow-black/5 dark:shadow-black/30 sm:p-8">
