@@ -52,6 +52,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  if (pathname.startsWith("/api/")) {
+    return response;
+  }
+
   if (pathname === "/login" || pathname.startsWith("/login/")) {
     if (user) {
       const nextParam = request.nextUrl.searchParams.get("next");
@@ -92,5 +96,6 @@ export const config = {
     "/logs/:path*",
     "/login",
     "/login/:path*",
+    "/api/:path*",
   ],
 };

@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Mail } from "lucide-react";
+import { waitForServerSession } from "@/lib/auth/session-ready";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 function LoginForm() {
@@ -21,6 +22,11 @@ function LoginForm() {
       ? nextPath
       : "/dashboard";
 
+  const redirectAfterAuth = useCallback(async () => {
+    await waitForServerSession(router);
+    router.replace(safeNext);
+  }, [router, safeNext]);
+
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
@@ -36,7 +42,7 @@ function LoginForm() {
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
       if (data.session) {
-        router.replace(safeNext);
+        void redirectAfterAuth();
         return;
       }
       setLoading(false);
@@ -47,7 +53,7 @@ function LoginForm() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (cancelled) return;
       if (session) {
-        router.replace(safeNext);
+        void redirectAfterAuth();
       }
     });
 
@@ -55,7 +61,7 @@ function LoginForm() {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [router, safeNext]);
+  }, [redirectAfterAuth]);
 
   async function signInWithPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,6 +80,7 @@ function LoginForm() {
       } else {
         localStorage.removeItem("rememberedEmail");
       }
+      await redirectAfterAuth();
     }
     setBusy(false);
   }

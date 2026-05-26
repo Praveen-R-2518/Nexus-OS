@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
-import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
 import type { DailyReport } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -14,10 +13,6 @@ export async function GET() {
   try {
     supabase = createServerClient();
   } catch (err) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return NextResponse.json({ report: null });
-    }
-
     const message =
       err instanceof Error ? err.message : "Server configuration error";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -32,10 +27,6 @@ export async function GET() {
     .maybeSingle();
 
   if (error) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return NextResponse.json({ report: null });
-    }
-
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
