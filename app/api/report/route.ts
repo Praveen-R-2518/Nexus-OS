@@ -1,41 +1,25 @@
 import { NextResponse } from "next/server";
-import { requireApiUser } from "@/lib/api-security";
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
-import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
+import { requireApiTenantContext } from "@/lib/api-security";
 import type { DailyReport } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const auth = await requireApiUser();
-  if (!auth.ok) return auth.response;
+  const tenant = await requireApiTenantContext();
+  if (!tenant.ok) return tenant.response;
 
-  let supabase;
-  try {
-    supabase = createSupabaseRouteHandlerClient();
-  } catch (err) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return NextResponse.json({ report: null });
-    }
-
-    const message =
-      err instanceof Error ? err.message : "Server configuration error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const { supabase, teamId } = tenant;
 
   const { data, error } = await supabase
     .from("daily_reports")
     .select("*")
+    .eq("team_id", teamId)
     .order("report_date", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error) {
-    if (shouldUseDevelopmentMockFallback()) {
-      return NextResponse.json({ report: null });
-    }
-
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

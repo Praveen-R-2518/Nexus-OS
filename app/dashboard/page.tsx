@@ -1,6 +1,5 @@
 "use client";
 
-import DemoButton from "@/app/components/DemoButton";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -15,14 +14,17 @@ import {
   ArrowRight,
   Clock,
   Flame,
+  Inbox,
   TrendingDown,
 } from "lucide-react";
+import { useTenantScope } from "@/components/tenant/TenantScope";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { conversationsQuery, metricsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
-import type { Conversation } from "@/types";
+import type { Conversation, Metrics } from "@/types";
 import {
   cn,
   conversationMessagePreview,
@@ -36,6 +38,13 @@ const INBOX_REFRESH_MS = 15_000;
 /** Shared list size for React Query cache (inbox, approval, report use same). */
 const CONVERSATIONS_LIMIT = 100;
 const FEED_PREVIEW = 10;
+
+const ZERO_METRICS: Metrics = {
+  revenue_at_risk: 0,
+  hot_leads: 0,
+  churn_risks: 0,
+  hours_saved: 0,
+};
 
 function urgencyBadgeLabel(urgency: Conversation["urgency"] | null | undefined): string {
   if (urgency == null) return "—";
@@ -113,6 +122,10 @@ function SideCardSkeleton() {
 }
 
 export default function DashboardPage() {
+  const tenant = useTenantScope();
+  const teamId = tenant.teamId;
+  const queriesEnabled = tenant.ready && teamId !== null;
+
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
 
   const prevConvIdsRef = useRef<Set<string>>(new Set());
@@ -153,10 +166,11 @@ export default function DashboardPage() {
     error: metricsError,
     refetch: refetchMetrics,
   } = useQuery({
-    queryKey: queryKeys.metrics(),
+    queryKey: queryKeys.metrics(teamId),
     queryFn: metricsQuery,
+    enabled: queriesEnabled,
     staleTime: 30_000,
-    refetchInterval: GLOBAL_REFRESH_MS,
+    refetchInterval: queriesEnabled ? GLOBAL_REFRESH_MS : false,
   });
 
   const {
@@ -165,10 +179,11 @@ export default function DashboardPage() {
     error: conversationsError,
     refetch: refetchConversations,
   } = useQuery({
-    queryKey: queryKeys.conversations(CONVERSATIONS_LIMIT),
+    queryKey: queryKeys.conversations(teamId, CONVERSATIONS_LIMIT),
     queryFn: () => conversationsQuery(CONVERSATIONS_LIMIT),
+    enabled: queriesEnabled,
     staleTime: 30_000,
-    refetchInterval: INBOX_REFRESH_MS,
+    refetchInterval: queriesEnabled ? INBOX_REFRESH_MS : false,
   });
 
   useEffect(() => {
@@ -219,12 +234,6 @@ export default function DashboardPage() {
             <h1 className="font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl md:text-5xl">
               Command Center
             </h1>
-            <DemoButton
-              onSent={() => {
-                void refetchMetrics();
-                void refetchConversations();
-              }}
-            />
           </div>
           <p className="mb-2 mt-4 max-w-2xl font-mono text-sm leading-relaxed text-muted">
             Live revenue rescue ops — prioritize revenue at risk, route hot
@@ -259,19 +268,26 @@ export default function DashboardPage() {
 
         {/* Metrics */}
         <section aria-label="Key metrics">
-          {metricsPending && !metrics ? (
-            <MetricsSkeletonRow />
-          ) : metricsErrorMsg && !metrics ? (
+          {!queriesEnabled && tenant.ready ? (
+            <ExecutiveEmptyState
+              title="Workspace setup required"
+              description="Complete onboarding to bind your team and activate metrics."
+              icon={<Inbox className="shrink-0" aria-hidden />}
+              className="surface-card"
+            />
+          ) : metricsErrorMsg && queriesEnabled ? (
             <EmptyState
               title="Metrics unavailable"
               description={metricsErrorMsg}
               className="border-border bg-surface-muted/50"
             />
-          ) : metrics ? (
+          ) : metricsPending && queriesEnabled && !metrics ? (
+            <MetricsSkeletonRow />
+          ) : queriesEnabled ? (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <Card
                 title="Revenue at Risk"
-                value={formatCurrency(metrics.revenue_at_risk)}
+                value={formatCurrency((metrics ?? ZERO_METRICS).revenue_at_risk)}
                 subtitle="in unresolved conversations"
                 icon={<TrendingDown />}
                 variant="critical"
@@ -279,7 +295,7 @@ export default function DashboardPage() {
               />
               <Card
                 title="Hot Leads"
-                value={metrics.hot_leads}
+                value={(metrics ?? ZERO_METRICS).hot_leads}
                 subtitle="high-intent buyers right now"
                 icon={<Flame />}
                 variant="critical"
@@ -287,7 +303,7 @@ export default function DashboardPage() {
               />
               <Card
                 title="Churn Risks"
-                value={metrics.churn_risks}
+                value={(metrics ?? ZERO_METRICS).churn_risks}
                 subtitle="customers showing churn signals"
                 icon={<AlertTriangle />}
                 variant="support"
@@ -296,7 +312,7 @@ export default function DashboardPage() {
               />
               <Card
                 title="Hours Saved"
-                value={`${metrics.hours_saved.toFixed(1)}h`}
+                value={`${(metrics ?? ZERO_METRICS).hours_saved.toFixed(1)}h`}
                 subtitle="saved by AI drafting"
                 icon={<Clock />}
                 variant="support"
@@ -305,11 +321,7 @@ export default function DashboardPage() {
               />
             </div>
           ) : (
-            <EmptyState
-              title="No metrics yet"
-              description="Connect Supabase or check API configuration."
-              className="border-border bg-surface-muted/50"
-            />
+            <MetricsSkeletonRow />
           )}
         </section>
 
@@ -329,12 +341,20 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {conversationsPending && feedPreview.length === 0 ? (
+            {conversationsPending && queriesEnabled && feedPreview.length === 0 ? (
               <FeedSkeleton />
+            ) : !queriesEnabled && tenant.ready ? (
+              <ExecutiveEmptyState
+                title="Workspace setup required"
+                description="Finish onboarding to stream live conversations into this feed."
+                icon={<Inbox className="shrink-0" aria-hidden />}
+                className="border-0 bg-transparent py-12"
+              />
             ) : feedPreview.length === 0 ? (
-              <EmptyState
-                title="Inbox empty"
-                description="New conversations will appear here."
+              <ExecutiveEmptyState
+                title="No conversations detected"
+                description="Intake channels standing by."
+                icon={<Inbox className="shrink-0" aria-hidden />}
                 className="border-0 bg-transparent py-12"
               />
             ) : (
@@ -426,12 +446,22 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="p-5">
-                {conversationsPending && feedPreview.length === 0 ? (
+                {conversationsPending && queriesEnabled && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
+                ) : !queriesEnabled && tenant.ready ? (
+                  <ExecutiveEmptyState
+                    title="Workspace setup required"
+                    description="Complete onboarding to surface hot leads."
+                    icon={<Flame className="shrink-0" aria-hidden />}
+                    className="border-0 bg-transparent py-8"
+                  />
                 ) : hotLeadsList.length === 0 ? (
-                  <p className="py-6 text-center font-mono text-xs text-muted">
-                    No hot leads in the current snapshot.
-                  </p>
+                  <ExecutiveEmptyState
+                    title="No high-intent leads"
+                    description="No high-intent leads in this workspace."
+                    icon={<Flame className="shrink-0" aria-hidden />}
+                    className="border-0 bg-transparent py-8"
+                  />
                 ) : (
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
@@ -491,12 +521,22 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="p-5">
-                {conversationsPending && feedPreview.length === 0 ? (
+                {conversationsPending && queriesEnabled && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
+                ) : !queriesEnabled && tenant.ready ? (
+                  <ExecutiveEmptyState
+                    title="Workspace setup required"
+                    description="Complete onboarding to surface churn signals."
+                    icon={<AlertTriangle className="shrink-0" aria-hidden />}
+                    className="border-0 bg-transparent py-8"
+                  />
                 ) : churnRisksList.length === 0 ? (
-                  <p className="py-6 text-center font-mono text-xs text-muted">
-                    No churn signals in the current snapshot.
-                  </p>
+                  <ExecutiveEmptyState
+                    title="No churn signals detected"
+                    description="No churn signals detected."
+                    icon={<AlertTriangle className="shrink-0" aria-hidden />}
+                    className="border-0 bg-transparent py-8"
+                  />
                 ) : (
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (

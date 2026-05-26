@@ -2,7 +2,6 @@
 
 'use client';
 
-import DemoButton from '@/app/components/DemoButton';
 import { useRealtimeConversations, useRealtimeLeads } from '@/app/hooks/useRealtimeData';
 
 export default function CommandCenter() {
@@ -27,7 +26,6 @@ export default function CommandCenter() {
         <div>
           <h1 className="text-4xl font-bold text-white">Command Center</h1>
         </div>
-        <DemoButton />
       </div>
 
       {/* Subtitle */}
