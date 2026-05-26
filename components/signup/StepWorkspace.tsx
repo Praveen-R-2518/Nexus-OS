@@ -132,8 +132,8 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Workspace setup</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Workspace setup</h2>
+        <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
           Tell us about your company. You can invite teammates later.
         </p>
       </div>
@@ -175,27 +175,29 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </FormSelect>
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Workspace type</p>
+        <p className="mb-2 font-mono text-xs font-medium uppercase tracking-widest text-gray-700 dark:text-gray-200">
+          Workspace type
+        </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => setWorkspaceType("solo")}
             className={cn(
-              "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
+              "flex cursor-pointer items-start gap-3 border border-black bg-white p-4 text-left transition dark:border-white dark:bg-[#0a1018]",
               workspaceType === "solo"
-                ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
-                : "border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
+                ? "bg-[#e3eef6] ring-1 ring-black dark:bg-[#0c141f] dark:ring-white"
+                : "hover:bg-[#eef6fb] dark:hover:bg-[#0c141f]",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
               <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </span>
             <span>
-              <span className="flex items-center gap-2 font-semibold text-foreground">
-                <User className="h-4 w-4 text-[#1B6B3A]" />
+              <span className="flex items-center gap-2 font-sans font-semibold text-foreground">
+                <User className="h-4 w-4 text-[#0f2336] dark:text-[#a8bdd4]" />
                 Solo
               </span>
-              <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+              <span className="mt-1 block font-mono text-xs text-gray-500 dark:text-gray-400">
                 Just me managing my inbox
               </span>
             </span>
@@ -204,21 +206,21 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("team")}
             className={cn(
-              "flex items-start gap-3 rounded-xl border p-4 text-left transition glass-panel",
+              "flex cursor-pointer items-start gap-3 border border-black bg-white p-4 text-left transition dark:border-white dark:bg-[#0a1018]",
               workspaceType === "team"
-                ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
-                : "border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950 hover:border-gray-300 dark:border-gray-700",
+                ? "bg-[#e3eef6] ring-1 ring-black dark:bg-[#0c141f] dark:ring-white"
+                : "hover:bg-[#eef6fb] dark:hover:bg-[#0c141f]",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
               <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </span>
             <span>
-              <span className="flex items-center gap-2 font-semibold text-foreground">
-                <Users className="h-4 w-4 text-[#1B6B3A]" />
+              <span className="flex items-center gap-2 font-sans font-semibold text-foreground">
+                <Users className="h-4 w-4 text-[#0f2336] dark:text-[#a8bdd4]" />
                 Team
               </span>
-              <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+              <span className="mt-1 block font-mono text-xs text-gray-500 dark:text-gray-400">
                 Multiple people will use this workspace
               </span>
             </span>
@@ -226,7 +228,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       </div>
       {workspaceType === "team" ? (
-        <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 p-4">
+        <div className="space-y-4 border border-black bg-[#eef6fb] p-4 dark:border-white dark:bg-[#0c141f]">
           <FormInput
             id="teamSize"
             label="Expected number of users"
@@ -238,14 +240,14 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
           />
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              <p className="font-mono text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-200">
                 Team member emails{" "}
-                <span className="font-normal text-atmospheric-grey/40">(optional)</span>
+                <span className="font-normal normal-case text-atmospheric-grey/40">(optional)</span>
               </p>
               <button
                 type="button"
                 onClick={addEmailRow}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-gray-800"
+                className="inline-flex cursor-pointer items-center gap-1 border border-black bg-white px-2 py-1 font-mono text-xs text-gray-700 transition hover:bg-[#e3eef6] dark:border-white dark:bg-[#0a1018] dark:text-gray-200 dark:hover:bg-[#0c141f]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add
@@ -256,7 +258,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                 <div key={i} className="flex gap-2">
                   <input
                     type="email"
-                    className="h-10 flex-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 text-sm text-gray-900 dark:text-gray-100 outline-none focus:border-emerald-500"
+                    className="h-10 flex-1 border border-black bg-white px-3 font-mono text-sm text-gray-900 outline-none focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-gray-100 dark:focus:border-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
                     placeholder="teammate@company.com"
                     value={row}
                     onChange={(e) => updateEmailRow(i, e.target.value)}
@@ -266,7 +268,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                       type="button"
                       aria-label="Remove row"
                       onClick={() => removeEmailRow(i)}
-                      className="rounded-lg border border-gray-300 dark:border-gray-700 p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800"
+                      className="cursor-pointer border border-black p-2 text-gray-500 transition hover:bg-[#eef6fb] dark:border-white dark:text-gray-400 dark:hover:bg-[#0c141f]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -285,7 +287,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
+        className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-white"
       >
         {busy ? "Saving…" : "Continue"}
       </button>

@@ -1,16 +1,16 @@
-// app/components/DemoButton.tsx
+"use client";
 
-'use client';
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown, Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-import { useState, useRef, useEffect } from 'react';
-
-type DemoUrgency = 'critical' | 'high' | 'medium' | 'low';
+type DemoUrgency = "critical" | "high" | "medium" | "low";
 type DemoIntent =
-  | 'purchase'
-  | 'complaint'
-  | 'churn_risk'
-  | 'support'
-  | 'unknown';
+  | "purchase"
+  | "complaint"
+  | "churn_risk"
+  | "support"
+  | "unknown";
 
 type DemoMessage = {
   name: string;
@@ -30,64 +30,63 @@ type DemoButtonProps = {
 
 export default function DemoButton({ onSent }: DemoButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<string>('');
+  const [status, setStatus] = useState<string>("");
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Test messages with realistic data
   const testMessages: DemoMessage[] = [
     {
-      name: 'Kasun Hotel - High Value',
-      description: 'Hotel ecommerce inquiry',
-      sender: 'kasun@hotelcorp.lk',
-      text: 'Hi, we run a hotel group with 5 properties. Looking for an ecommerce platform to manage bookings and merchandise sales. Currently doing ~350,000 LKR monthly. Can you help us build something scalable?',
+      name: "Kasun Hotel - High Value",
+      description: "Hotel ecommerce inquiry",
+      sender: "kasun@hotelcorp.lk",
+      text: "Hi, we run a hotel group with 5 properties. Looking for an ecommerce platform to manage bookings and merchandise sales. Currently doing ~350,000 LKR monthly. Can you help us build something scalable?",
       value: 350000,
-      urgency: 'high',
-      intent: 'purchase',
+      urgency: "high",
+      intent: "purchase",
       riskScore: 62,
       confidence: 0.88,
     },
     {
-      name: 'Angry Customer - Churn Risk',
-      description: 'Dissatisfied customer',
-      sender: 'john@ecommerce.com',
-      text: 'Your service has been terrible lately. Multiple issues with our store, zero response from support. We\'re seriously considering switching to your competitor. This is our last chance to fix this.',
+      name: "Angry Customer - Churn Risk",
+      description: "Dissatisfied customer",
+      sender: "john@ecommerce.com",
+      text: "Your service has been terrible lately. Multiple issues with our store, zero response from support. We're seriously considering switching to your competitor. This is our last chance to fix this.",
       value: 50000,
-      urgency: 'critical',
-      intent: 'churn_risk',
+      urgency: "critical",
+      intent: "churn_risk",
       riskScore: 92,
       confidence: 0.91,
     },
     {
-      name: 'Support Question - Low Priority',
-      description: 'General inquiry',
-      sender: 'sarah@startup.io',
-      text: 'Hi, I\'ve been trying to reset my password but the email isn\'t arriving. Can someone help me with this?',
+      name: "Support Question - Low Priority",
+      description: "General inquiry",
+      sender: "sarah@startup.io",
+      text: "Hi, I've been trying to reset my password but the email isn't arriving. Can someone help me with this?",
       value: 10000,
-      urgency: 'low',
-      intent: 'support',
+      urgency: "low",
+      intent: "support",
       riskScore: 18,
       confidence: 0.82,
     },
     {
-      name: 'Follow-up Proposal - Medium',
-      description: 'Warm lead revisit',
-      sender: 'rajesh@tech.com',
-      text: 'Thanks for the proposal last week. We loved the features but had a few questions about pricing and implementation timeline. Can we schedule a call to discuss?',
+      name: "Follow-up Proposal - Medium",
+      description: "Warm lead revisit",
+      sender: "rajesh@tech.com",
+      text: "Thanks for the proposal last week. We loved the features but had a few questions about pricing and implementation timeline. Can we schedule a call to discuss?",
       value: 200000,
-      urgency: 'medium',
-      intent: 'purchase',
+      urgency: "medium",
+      intent: "purchase",
       riskScore: 48,
       confidence: 0.86,
     },
     {
-      name: 'Mobile App Dev - High Value',
-      description: 'App development inquiry',
-      sender: 'maya@startupfund.lk',
-      text: 'We\'re launching a new fintech app and need a team to handle frontend development and infrastructure. Budget is ~3-5 million LKR for the first phase. Are you available?',
+      name: "Mobile App Dev - High Value",
+      description: "App development inquiry",
+      sender: "maya@startupfund.lk",
+      text: "We're launching a new fintech app and need a team to handle frontend development and infrastructure. Budget is ~3-5 million LKR for the first phase. Are you available?",
       value: 5000000,
-      urgency: 'high',
-      intent: 'purchase',
+      urgency: "high",
+      intent: "purchase",
       riskScore: 74,
       confidence: 0.89,
     },
@@ -162,19 +161,17 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
       void onSent?.();
 
       setStatus(`"${message.name}" sent. Watch the dashboard update.`);
-      
-      // Clear status after 4 seconds
-      setTimeout(() => setStatus(''), 4000);
+
+      window.setTimeout(() => setStatus(""), 4000);
     } catch (error) {
-      console.error('Error:', error);
-      setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setTimeout(() => setStatus(''), 4000);
+      console.error("Error:", error);
+      setStatus(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      window.setTimeout(() => setStatus(""), 4000);
     } finally {
       setLoading(false);
     }
   };
 
-  // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -182,65 +179,75 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* Main Button */}
       <button
+        type="button"
         onClick={() => setShowMenu(!showMenu)}
         disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-black bg-ref-cta px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#f3f6f1] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-[#1a2e22]"
       >
-        <span>Demo Messages</span>
-        <svg
-          className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
+        <Send className="h-4 w-4 shrink-0" aria-hidden />
+        <span>Demo</span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 transition-transform duration-interaction",
+            showMenu && "rotate-180",
+          )}
+          aria-hidden
+        />
       </button>
 
-      {/* Dropdown Menu */}
-      {showMenu && (
-        <div className="absolute right-0 mt-2 w-96 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl z-50">
-          <div className="p-4 border-b border-gray-700">
-            <p className="text-sm text-gray-400">Click to send a test message through the system</p>
+      {showMenu ? (
+        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,24rem)] border border-black bg-white shadow-sm dark:border-white dark:bg-[#0a1018]">
+          <div className="border-b border-black px-4 py-3 dark:border-white">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+              Inject test payload
+            </p>
+            <p className="mt-1 font-mono text-xs leading-relaxed text-atmospheric-grey">
+              Sends a conversation through intake → classify → draft.
+            </p>
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto overscroll-contain">
             {testMessages.map((msg, idx) => (
               <button
                 key={idx}
+                type="button"
                 onClick={() => sendTestMessage(msg)}
                 disabled={loading}
-                className="w-full text-left px-4 py-3 hover:bg-gray-800 disabled:opacity-50 border-b border-gray-800 last:border-b-0 transition-colors"
+                className="flex w-full cursor-pointer border-b border-black/10 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-ref-mint disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:hover:bg-[#0c141f]"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm">{msg.name}</p>
-                    <p className="text-gray-400 text-xs truncate">{msg.description}</p>
-                    <p className="text-gray-500 text-xs mt-1 line-clamp-2">{msg.text.substring(0, 60)}...</p>
+                <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-xs font-semibold text-atmospheric-grey">
+                      {msg.name}
+                    </p>
+                    <p className="truncate font-mono text-[10px] uppercase tracking-wide text-muted">
+                      {msg.description}
+                    </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1 whitespace-nowrap">
+                  <div className="flex shrink-0 flex-col items-end gap-1">
                     <span
-                      className={`text-xs px-2 py-1 rounded font-medium ${
-                        msg.urgency === 'critical'
-                          ? 'bg-red-900 text-red-200'
-                          : msg.urgency === 'high'
-                          ? 'bg-orange-900 text-orange-200'
-                          : msg.urgency === 'medium'
-                          ? 'bg-yellow-900 text-yellow-200'
-                          : 'bg-gray-700 text-gray-200'
-                      }`}
+                      className={cn(
+                        "border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase",
+                        msg.urgency === "critical" &&
+                          "border-status-critical-border bg-status-critical-surface text-status-critical",
+                        msg.urgency === "high" &&
+                          "border-status-warning-border bg-status-warning-surface text-status-warning",
+                        msg.urgency === "medium" &&
+                          "border-status-caution-border bg-status-caution-surface text-status-caution",
+                        msg.urgency === "low" &&
+                          "border-status-positive-border bg-status-positive-surface text-status-positive",
+                      )}
                     >
                       {msg.urgency}
                     </span>
-                    <span className="text-xs text-green-400 font-medium">
+                    <span className="font-mono text-[10px] font-semibold tabular-nums text-ref-cta dark:text-emerald-300/90">
                       ${(msg.value / 1000).toFixed(0)}k
                     </span>
                   </div>
@@ -249,26 +256,27 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
             ))}
           </div>
 
-          <div className="p-3 bg-gray-800 border-t border-gray-700 text-xs text-gray-400">
-            Messages flow through: WF1 (intake) → WF2 (classify) → WF3 (draft) → Supabase
+          <div className="border-t border-dashed border-black/20 px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-muted dark:border-white/20">
+            WF1 → WF2 → WF3 → Supabase
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Status Message */}
-      {status && (
+      {status ? (
         <div
-          className={`absolute top-full mt-2 right-0 px-3 py-2 rounded text-sm whitespace-nowrap ${
+          className={cn(
+            "absolute right-0 top-full z-50 mt-2 max-w-[min(100vw-2rem,20rem)] border px-3 py-2 font-mono text-[10px] leading-snug",
             status.startsWith("Error:")
-              ? "bg-red-900 text-red-200"
+              ? "border-status-critical-border bg-status-critical-surface text-status-critical"
               : status.startsWith("Sending:")
-                ? "bg-blue-900 text-blue-200"
-                : "bg-green-900 text-green-200"
-          }`}
+                ? "border-status-neutral-border bg-status-neutral-surface text-status-neutral"
+                : "border-status-positive-border bg-status-positive-surface text-status-positive",
+          )}
+          role="status"
         >
           {status}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

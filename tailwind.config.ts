@@ -10,7 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-plus-jakarta-sans)", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
       colors: {
         background: "var(--background)",
@@ -75,6 +76,11 @@ const config: Config = {
           "text-warning": "var(--status-warning-fg)",
           "text-critical": "var(--status-critical-fg)",
           "text-nav": "#2e2e2e",
+        },
+        ref: {
+          cta: "var(--ref-cta)",
+          ice: "var(--ref-ice)",
+          mint: "var(--ref-mint)",
         },
       },
       boxShadow: {

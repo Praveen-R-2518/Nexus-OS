@@ -24,11 +24,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60">
+    <div className="border border-black bg-white dark:border-white dark:bg-[#0a1018]">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-foreground"
+        className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left font-mono text-xs font-semibold uppercase tracking-widest text-foreground"
       >
         {title}
         {open ? (
@@ -37,7 +37,9 @@ function Section({
           <ChevronDown className="h-4 w-4 shrink-0 text-gray-500 dark:text-gray-400" />
         )}
       </button>
-      {open ? <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-3 text-sm">{children}</div> : null}
+      {open ? (
+        <div className="border-t border-black px-4 py-3 font-mono text-sm dark:border-white">{children}</div>
+      ) : null}
     </div>
   );
 }
@@ -128,23 +130,23 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Connect Gmail (IMAP)</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Connect Gmail (IMAP)</h2>
+        <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
           Follow the steps, then test your credentials. You can skip and finish
           later.
         </p>
       </div>
       <Section title="Section A — Enable IMAP in Gmail" open={openA} onToggle={() => setOpenA((v) => !v)}>
-        <ol className="list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-300">
+        <ol className="list-decimal space-y-2 pl-5 font-mono text-xs text-gray-600 dark:text-gray-300">
           <li>Open gmail.com</li>
           <li>Settings (gear icon) → See all settings</li>
           <li>Tab: Forwarding and POP/IMAP</li>
           <li>Enable IMAP → Save Changes</li>
         </ol>
-        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+        <label className="mt-4 flex cursor-pointer items-center gap-2 font-mono text-xs text-gray-700 dark:text-gray-200">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[#1B6B3A]"
+            className="h-4 w-4 border border-black bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
             checked={chkA}
             onChange={(e) => setChkA(e.target.checked)}
           />
@@ -152,7 +154,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
         </label>
       </Section>
       <Section title="Section B — Create App Password" open={openB} onToggle={() => setOpenB((v) => !v)}>
-        <ol className="list-decimal space-y-2 pl-5 text-gray-600 dark:text-gray-300">
+        <ol className="list-decimal space-y-2 pl-5 font-mono text-xs text-gray-600 dark:text-gray-300">
           <li>Go to myaccount.google.com/security</li>
           <li>Enable 2-Step Verification if not already on</li>
           <li>Search &quot;App passwords&quot;</li>
@@ -164,10 +166,10 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           </li>
           <li>Copy the 16-character password shown</li>
         </ol>
-        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+        <label className="mt-4 flex cursor-pointer items-center gap-2 font-mono text-xs text-gray-700 dark:text-gray-200">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[#1B6B3A]"
+            className="h-4 w-4 border border-black bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
             checked={chkB}
             onChange={(e) => setChkB(e.target.checked)}
           />
@@ -203,9 +205,9 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
             {banner ? (
               <div
                 className={cn(
-                  "rounded-lg border px-3 py-2 text-sm flex items-center",
+                  "flex items-center border border-dashed px-3 py-2 font-mono text-xs",
                   banner.type === "ok"
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-[#1B6B3A]"
+                    ? "border-black bg-[#e3eef6] text-[#0f2336] dark:border-white dark:bg-[#0c141f] dark:text-[#a8bdd4]"
                     : "border-badge-critical-ring bg-badge-critical-bg text-badge-critical-text",
                 )}
                 role="status"
@@ -218,14 +220,14 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
               type="button"
               disabled={busy}
               onClick={testConnection}
-              className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
+              className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-white"
             >
               {busy ? "Testing…" : "Test Connection"}
             </button>
           </div>
         </Section>
       ) : (
-        <p className="text-center text-xs text-atmospheric-grey/40">
+        <p className="text-center font-mono text-[10px] uppercase tracking-widest text-atmospheric-grey/40">
           Complete Sections A and B to unlock the connection form.
         </p>
       )}
@@ -234,7 +236,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           type="button"
           disabled={busy}
           onClick={skip}
-          className="text-sm text-gray-500 dark:text-gray-400 underline decoration-gray-600 underline-offset-4 hover:text-gray-700 dark:text-gray-200"
+          className="cursor-pointer font-mono text-xs text-gray-500 underline decoration-black/30 underline-offset-4 transition hover:text-gray-800 dark:text-gray-400 dark:decoration-white/30 dark:hover:text-gray-200"
         >
           Skip for now
         </button>

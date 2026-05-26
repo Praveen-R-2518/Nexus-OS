@@ -237,14 +237,14 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     return (
       <div className="mx-auto max-w-lg space-y-5">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Verify your email</h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Verify your email</h2>
+          <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
             We sent a confirmation link to{" "}
             <span className="font-medium text-foreground">{lockedEmail}</span>. After you
             confirm, sign in to continue workspace setup.
           </p>
         </div>
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-foreground">
+        <div className="border border-black bg-[#e3eef6] px-4 py-3 font-mono text-sm text-foreground dark:border-white dark:bg-[#0c141f]">
           <p className="font-medium">Next steps</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
             <li>Open the email and click the confirmation link.</li>
@@ -255,7 +255,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
         </div>
         <Link
           href="/login?next=%2Fsignup"
-          className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+          className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] dark:border-white"
         >
           Go to sign in
         </Link>
@@ -263,7 +263,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           type="button"
           disabled={busy}
           onClick={resendVerification}
-          className="inline-flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-white py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-black transition hover:bg-[#eef6fb] disabled:opacity-50 dark:border-white dark:bg-[#0a1018] dark:text-white dark:hover:bg-[#0c141f]"
         >
           {busy ? "Sending…" : "Resend verification email"}
         </button>
@@ -273,7 +273,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           </p>
         ) : null}
         {resendMessage ? (
-          <p className="text-sm text-[#1B6B3A]" role="status">
+          <p className="font-mono text-sm text-[#0f2336] dark:text-[#a8bdd4]" role="status">
             {resendMessage}
           </p>
         ) : null}
@@ -284,8 +284,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-lg space-y-5">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Create your account</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Create your account</h2>
+        <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
           After you create your account, we&apos;ll email you a verification link. Once
           your email is confirmed, sign in to continue with workspace setup.
         </p>
@@ -345,15 +345,15 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-[#1B6B3A] focus:ring-emerald-500"
+          className="mt-1 h-4 w-4 border border-black bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-white dark:bg-[#0a1018] dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
         <span>
           I agree to the{" "}
-          <span className="text-[#1B6B3A]">Terms of Service</span> and{" "}
-          <span className="text-[#1B6B3A]">Privacy Policy</span>
+          <span className="font-mono text-[#0f2336] dark:text-[#a8bdd4]">Terms of Service</span> and{" "}
+          <span className="font-mono text-[#0f2336] dark:text-[#a8bdd4]">Privacy Policy</span>
         </span>
       </label>
       {formError ? (
@@ -364,7 +364,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
+        className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-white"
       >
         {busy ? "Creating account…" : "Continue"}
       </button>

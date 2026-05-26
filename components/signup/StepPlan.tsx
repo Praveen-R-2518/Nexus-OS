@@ -139,14 +139,14 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Choose your plan</h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Choose your plan</h2>
+          <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
             Smart defaults based on your workspace. Change anytime before going
             live.
           </p>
         </div>
         <div
-          className="inline-flex rounded-lg border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950 p-1"
+          className="inline-flex border border-black bg-white p-0.5 dark:border-white dark:bg-[#0a1018]"
           role="group"
           aria-label="Billing cycle"
         >
@@ -154,10 +154,10 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             type="button"
             onClick={() => setCycle("monthly")}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition",
+              "cursor-pointer px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-widest transition",
               cycle === "monthly"
-                ? "bg-gray-100 dark:bg-gray-800 text-foreground"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
+                ? "bg-[#e3eef6] text-foreground dark:bg-[#0c141f] dark:text-white"
+                : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200",
             )}
           >
             Monthly
@@ -166,10 +166,10 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             type="button"
             onClick={() => setCycle("annual")}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition",
+              "cursor-pointer px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-widest transition",
               cycle === "annual"
-                ? "bg-emerald-600/90 text-white"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200",
+                ? "bg-[#0f2336] text-white"
+                : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200",
             )}
           >
             Annual — Save 17%
@@ -211,7 +211,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
         })}
       </div>
       {error ? (
-        <p className="text-center text-sm text-[#8B1A1A]" role="alert">
+        <p className="text-center font-mono text-xs text-[#8B1A1A]" role="alert">
           {error}
         </p>
       ) : null}
