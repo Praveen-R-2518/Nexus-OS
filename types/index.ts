@@ -1,7 +1,9 @@
 export interface Conversation {
   id: string;
-  /** Owning workspace; required for RLS-scoped dashboard data. */
+  /** Owning workspace; used for ingest + compatibility. */
   workspace_id?: string | null;
+  /** Tenant / organization; enforced by RLS. */
+  team_id?: string | null;
   source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form";
   customer_name: string;
   customer_email?: string;
@@ -38,6 +40,7 @@ export interface ReplyDraft {
   id: string;
   conversation_id: string;
   workspace_id?: string | null;
+  team_id?: string | null;
   draft_text: string;
   tone: string;
   approval_status: "pending" | "approved" | "rejected";
@@ -69,6 +72,7 @@ export interface Lead {
 export interface WorkflowLog {
   id: string;
   workspace_id?: string | null;
+  team_id?: string | null;
   workflow_name: string;
   step: string;
   /** Outcome label from workflows (e.g. success, failed, running). */
@@ -82,6 +86,7 @@ export interface WorkflowLog {
 export interface DailyReport {
   id: string;
   workspace_id?: string | null;
+  team_id?: string | null;
   report_date: string;
   total_revenue_at_risk: number;
   messages_processed: number;
