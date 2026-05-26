@@ -16,19 +16,19 @@ export default function SiteFooter() {
         <div className="flex flex-wrap gap-x-8 gap-y-3 font-mono text-xs uppercase tracking-widest text-black dark:text-white">
           <Link
             href="#"
-            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-sky-400/55 dark:focus-visible:ring-offset-surface-page"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-border-strong"
           >
             Privacy
           </Link>
           <Link
             href="#"
-            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-sky-400/55 dark:focus-visible:ring-offset-surface-page"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-border-strong"
           >
             Terms
           </Link>
           <Link
             href="/login"
-            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-sky-400/55 dark:focus-visible:ring-offset-surface-page"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-border-strong"
           >
             Support
           </Link>

@@ -35,10 +35,10 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 className={cn(
                   "relative z-10 flex h-7 w-7 items-center justify-center border text-[10px] font-bold tabular-nums",
                   done &&
-                    "border-border bg-[#0f2336] text-white dark:border-border dark:bg-[#0f2336] dark:text-white",
+                    "border-border bg-[#0f2336] text-white dark:border-border dark:bg-surface-elevated dark:text-white",
                   active &&
                     !done &&
-                    "border-border bg-[#e3eef6] text-black ring-1 ring-border-strong dark:border-border dark:bg-surface-elevated dark:text-white dark:ring-trajectory-blue/50",
+                    "border-2 border-ref-cta bg-[#e3eef6] text-black dark:border-border-strong dark:bg-surface-elevated dark:text-white",
                   !active &&
                     !done &&
                     "border-border bg-white text-black/45 dark:border-border dark:bg-surface-card dark:text-white/45",

@@ -13,7 +13,7 @@ type StepDoneProps = {
   snapshot: SignupSnapshot;
 };
 
-const accent = "text-[#0f2336] dark:text-[#a8bdd4]";
+const accent = "text-[#0f2336] dark:text-muted";
 
 export default function StepDone({ snapshot }: StepDoneProps) {
   const router = useRouter();

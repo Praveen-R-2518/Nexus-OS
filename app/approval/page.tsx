@@ -349,7 +349,7 @@ export default function ApprovalPage() {
       {toast ? (
         <div
           className={cn(
-            "fixed right-6 top-6 z-50 rounded-xl border border-border bg-white px-5 py-4 font-mono text-sm shadow-sm dark:border-border/60 dark:bg-surface-card",
+            "fixed right-6 top-6 z-50 rounded-xl border border-border bg-white px-5 py-4 font-mono text-sm dark:border-border/60 dark:bg-surface-card",
             toast.kind === "success"
               ? "border-status-positive-border bg-status-positive-surface text-status-positive"
               : "border-status-critical-border bg-status-critical-surface text-status-critical",
@@ -405,7 +405,7 @@ export default function ApprovalPage() {
                     className={cn(
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
                       active
-                        ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
+                        ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                         : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
@@ -455,10 +455,10 @@ export default function ApprovalPage() {
                         className={cn(
                           "w-full cursor-pointer rounded-xl border border-border/60 bg-white p-4 text-left transition-colors duration-interaction hover:border-border hover:bg-ref-mint dark:border-border/70 dark:bg-surface-elevated dark:hover:border-border-strong",
                           selected &&
-                            "border-status-positive-border bg-surface-elevated ring-2 ring-status-positive-border/40 shadow-card-halo-light dark:shadow-card-halo",
+                            "border-2 border-ref-cta bg-ref-ice dark:border-border-strong dark:bg-surface-muted",
                           highRisk &&
                             !selected &&
-                            "border-l-4 border-l-status-critical-border",
+                            "border border-status-critical-border/50 dark:border-status-critical-border/40",
                         )}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -631,7 +631,7 @@ export default function ApprovalPage() {
                       }))
                     }
                     rows={10}
-                    className="mt-5 w-full resize-none rounded-xl border border-border bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey outline-none transition-colors placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border/60 dark:focus:border-sky-400/55"
+                    className="mt-5 w-full resize-none rounded-xl border border-border bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey outline-none transition-colors placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border/60 dark:focus:border-border-strong"
                   />
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
                     <span>Tone: {toneLabel(selectedDraft.tone)}</span>
@@ -697,7 +697,7 @@ export default function ApprovalPage() {
       </div>
 
       {rejectingDraft ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/65 p-4">
           <div className="w-full max-w-lg rounded-xl border border-border bg-surface-elevated p-6 dark:border-border/60">
             <div className="flex items-start justify-between gap-4">
               <div>

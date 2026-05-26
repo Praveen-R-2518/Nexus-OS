@@ -273,7 +273,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           </p>
         ) : null}
         {resendMessage ? (
-          <p className="font-mono text-sm text-[#0f2336] dark:text-[#a8bdd4]" role="status">
+          <p className="font-mono text-sm text-[#0f2336] dark:text-muted" role="status">
             {resendMessage}
           </p>
         ) : null}
@@ -345,15 +345,15 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-[#a8bdd4] dark:focus:ring-[#a8bdd4]"
+          className="mt-1 h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
         <span>
           I agree to the{" "}
-          <span className="font-mono text-[#0f2336] dark:text-[#a8bdd4]">Terms of Service</span> and{" "}
-          <span className="font-mono text-[#0f2336] dark:text-[#a8bdd4]">Privacy Policy</span>
+          <span className="font-mono text-[#0f2336] dark:text-muted">Terms of Service</span> and{" "}
+          <span className="font-mono text-[#0f2336] dark:text-muted">Privacy Policy</span>
         </span>
       </label>
       {formError ? (

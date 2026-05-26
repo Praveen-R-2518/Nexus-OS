@@ -104,9 +104,9 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 surface-card p-6 shadow-2xl shadow-black/10 dark:shadow-black/40">
+      <div className="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 surface-card p-6">
         <div className="mb-6 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1B6B3A] dark:text-sky-300">
+          <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1B6B3A] dark:text-muted">
             Founder Access
           </p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
@@ -144,12 +144,12 @@ function LoginForm() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-[#D8D5CE] dark:border-slate-700 bg-surface-input dark:bg-slate-950 text-[#1B6B3A] focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-950"
+              className="rounded border-[#D8D5CE] dark:border-slate-700 bg-surface-input dark:bg-slate-950 text-[#1B6B3A] focus:ring-emerald-500 focus:ring-offset-0"
             />
             Remember me
           </label>
           {message ? (
-            <p className="text-sm text-[#7A4200] dark:text-amber-300" role="alert">
+            <p className="text-sm text-[#7A4200] dark:text-status-warning" role="alert">
               {message}
             </p>
           ) : null}
@@ -157,7 +157,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={busy}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-[#0f2336] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2] dark:hover:bg-surface-muted"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               Sign in
@@ -177,7 +177,7 @@ function LoginForm() {
           Need an account?{" "}
           <a
             href="/signup"
-            className="text-[#1B6B3A] dark:text-sky-300 underline decoration-emerald-500/40 underline-offset-2 hover:text-[#1B6B3A] dark:hover:text-[#1B6B3A]"
+            className="text-[#1B6B3A] dark:text-muted underline decoration-emerald-500/40 underline-offset-2 hover:text-[#1B6B3A] dark:hover:text-muted"
           >
             Start signup
           </a>

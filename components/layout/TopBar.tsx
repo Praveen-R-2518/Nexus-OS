@@ -98,7 +98,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
                 aria-expanded={solutionsOpen}
                 aria-haspopup="menu"
                 onClick={() => setSolutionsOpen((o) => !o)}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-black transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-white dark:focus-visible:ring-sky-400/60 dark:focus-visible:ring-offset-surface-page"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-black transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 dark:text-white dark:focus-visible:ring-border-strong"
               >
                 Solutions
                 <ChevronDown
@@ -112,7 +112,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
               {solutionsOpen ? (
                 <div
                   role="menu"
-                  className="absolute left-1/2 top-full z-50 mt-2 min-w-[12rem] -translate-x-1/2 rounded-lg border border-border bg-white py-1 shadow-sm dark:border-border dark:bg-surface-card"
+                  className="absolute left-1/2 top-full z-50 mt-2 min-w-[12rem] -translate-x-1/2 rounded-lg border border-border bg-white py-1 dark:border-border dark:bg-surface-card"
                 >
                   {solutionsLinks.map(({ href, label }) => (
                     <Link
@@ -193,7 +193,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
               </Link>
               <Link
                 href="/login"
-                className="hidden cursor-pointer border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-[#153d5c]"
+                className="hidden cursor-pointer border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
               >
                 Access console
               </Link>
@@ -202,7 +202,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-sky-400/60 dark:focus-visible:ring-offset-surface-page"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-border-strong"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span className="hidden sm:inline">Log out</span>

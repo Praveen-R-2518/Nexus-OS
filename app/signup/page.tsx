@@ -120,7 +120,7 @@ export default function SignupPage() {
           </p>
           <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/45">
             Already registered?{" "}
-            <Link href="/login" className="cursor-pointer text-[#0f2336] underline underline-offset-4 dark:text-[#a8bdd4]">
+            <Link href="/login" className="cursor-pointer text-[#0f2336] underline underline-offset-4 dark:text-muted">
               Sign in
             </Link>
           </p>

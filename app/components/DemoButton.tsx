@@ -203,7 +203,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
       </button>
 
       {showMenu ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,24rem)] border border-border bg-white shadow-sm dark:border-border dark:bg-surface-card">
+        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,24rem)] border border-border bg-white dark:border-border dark:bg-surface-card">
           <div className="hairline-b px-4 py-3">
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
               Inject test payload
@@ -247,7 +247,7 @@ export default function DemoButton({ onSent }: DemoButtonProps) {
                     >
                       {msg.urgency}
                     </span>
-                    <span className="font-mono text-[10px] font-semibold tabular-nums text-ref-cta dark:text-sky-300/90">
+                    <span className="font-mono text-[10px] font-semibold tabular-nums text-ref-cta dark:text-muted">
                       ${(msg.value / 1000).toFixed(0)}k
                     </span>
                   </div>

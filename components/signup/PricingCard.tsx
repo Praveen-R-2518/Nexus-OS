@@ -34,11 +34,11 @@ export default function PricingCard({
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col rounded-xl border border-border bg-white p-4 transition sm:p-5 dark:border-border dark:bg-surface-card",
-        disabled && "opacity-45 grayscale",
+        "relative flex h-full flex-col rounded-xl border bg-white p-4 transition sm:p-5 dark:bg-surface-card",
         selected
-          ? "ring-1 ring-border-strong ring-offset-2 ring-offset-white dark:ring-trajectory-blue/70 dark:ring-offset-surface-card"
-          : "",
+          ? "border-2 border-ref-cta dark:border-border-strong"
+          : "border-border dark:border-border",
+        disabled && "opacity-45 grayscale",
         !disabled && !selected && "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
       )}
     >
@@ -57,7 +57,7 @@ export default function PricingCard({
         {features.map((f) => (
           <li key={f} className="flex gap-2">
             <span aria-hidden>
-              <Check className="h-4 w-4 shrink-0 text-[#0f2336] dark:text-[#a8bdd4]" />
+              <Check className="h-4 w-4 shrink-0 text-[#0f2336] dark:text-muted" />
             </span>
             <span>{f}</span>
           </li>

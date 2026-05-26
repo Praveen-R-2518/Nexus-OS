@@ -26,34 +26,34 @@
     --app-chrome-bg: color-mix(in srgb, var(--surface-card) 94%, transparent);
     --app-chrome-border: rgba(10, 22, 40, 0.07);
 
-    --border-subtle: rgba(10, 15, 12, 0.06);
-    --border-strong: rgba(10, 15, 12, 0.12);
+    --border-subtle: rgba(10, 15, 12, 0.05);
+    --border-strong: rgba(10, 15, 12, 0.1);
 
     --text-primary: #0a0f0c;
-    --text-secondary: #3d4a42;
-    --text-tertiary: #5c6b62;
+    --text-secondary: #4a5450;
+    --text-tertiary: #5f6962;
 
-    --status-positive-fg: #0a4f8a;
-    --status-positive-surface: rgba(10, 79, 138, 0.09);
-    --status-positive-border: rgba(10, 79, 138, 0.2);
-    --status-positive-glow: rgba(20, 90, 160, 0.12);
+    --status-positive-fg: #1a5580;
+    --status-positive-surface: rgba(10, 79, 138, 0.06);
+    --status-positive-border: rgba(10, 79, 138, 0.14);
+    --status-positive-glow: transparent;
 
-    --status-neutral-fg: #1e3a5f;
-    --status-neutral-surface: rgba(30, 58, 95, 0.06);
-    --status-neutral-border: rgba(30, 58, 95, 0.14);
+    --status-neutral-fg: #2d4560;
+    --status-neutral-surface: rgba(30, 58, 95, 0.05);
+    --status-neutral-border: rgba(30, 58, 95, 0.11);
 
-    --status-warning-fg: #6b4200;
-    --status-warning-surface: rgba(107, 66, 0, 0.08);
-    --status-warning-border: rgba(107, 66, 0, 0.18);
+    --status-warning-fg: #5c4510;
+    --status-warning-surface: rgba(107, 66, 0, 0.06);
+    --status-warning-border: rgba(107, 66, 0, 0.13);
 
-    --status-caution-fg: #7a5a00;
-    --status-caution-surface: rgba(122, 90, 0, 0.08);
-    --status-caution-border: rgba(122, 90, 0, 0.16);
+    --status-caution-fg: #6a5210;
+    --status-caution-surface: rgba(122, 90, 0, 0.06);
+    --status-caution-border: rgba(122, 90, 0, 0.12);
 
-    --status-critical-fg: #8b1f2d;
-    --status-critical-surface: rgba(139, 31, 45, 0.08);
-    --status-critical-border: rgba(139, 31, 45, 0.2);
-    --status-critical-glow: rgba(139, 31, 45, 0.08);
+    --status-critical-fg: #7a2834;
+    --status-critical-surface: rgba(139, 31, 45, 0.06);
+    --status-critical-border: rgba(139, 31, 45, 0.14);
+    --status-critical-glow: transparent;
 
     --bg-card: var(--surface-card);
     --bg-page: var(--surface-page);
@@ -80,63 +80,64 @@
   .light,
   [data-theme="light"] {
     --text-primary: #0a0f0c;
-    --text-secondary: #3d4a42;
-    --text-tertiary: #5c6b62;
+    --text-secondary: #4a5450;
+    --text-tertiary: #5f6962;
     --surface-page: var(--ref-mint);
     --surface-card: #ffffff;
     --surface-elevated: #ffffff;
     --surface-sidebar: #ffffff;
     --surface-input: #e8eef5;
     --surface-muted: #e4ebf3;
-    --border-subtle: rgba(10, 15, 12, 0.06);
-    --border-strong: rgba(10, 15, 12, 0.12);
+    --border-subtle: rgba(10, 15, 12, 0.05);
+    --border-strong: rgba(10, 15, 12, 0.1);
   }
 
   .dark {
-    --background: rgb(31, 31, 30);
-    --foreground: #e8eaef;
-    --obsidian: rgb(31, 31, 30);
-    --atmospheric-grey: #e8eaef;
-    --trajectory-blue: #7eb8f0;
+    --background: #121212;
+    --foreground: #e2e2e2;
+    --obsidian: #121212;
+    --atmospheric-grey: #e2e2e2;
+    --trajectory-blue: #a3a3a3;
 
     --app-chrome-bg: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
-    --app-chrome-border: rgba(255, 255, 255, 0.05);
+    --app-chrome-border: rgba(255, 255, 255, 0.055);
 
-    --surface-page: rgb(31, 31, 30);
-    --surface-card: #2a2a29;
-    --surface-elevated: #323231;
-    --surface-sidebar: #2d2d2c;
-    --surface-input: #363635;
-    --surface-muted: #2e2e2d;
+    --surface-page: #121212;
+    --surface-card: #161616;
+    --surface-elevated: #1a1a1a;
+    --surface-sidebar: #161616;
+    --surface-input: #1a1a1a;
+    --surface-muted: #141414;
 
-    --border-subtle: rgba(255, 255, 255, 0.045);
-    --border-strong: rgba(255, 255, 255, 0.078);
+    --border-subtle: rgba(255, 255, 255, 0.055);
+    --border-strong: rgba(255, 255, 255, 0.1);
 
-    --text-primary: #e8eaef;
-    --text-secondary: #b8bcb8;
-    --text-tertiary: #8a908a;
+    --text-primary: #e2e2e2;
+    --text-secondary: #b4b4b4;
+    --text-tertiary: #8f8f8f;
+    --text-accent: #bababa;
 
-    --status-positive-fg: #8ec8f5;
-    --status-positive-surface: rgba(110, 180, 240, 0.12);
-    --status-positive-border: rgba(126, 190, 245, 0.26);
-    --status-positive-glow: rgba(110, 180, 240, 0.14);
+    --status-positive-fg: #a5a8b0;
+    --status-positive-surface: rgba(130, 140, 160, 0.09);
+    --status-positive-border: rgba(130, 140, 160, 0.16);
+    --status-positive-glow: transparent;
 
-    --status-neutral-fg: #9ec8ff;
-    --status-neutral-surface: rgba(158, 200, 255, 0.08);
-    --status-neutral-border: rgba(158, 200, 255, 0.2);
+    --status-neutral-fg: #9ea3ac;
+    --status-neutral-surface: rgba(120, 125, 135, 0.07);
+    --status-neutral-border: rgba(120, 125, 135, 0.14);
 
-    --status-warning-fg: #f0c674;
-    --status-warning-surface: rgba(240, 198, 116, 0.1);
-    --status-warning-border: rgba(240, 198, 116, 0.22);
+    --status-warning-fg: #b0a68c;
+    --status-warning-surface: rgba(160, 150, 120, 0.07);
+    --status-warning-border: rgba(160, 150, 120, 0.13);
 
-    --status-caution-fg: #e8d96a;
-    --status-caution-surface: rgba(232, 217, 106, 0.08);
-    --status-caution-border: rgba(232, 217, 106, 0.2);
+    --status-caution-fg: #aba382;
+    --status-caution-surface: rgba(155, 148, 100, 0.06);
+    --status-caution-border: rgba(155, 148, 100, 0.12);
 
-    --status-critical-fg: #f4a8b5;
-    --status-critical-surface: rgba(244, 168, 181, 0.1);
-    --status-critical-border: rgba(244, 168, 181, 0.24);
-    --status-critical-glow: rgba(244, 168, 181, 0.12);
+    --status-critical-fg: #b8a2a7;
+    --status-critical-surface: rgba(170, 130, 140, 0.07);
+    --status-critical-border: rgba(170, 130, 140, 0.13);
+    --status-critical-glow: transparent;
 
     --bg-card: var(--surface-card);
     --bg-page: var(--surface-page);
@@ -148,7 +149,7 @@
     --text-critical: var(--status-critical-fg);
 
     .logo-os {
-      color: var(--trajectory-blue);
+      color: var(--text-secondary);
     }
   }
 
@@ -192,7 +193,7 @@
   .app-chrome-bar {
     background-color: var(--app-chrome-bg);
     border-bottom: 1px solid var(--app-chrome-border);
-    backdrop-filter: blur(12px);
+    backdrop-filter: none;
   }
 
   /* Softer than border-border: section / list separation */
@@ -220,7 +221,7 @@
     background-color: var(--surface-card);
     border: 1px solid var(--border-strong);
     border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(10, 15, 12, 0.04);
+    box-shadow: 0 1px 2px rgba(10, 15, 12, 0.035);
   }
   .dark .landing-glass-card {
     background-color: var(--surface-card);
@@ -246,7 +247,7 @@
     outline: none;
   }
   .dark .glass-input:focus {
-    border-color: var(--trajectory-blue);
+    border-color: var(--border-strong);
   }
 
   .space-bg {
@@ -287,10 +288,10 @@
 
   .nav-link:focus-visible {
     outline: 2px solid var(--ref-cta);
-    outline-offset: 2px;
+    outline-offset: 1px;
   }
   .dark .nav-link:focus-visible {
-    outline-color: var(--trajectory-blue);
+    outline-color: var(--border-strong);
   }
 
   .approval-action-bar {
@@ -347,7 +348,7 @@
     border-radius: 0.75rem;
   }
   .dark .ref-cta {
-    background-color: #153d5c;
-    color: #f4f8fc;
+    background-color: #2a2a2a;
+    color: #e2e2e2;
   }
 }
