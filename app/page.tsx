@@ -1,14 +1,33 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { motion, useInView } from "framer-motion";
 import { ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { Tangerine } from "next/font/google";
+import { useTheme } from "next-themes";
 import DataNexus from "@/components/landing/DataNexus";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
+
+function HeroLights() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = !mounted || resolvedTheme === "dark";
+
+  return (
+    <>
+      <ambientLight intensity={isDark ? 0.65 : 0.55} />
+      <directionalLight position={[10, 10, 5]} intensity={isDark ? 1.1 : 0.85} />
+    </>
+  );
+}
 
 const tangerine = Tangerine({ subsets: ["latin"], weight: ["400", "700"] });
 
@@ -85,15 +104,19 @@ export default function LandingPage() {
         {/* 3D Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[10, 10, 5]} intensity={1} />
+            <HeroLights />
             <DataNexus />
           </Canvas>
         </div>
 
+        <div
+          className="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(248,250,252,0.88)_0%,rgba(248,250,252,0.45)_50%,transparent_72%)] dark:bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(13,21,33,0.85)_0%,rgba(13,21,33,0.4)_50%,transparent_72%)]"
+          aria-hidden
+        />
+
         {/* Foreground Content */}
         <motion.div
-          className="z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto"
+          className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto"
         >
           <div className="animate-fade-up [animation-delay:0ms]">
             <h1 className="text-[64px] font-medium tracking-[-1.28px] text-slate-900 dark:text-atmospheric-grey leading-[1.1] mb-6">

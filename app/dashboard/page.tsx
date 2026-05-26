@@ -1,6 +1,5 @@
 "use client";
 
-import DemoButton from "@/app/components/DemoButton";
 import Link from "next/link";
 import {
   useCallback,
@@ -273,17 +272,10 @@ export default function DashboardPage() {
 
       <div className="relative space-y-8">
         <header className="border-b border-black/10 dark:border-white/10 pb-6">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Command Center
-              </h1>
-            </div>
-            <DemoButton
-              onSent={() => {
-                void loadDashboard({ silent: true });
-              }}
-            />
+          <div className="mb-2">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Command Center
+            </h1>
           </div>
           <p className="max-w-xl text-sm text-gray-500 dark:text-gray-400 mb-8">
             Live revenue rescue ops — prioritize revenue at risk, route hot

@@ -128,8 +128,6 @@ function InboxPageContent() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
 
-  const [usingMockData, setUsingMockData] = useState(false);
-
   const loadConversations = useCallback(async () => {
     setListError(null);
     try {
@@ -137,7 +135,6 @@ function InboxPageContent() {
       const json = (await res.json()) as {
         data?: Conversation[];
         error?: string;
-        source?: string;
       };
       if (!res.ok) {
         throw new Error(
@@ -148,12 +145,10 @@ function InboxPageContent() {
         throw new Error("Invalid conversations response");
       }
       setConversations(json.data);
-      setUsingMockData(json.source === "mock");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load conversations";
       setListError(msg);
       setConversations([]);
-      setUsingMockData(false);
     } finally {
       setListLoading(false);
     }
@@ -343,27 +338,6 @@ function InboxPageContent() {
 
   return (
     <>
-      {usingMockData ? (
-        <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-[#7A4200]">
-          Demo data — add{" "}
-          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
-            NEXT_PUBLIC_SUPABASE_URL
-          </code>{" "}
-          and{" "}
-          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
-            SUPABASE_SERVICE_ROLE_KEY
-          </code>{" "}
-          in{" "}
-          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
-            .env.local
-          </code>{" "}
-          to load live conversations (or set{" "}
-          <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 text-[#7A4200]">
-            NEXUS_USE_MOCK_DATA=false
-          </code>{" "}
-          to disable auto-demo in development).
-        </p>
-      ) : null}
       {listError && conversations.length > 0 ? (
         <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-[#7A4200]">
           Could not refresh inbox: {listError}
