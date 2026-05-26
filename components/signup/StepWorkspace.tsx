@@ -95,7 +95,13 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
       return;
     }
 
-    const wid = (rpcData as { workspace_id?: string } | null)?.workspace_id;
+    let wid: string | undefined;
+    if (typeof rpcData === "string") {
+      wid = rpcData;
+    } else if (rpcData && typeof rpcData === "object") {
+      wid = (rpcData as any).workspace_id;
+    }
+
     if (!wid) {
       setError("Could not create workspace.");
       setBusy(false);
