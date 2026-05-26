@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -15,16 +16,17 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import {
   approveReply,
-  fetchConversations,
-  fetchReplyDrafts,
   rejectReply,
 } from "@/lib/api";
+import { conversationsQuery, replyDraftsQuery } from "@/lib/queries/fetchers";
+import { queryKeys } from "@/lib/queries/keys";
 import {
   cn,
   conversationMessageText,
   formatCurrency,
   formatRelativeTime,
   getRiskColor,
+  getRiskHeatPinClass,
 } from "@/lib/utils";
 import type { Conversation, ReplyDraft, ReplyDraftWithConversation } from "@/types";
 
@@ -140,11 +142,11 @@ function MiniCard({
   accent?: string;
 }) {
   return (
-    <div className="surface-card rounded-xl p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">
+    <div className="surface-card rounded-2xl p-5 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-brand text-muted">
         {label}
       </p>
-      <p className={cn("mt-2 text-xl font-semibold tabular-nums", accent)}>
+      <p className={cn("mt-3 text-2xl font-bold tabular-nums sm:text-3xl", accent)}>
         {value}
       </p>
     </div>
@@ -152,9 +154,8 @@ function MiniCard({
 }
 
 export default function ApprovalPage() {
-  const [drafts, setDrafts] = useState<DraftItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [draftOverride, setDraftOverride] = useState<DraftItem[] | null>(null);
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<ApprovalFilter>("pending");
   const [editedDraftText, setEditedDraftText] = useState<Record<string, string>>(
@@ -165,47 +166,36 @@ export default function ApprovalPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
 
+  const {
+    data: draftRows = [],
+    isPending: draftsPending,
+    error: draftsErr,
+  } = useQuery({
+    queryKey: queryKeys.replyDrafts(),
+    queryFn: () => replyDraftsQuery(),
+    staleTime: 30_000,
+  });
+
+  const { data: convRows = [] } = useQuery({
+    queryKey: queryKeys.conversations(100),
+    queryFn: () => conversationsQuery(100),
+    staleTime: 30_000,
+  });
+
+  const mergedBase = useMemo(
+    () => sortDrafts(mergeDraftsWithConversations(draftRows, convRows)),
+    [draftRows, convRows],
+  );
+
+  const drafts = draftOverride ?? mergedBase;
+  const loading = draftsPending && draftOverride === null;
+  const error =
+    draftsErr instanceof Error ? draftsErr.message : null;
+
   const showToast = useCallback((nextToast: Toast) => {
     setToast(nextToast);
     window.setTimeout(() => setToast(null), 3200);
   }, []);
-
-  const loadDrafts = useCallback(async () => {
-    setError(null);
-    try {
-      let draftRows: ReplyDraftWithConversation[];
-      try {
-        draftRows = await fetchReplyDrafts();
-      } catch (e) {
-        const msg =
-          e instanceof Error ? e.message : "Failed to load reply drafts";
-        setError(msg);
-        setDrafts([]);
-        return;
-      }
-
-      let conversations: Conversation[] = [];
-      try {
-        conversations = await fetchConversations();
-      } catch {
-        conversations = [];
-      }
-
-      const merged = sortDrafts(
-        mergeDraftsWithConversations(draftRows, conversations),
-      );
-      setDrafts(merged);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load approvals");
-      setDrafts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadDrafts();
-  }, [loadDrafts]);
 
   const counts = useMemo(() => {
     return {
@@ -253,6 +243,7 @@ export default function ApprovalPage() {
     action: () => Promise<void>,
     successMessage: string,
   ) {
+    const overrideBefore = draftOverride;
     const previousDrafts = drafts;
     const previousFilter = activeFilter;
     const previousSelectedDraftId = selectedDraftId;
@@ -263,9 +254,9 @@ export default function ApprovalPage() {
     setActionDraftId(draft.id);
     setActiveFilter(status);
     setSelectedDraftId(draft.id);
-    setDrafts((current) =>
+    setDraftOverride(
       sortDrafts(
-        current.map((item) =>
+        previousDrafts.map((item) =>
           item.id === draft.id
             ? {
                 ...item,
@@ -287,8 +278,13 @@ export default function ApprovalPage() {
     try {
       await action();
       showToast({ kind: "success", message: successMessage });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.replyDrafts() });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations(100),
+      });
+      setDraftOverride(null);
     } catch (e) {
-      setDrafts(previousDrafts);
+      setDraftOverride(overrideBefore);
       setActiveFilter(previousFilter);
       setSelectedDraftId(previousSelectedDraftId);
       showToast({
@@ -353,10 +349,10 @@ export default function ApprovalPage() {
       {toast ? (
         <div
           className={cn(
-            "fixed right-6 top-6 z-50 rounded-xl border px-4 py-3 text-sm shadow-2xl glass-panel",
+            "fixed right-6 top-6 z-50 rounded-2xl border px-5 py-4 text-base shadow-2xl glass-panel",
             toast.kind === "success"
-              ? "border-emerald-200 bg-emerald-50 text-[#1B6B3A] dark:border-emerald-500/40 dark:bg-emerald-950/90 dark:text-emerald-200"
-              : "border-red-200 bg-red-50 text-[#8B1A1A] dark:border-red-500/40 dark:bg-red-950/90 dark:text-red-200",
+              ? "border-status-positive-border bg-status-positive-surface text-status-positive"
+              : "border-status-critical-border bg-status-critical-surface text-status-critical",
           )}
         >
           {toast.message}
@@ -364,23 +360,25 @@ export default function ApprovalPage() {
       ) : null}
 
       <div className="flex h-[calc(100vh-6rem)] min-h-[620px] gap-4">
-        <aside className="flex w-[400px] shrink-0 flex-col overflow-hidden rounded-xl surface-muted">
-          <div className="border-b border-slate-200 dark:border-slate-800 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted">
+        <aside className="flex w-[420px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border surface-muted">
+          <div className="border-b border-border p-5">
+            <p className="text-xs font-bold uppercase tracking-brand text-muted">
               Approval Queue
             </p>
-            <div className="mt-2 flex items-end justify-between gap-3">
+            <div className="mt-3 flex items-end justify-between gap-4">
               <div>
-                <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+                <p className="text-3xl font-bold tabular-nums text-atmospheric-grey">
                   {counts.pending} pending
                 </p>
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-2 text-base text-muted">
                   AI replies waiting on a founder decision
                 </p>
               </div>
-              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2 text-right">
-                <p className="text-xs text-[#7A4200] dark:text-amber-200">At stake</p>
-                <p className="text-sm font-semibold tabular-nums text-[#7A4200] dark:text-amber-300">
+              <div className="rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-right shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-status-warning">
+                  At stake
+                </p>
+                <p className="mt-1 text-lg font-bold tabular-nums text-status-warning">
                   {formatCurrency(
                     drafts
                       .filter((d) => d.approval_status === "pending")
@@ -395,8 +393,8 @@ export default function ApprovalPage() {
             </div>
           </div>
 
-          <div className="border-b border-slate-200 dark:border-slate-800 p-3">
-            <div className="flex flex-wrap gap-1.5">
+          <div className="border-b border-border p-4">
+            <div className="flex flex-wrap gap-2">
               {FILTERS.map((filter) => {
                 const active = activeFilter === filter.value;
                 return (
@@ -405,17 +403,19 @@ export default function ApprovalPage() {
                     type="button"
                     onClick={() => setActiveFilter(filter.value)}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-interaction",
                       active
-                        ? "border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/15 text-[#1B6B3A] dark:text-emerald-300"
-                        : "border-slate-200 dark:border-slate-700 bg-surface-card dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600",
+                        ? "border-status-positive-border bg-status-positive-surface text-status-positive shadow-sm"
+                        : "border-border bg-surface-card text-slate-600 hover:border-border-strong hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
                     {filter.label}
                     <span
                       className={cn(
-                        "rounded-md px-1 py-0.5 text-[10px] tabular-nums",
-                        active ? "bg-emerald-100 dark:bg-emerald-500/25" : "bg-slate-100 dark:bg-slate-900/80",
+                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-md px-2 py-0.5 text-sm tabular-nums",
+                        active
+                          ? "bg-status-positive-surface font-bold text-status-positive"
+                          : "bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {counts[filter.value]}
@@ -453,46 +453,46 @@ export default function ApprovalPage() {
                         type="button"
                         onClick={() => setSelectedDraftId(draft.id)}
                         className={cn(
-                          "w-full rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-left transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                          "w-full cursor-pointer rounded-xl border border-border p-4 text-left transition-colors duration-interaction hover:border-border-strong hover:bg-surface-muted/60",
                           selected &&
-                            "border-emerald-500/40 bg-surface-elevated dark:bg-slate-800 ring-1 ring-emerald-500/30 shadow-sm",
+                            "border-status-positive-border bg-surface-elevated ring-2 ring-status-positive-border/50 shadow-card-halo-light dark:shadow-card-halo",
                           highRisk &&
                             !selected &&
-                            "border-l-4 border-l-red-500/50",
+                            "border-l-4 border-l-status-critical-border",
                         )}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="truncate text-base font-semibold text-atmospheric-grey">
                                 {draft.conversation.customer_name}
                               </p>
                               <span
                                 className={cn(
-                                  "shrink-0 text-base font-bold tabular-nums",
-                                  getRiskColor(draft.conversation.risk_score),
+                                  "risk-heat-pin shrink-0 text-sm",
+                                  getRiskHeatPinClass(draft.conversation.risk_score),
                                 )}
                               >
                                 {draft.conversation.risk_score}
                               </span>
                             </div>
-                            <p className="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+                            <p className="mt-2 line-clamp-2 text-base leading-relaxed text-muted">
                               {conversationMessageText(draft.conversation)}
                             </p>
-                            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
                               <Badge
                                 variant="status"
                                 value={draft.approval_status}
                                 label={STATUS_LABELS[draft.approval_status]}
                               />
-                              <span className="ml-auto text-sm font-semibold tabular-nums text-[#1B6B3A] dark:text-emerald-300">
+                              <span className="ml-auto text-base font-bold tabular-nums text-status-positive">
                                 {formatCurrency(
                                   draft.conversation.estimated_value,
                                 )}
                               </span>
                             </div>
-                            <p className="mt-2 inline-flex items-center gap-1 text-xs text-atmospheric-grey/40">
-                              <Clock className="h-3 w-3" aria-hidden />
+                            <p className="mt-2 inline-flex items-center gap-2 text-sm text-muted">
+                              <Clock className="h-4 w-4 shrink-0" aria-hidden />
                               {formatRelativeTime(draft.created_at)}
                             </p>
                           </div>
@@ -506,7 +506,7 @@ export default function ApprovalPage() {
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 surface-muted">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border surface-muted">
           {!selectedDraft ? (
             <EmptyState
               title={
@@ -520,75 +520,81 @@ export default function ApprovalPage() {
             />
           ) : (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 pb-6">
-                <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 pb-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-atmospheric-grey/60">
+                    <p className="text-xs font-bold uppercase tracking-brand text-muted">
                       Review Draft
                     </p>
-                    <h1 className="mt-1 text-2xl font-semibold text-foreground">
+                    <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
                       {selectedDraft.conversation.customer_name}
                     </h1>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Badge
                       variant="status"
                       value={selectedDraft.approval_status}
                       label={STATUS_LABELS[selectedDraft.approval_status]}
                     />
-                      <span
-                        className={cn(
-                          "rounded-lg border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 px-3 py-1.5 text-lg font-bold tabular-nums",
-                          getRiskColor(selectedDraft.conversation.risk_score),
-                        )}
-                      >
+                    <span
+                      className={cn(
+                        "risk-heat-pin text-base",
+                        getRiskHeatPinClass(selectedDraft.conversation.risk_score),
+                      )}
+                    >
                       Risk {selectedDraft.conversation.risk_score}
                     </span>
-                    <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-lg font-bold tabular-nums text-[#1B6B3A] dark:text-emerald-300">
+                    <span className="rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 text-lg font-bold tabular-nums text-status-positive">
                       {formatCurrency(selectedDraft.conversation.estimated_value)}
                     </span>
-                    <span className="rounded-full border border-trajectory-blue/30 bg-trajectory-blue/10 px-3 py-1.5 text-sm font-medium tabular-nums text-trajectory-blue">
-                      Confidence: {Math.round((selectedDraft.conversation.confidence || 0.95) * 100)}%
+                    <span className="rounded-full border border-status-neutral-border bg-status-neutral-surface px-4 py-2 text-sm font-semibold tabular-nums text-status-neutral">
+                      Confidence:{" "}
+                      {Math.round(
+                        (selectedDraft.conversation.confidence > 1
+                          ? selectedDraft.conversation.confidence
+                          : (selectedDraft.conversation.confidence || 0.95) * 100),
+                      )}
+                      %
                     </span>
                   </div>
                 </div>
 
-                <section className="rounded-xl border border-black/10 dark:border-white/10 glass-panel p-4">
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <section className="glass-panel rounded-2xl border border-border p-5">
+                  <h2 className="text-xs font-bold uppercase tracking-brand text-muted">
                     Original Message
                   </h2>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-base text-muted">
+                    <span className="font-semibold text-atmospheric-grey">
                       {selectedDraft.conversation.customer_name}
                     </span>
-                    <span className="rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs capitalize text-gray-500 dark:text-gray-400">
+                    <span className="rounded-full border border-border bg-surface-muted px-3 py-1 text-sm capitalize text-muted">
                       {selectedDraft.conversation.source}
                     </span>
                   </div>
-                  <div className="mt-4 rounded-xl border border-[#D8D5CE] bg-surface-input p-4 font-mono text-sm leading-relaxed text-slate-900 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+                  <div className="mt-4 rounded-2xl border border-border bg-surface-input p-5 font-mono text-base leading-relaxed text-atmospheric-grey">
                     {conversationMessageText(selectedDraft.conversation)}
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-black/10 dark:border-white/10 glass-panel p-4">
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <section className="glass-panel rounded-2xl border border-border p-5">
+                  <h2 className="text-xs font-bold uppercase tracking-brand text-muted">
                     AI Classification
                   </h2>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <MiniCard
                       label="Intent"
                       value={intentLabel(selectedDraft.conversation.intent)}
-                      accent="text-[#1B6B3A] dark:text-emerald-300"
+                      accent="text-status-positive"
                     />
                     <MiniCard
                       label="Urgency"
                       value={urgencyLabel(selectedDraft.conversation.urgency)}
                       accent={
                         selectedDraft.conversation.urgency === "critical"
-                          ? "text-[#8B1A1A] dark:text-red-300"
+                          ? "text-status-critical"
                           : selectedDraft.conversation.urgency === "high"
-                            ? "text-[#7A4200] dark:text-orange-300"
-                            : "text-yellow-600 dark:text-yellow-300"
+                            ? "text-status-warning"
+                            : "text-status-caution"
                       }
                     />
                     <MiniCard
@@ -601,18 +607,18 @@ export default function ApprovalPage() {
                       value={formatCurrency(
                         selectedDraft.conversation.estimated_value,
                       )}
-                      accent="text-[#1B6B3A] dark:text-emerald-300"
+                      accent="text-status-positive"
                     />
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-black/10 dark:border-white/10 glass-panel p-4">
+                <section className="glass-panel rounded-2xl border border-border p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-                      <Bot className="h-4 w-4 text-[#1B6B3A]" aria-hidden />
+                    <h2 className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-brand text-muted">
+                      <Bot className="h-5 w-5 text-status-positive" aria-hidden />
                       AI Draft Reply
                     </h2>
-                    <span className="rounded-full border border-trajectory-blue/30 bg-trajectory-blue/10 px-2 py-0.5 text-xs font-medium text-trajectory-blue">
+                    <span className="rounded-full border border-status-neutral-border bg-status-neutral-surface px-3 py-1 text-sm font-semibold text-status-neutral">
                       {toneLabel(selectedDraft.tone)}
                     </span>
                   </div>
@@ -625,9 +631,9 @@ export default function ApprovalPage() {
                       }))
                     }
                     rows={10}
-                    className="mt-4 w-full resize-none rounded-xl border border-[#D8D5CE] dark:border-gray-700 bg-surface-input dark:bg-gray-950 p-4 text-sm leading-relaxed text-gray-900 dark:text-gray-100 outline-none transition-colors placeholder:text-gray-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30"
+                    className="mt-5 w-full resize-none rounded-2xl border border-border bg-surface-input p-5 text-base leading-relaxed text-atmospheric-grey outline-none transition-colors placeholder:text-muted focus:border-status-positive-border focus:ring-2 focus:ring-status-positive-border/30"
                   />
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-atmospheric-grey/60">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
                     <span>Tone: {toneLabel(selectedDraft.tone)}</span>
                     <span className="tabular-nums">
                       {selectedText.length} characters
@@ -636,51 +642,54 @@ export default function ApprovalPage() {
                 </section>
               </div>
 
-              <div className="approval-action-bar flex items-center justify-between bg-[#FAFAF8] border-t border-[#D8D5CE] px-5 py-3 dark:bg-slate-950/95 dark:border-slate-800">
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <DollarSign className="h-4 w-4 text-[#1B6B3A]" aria-hidden />
+              <div className="approval-action-bar flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+                <div className="flex min-w-0 items-center gap-3 text-base text-muted">
+                  <DollarSign
+                    className="h-5 w-5 shrink-0 text-status-positive"
+                    aria-hidden
+                  />
                   <span>
                     Decision impacts{" "}
-                    <strong className="text-[#1B6B3A] dark:text-emerald-300">
+                    <strong className="font-bold text-status-positive">
                       {formatCurrency(
                         selectedDraft.conversation.estimated_value,
                       )}
                     </strong>
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
-                      type="button"
-                      onClick={() => {
-                        setRejectingDraft(selectedDraft);
-                        setRejectionReason("");
-                      }}
-                      disabled={
-                        actionDraftId === selectedDraft.id ||
-                        selectedDraft.approval_status === "rejected"
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg border border-red-500/40 bg-transparent px-4 py-2 text-sm font-medium text-[#8B1A1A] transition-all duration-150 hover:bg-red-500/10 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-                    >
-                      <XCircle className="h-4 w-4" aria-hidden />
-                      Reject
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleApprove(selectedDraft)}
-                      disabled={
-                        actionDraftId === selectedDraft.id ||
-                        selectedDraft.approval_status === "approved"
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg bg-trajectory-blue px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
-                    >
-                      {actionDraftId === selectedDraft.id ? (
-                        <Spinner className="h-4 w-4" label="Approving draft" />
-                      ) : (
-                        <Send className="h-4 w-4" aria-hidden />
-                      )}
-                      Approve & Send
-                    </button>
-                  </div>
+                    type="button"
+                    onClick={() => {
+                      setRejectingDraft(selectedDraft);
+                      setRejectionReason("");
+                    }}
+                    disabled={
+                      actionDraftId === selectedDraft.id ||
+                      selectedDraft.approval_status === "rejected"
+                    }
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-status-critical-border bg-transparent px-5 py-2.5 text-base font-semibold text-status-critical transition-colors duration-interaction hover:bg-status-critical-surface disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <XCircle className="h-5 w-5 shrink-0" aria-hidden />
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleApprove(selectedDraft)}
+                    disabled={
+                      actionDraftId === selectedDraft.id ||
+                      selectedDraft.approval_status === "approved"
+                    }
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-trajectory-blue px-6 py-2.5 text-base font-bold text-white shadow-glow-positive transition-opacity duration-interaction hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {actionDraftId === selectedDraft.id ? (
+                      <Spinner className="h-5 w-5" label="Approving draft" />
+                    ) : (
+                      <Send className="h-5 w-5 shrink-0" aria-hidden />
+                    )}
+                    Approve & Send
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -688,41 +697,41 @@ export default function ApprovalPage() {
       </div>
 
       {rejectingDraft ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-gray-200 dark:border-gray-800 bg-surface-elevated dark:bg-gray-950 p-5 shadow-2xl">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-surface-elevated p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-xl font-bold text-foreground">
                   Reject draft
                 </h2>
-                <p className="mt-1 text-sm text-atmospheric-grey/60">
+                <p className="mt-2 text-base text-muted">
                   Add feedback so the team can improve the next AI reply.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300"
+                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-border text-muted transition-colors hover:bg-surface-muted hover:text-atmospheric-grey"
                 aria-label="Close rejection modal"
               >
-                <XCircle className="h-5 w-5" aria-hidden />
+                <XCircle className="h-6 w-6" aria-hidden />
               </button>
             </div>
-            <label className="mt-5 block text-sm font-medium text-gray-600 dark:text-gray-300">
+            <label className="mt-6 block text-base font-semibold text-atmospheric-grey">
               Rejection reason
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={5}
-                className="mt-2 w-full resize-none rounded-xl border border-[#D8D5CE] dark:border-slate-700 bg-surface-input dark:bg-slate-900 p-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/30"
+                className="mt-3 w-full resize-none rounded-2xl border border-border bg-surface-input p-4 text-base text-atmospheric-grey outline-none transition-colors placeholder:text-muted focus:border-status-critical-border focus:ring-2 focus:ring-status-critical-border/25"
                 placeholder="What should change before this reply is sent?"
               />
             </label>
-            <div className="mt-5 flex justify-end gap-2">
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-border bg-surface-muted px-5 py-2.5 text-base font-semibold text-muted transition-colors hover:border-border-strong hover:bg-surface-card"
               >
                 Cancel
               </button>
@@ -733,10 +742,10 @@ export default function ApprovalPage() {
                   rejectionReason.trim() === "" ||
                   actionDraftId === rejectingDraft.id
                 }
-                className="inline-flex items-center gap-2 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-status-critical-border bg-status-critical-surface px-5 py-2.5 text-base font-bold text-status-critical transition-colors hover:bg-status-critical-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {actionDraftId === rejectingDraft.id ? (
-                  <Spinner className="h-4 w-4" label="Rejecting draft" />
+                  <Spinner className="h-5 w-5" label="Rejecting draft" />
                 ) : null}
                 Submit Rejection
               </button>

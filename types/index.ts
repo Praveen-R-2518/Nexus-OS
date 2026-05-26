@@ -1,11 +1,13 @@
 export interface Conversation {
   id: string;
-  source: "gmail" | "email" | "imap" | "webhook" | "manual" | "chat" | "form";
+  /** Owning workspace; required for RLS-scoped dashboard data. */
+  workspace_id?: string | null;
+  source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form";
   customer_name: string;
   customer_email?: string;
   /** Ingest/plain text column from Supabase. */
   message?: string;
-  /** Legacy inbox body (prefer `message` when both exist). */
+  /** Legacy / mock inbox body (prefer `message` when both exist). */
   raw_message?: string;
   intent?:
     | "purchase"
@@ -35,6 +37,7 @@ export interface Conversation {
 export interface ReplyDraft {
   id: string;
   conversation_id: string;
+  workspace_id?: string | null;
   draft_text: string;
   tone: string;
   approval_status: "pending" | "approved" | "rejected";
@@ -65,6 +68,7 @@ export interface Lead {
 /** Matches `public.workflow_logs` (see supabase/migrations/0001_initial_schema.sql). */
 export interface WorkflowLog {
   id: string;
+  workspace_id?: string | null;
   workflow_name: string;
   step: string;
   /** Outcome label from workflows (e.g. success, failed, running). */
@@ -77,6 +81,7 @@ export interface WorkflowLog {
 
 export interface DailyReport {
   id: string;
+  workspace_id?: string | null;
   report_date: string;
   total_revenue_at_risk: number;
   messages_processed: number;

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import type { Conversation, ReplyDraft } from "@/types";
+import {
+  mockConversationById,
+  shouldFallbackToMockAfterEmptyLiveData,
+  shouldFallbackToMockAfterSupabaseError,
+  shouldUseMockConversations,
+} from "@/lib/conversations-mock";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +25,24 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Missing conversation id" }, { status: 400 });
   }
 
+  if (shouldUseMockConversations()) {
+    const found = mockConversationById(id);
+    if (!found) {
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({
+      conversation: found.conversation,
+      drafts: found.drafts,
+      source: "mock",
+    });
+  }
+
   let supabase;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Server configuration error";
@@ -35,10 +56,30 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (conversationError) {
     if (conversationError.code === "PGRST116") {
+      if (shouldFallbackToMockAfterEmptyLiveData()) {
+        const found = mockConversationById(id);
+        if (found) {
+          return NextResponse.json({
+            conversation: found.conversation,
+            drafts: found.drafts,
+            source: "mock",
+          });
+        }
+      }
       return NextResponse.json(
         { error: "Conversation not found" },
         { status: 404 },
       );
+    }
+    if (shouldFallbackToMockAfterSupabaseError(conversationError)) {
+      const found = mockConversationById(id);
+      if (found) {
+        return NextResponse.json({
+          conversation: found.conversation,
+          drafts: found.drafts,
+          source: "mock",
+        });
+      }
     }
     return NextResponse.json(
       { error: conversationError.message },
@@ -56,6 +97,16 @@ export async function GET(_request: Request, context: RouteContext) {
     .order("created_at", { ascending: false });
 
   if (draftsError) {
+    if (shouldFallbackToMockAfterSupabaseError(draftsError)) {
+      const found = mockConversationById(id);
+      if (found) {
+        return NextResponse.json({
+          conversation: found.conversation,
+          drafts: found.drafts,
+          source: "mock",
+        });
+      }
+    }
     return NextResponse.json(
       { error: draftsError.message },
       { status: 500 },
@@ -65,5 +116,5 @@ export async function GET(_request: Request, context: RouteContext) {
   const conversation = conversationRow as Conversation;
   const drafts = (draftRows ?? []) as ReplyDraft[];
 
-  return NextResponse.json({ conversation, drafts });
+  return NextResponse.json({ conversation, drafts, source: "live" });
 }

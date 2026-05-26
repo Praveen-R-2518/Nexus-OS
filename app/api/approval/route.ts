@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
   requireApiUser,
 } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
+import {
+  mockReplyDraftById,
+  shouldFallbackToMockAfterEmptyLiveData,
+  shouldUseMockConversations,
+} from "@/lib/conversations-mock";
 import type { ReplyDraft } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -27,22 +33,58 @@ function approvalWebhookUrl(): string | null {
 }
 
 async function insertApprovalWorkflowLog(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: SupabaseClient,
   meta: {
+    workspace_id: string;
     draft_id: string;
     conversation_id: string;
     action: "approve" | "reject";
   },
 ) {
   const { error } = await supabase.from("workflow_logs").insert({
+    workspace_id: meta.workspace_id,
     workflow_name: "approval-trigger",
     step: "human_approval",
     result: "success",
-    payload: meta,
+    payload: {
+      draft_id: meta.draft_id,
+      conversation_id: meta.conversation_id,
+      action: meta.action,
+    },
   });
   if (error) {
     console.error("[approval] workflow_logs insert failed:", error.message);
   }
+}
+
+function mockApprovalResponse(
+  draftId: string,
+  action: ApprovalBody["action"],
+  draftText?: string,
+  rejectionReason?: string,
+): NextResponse | null {
+  if (!shouldUseMockConversations() && !shouldFallbackToMockAfterEmptyLiveData()) {
+    return null;
+  }
+
+  const draft = mockReplyDraftById(draftId);
+  if (!draft) return null;
+
+  const nowIso = new Date().toISOString();
+  const updatedDraft: ReplyDraft = {
+    ...draft,
+    draft_text: draftText ?? draft.draft_text,
+    approval_status: action === "approve" ? "approved" : "rejected",
+    approved_at: action === "approve" ? nowIso : undefined,
+    rejected_at: action === "reject" ? nowIso : undefined,
+    rejection_reason: action === "reject" ? rejectionReason : undefined,
+  };
+
+  return NextResponse.json({
+    success: true,
+    draft: updatedDraft,
+    source: "mock",
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -80,9 +122,9 @@ export async function PATCH(request: Request) {
     );
   }
 
-  let supabase;
+  let supabase: SupabaseClient;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Server configuration error";
@@ -112,6 +154,16 @@ export async function PATCH(request: Request) {
     );
   }
   if (!existing) {
+    const mockResponse = mockApprovalResponse(
+      draftId,
+      body.action,
+      draftText,
+      body.rejection_reason?.trim(),
+    );
+    if (mockResponse) {
+      return mockResponse;
+    }
+
     return NextResponse.json({ error: "Draft not found" }, { status: 404 });
   }
 
@@ -122,6 +174,35 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       { error: "Draft has no conversation_id" },
       { status: 500 },
+    );
+  }
+
+  const { data: convRow, error: convFetchErr } = await supabase
+    .from("conversations")
+    .select("workspace_id")
+    .eq("id", conversationId)
+    .maybeSingle();
+
+  if (convFetchErr) {
+    return NextResponse.json(
+      { error: convFetchErr.message },
+      { status: 500 },
+    );
+  }
+
+  const workspaceId =
+    convRow &&
+    typeof (convRow as { workspace_id?: string }).workspace_id === "string"
+      ? (convRow as { workspace_id: string }).workspace_id.trim()
+      : "";
+
+  if (!workspaceId) {
+    return NextResponse.json(
+      {
+        error:
+          "Conversation is not linked to a workspace; complete workspace setup or re-sync ingest.",
+      },
+      { status: 409 },
     );
   }
 
@@ -184,6 +265,7 @@ export async function PATCH(request: Request) {
     }
 
     await insertApprovalWorkflowLog(supabase, {
+      workspace_id: workspaceId,
       draft_id: draftId,
       conversation_id: conversationId,
       action: "approve",
@@ -223,6 +305,7 @@ export async function PATCH(request: Request) {
   }
 
   await insertApprovalWorkflowLog(supabase, {
+    workspace_id: workspaceId,
     draft_id: draftId,
     conversation_id: conversationId,
     action: "reject",

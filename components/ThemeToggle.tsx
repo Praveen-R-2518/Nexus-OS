@@ -13,7 +13,7 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="w-8 h-8" />; // Placeholder to avoid layout shift
+    return <div className="h-11 w-11 shrink-0" aria-hidden />;
   }
 
   return (
@@ -22,13 +22,13 @@ export function ThemeToggle() {
       onClick={() =>
         setTheme(resolvedTheme === "dark" ? "light" : "dark")
       }
-      className="inline-flex items-center justify-center rounded-lg border border-black/10 dark:border-white/10 p-2 text-foreground/60 transition-colors hover:bg-black/5 dark:bg-white/5 hover:text-foreground"
+      className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface-muted/80 text-foreground/70 transition-colors duration-interaction hover:border-border-strong hover:bg-surface-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-neutral-border focus-visible:ring-offset-2 focus-visible:ring-offset-surface-sidebar dark:focus-visible:ring-offset-surface-card"
       aria-label="Toggle theme"
     >
       {resolvedTheme === "dark" ? (
-        <Sun className="h-4 w-4" />
+        <Sun className="h-5 w-5" aria-hidden />
       ) : (
-        <Moon className="h-4 w-4" />
+        <Moon className="h-5 w-5" aria-hidden />
       )}
     </button>
   );
