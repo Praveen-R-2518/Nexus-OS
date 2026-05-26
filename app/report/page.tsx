@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowUpDown,
@@ -13,18 +14,9 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { Conversation, DailyReport } from "@/types";
-
-type ReportResponse = {
-  report: DailyReport | null;
-  generated_at?: string;
-  error?: string;
-};
-
-type ConversationsResponse = {
-  data?: Conversation[];
-  error?: string;
-};
+import { conversationsQuery, dailyReportQuery } from "@/lib/queries/fetchers";
+import { queryKeys } from "@/lib/queries/keys";
+import type { Conversation } from "@/types";
 
 type SortKey =
   | "customer_name"
@@ -147,63 +139,33 @@ function TypewriterSummary({ text }: { text: string | null | undefined }) {
 }
 
 export default function ReportPage() {
-  const [report, setReport] = useState<DailyReport | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("estimated_value");
+  const {
+    data: report = null,
+    isPending: reportPending,
+    error: reportErr,
+  } = useQuery({
+    queryKey: queryKeys.dailyReport(),
+    queryFn: dailyReportQuery,
+    staleTime: 60_000,
+  });
+
+  const {
+    data: conversations = [],
+    isPending: conversationsPending,
+    error: conversationsErr,
+  } = useQuery({
+    queryKey: queryKeys.conversations(100),
+    queryFn: () => conversationsQuery(100),
+    staleTime: 30_000,
+  });
+
+  const loading = reportPending || conversationsPending;
+  const reportErrorMsg =
+    reportErr instanceof Error ? reportErr.message : null;
+  const conversationsErrorMsg =
+    conversationsErr instanceof Error ? conversationsErr.message : null;
+  const [columnSortKey, setColumnSortKey] = useState<SortKey>("estimated_value");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadReport() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const [reportRes, conversationsRes] = await Promise.all([
-          fetch("/api/report"),
-          fetch("/api/conversations?limit=100"),
-        ]);
-
-        const reportJson = (await reportRes.json()) as ReportResponse;
-        const conversationsJson =
-          (await conversationsRes.json()) as ConversationsResponse;
-
-        if (!reportRes.ok) {
-          throw new Error(reportJson.error ?? reportRes.statusText);
-        }
-        if (!conversationsRes.ok) {
-          throw new Error(conversationsJson.error ?? conversationsRes.statusText);
-        }
-        if (!Array.isArray(conversationsJson.data)) {
-          throw new Error("Invalid conversations response");
-        }
-
-        if (!cancelled) {
-          setReport(reportJson.report ?? null);
-          setConversations(conversationsJson.data);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load report");
-          setReport(null);
-          setConversations([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadReport();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const todaysRows = useMemo<TableRow[]>(() => {
     const reportDate = report?.report_date;
@@ -230,25 +192,25 @@ export default function ReportPage() {
       let aValue: string | number;
       let bValue: string | number;
 
-      if (sortKey === "estimated_value") {
+      if (columnSortKey === "estimated_value") {
         aValue = Number(a.estimated_value) || 0;
         bValue = Number(b.estimated_value) || 0;
-      } else if (sortKey === "urgency") {
+      } else if (columnSortKey === "urgency") {
         aValue = a.urgency ? urgencyRank[a.urgency] : 0;
         bValue = b.urgency ? urgencyRank[b.urgency] : 0;
       } else {
-        aValue = String(a[sortKey]).toLowerCase();
-        bValue = String(b[sortKey]).toLowerCase();
+        aValue = String(a[columnSortKey]).toLowerCase();
+        bValue = String(b[columnSortKey]).toLowerCase();
       }
 
       if (aValue < bValue) return -1 * direction;
       if (aValue > bValue) return 1 * direction;
       return a.created_at.localeCompare(b.created_at) * -1;
     });
-  }, [sortDirection, sortKey, todaysRows]);
+  }, [sortDirection, columnSortKey, todaysRows]);
 
   const handleSort = useCallback((key: SortKey) => {
-    setSortKey((currentKey) => {
+    setColumnSortKey((currentKey) => {
       if (currentKey === key) {
         setSortDirection((currentDirection) =>
           currentDirection === "asc" ? "desc" : "asc",
@@ -322,9 +284,14 @@ export default function ReportPage() {
           </div>
         </header>
 
-        {error ? (
+        {reportErrorMsg ? (
           <div className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A]">
-            {error}
+            Report: {reportErrorMsg}
+          </div>
+        ) : null}
+        {conversationsErrorMsg ? (
+          <div className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A]">
+            Conversations: {conversationsErrorMsg}
           </div>
         ) : null}
 
@@ -337,23 +304,7 @@ export default function ReportPage() {
               />
             ))}
           </div>
-        ) : !report ? (
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/70 p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300">
-                <Clock className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  No report generated yet today.
-                </h2>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Reports are generated daily at 9 AM.
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
+        ) : report ? (
           <>
             <section
               aria-label="Report KPI summary"
@@ -449,7 +400,7 @@ export default function ReportPage() {
                             <ArrowUpDown
                               className={cn(
                                 "h-3.5 w-3.5",
-                                sortKey === key
+                                columnSortKey === key
                                   ? "text-[#1B6B3A]"
                                   : "text-gray-600",
                               )}
@@ -525,6 +476,26 @@ export default function ReportPage() {
               </div>
             </section>
           </>
+        ) : reportErrorMsg ? (
+          <div className="rounded-2xl border border-red-500/35 bg-red-500/10 p-8 text-sm text-[#8B1A1A]">
+            Could not load the daily report. {reportErrorMsg}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/70 p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  No report generated yet today.
+                </h2>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Reports are generated daily at 9 AM.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

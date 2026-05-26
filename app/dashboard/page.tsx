@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   useCallback,
   useEffect,
@@ -18,7 +19,9 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import type { Conversation, Metrics } from "@/types";
+import { conversationsQuery, metricsQuery } from "@/lib/queries/fetchers";
+import { queryKeys } from "@/lib/queries/keys";
+import type { Conversation } from "@/types";
 import {
   cn,
   conversationMessagePreview,
@@ -29,6 +32,9 @@ import {
 
 const GLOBAL_REFRESH_MS = 30_000;
 const INBOX_REFRESH_MS = 15_000;
+/** Shared list size for React Query cache (inbox, approval, report use same). */
+const CONVERSATIONS_LIMIT = 100;
+const FEED_PREVIEW = 10;
 
 function urgencyBadgeLabel(urgency: Conversation["urgency"] | null | undefined): string {
   if (urgency == null) return "—";
@@ -103,10 +109,6 @@ function SideCardSkeleton() {
 }
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
 
   const prevConvIdsRef = useRef<Set<string>>(new Set());
@@ -141,110 +143,53 @@ export default function DashboardPage() {
     }, 900);
   }, []);
 
-  const loadDashboard = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = opts?.silent ?? false;
-    if (!silent) setLoading(true);
-    setError(null);
+  const {
+    data: metrics,
+    isPending: metricsPending,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useQuery({
+    queryKey: queryKeys.metrics(),
+    queryFn: metricsQuery,
+    staleTime: 30_000,
+    refetchInterval: GLOBAL_REFRESH_MS,
+  });
 
-    try {
-      const [metricsRes, conversationsRes] = await Promise.all([
-        fetch("/api/metrics"),
-        fetch("/api/conversations?limit=10"),
-      ]);
-
-      const metricsJson = (await metricsRes.json()) as {
-        metrics?: Metrics;
-        error?: string;
-      };
-      const conversationsJson = (await conversationsRes.json()) as {
-        data?: Conversation[];
-        error?: string;
-      };
-
-      if (!metricsRes.ok) {
-        throw new Error(
-          typeof metricsJson.error === "string"
-            ? metricsJson.error
-            : metricsRes.statusText,
-        );
-      }
-      if (!conversationsRes.ok) {
-        throw new Error(
-          typeof conversationsJson.error === "string"
-            ? conversationsJson.error
-            : conversationsRes.statusText,
-        );
-      }
-
-      if (!metricsJson.metrics || typeof metricsJson.metrics !== "object") {
-        throw new Error("Invalid metrics response");
-      }
-      if (!Array.isArray(conversationsJson.data)) {
-        throw new Error("Invalid conversations response");
-      }
-
-      setMetrics(metricsJson.metrics);
-      setConversations(conversationsJson.data);
-      applyConversationHighlights(conversationsJson.data);
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Failed to load command center";
-      setError(msg);
-      if (!silent) {
-        setMetrics(null);
-        setConversations([]);
-      }
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [applyConversationHighlights]);
-
-  const loadInboxOnly = useCallback(async () => {
-    setError(null);
-    try {
-      const conversationsRes = await fetch("/api/conversations?limit=10");
-      const conversationsJson = (await conversationsRes.json()) as {
-        data?: Conversation[];
-        error?: string;
-      };
-
-      if (!conversationsRes.ok) {
-        throw new Error(
-          typeof conversationsJson.error === "string"
-            ? conversationsJson.error
-            : conversationsRes.statusText,
-        );
-      }
-      if (!Array.isArray(conversationsJson.data)) {
-        throw new Error("Invalid conversations response");
-      }
-
-      setConversations(conversationsJson.data);
-      applyConversationHighlights(conversationsJson.data);
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Failed to refresh inbox feed";
-      setError(msg);
-    }
-  }, [applyConversationHighlights]);
+  const {
+    data: conversations = [],
+    isPending: conversationsPending,
+    error: conversationsError,
+    refetch: refetchConversations,
+  } = useQuery({
+    queryKey: queryKeys.conversations(CONVERSATIONS_LIMIT),
+    queryFn: () => conversationsQuery(CONVERSATIONS_LIMIT),
+    staleTime: 30_000,
+    refetchInterval: INBOX_REFRESH_MS,
+  });
 
   useEffect(() => {
-    void loadDashboard();
+    if (conversations.length > 0) {
+      applyConversationHighlights(conversations);
+    }
+  }, [conversations, applyConversationHighlights]);
 
-    const globalTimer = window.setInterval(() => {
-      void loadDashboard({ silent: true });
-    }, GLOBAL_REFRESH_MS);
-
-    const inboxTimer = window.setInterval(() => {
-      void loadInboxOnly();
-    }, INBOX_REFRESH_MS);
-
+  useEffect(() => {
     return () => {
-      window.clearInterval(globalTimer);
-      window.clearInterval(inboxTimer);
       if (highlightClearRef.current) clearTimeout(highlightClearRef.current);
     };
-  }, [loadDashboard, loadInboxOnly]);
+  }, []);
+
+  const metricsErrorMsg =
+    metricsError instanceof Error ? metricsError.message : null;
+  const conversationsErrorMsg =
+    conversationsError instanceof Error
+      ? conversationsError.message
+      : null;
+
+  const feedPreview = useMemo(
+    () => conversations.slice(0, FEED_PREVIEW),
+    [conversations],
+  );
 
   const hotLeadsList = useMemo(() => {
     return conversations
@@ -274,16 +219,41 @@ export default function DashboardPage() {
           </p>
         </header>
 
-        {error ? (
+        {metricsErrorMsg ? (
           <div className="rounded-xl border border-red-200 dark:border-red-500/35 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A] dark:text-red-200">
-            {error}
+            <span>Metrics: {metricsErrorMsg}</span>{" "}
+            <button
+              type="button"
+              onClick={() => void refetchMetrics()}
+              className="ml-2 font-medium text-[#1B6B3A] underline dark:text-emerald-400"
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
+        {conversationsErrorMsg ? (
+          <div className="rounded-xl border border-red-200 dark:border-red-500/35 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-[#8B1A1A] dark:text-red-200">
+            <span>Inbox feed: {conversationsErrorMsg}</span>{" "}
+            <button
+              type="button"
+              onClick={() => void refetchConversations()}
+              className="ml-2 font-medium text-[#1B6B3A] underline dark:text-emerald-400"
+            >
+              Retry
+            </button>
           </div>
         ) : null}
 
         {/* Metrics */}
         <section aria-label="Key metrics">
-          {loading && !metrics ? (
+          {metricsPending && !metrics ? (
             <MetricsSkeletonRow />
+          ) : metricsErrorMsg && !metrics ? (
+            <EmptyState
+              title="Metrics unavailable"
+              description={metricsErrorMsg}
+              className="border-gray-200 dark:border-gray-800 bg-obsidian/40"
+            />
           ) : metrics ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Card
@@ -344,9 +314,9 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {loading && conversations.length === 0 ? (
+            {conversationsPending && feedPreview.length === 0 ? (
               <FeedSkeleton />
-            ) : conversations.length === 0 ? (
+            ) : feedPreview.length === 0 ? (
               <EmptyState
                 title="Inbox empty"
                 description="New conversations will appear here."
@@ -354,7 +324,7 @@ export default function DashboardPage() {
               />
             ) : (
               <ul className="divide-y divide-slate-200 dark:divide-slate-800/80">
-                {conversations.map((c) => {
+                {feedPreview.map((c) => {
                   const highlighted = highlightIds.has(c.id);
                   return (
                     <li key={c.id}>
@@ -436,7 +406,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="p-4">
-                {loading && conversations.length === 0 ? (
+                {conversationsPending && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
                 ) : hotLeadsList.length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate-500">
@@ -497,7 +467,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="p-4">
-                {loading && conversations.length === 0 ? (
+                {conversationsPending && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
                 ) : churnRisksList.length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate-500">

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ClipboardList,
@@ -13,7 +14,9 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
-import type { Conversation, ReplyDraft } from "@/types";
+import { conversationDraftsQuery, conversationsQuery } from "@/lib/queries/fetchers";
+import { queryKeys } from "@/lib/queries/keys";
+import type { Conversation } from "@/types";
 import {
   cn,
   conversationMessageText,
@@ -111,9 +114,18 @@ function InboxPageContent() {
   const searchParams = useSearchParams();
   const prevQsRef = useRef<string | null>(null);
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState<string | null>(null);
+  const {
+    data: conversations = [],
+    isPending: listLoading,
+    error: listErr,
+  } = useQuery({
+    queryKey: queryKeys.conversations(FETCH_LIMIT),
+    queryFn: () => conversationsQuery(FETCH_LIMIT),
+    staleTime: 30_000,
+    refetchInterval: REFRESH_MS,
+  });
+
+  const listError = listErr instanceof Error ? listErr.message : null;
 
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
@@ -124,43 +136,20 @@ function InboxPageContent() {
     useState<IntentFilter>("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [detailDrafts, setDetailDrafts] = useState<ReplyDraft[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
+  const {
+    data: detailDrafts = [],
+    isFetching: detailLoading,
+    error: detailErrObj,
+  } = useQuery({
+    queryKey: queryKeys.conversationDetail(
+      selectedConversationId ?? "nil",
+    ),
+    queryFn: () => conversationDraftsQuery(selectedConversationId!),
+    enabled: Boolean(selectedConversationId),
+  });
 
-  const loadConversations = useCallback(async () => {
-    setListError(null);
-    try {
-      const res = await fetch(`/api/conversations?limit=${FETCH_LIMIT}`);
-      const json = (await res.json()) as {
-        data?: Conversation[];
-        error?: string;
-      };
-      if (!res.ok) {
-        throw new Error(
-          typeof json.error === "string" ? json.error : res.statusText,
-        );
-      }
-      if (!Array.isArray(json.data)) {
-        throw new Error("Invalid conversations response");
-      }
-      setConversations(json.data);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load conversations";
-      setListError(msg);
-      setConversations([]);
-    } finally {
-      setListLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadConversations();
-    const t = setInterval(() => {
-      void loadConversations();
-    }, REFRESH_MS);
-    return () => clearInterval(t);
-  }, [loadConversations]);
+  const detailError =
+    detailErrObj instanceof Error ? detailErrObj.message : null;
 
   const revenueAtRisk = useMemo(() => {
     return conversations
@@ -237,48 +226,6 @@ function InboxPageContent() {
       setSelectedConversationId(null);
     }
   }, [conversations, selectedConversationId]);
-
-  useEffect(() => {
-    if (!selectedConversationId) {
-      setDetailDrafts([]);
-      setDetailError(null);
-      setDetailLoading(false);
-      return;
-    }
-
-    const ac = new AbortController();
-    setDetailLoading(true);
-    setDetailError(null);
-
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/conversations/${encodeURIComponent(selectedConversationId)}`,
-          { signal: ac.signal },
-        );
-        const json = (await res.json()) as {
-          drafts?: ReplyDraft[];
-          error?: string;
-        };
-        if (!res.ok) {
-          throw new Error(
-            typeof json.error === "string" ? json.error : res.statusText,
-          );
-        }
-        setDetailDrafts(Array.isArray(json.drafts) ? json.drafts : []);
-      } catch (e) {
-        if (e instanceof Error && e.name === "AbortError") return;
-        const msg =
-          e instanceof Error ? e.message : "Failed to load conversation";
-        setDetailError(msg);
-        setDetailDrafts([]);
-      } finally {
-        if (!ac.signal.aborted) setDetailLoading(false);
-      }
-    })();
-
-    return () => ac.abort();
-  }, [selectedConversationId]);
 
   const selectedConversation = useMemo(() => {
     if (!selectedConversationId) return null;

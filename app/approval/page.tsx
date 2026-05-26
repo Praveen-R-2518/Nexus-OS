@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -15,10 +16,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import {
   approveReply,
-  fetchConversations,
-  fetchReplyDrafts,
   rejectReply,
 } from "@/lib/api";
+import { conversationsQuery, replyDraftsQuery } from "@/lib/queries/fetchers";
+import { queryKeys } from "@/lib/queries/keys";
 import {
   cn,
   conversationMessageText,
@@ -152,9 +153,8 @@ function MiniCard({
 }
 
 export default function ApprovalPage() {
-  const [drafts, setDrafts] = useState<DraftItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [draftOverride, setDraftOverride] = useState<DraftItem[] | null>(null);
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<ApprovalFilter>("pending");
   const [editedDraftText, setEditedDraftText] = useState<Record<string, string>>(
@@ -165,47 +165,36 @@ export default function ApprovalPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
 
+  const {
+    data: draftRows = [],
+    isPending: draftsPending,
+    error: draftsErr,
+  } = useQuery({
+    queryKey: queryKeys.replyDrafts(),
+    queryFn: () => replyDraftsQuery(),
+    staleTime: 30_000,
+  });
+
+  const { data: convRows = [] } = useQuery({
+    queryKey: queryKeys.conversations(100),
+    queryFn: () => conversationsQuery(100),
+    staleTime: 30_000,
+  });
+
+  const mergedBase = useMemo(
+    () => sortDrafts(mergeDraftsWithConversations(draftRows, convRows)),
+    [draftRows, convRows],
+  );
+
+  const drafts = draftOverride ?? mergedBase;
+  const loading = draftsPending && draftOverride === null;
+  const error =
+    draftsErr instanceof Error ? draftsErr.message : null;
+
   const showToast = useCallback((nextToast: Toast) => {
     setToast(nextToast);
     window.setTimeout(() => setToast(null), 3200);
   }, []);
-
-  const loadDrafts = useCallback(async () => {
-    setError(null);
-    try {
-      let draftRows: ReplyDraftWithConversation[];
-      try {
-        draftRows = await fetchReplyDrafts();
-      } catch (e) {
-        const msg =
-          e instanceof Error ? e.message : "Failed to load reply drafts";
-        setError(msg);
-        setDrafts([]);
-        return;
-      }
-
-      let conversations: Conversation[] = [];
-      try {
-        conversations = await fetchConversations();
-      } catch {
-        conversations = [];
-      }
-
-      const merged = sortDrafts(
-        mergeDraftsWithConversations(draftRows, conversations),
-      );
-      setDrafts(merged);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load approvals");
-      setDrafts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadDrafts();
-  }, [loadDrafts]);
 
   const counts = useMemo(() => {
     return {
@@ -253,6 +242,7 @@ export default function ApprovalPage() {
     action: () => Promise<void>,
     successMessage: string,
   ) {
+    const overrideBefore = draftOverride;
     const previousDrafts = drafts;
     const previousFilter = activeFilter;
     const previousSelectedDraftId = selectedDraftId;
@@ -263,9 +253,9 @@ export default function ApprovalPage() {
     setActionDraftId(draft.id);
     setActiveFilter(status);
     setSelectedDraftId(draft.id);
-    setDrafts((current) =>
+    setDraftOverride(
       sortDrafts(
-        current.map((item) =>
+        previousDrafts.map((item) =>
           item.id === draft.id
             ? {
                 ...item,
@@ -287,8 +277,13 @@ export default function ApprovalPage() {
     try {
       await action();
       showToast({ kind: "success", message: successMessage });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.replyDrafts() });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations(100),
+      });
+      setDraftOverride(null);
     } catch (e) {
-      setDrafts(previousDrafts);
+      setDraftOverride(overrideBefore);
       setActiveFilter(previousFilter);
       setSelectedDraftId(previousSelectedDraftId);
       showToast({
