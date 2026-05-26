@@ -109,16 +109,16 @@ export default function SignupPage() {
     <div className="min-h-screen px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 hairline-b pb-8 text-center sm:mb-10">
-          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/55 dark:text-white/50">
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/75 dark:text-white/75">
             [ ONBOARD / WORKSPACE ]
           </p>
           <h1 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-black sm:text-3xl dark:text-white">
             Revenue command center
           </h1>
-          <p className="mx-auto mt-3 max-w-lg font-mono text-xs leading-relaxed text-black/75 dark:text-white/70">
+          <p className="mx-auto mt-3 max-w-lg font-mono text-xs leading-relaxed text-black/90 dark:text-white/90">
             Multi-step signup — flat panels, monospace labels, navy primary actions.
           </p>
-          <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-black/50 dark:text-white/45">
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-black/70 dark:text-white/70">
             Already registered?{" "}
             <Link href="/login" className="cursor-pointer text-[#0f2336] underline underline-offset-4 dark:text-muted">
               Sign in

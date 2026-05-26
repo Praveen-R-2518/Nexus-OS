@@ -49,21 +49,6 @@ export default function DataNexus() {
       objects.push(new THREE.LineLoop(geo, mat));
     }
 
-    const meridians = 14;
-    const meridianSteps = 44;
-    for (let m = 0; m < meridians; m++) {
-      const a = (m / meridians) * Math.PI * 2;
-      const pts: THREE.Vector3[] = [];
-      for (let s = 0; s <= meridianSteps; s++) {
-        const u = s / meridianSteps;
-        const y = (u - 0.5) * 2 * yScale;
-        const rad = Math.sqrt(Math.max(0, 1 - (y / yScale) ** 2)) * rScale;
-        pts.push(new THREE.Vector3(Math.cos(a) * rad, y, Math.sin(a) * rad));
-      }
-      const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      objects.push(new THREE.Line(geo, mat));
-    }
-
     return objects;
   }, [lineColor, opacity]);
 

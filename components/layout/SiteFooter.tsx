@@ -4,7 +4,7 @@ export default function SiteFooter() {
   return (
     <footer className="rounded-t-xl hairline-t bg-white text-black dark:bg-surface-page dark:text-white">
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-4 py-10 md:flex-row md:items-center md:px-8">
-        <div className="space-y-2 font-mono text-xs text-black/70 dark:text-white/65">
+        <div className="space-y-2 font-mono text-xs text-black/85 dark:text-white/80">
           <p className="font-bold uppercase tracking-[0.28em] text-black dark:text-white">
             Nexus OS
           </p>

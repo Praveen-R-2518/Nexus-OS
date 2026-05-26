@@ -7,7 +7,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClass =
-  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/40 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/40 dark:focus:border-border-strong dark:focus:ring-border-strong";
+  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/55 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/55 dark:focus:border-border-strong dark:focus:ring-border-strong";
 
 function LoginForm() {
   const router = useRouter();
@@ -100,7 +100,7 @@ function LoginForm() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/60 dark:text-white/55">
+      <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/80">
         Loading secure workspace…
       </div>
     );
@@ -110,19 +110,19 @@ function LoginForm() {
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md border border-border bg-white p-6 dark:border-border dark:bg-surface-card">
         <div className="mb-6 border-b border-dashed border-border pb-6 dark:border-border">
-          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/55 dark:text-white/50">
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/75 dark:text-white/75">
             [ AUTH / SESSION ]
           </p>
           <h1 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-black dark:text-white">
             Sign in
           </h1>
-          <p className="mt-3 font-mono text-xs leading-relaxed text-black/75 dark:text-white/70">
+          <p className="mt-3 font-mono text-xs leading-relaxed text-black/90 dark:text-white/90">
             Gmail and webhook data stay behind the founder dashboard. Monospace fields, navy actions.
           </p>
         </div>
         <form className="space-y-5" onSubmit={signInWithPassword}>
           <label className="block space-y-2">
-            <span className="font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/75">
+            <span className="font-mono text-xs uppercase tracking-widest text-black/95 dark:text-white/95">
               Email
             </span>
             <input
@@ -135,7 +135,7 @@ function LoginForm() {
             />
           </label>
           <label className="block space-y-2">
-            <span className="font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/75">
+            <span className="font-mono text-xs uppercase tracking-widest text-black/95 dark:text-white/95">
               Password
             </span>
             <input
@@ -183,7 +183,7 @@ function LoginForm() {
             </button>
           </div>
         </form>
-        <p className="mt-8 hairline-t pt-6 text-center font-mono text-[10px] uppercase tracking-widest text-black/60 dark:text-white/55">
+        <p className="mt-8 hairline-t pt-6 text-center font-mono text-[10px] uppercase tracking-widest text-black/80 dark:text-white/80">
           Need an account?{" "}
           <Link
             href="/signup"
@@ -201,7 +201,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/60 dark:text-white/55">
+        <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/80">
           Loading…
         </div>
       }
