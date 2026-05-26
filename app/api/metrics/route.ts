@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { MOCK_CONVERSATIONS, MOCK_REPLY_DRAFTS } from "@/lib/mock-inbox-data";
 import {
   shouldUseDevelopmentMockFallback,
@@ -56,7 +56,7 @@ export async function GET() {
 
   let supabase;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     if (shouldUseDevelopmentMockFallback()) {
       return mockMetricsResponse();

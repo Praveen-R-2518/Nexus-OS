@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
 import type { DailyReport } from "@/types";
 
@@ -12,7 +12,7 @@ export async function GET() {
 
   let supabase;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     if (shouldUseDevelopmentMockFallback()) {
       return NextResponse.json({ report: null });

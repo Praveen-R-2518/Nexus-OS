@@ -150,7 +150,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", payload: $json } }}"
+        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", workspace_id: $env.NEXUS_WORKSPACE_ID, payload: $json } }}"
       },
       "id": "00000000-0000-4000-8000-000000000035",
       "name": "Log Noise Drop",
@@ -341,7 +341,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}"
+        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", workspace_id: $env.NEXUS_WORKSPACE_ID, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}"
       },
       "id": "00000000-0000-4000-8000-000000000040",
       "name": "POST Conversation (append)",
@@ -440,7 +440,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}"
+        "jsonBody": "={{ { source: $json.normalized.source, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", workspace_id: $env.NEXUS_WORKSPACE_ID, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}"
       },
       "id": "00000000-0000-4000-8000-000000000042",
       "name": "POST Conversation (new)",
@@ -562,7 +562,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}"
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', workspace_id: $env.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}"
       },
       "id": "00000000-0000-4000-8000-000000000044",
       "name": "Log Intake OK",
@@ -603,7 +603,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}"
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', workspace_id: $env.NEXUS_WORKSPACE_ID, payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}"
       },
       "id": "00000000-0000-4000-8000-000000000045",
       "name": "Log Intake Error",

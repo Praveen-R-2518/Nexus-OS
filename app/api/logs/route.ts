@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireApiUser } from "@/lib/api-security";
-import { createServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { shouldUseDevelopmentMockFallback } from "@/lib/conversations-mock";
 import type { WorkflowLog } from "@/types";
 
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
   let supabase;
   try {
-    supabase = createServerClient();
+    supabase = createSupabaseRouteHandlerClient();
   } catch (err) {
     if (shouldUseDevelopmentMockFallback()) {
       return emptyLogsResponse();

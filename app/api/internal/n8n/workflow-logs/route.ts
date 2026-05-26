@@ -6,6 +6,7 @@ import {
   requireN8nToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
+import { parseWorkspaceId } from "@/lib/workspace-id";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const workspaceId = parseWorkspaceId(body.workspace_id);
+  if (!workspaceId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "workspace_id is required and must be a valid UUID",
+      },
+      { status: 400 },
+    );
+  }
+
   let supabase;
   try {
     supabase = createServerClient();
@@ -68,9 +80,23 @@ export async function POST(request: Request) {
       ? body.payload
       : {};
 
+  const { data: wsRow, error: wsErr } = await supabase
+    .from("workspaces")
+    .select("id")
+    .eq("id", workspaceId)
+    .maybeSingle();
+
+  if (wsErr || !wsRow) {
+    return NextResponse.json(
+      { success: false, error: "workspace_id does not reference an existing workspace" },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await supabase
     .from("workflow_logs")
     .insert({
+      workspace_id: workspaceId,
       workflow_name: workflowName,
       step,
       result,
