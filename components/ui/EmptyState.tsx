@@ -17,19 +17,23 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-obsidian/40 px-8 py-16 text-center",
+        "flex flex-col items-center justify-center border border-dashed border-black/40 bg-ref-mint/50 px-8 py-14 text-center dark:border-white/35 dark:bg-[#080c10]/80",
         className,
       )}
     >
       {icon ? (
-      <span className="mb-4 text-slate-400 dark:text-slate-600 [&>svg]:h-10 [&>svg]:w-10">
-        {icon}
-      </span>
-    ) : null}
-    <p className="text-sm font-medium text-slate-900 dark:text-slate-200">{title}</p>
-    {description ? (
-      <p className="mt-2 max-w-sm text-sm text-slate-500">{description}</p>
-    ) : null}
+        <span className="mb-4 text-black/35 dark:text-white/35 [&>svg]:h-9 [&>svg]:w-9">
+          {icon}
+        </span>
+      ) : null}
+      <p className="font-mono text-xs font-semibold uppercase tracking-widest text-atmospheric-grey">
+        {title}
+      </p>
+      {description ? (
+        <p className="mt-2 max-w-sm font-mono text-[11px] leading-relaxed text-muted">
+          {description}
+        </p>
+      ) : null}
     </div>
   );
 }

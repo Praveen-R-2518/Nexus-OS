@@ -13,6 +13,8 @@ type StepDoneProps = {
   snapshot: SignupSnapshot;
 };
 
+const accent = "text-[#0f2336] dark:text-[#a8bdd4]";
+
 export default function StepDone({ snapshot }: StepDoneProps) {
   const router = useRouter();
   const gmailLabel =
@@ -24,39 +26,54 @@ export default function StepDone({ snapshot }: StepDoneProps) {
     <div className="mx-auto max-w-xl space-y-8 text-center">
       <div>
         <div className="flex justify-center text-4xl" aria-hidden>
-          <PartyPopper className="w-12 h-12 text-[#1B6B3A]" />
+          <PartyPopper className={`h-12 w-12 ${accent}`} />
         </div>
-        <h2 className="mt-3 text-2xl font-bold text-foreground">NexusOS is ready!</h2>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Your workspace is configured. Here&apos;s what we set up.
+        <h2 className="mt-3 font-sans text-2xl font-black uppercase tracking-tight text-foreground">
+          Nexus OS is ready
+        </h2>
+        <p className="mt-2 font-mono text-sm text-gray-500 dark:text-gray-400">
+          Your workspace is configured. Summary below.
         </p>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/80 p-5 text-left text-sm">
-        <p className="mb-3 font-semibold text-gray-700 dark:text-gray-200">Summary</p>
-        <ul className="space-y-2 text-gray-600 dark:text-gray-300">
-          <li className="flex items-center"><Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Account created</li>
+      <div className="border border-black bg-white p-5 text-left font-mono text-sm dark:border-white dark:bg-[#0a1018]">
+        <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
+          Summary
+        </p>
+        <ul className="space-y-2 text-black/85 dark:text-white/80">
           <li className="flex items-center">
-            <Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Workspace:{" "}
-            <span className="text-foreground ml-1">
+            <Check className={`mr-1 inline h-4 w-4 shrink-0 ${accent}`} aria-hidden />
+            Account created
+          </li>
+          <li className="flex items-center">
+            <Check className={`mr-1 inline h-4 w-4 shrink-0 ${accent}`} aria-hidden />
+            Workspace:{" "}
+            <span className="ml-1 text-foreground">
               {snapshot.companyName || "Your workspace"}
             </span>
           </li>
           <li className="flex items-center">
-            <Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Plan:{" "}
-            <span className="text-foreground ml-1">
+            <Check className={`mr-1 inline h-4 w-4 shrink-0 ${accent}`} aria-hidden />
+            Plan:{" "}
+            <span className="ml-1 text-foreground">
               {planLabel(snapshot.planTier)} — 14-day free trial
             </span>
           </li>
           <li className="flex items-center">
-            <Check className="inline w-4 h-4 mr-1 text-[#1B6B3A]" /> Gmail: <span className="text-foreground ml-1">{gmailLabel}</span>
+            <Check className={`mr-1 inline h-4 w-4 shrink-0 ${accent}`} aria-hidden />
+            Gmail: <span className="ml-1 text-foreground">{gmailLabel}</span>
           </li>
         </ul>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-surface-card dark:bg-gray-950/60 p-5 text-left text-sm">
-        <p className="mb-3 font-semibold text-gray-700 dark:text-gray-200">Onboarding checklist</p>
-        <ul className="space-y-2 text-gray-500 dark:text-gray-400">
+      <div className="border border-black bg-[#eef6fb] p-5 text-left font-mono text-sm dark:border-white dark:bg-[#0c141f]">
+        <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
+          Onboarding checklist
+        </p>
+        <ul className="space-y-2 text-black/70 dark:text-white/65">
           {snapshot.gmailConnected === true ? (
-            <li className="text-[#1B6B3A] flex items-center"><Check className="inline w-4 h-4 mr-1" /> Connect Gmail</li>
+            <li className={`flex items-center ${accent}`}>
+              <Check className="mr-1 inline h-4 w-4 shrink-0" aria-hidden />
+              Connect Gmail
+            </li>
           ) : (
             <li>□ Connect Gmail</li>
           )}
@@ -68,9 +85,9 @@ export default function StepDone({ snapshot }: StepDoneProps) {
       <button
         type="button"
         onClick={() => router.push("/dashboard")}
-        className="inline-flex w-full items-center justify-center rounded-lg bg-trajectory-blue py-3 text-sm font-semibold text-white transition hover:bg-blue-600 sm:w-auto sm:px-8"
+        className="inline-flex w-full cursor-pointer items-center justify-center border border-black bg-[#0f2336] py-3 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] sm:w-auto sm:px-8 dark:border-white"
       >
-        Go to Dashboard →
+        Go to dashboard →
       </button>
     </div>
   );

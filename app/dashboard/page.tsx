@@ -69,7 +69,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-40 animate-pulse rounded-2xl border border-border bg-surface-muted"
+          className="h-36 animate-pulse border border-black/15 bg-surface-muted dark:border-white/15"
         />
       ))}
     </div>
@@ -78,18 +78,18 @@ function MetricsSkeletonRow() {
 
 function FeedSkeleton() {
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-2 p-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-obsidian/40 p-3"
+          className="flex animate-pulse gap-3 border border-black/10 bg-surface-muted/80 p-3 dark:border-white/10"
         >
-          <div className="h-6 w-16 shrink-0 rounded-full bg-gray-100 dark:bg-gray-800" />
+          <div className="h-6 w-14 shrink-0 border border-black/10 bg-white/50 dark:border-white/10 dark:bg-[#0a1018]/80" />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-4 w-1/3 rounded bg-gray-100 dark:bg-gray-800" />
-            <div className="h-3 w-full rounded bg-gray-100 dark:bg-gray-800/80" />
+            <div className="h-3 w-1/3 border border-black/10 bg-white/50 dark:border-white/10 dark:bg-[#0a1018]/80" />
+            <div className="h-3 w-full border border-black/10 bg-white/40 dark:border-white/10 dark:bg-[#0a1018]/60" />
           </div>
-          <div className="hidden h-8 w-14 shrink-0 rounded bg-gray-100 dark:bg-gray-800 sm:block" />
+          <div className="hidden h-8 w-12 shrink-0 border border-black/10 bg-white/50 dark:border-white/10 dark:bg-[#0a1018]/80 sm:block" />
         </div>
       ))}
     </div>
@@ -98,11 +98,14 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-gray-200 dark:border-gray-800 bg-obsidian/40 p-4">
-      <div className="mb-4 h-5 w-40 rounded bg-gray-100 dark:bg-gray-800" />
-      <div className="space-y-3">
+    <div className="animate-pulse border border-black/15 bg-surface-muted p-4 dark:border-white/15">
+      <div className="mb-4 h-4 w-36 border border-black/10 bg-white/40 dark:border-white/10 dark:bg-[#0a1018]/60" />
+      <div className="space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-lg bg-gray-100 dark:bg-gray-800/50" />
+          <div
+            key={i}
+            className="h-12 border border-black/10 bg-white/40 dark:border-white/10 dark:bg-[#0a1018]/50"
+          />
         ))}
       </div>
     </div>
@@ -207,13 +210,13 @@ export default function DashboardPage() {
   }, [conversations]);
 
   return (
-    <div className="min-h-[calc(100vh-6rem)] space-y-8">
-        <header className="border-b border-border pb-8">
-          <p className="text-xs font-bold uppercase tracking-brand text-status-positive">
+    <div className="min-h-0 space-y-10">
+        <header className="border-b border-black pb-8 dark:border-white">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-emerald-300/90">
             Operations
           </p>
-          <div className="mt-2 flex items-start justify-between">
-            <h1 className="text-4xl font-bold tracking-tight text-atmospheric-grey sm:text-5xl">
+          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <h1 className="font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl md:text-5xl">
               Command Center
             </h1>
             <DemoButton
@@ -223,31 +226,31 @@ export default function DashboardPage() {
               }}
             />
           </div>
-          <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
+          <p className="mb-2 mt-4 max-w-2xl font-mono text-sm leading-relaxed text-muted">
             Live revenue rescue ops — prioritize revenue at risk, route hot
             leads, and intercept churn before it lands.
           </p>
         </header>
 
         {metricsErrorMsg ? (
-          <div className="rounded-2xl border border-status-critical-border bg-status-critical-surface px-4 py-3 text-base text-status-critical">
+          <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
             <span>Metrics: {metricsErrorMsg}</span>{" "}
             <button
               type="button"
               onClick={() => void refetchMetrics()}
-              className="ml-2 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-2 font-semibold text-status-positive underline-offset-4 hover:underline"
+              className="ml-2 inline-flex min-h-11 cursor-pointer items-center px-2 font-semibold uppercase tracking-wide text-status-positive underline-offset-4 hover:underline"
             >
               Retry
             </button>
           </div>
         ) : null}
         {conversationsErrorMsg ? (
-          <div className="rounded-2xl border border-status-critical-border bg-status-critical-surface px-4 py-3 text-base text-status-critical">
+          <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
             <span>Inbox feed: {conversationsErrorMsg}</span>{" "}
             <button
               type="button"
               onClick={() => void refetchConversations()}
-              className="ml-2 inline-flex min-h-11 cursor-pointer items-center rounded-lg px-2 font-semibold text-status-positive underline-offset-4 hover:underline"
+              className="ml-2 inline-flex min-h-11 cursor-pointer items-center px-2 font-semibold uppercase tracking-wide text-status-positive underline-offset-4 hover:underline"
             >
               Retry
             </button>
@@ -315,12 +318,12 @@ export default function DashboardPage() {
           {/* Inbox feed */}
           <section
             aria-label="Inbox feed preview"
-            className="overflow-hidden rounded-2xl border border-border surface-card shadow-card-halo-light dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+            className="overflow-hidden border border-black bg-white dark:border-white dark:bg-[#0a1018]"
           >
-            <div className="flex items-center justify-end border-b border-border px-5 py-4">
+            <div className="flex items-center justify-end border-b border-black px-4 py-3 dark:border-white">
               <Link
                 href="/inbox"
-                className="inline-flex min-h-11 items-center text-base font-semibold text-status-positive transition-colors duration-interaction hover:text-trajectory-blue"
+                className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[11px] font-semibold uppercase tracking-widest text-ref-cta transition-opacity hover:opacity-80 dark:text-emerald-300/90"
               >
                 Open inbox →
               </Link>
@@ -335,7 +338,7 @@ export default function DashboardPage() {
                 className="border-0 bg-transparent py-12"
               />
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-black/10 dark:divide-white/10">
                 {feedPreview.map((c) => {
                   const highlighted = highlightIds.has(c.id);
                   return (
@@ -386,7 +389,7 @@ export default function DashboardPage() {
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface-muted text-atmospheric-grey transition-colors duration-interaction hover:border-status-positive-border hover:bg-status-positive-surface hover:text-status-positive"
+                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border border-black bg-ref-mint text-atmospheric-grey transition-colors duration-interaction hover:border-ref-cta hover:bg-white dark:border-white dark:bg-[#0c141f] dark:hover:border-emerald-300/60"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-5 w-5" />
@@ -405,16 +408,16 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden rounded-2xl border border-status-warning-border bg-gradient-to-b from-status-warning-surface to-transparent shadow-card-halo-light dark:shadow-card-halo"
+              className="overflow-hidden border border-status-warning-border bg-status-warning-surface/30 dark:bg-[#0a1018]"
             >
-              <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                <h2 className="flex items-center gap-2 text-base font-bold text-atmospheric-grey">
-                  <Flame className="h-5 w-5 text-status-warning" aria-hidden />{" "}
+              <div className="flex items-center justify-between border-b border-black px-4 py-3 dark:border-white">
+                <h2 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-atmospheric-grey">
+                  <Flame className="h-4 w-4 text-status-warning" aria-hidden />{" "}
                   Hot Leads
                 </h2>
                 <Link
                   href="/inbox?intent=purchase"
-                  className="inline-flex min-h-11 items-center text-sm font-semibold text-status-warning transition-colors hover:text-status-caution"
+                  className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[10px] font-semibold uppercase tracking-widest text-status-warning transition-opacity hover:opacity-80"
                 >
                   View all →
                 </Link>
@@ -423,14 +426,14 @@ export default function DashboardPage() {
                 {conversationsPending && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
                 ) : hotLeadsList.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-slate-500">
+                  <p className="py-6 text-center font-mono text-xs text-muted">
                     No hot leads in the current snapshot.
                   </p>
                 ) : (
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-xl border border-border surface-card px-4 py-3 shadow-sm">
+                        <div className="border border-black/15 bg-white px-3 py-3 dark:border-white/15 dark:bg-[#0c141f]">
                           <div className="flex items-start justify-between gap-3">
                             <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
@@ -447,7 +450,7 @@ export default function DashboardPage() {
                             />
                             <span
                               className={cn(
-                                "rounded-full border px-3 py-1 text-xs font-semibold",
+                                "border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
                                 isDraftPipelineReady(c.status)
                                   ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                                   : "border-border bg-surface-muted text-muted",
@@ -467,19 +470,19 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden rounded-2xl border border-status-caution-border bg-gradient-to-b from-status-caution-surface to-transparent shadow-card-halo-light dark:shadow-card-halo"
+              className="overflow-hidden border border-status-caution-border bg-status-caution-surface/25 dark:bg-[#0a1018]"
             >
-              <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                <h2 className="flex items-center gap-2 text-base font-bold text-atmospheric-grey">
+              <div className="flex items-center justify-between border-b border-black px-4 py-3 dark:border-white">
+                <h2 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-atmospheric-grey">
                   <AlertTriangle
-                    className="h-5 w-5 text-status-caution"
+                    className="h-4 w-4 text-status-caution"
                     aria-hidden
                   />{" "}
                   Churn Risks
                 </h2>
                 <Link
                   href="/inbox?intent=churn_risk"
-                  className="inline-flex min-h-11 items-center text-sm font-semibold text-status-caution transition-colors hover:text-status-warning"
+                  className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[10px] font-semibold uppercase tracking-widest text-status-caution transition-opacity hover:opacity-80"
                 >
                   View all →
                 </Link>
@@ -488,14 +491,14 @@ export default function DashboardPage() {
                 {conversationsPending && feedPreview.length === 0 ? (
                   <SideCardSkeleton />
                 ) : churnRisksList.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-slate-500">
+                  <p className="py-6 text-center font-mono text-xs text-muted">
                     No churn signals in the current snapshot.
                   </p>
                 ) : (
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-xl border border-border surface-card px-4 py-3 shadow-sm">
+                        <div className="border border-black/15 bg-white px-3 py-3 dark:border-white/15 dark:bg-[#0c141f]">
                           <div className="flex items-start justify-between gap-3">
                             <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
@@ -509,10 +512,10 @@ export default function DashboardPage() {
                               {c.risk_score}
                             </span>
                           </div>
-                          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-surface-muted">
+                          <div className="mt-3 h-2 overflow-hidden border border-black/10 bg-surface-muted dark:border-white/10">
                             <div
                               className={cn(
-                                "h-full rounded-full transition-all",
+                                "h-full transition-all",
                                 c.risk_score >= 80
                                   ? "bg-status-critical"
                                   : c.risk_score >= 60
@@ -529,7 +532,7 @@ export default function DashboardPage() {
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={cn(
-                                "rounded-full border px-3 py-1 text-xs font-semibold",
+                                "border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
                                 isDraftPipelineReady(c.status)
                                   ? "border-status-positive-border bg-status-positive-surface text-status-positive"
                                   : "border-border bg-surface-muted text-muted",
