@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertCircle, RefreshCw } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
@@ -59,6 +59,7 @@ export default function LogsPage() {
   const [filter, setFilter] = useState<ResultFilter>("");
   const [logs, setLogs] = useState<WorkflowLog[]>([]);
   const [counts, setCounts] = useState<WorkflowLogsCounts | null>(null);
+  const [source, setSource] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +72,7 @@ export default function LogsPage() {
       );
       setLogs(data.logs);
       setCounts(data.counts);
+      setSource(data.source);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load logs");
       setLogs([]);
@@ -84,6 +86,11 @@ export default function LogsPage() {
     void load();
   }, [load]);
 
+  const headingSubtitle = useMemo(() => {
+    if (source === "mock") return "Showing mock data (dev fallback).";
+    return "Latest workflow executions from Supabase.";
+  }, [source]);
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 border-b border-gray-200 dark:border-gray-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
@@ -95,9 +102,7 @@ export default function LogsPage() {
             <Activity className="h-7 w-7 text-[#1B6B3A]" aria-hidden />
             Workflow Logs
           </h1>
-          <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-gray-400">
-            Latest workflow executions from Supabase.
-          </p>
+          <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-gray-400">{headingSubtitle}</p>
         </div>
         <button
           type="button"
