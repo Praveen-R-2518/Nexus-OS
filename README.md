@@ -543,12 +543,6 @@ WF0a is exported to JSON; WF2–WF4 live as Code node sources—mirror your n8n 
 
 ---
 
-## License
-
-This project is licensed under the **MIT License**. See [`LICENSE`](LICENSE) for the full text. *(Add a `LICENSE` file at repo root if not yet present.)*
-
----
-
 ## Contact & Support
 
 | Channel | Link |
