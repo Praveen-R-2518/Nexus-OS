@@ -439,7 +439,7 @@ npm run n8n:export-workflows   # Regenerate n8n JSON exports
 
 | Component | Host |
 |-----------|------|
-| Next.js | [Vercel](https://vercel.com) or Netlify (`netlify.toml` included) |
+| Next.js | [Netlify](https://netlify.com) |
 | Database / Auth | [Supabase](https://supabase.com) |
 | Workflows | [n8n Cloud](https://n8n.io) |
 | AI | [OpenAI API](https://platform.openai.com) |
@@ -501,25 +501,6 @@ Benchmarks from MVP / test harness (your production numbers will vary with inbox
 | **GDPR** | Data processor agreements with Supabase, OpenAI, n8n; implement retention policies per tenant contract |
 
 Rotate keys on team member offboarding. Use separate Supabase projects for staging vs production.
-
----
-
-## FAQ
-
-**Why n8n instead of only Next.js API routes?**  
-n8n gives operators a visual audit trail, retry semantics, and webhook/IMAP connectors without redeploying the app. The Next.js app remains the system of record UI and approval surface.
-
-**Can I run without Gmail IMAP?**  
-Yes—use the WF0a webhook path (`/webhook/gmail-inbound`) or `POST /api/conversations` for testing.
-
-**Is demo mode still supported?**  
-Demo mode was removed in migration `0011_remove_demo_mode.sql`. Use seeded data via `scripts/seed_demo_data.js` in dev.
-
-**How do I add a second tenant?**  
-Create a new `business_profiles` row with unique `gmail_destination_email` / routing token; map n8n env or per-workflow credentials.
-
-**WF2 export missing from repo?**  
-WF0a is exported to JSON; WF2–WF4 live as Code node sources—mirror your n8n Cloud graphs or extend `build_n8n_workflow_exports.js`.
 
 ---
 
