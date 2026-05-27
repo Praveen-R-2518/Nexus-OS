@@ -529,10 +529,10 @@ WF0a is exported to JSON; WF2–WF4 live as Code node sources—mirror your n8n 
 
 | Contributor | Focus |
 |-------------|-------|
-| **Senuka Deneth** | Product & full-stack |
-| **Mahinsa Wattegedara** | Engineering |
-| **Praveen Ramanathan** | Engineering |
-| **Vinuth Karunathilaka** | Engineering |
+| **Senuka Deneth** | Automations, Backend |
+| **Mahinsa Wattegedara** | UI/UX design |
+| **Praveen Ramanathan** | Database Management, Backend |
+| **Vinuth Karunathilaka** | Model Fine-tuning |
 
 **Community & partners**
 
