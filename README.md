@@ -14,7 +14,6 @@
 **AI-powered operational layer that prevents revenue leakage and customer churn.**
 
 [![MVP](https://img.shields.io/badge/status-MVP%20complete-0ea5e9?style=flat-square)]()
-[![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)]()
 [![n8n Track Winner](https://img.shields.io/badge/Cursor%20Colombo%20Buildathon-n8n%20Track%20Winner-f97316?style=flat-square)]()
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-000?style=flat-square&logo=next.js)]()
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20RLS-3ecf8e?style=flat-square&logo=supabase)]()
