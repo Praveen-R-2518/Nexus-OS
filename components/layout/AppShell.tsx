@@ -10,9 +10,17 @@ import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
 
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
+const MARKETING_PREFIXES = ["/docs", "/customers", "/resources"] as const;
 
 export function isMarketingShellRoute(pathname: string): boolean {
   if (pathname === "/") return true;
+  if (
+    MARKETING_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
+    return true;
+  }
   return AUTH_ONLY_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );

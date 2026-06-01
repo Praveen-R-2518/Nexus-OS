@@ -27,9 +27,9 @@ const solutionsLinks = [
 ] as const;
 
 const marketingLinks = [
-  { href: "#", label: "Docs" },
-  { href: "#", label: "Customers" },
-  { href: "#", label: "Resources" },
+  { href: "/docs", label: "Docs" },
+  { href: "/customers", label: "Customers" },
+  { href: "/resources", label: "Resources" },
   { href: "/signup", label: "Pricing" },
 ] as const;
 
@@ -229,6 +229,24 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             </Link>
             <Link href="/#process" className={marketingNavLinkClass(false)}>
               Pipeline
+            </Link>
+            <Link
+              href="/docs"
+              className={marketingNavLinkClass(pathname.startsWith("/docs"))}
+            >
+              Docs
+            </Link>
+            <Link
+              href="/customers"
+              className={marketingNavLinkClass(pathname.startsWith("/customers"))}
+            >
+              Customers
+            </Link>
+            <Link
+              href="/resources"
+              className={marketingNavLinkClass(pathname.startsWith("/resources"))}
+            >
+              Resources
             </Link>
             <Link href="/signup" className={marketingNavLinkClass(false)}>
               Pricing
