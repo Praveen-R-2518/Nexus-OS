@@ -14,7 +14,6 @@
 **AI-powered operational layer that prevents revenue leakage and customer churn.**
 
 [![MVP](https://img.shields.io/badge/status-MVP%20complete-0ea5e9?style=flat-square)]()
-[![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)]()
 [![n8n Track Winner](https://img.shields.io/badge/Cursor%20Colombo%20Buildathon-n8n%20Track%20Winner-f97316?style=flat-square)]()
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-000?style=flat-square&logo=next.js)]()
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20RLS-3ecf8e?style=flat-square&logo=supabase)]()
@@ -440,7 +439,7 @@ npm run n8n:export-workflows   # Regenerate n8n JSON exports
 
 | Component | Host |
 |-----------|------|
-| Next.js | [Vercel](https://vercel.com) or Netlify (`netlify.toml` included) |
+| Next.js | [Netlify](https://netlify.com) |
 | Database / Auth | [Supabase](https://supabase.com) |
 | Workflows | [n8n Cloud](https://n8n.io) |
 | AI | [OpenAI API](https://platform.openai.com) |
@@ -505,35 +504,16 @@ Rotate keys on team member offboarding. Use separate Supabase projects for stagi
 
 ---
 
-## FAQ
-
-**Why n8n instead of only Next.js API routes?**  
-n8n gives operators a visual audit trail, retry semantics, and webhook/IMAP connectors without redeploying the app. The Next.js app remains the system of record UI and approval surface.
-
-**Can I run without Gmail IMAP?**  
-Yes—use the WF0a webhook path (`/webhook/gmail-inbound`) or `POST /api/conversations` for testing.
-
-**Is demo mode still supported?**  
-Demo mode was removed in migration `0011_remove_demo_mode.sql`. Use seeded data via `scripts/seed_demo_data.js` in dev.
-
-**How do I add a second tenant?**  
-Create a new `business_profiles` row with unique `gmail_destination_email` / routing token; map n8n env or per-workflow credentials.
-
-**WF2 export missing from repo?**  
-WF0a is exported to JSON; WF2–WF4 live as Code node sources—mirror your n8n Cloud graphs or extend `build_n8n_workflow_exports.js`.
-
----
-
 ## Acknowledgments
 
 **Core team** (Cursor Colombo Buildathon, n8n Track):
 
 | Contributor | Focus |
 |-------------|-------|
-| **Senuka Deneth** | Product & full-stack |
-| **Mahinsa Wattegedara** | Engineering |
-| **Praveen Ramanathan** | Engineering |
-| **Vinuth Karunathilaka** | Engineering |
+| **Senuka Deneth** | Automations, Backend |
+| **Mahinsa Wattegedara** | UI/UX design |
+| **Praveen Ramanathan** | Database Management, Backend |
+| **Vinuth Karunathilaka** | Model Fine-tuning |
 
 **Community & partners**
 
@@ -541,12 +521,6 @@ WF0a is exported to JSON; WF2–WF4 live as Code node sources—mirror your n8n 
 - [TechTalk360](https://techtalk360.com/) — Buildathon ecosystem
 - [n8n](https://n8n.io) — Workflow automation platform & track sponsor
 - [OpenAI](https://openai.com) — GPT-4o classification and generation APIs
-
----
-
-## License
-
-This project is licensed under the **MIT License**. See [`LICENSE`](LICENSE) for the full text. *(Add a `LICENSE` file at repo root if not yet present.)*
 
 ---
 
