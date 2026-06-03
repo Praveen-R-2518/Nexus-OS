@@ -18,8 +18,10 @@ export async function waitForServerSession(
     /* ignore */
   }
 
+  // Higher initial delay + faster backoff keeps the happy path fast while
+  // cutting the burst of GoTrue `/user` calls that can contribute to 429s.
   const start = Date.now();
-  let delay = 50;
+  let delay = 150;
   while (Date.now() - start < maxWait) {
     try {
       const res = await authenticatedFetch("/api/auth/session", {
@@ -30,7 +32,7 @@ export async function waitForServerSession(
       /* retry */
     }
     await new Promise((r) => setTimeout(r, delay));
-    delay = Math.min(Math.round(delay * 1.5), 400);
+    delay = Math.min(Math.round(delay * 1.8), 600);
   }
   return false;
 }

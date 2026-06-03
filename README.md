@@ -259,6 +259,7 @@ Open [http://localhost:3000](http://localhost:3000) → complete **signup/onboar
 | Issue | Fix |
 |-------|-----|
 | `Unauthorized` on API routes | Sign in via Supabase Auth; ensure `profiles.team_id` is set after onboarding |
+| Login shows "Too many requests" (429) | Supabase Auth rate limit. The login UI now throttles retries with a cooldown; for legitimate volume, raise limits and add SMTP (see [Supabase Auth rate limits](#supabase-auth-rate-limits)) |
 | IMAP test fails | Set `ENCRYPTION_KEY` (32+ chars); restart `next dev`; verify Gmail app password |
 | n8n writes wrong tenant | Align `NEXUS_GMAIL_DESTINATION_MAILBOX` with `business_profiles.gmail_destination_email` |
 | No dashboard data | Confirm WF0a → WF2 chain executed; check `workflow_logs` in Supabase |
@@ -314,6 +315,14 @@ Full reference: [`docs/n8n_workspace_env.md`](docs/n8n_workspace_env.md).
 
 - Migrations through `0008`, `0010`, `0011`, and `future_migrations/0011_production_rls_hardening.sql` harden production policies.
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` to the client bundle.
+
+### Supabase Auth rate limits
+
+Login surfaces an HTTP 429 ("Too many requests") when Supabase Auth (GoTrue) rate-limits sign-in or magic-link requests. The client already throttles retries (cooldown + exponential backoff in `app/login/page.tsx`), but if you legitimately hit the cap:
+
+- **Raise auth limits:** Supabase Dashboard → Authentication → Rate Limits. Increase token/sign-in and OTP/email limits to match expected traffic.
+- **Add custom SMTP:** Supabase Dashboard → Authentication → Emails (SMTP Settings). The default shared mailer caps magic-link emails very low (a few per hour); a custom SMTP provider lifts this and is required for production magic-link / OTP volume.
+- **Prefer password auth** for high-frequency sign-ins; reserve magic links for recovery to avoid the email cap.
 
 ---
 
