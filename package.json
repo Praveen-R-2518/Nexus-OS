@@ -11,6 +11,7 @@
     "lint": "next lint",
     "test:buy-back-report": "node scripts/test-buy-back-report.mjs",
     "test:tenant-intake": "node scripts/tenant_intake_mapping.test.mjs",
+    "test:launch-workspace": "node scripts/launch_workspace_rpc.test.mjs",
     "n8n:export-workflows": "node scripts/build_n8n_workflow_exports.js"
   },
   "dependencies": {
