@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Newspaper,
   Video,
+  type LucideIcon,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/marketing/ScrollReveal";
 
@@ -21,7 +22,7 @@ type Resource = {
 type ResourceGroup = {
   id: string;
   title: string;
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon: LucideIcon;
   items: Resource[];
 };
 
