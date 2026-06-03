@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Mail } from "lucide-react";
 import Link from "next/link";
@@ -8,6 +8,26 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/55 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/55 dark:focus:border-border-strong dark:focus:ring-border-strong";
+
+// Client-side throttle so users can't hammer Supabase Auth into a 429.
+const PASSWORD_BACKOFF_SECONDS = [5, 15, 30, 60] as const;
+const MAGIC_LINK_COOLDOWN_SECONDS = 60;
+
+type AuthLikeError = { status?: number; message?: string } | null | undefined;
+
+function isRateLimitError(error: AuthLikeError): boolean {
+  if (!error) return false;
+  if (error.status === 429) return true;
+  return /rate limit|too many/i.test(error.message ?? "");
+}
+
+function backoffSeconds(attempt: number): number {
+  const idx = Math.min(
+    Math.max(attempt - 1, 0),
+    PASSWORD_BACKOFF_SECONDS.length - 1,
+  );
+  return PASSWORD_BACKOFF_SECONDS[idx];
+}
 
 function LoginForm() {
   const router = useRouter();
@@ -18,6 +38,9 @@ function LoginForm() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const rateLimitAttempts = useRef(0);
 
   const nextPath = searchParams.get("next");
   const safeNext =
@@ -32,6 +55,28 @@ function LoginForm() {
       setRememberMe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) {
+      setCooldownRemaining(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((cooldownUntil - Date.now()) / 1000),
+      );
+      setCooldownRemaining(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
+
+  const startCooldown = (seconds: number) => {
+    setCooldownUntil(Date.now() + seconds * 1000);
+    setCooldownRemaining(seconds);
+  };
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -63,6 +108,7 @@ function LoginForm() {
 
   async function signInWithPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || cooldownRemaining > 0) return;
     setBusy(true);
     setMessage("");
     const supabase = createSupabaseBrowserClient();
@@ -71,8 +117,18 @@ function LoginForm() {
       password,
     });
     if (error) {
-      setMessage(error.message);
+      if (isRateLimitError(error)) {
+        rateLimitAttempts.current += 1;
+        const wait = backoffSeconds(rateLimitAttempts.current);
+        startCooldown(wait);
+        setMessage(
+          `Too many attempts. Please wait ${wait}s before trying again.`,
+        );
+      } else {
+        setMessage(error.message);
+      }
     } else {
+      rateLimitAttempts.current = 0;
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
       } else {
@@ -83,6 +139,7 @@ function LoginForm() {
   }
 
   async function sendMagicLink() {
+    if (busy || cooldownRemaining > 0 || !email) return;
     setBusy(true);
     setMessage("");
     const supabase = createSupabaseBrowserClient();
@@ -94,7 +151,20 @@ function LoginForm() {
         emailRedirectTo: `${origin}${safeNext}`,
       },
     });
-    setMessage(error ? error.message : "Magic link sent. Check your email.");
+    if (error) {
+      if (isRateLimitError(error)) {
+        startCooldown(MAGIC_LINK_COOLDOWN_SECONDS);
+        setMessage(
+          `Too many magic link requests. Please wait ${MAGIC_LINK_COOLDOWN_SECONDS}s before trying again.`,
+        );
+      } else {
+        setMessage(error.message);
+      }
+    } else {
+      // Lock the button for the per-email window to avoid tripping the limit.
+      startCooldown(MAGIC_LINK_COOLDOWN_SECONDS);
+      setMessage("Magic link sent. Check your email.");
+    }
     setBusy(false);
   }
 
@@ -166,15 +236,15 @@ function LoginForm() {
           <div className="flex flex-wrap gap-3 pt-1">
             <button
               type="submit"
-              disabled={busy}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-[#0f2336] px-6 py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border"
+              disabled={busy || cooldownRemaining > 0}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-[#0f2336] px-6 py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
-              Sign in
+              {cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : "Sign in"}
             </button>
             <button
               type="button"
-              disabled={busy || !email}
+              disabled={busy || !email || cooldownRemaining > 0}
               onClick={sendMagicLink}
               className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-white px-6 py-3 font-mono text-xs uppercase tracking-widest text-black transition hover:bg-[#e3eef6] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-white/5"
             >

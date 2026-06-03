@@ -15,10 +15,22 @@ export default function SiteFooter() {
         </div>
         <div className="flex flex-wrap gap-x-8 gap-y-3 font-mono text-xs uppercase tracking-widest text-black dark:text-white">
           <Link
-            href="#"
+            href="/docs"
             className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-border-strong"
           >
-            Privacy
+            Docs
+          </Link>
+          <Link
+            href="/customers"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-border-strong"
+          >
+            Customers
+          </Link>
+          <Link
+            href="/resources"
+            className="cursor-pointer underline-offset-4 transition-opacity duration-interaction hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-border-strong"
+          >
+            Resources
           </Link>
           <Link
             href="#"

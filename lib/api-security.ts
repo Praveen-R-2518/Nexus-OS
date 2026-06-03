@@ -121,14 +121,15 @@ export async function requireApiTenantContext(): Promise<ApiTenantContextResult>
   return { ok: true, user, supabase, teamId, workspaceId };
 }
 
-function clientKey(request: Request): string {
+function clientKey(request: Request): string | null {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const firstForwarded = forwardedFor?.split(",")[0]?.trim();
-  return (
-    firstForwarded ||
-    request.headers.get("x-real-ip")?.trim() ||
-    "unknown-client"
-  );
+  const ip = firstForwarded || request.headers.get("x-real-ip")?.trim();
+  if (ip) return ip;
+  // No identifiable client IP (e.g. local dev or a proxy that strips it).
+  // Returning null avoids bucketing every visitor under one shared key,
+  // which would otherwise cause spurious 429s under light traffic.
+  return null;
 }
 
 export function rateLimit(
@@ -137,8 +138,14 @@ export function rateLimit(
   limit: number,
   windowMs: number,
 ): NextResponse | null {
+  const client = clientKey(request);
+  if (!client) {
+    // Cannot identify the caller; skip limiting rather than share one global
+    // bucket across all clients.
+    return null;
+  }
   const now = Date.now();
-  const key = `${namespace}:${clientKey(request)}`;
+  const key = `${namespace}:${client}`;
   const current = buckets.get(key);
 
   if (!current || current.resetAt <= now) {
