@@ -232,7 +232,7 @@ export default function CustomersPage() {
           </div>
           <Link
             href="/signup"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-ref-cta px-6 py-3 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-ref-cta px-6 py-3 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
           >
             Start now
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />

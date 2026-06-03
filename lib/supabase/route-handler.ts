@@ -9,10 +9,39 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export function createSupabaseRouteHandlerClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    );
+  if (!url || !anonKey || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+    return new Proxy({} as any, {
+      get(target, prop) {
+        if (prop === "auth") {
+          return {
+            getSession: async () => ({ data: { session: null }, error: null }),
+            getUser: async () => ({ data: { user: null }, error: null }),
+            onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+          };
+        }
+        if (prop === "from") {
+          return () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: new Error("Supabase is not configured.") }),
+              maybeSingle: async () => ({ data: null, error: new Error("Supabase is not configured.") }),
+              eq: () => ({
+                single: async () => ({ data: null, error: new Error("Supabase is not configured.") }),
+                maybeSingle: async () => ({ data: null, error: new Error("Supabase is not configured.") }),
+              }),
+            }),
+            insert: () => ({
+              select: () => ({
+                single: async () => ({ data: null, error: new Error("Supabase is not configured.") }),
+              }),
+            }),
+            update: () => ({
+              eq: async () => ({ data: null, error: new Error("Supabase is not configured.") }),
+            }),
+          });
+        }
+        return undefined;
+      }
+    });
   }
 
   const cookieStore = cookies();

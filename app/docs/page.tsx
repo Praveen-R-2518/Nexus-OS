@@ -221,22 +221,28 @@ export default function DocsPage() {
                   </div>
                 </div>
 
-                <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {section.links.map((link) => (
-                    <div
+                <div className="mx-auto mt-10 flex max-w-6xl flex-wrap justify-center gap-5">
+                  {section.links.map((link, index) => (
+                    <ScrollReveal
                       key={link.title}
-                      className="group flex h-full flex-col rounded-2xl border border-border bg-white p-6 transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35 dark:hover:bg-[#1f1f1f]"
+                      delay={index * 0.06}
+                      className="flex h-full w-full max-w-[22rem] flex-[1_1_22rem]"
                     >
-                      <span className="inline-flex w-fit rounded-full border border-border px-2.5 py-1 font-mono text-[9px] uppercase tracking-widest text-muted dark:border-white/15">
-                        {link.tag}
-                      </span>
-                      <h3 className="mt-4 font-sans text-lg font-semibold tracking-tight text-atmospheric-grey">
-                        {link.title}
-                      </h3>
-                      <p className="mt-2 flex-1 text-sm leading-relaxed text-muted dark:text-slate-300">
-                        {link.desc}
-                      </p>
-                    </div>
+                      <div className="group relative flex h-full min-h-[15rem] w-full overflow-hidden rounded-[1.75rem] border border-border bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 hover:shadow-card-halo-light dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35 dark:hover:bg-[#1f1f1f] dark:hover:shadow-none">
+                        <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-ref-cta/35 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:via-white/35" />
+                        <div className="flex flex-col">
+                          <span className="inline-flex w-fit rounded-full border border-border bg-ref-mint px-2.5 py-1 font-mono text-[9px] uppercase tracking-widest text-muted dark:border-white/15 dark:bg-white/5">
+                            {link.tag}
+                          </span>
+                          <h3 className="mt-5 font-sans text-xl font-semibold leading-tight tracking-tight text-atmospheric-grey">
+                            {link.title}
+                          </h3>
+                          <p className="mt-3 flex-1 text-sm leading-relaxed text-muted dark:text-slate-300">
+                            {link.desc}
+                          </p>
+                        </div>
+                      </div>
+                    </ScrollReveal>
                   ))}
                 </div>
               </section>
@@ -263,7 +269,7 @@ export default function DocsPage() {
           <div className="flex shrink-0 flex-wrap gap-3">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-ref-cta px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-ref-cta px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
             >
               <Workflow className="h-3.5 w-3.5" aria-hidden />
               Get started

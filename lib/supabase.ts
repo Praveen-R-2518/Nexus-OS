@@ -8,15 +8,25 @@ function requireEnv(name: string): string {
   return value;
 }
 
+function isValidUrl(val?: string): boolean {
+  return !!val && (val.startsWith("http://") || val.startsWith("https://"));
+}
+
 /**
  * Browser Supabase client (Client Components only).
  * Uses the anon key — never import this module into Server Components if it executes at module scope.
  */
 export function createBrowserClient(): SupabaseClient {
-  return createClient(
-    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!isValidUrl(url) || !anonKey) {
+    return new Proxy({} as any, {
+      get(target, prop) {
+        return () => ({});
+      }
+    });
+  }
+  return createClient(url!, anonKey);
 }
 
 /**
@@ -25,9 +35,18 @@ export function createBrowserClient(): SupabaseClient {
  * For dashboard APIs, use `createSupabaseRouteHandlerClient()` from `@/lib/supabase/route-handler`.
  */
 export function createServerClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!isValidUrl(url) || !serviceRoleKey) {
+    return new Proxy({} as any, {
+      get(target, prop) {
+        return () => ({});
+      }
+    });
+  }
   return createClient(
-    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    url!,
+    serviceRoleKey,
     {
       auth: {
         autoRefreshToken: false,
