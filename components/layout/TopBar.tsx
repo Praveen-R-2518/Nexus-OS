@@ -133,8 +133,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             </div>
             {marketingLinks.map(({ href, label }) => {
               const active =
-                href !== "#" &&
-                (pathname === href || pathname.startsWith(href));
+                pathname === href || pathname.startsWith(href);
               return (
                 <Link
                   key={href}
