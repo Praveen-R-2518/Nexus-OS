@@ -10,7 +10,7 @@ import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
 
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
-const MARKETING_PREFIXES = ["/docs", "/customers", "/resources"] as const;
+const MARKETING_PREFIXES = ["/docs", "/customers", "/resources", "/pricing"] as const;
 
 export function isMarketingShellRoute(pathname: string): boolean {
   if (pathname === "/") return true;
