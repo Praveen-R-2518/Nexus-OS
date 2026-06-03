@@ -14,7 +14,7 @@ function assert(cond, msg) {
 }
 
 const guardMigration = readFileSync(
-  resolve(root, "supabase/migrations/20260603120000_drop_duplicate_launch_workspace.sql"),
+  resolve(root, "supabase/migrations/20260603121000_drop_legacy_launch_workspace_overloads.sql"),
   "utf8",
 );
 assert(
@@ -22,6 +22,10 @@ assert(
     "drop function if exists public.launch_workspace(text, text, text, text[], text)",
   ),
   "guard migration must drop stale overload",
+);
+assert(
+  guardMigration.includes("drop function if exists public.launch_workspace(text, text, text, text)"),
+  "guard migration must drop legacy invites text overload",
 );
 assert(
   guardMigration.includes("expected 1 overload"),
