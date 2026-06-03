@@ -285,7 +285,7 @@ export default function ResourcesPage() {
           <div className="flex shrink-0 flex-wrap gap-3">
             <Link
               href="/docs"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-ref-cta px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-ref-cta px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
             >
               Read the docs
             </Link>

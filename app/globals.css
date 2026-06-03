@@ -105,7 +105,7 @@
     --foreground: #ffffff;
     --obsidian: #121212;
     --atmospheric-grey: #ffffff;
-    --trajectory-blue: #cbd5e1;
+    --trajectory-blue: #8fbce6;
 
     --app-chrome-bg: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
     --app-chrome-border: rgba(255, 255, 255, 0.12);
@@ -125,26 +125,26 @@
     --text-tertiary: #94a3b8;
     --text-accent: #e2e8f0;
 
-    --status-positive-fg: #a5a8b0;
-    --status-positive-surface: rgba(130, 140, 160, 0.09);
-    --status-positive-border: rgba(130, 140, 160, 0.16);
+    --status-positive-fg: #7fc8a4;
+    --status-positive-surface: rgba(127, 200, 164, 0.09);
+    --status-positive-border: rgba(127, 200, 164, 0.18);
     --status-positive-glow: transparent;
 
-    --status-neutral-fg: #9ea3ac;
-    --status-neutral-surface: rgba(120, 125, 135, 0.07);
-    --status-neutral-border: rgba(120, 125, 135, 0.14);
+    --status-neutral-fg: #9ab3d8;
+    --status-neutral-surface: rgba(154, 179, 216, 0.08);
+    --status-neutral-border: rgba(154, 179, 216, 0.15);
 
-    --status-warning-fg: #b0a68c;
-    --status-warning-surface: rgba(160, 150, 120, 0.07);
-    --status-warning-border: rgba(160, 150, 120, 0.13);
+    --status-warning-fg: #d6b36a;
+    --status-warning-surface: rgba(214, 179, 106, 0.08);
+    --status-warning-border: rgba(214, 179, 106, 0.15);
 
-    --status-caution-fg: #aba382;
-    --status-caution-surface: rgba(155, 148, 100, 0.06);
-    --status-caution-border: rgba(155, 148, 100, 0.12);
+    --status-caution-fg: #cbb58a;
+    --status-caution-surface: rgba(203, 181, 138, 0.08);
+    --status-caution-border: rgba(203, 181, 138, 0.15);
 
-    --status-critical-fg: #b8a2a7;
-    --status-critical-surface: rgba(170, 130, 140, 0.07);
-    --status-critical-border: rgba(170, 130, 140, 0.13);
+    --status-critical-fg: #e08b8b;
+    --status-critical-surface: rgba(224, 139, 139, 0.08);
+    --status-critical-border: rgba(224, 139, 139, 0.16);
     --status-critical-glow: transparent;
 
     --bg-card: var(--surface-card);

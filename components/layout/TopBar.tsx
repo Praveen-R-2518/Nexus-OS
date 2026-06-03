@@ -193,13 +193,13 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <>
               <Link
                 href="mailto:support@example.com"
-                className="hidden cursor-pointer rounded-full border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-white dark:hover:border-border-strong dark:hover:bg-surface-elevated"
+                className="hidden cursor-pointer rounded-full border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-slate-200 dark:hover:border-border-strong dark:hover:bg-surface-elevated"
               >
                 Contact sales
               </Link>
               <Link
                 href="/login"
-                className="hidden cursor-pointer rounded-full border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
+                className="hidden cursor-pointer rounded-full border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
               >
                 Access console
               </Link>

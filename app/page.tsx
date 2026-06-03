@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
 import { Style_Script } from "next/font/google";
+import { ScrollReveal } from "@/components/marketing/ScrollReveal";
 
 const styleScript = Style_Script({
   subsets: ["latin"],
@@ -45,27 +45,6 @@ const steps = [
   },
 ];
 
-function ScrollReveal({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      className={className}
-      initial={reduce ? undefined : { opacity: 0, y: 40 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: false, amount: 0.15 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 export default function LandingPage() {
   return (
     <div className={`min-h-screen flex-1 bg-surface-page text-atmospheric-grey selection:bg-black/10 dark:selection:bg-white/20 ${styleScript.variable}`}>
@@ -93,7 +72,7 @@ export default function LandingPage() {
         <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
           <Link
             href="/login"
-            className="rounded-full border border-black/20 bg-black/5 px-8 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-black backdrop-blur-md transition-all duration-300 hover:bg-black hover:text-white dark:border-white/20 dark:bg-white/5 dark:text-white dark:hover:bg-white dark:hover:text-black dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
+            className="rounded-full border border-border bg-ref-cta px-8 py-4 font-sans text-xs font-semibold uppercase tracking-widest text-[#f4f8fc] backdrop-blur-md transition-all duration-300 hover:opacity-90 dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc] dark:hover:opacity-90"
           >
             Sign in
           </Link>
