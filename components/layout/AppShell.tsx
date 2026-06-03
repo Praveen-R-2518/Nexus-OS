@@ -10,7 +10,7 @@ import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
 
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
-const MARKETING_PREFIXES = ["/docs", "/customers", "/resources"] as const;
+const MARKETING_PREFIXES = ["/docs", "/customers", "/resources", "/pricing"] as const;
 
 export function isMarketingShellRoute(pathname: string): boolean {
   if (pathname === "/") return true;
@@ -29,9 +29,18 @@ export function isMarketingShellRoute(pathname: string): boolean {
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const marketing = isMarketingShellRoute(pathname);
+  const isSupabaseConfigured = !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-surface-page text-atmospheric-grey dark:bg-obsidian">
+      {!isSupabaseConfigured && (
+        <div className="bg-[#8B1A1A] text-white font-mono text-xs py-2 px-4 text-center z-50">
+          ⚠️ <strong>Supabase Configuration Missing</strong>: Please create a <code>.env.local</code> file in the project root containing your Supabase credentials (see <code>.env.example</code>).
+        </div>
+      )}
       {marketing ? (
         <>
           <TopBar marketing />

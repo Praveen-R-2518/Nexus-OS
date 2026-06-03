@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import ProgressBar from "@/components/signup/ProgressBar";
 import StepAccount from "@/components/signup/StepAccount";
 import StepDone from "@/components/signup/StepDone";
@@ -15,6 +16,7 @@ import {
   saveSignupSnapshot,
   type SignupSnapshot,
 } from "@/components/signup/types";
+import { parsePlanFromUrl } from "@/lib/pricing/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const STEP_LABELS = [
@@ -27,6 +29,7 @@ const STEP_LABELS = [
 ] as const;
 
 export default function SignupPage() {
+  const searchParams = useSearchParams();
   const [snapshot, setSnapshot] = useState<SignupSnapshot>(() => defaultSignupSnapshot());
   const [hydrated, setHydrated] = useState(false);
 
@@ -35,9 +38,16 @@ export default function SignupPage() {
   }, []);
 
   useEffect(() => {
-    setSnapshot(loadSignupSnapshot());
+    const loaded = loadSignupSnapshot();
+    const planParam = searchParams.get("plan");
+    const planFromUrl = parsePlanFromUrl(planParam);
+    setSnapshot({
+      ...loaded,
+      planTier: planParam ? planFromUrl : loaded.planTier ?? "starter",
+      billingCycle: loaded.billingCycle ?? "monthly",
+    });
     setHydrated(true);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -73,6 +83,8 @@ export default function SignupPage() {
         if (s.currentStep > 1) {
           return {
             ...defaultSignupSnapshot(),
+            planTier: s.planTier ?? "starter",
+            billingCycle: s.billingCycle ?? "monthly",
             accountEmail: s.accountEmail,
             accountFullName: s.accountFullName,
             accountPhone: s.accountPhone,

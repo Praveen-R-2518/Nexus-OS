@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Mail } from "lucide-react";
 import Link from "next/link";
+import { buildAuthCallbackUrl, safeNextPath } from "@/lib/auth/redirect-url";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClass =
@@ -43,10 +44,9 @@ function LoginForm() {
   const rateLimitAttempts = useRef(0);
 
   const nextPath = searchParams.get("next");
-  const safeNext =
-    nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")
-      ? nextPath
-      : "/dashboard";
+  const safeNext = safeNextPath(nextPath, "/dashboard");
+
+  const callbackError = searchParams.get("error");
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
@@ -55,6 +55,15 @@ function LoginForm() {
       setRememberMe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!callbackError) return;
+    setMessage(callbackError);
+    if (isRateLimitError({ message: callbackError })) {
+      startCooldown(PASSWORD_BACKOFF_SECONDS[PASSWORD_BACKOFF_SECONDS.length - 1]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callbackError]);
 
   useEffect(() => {
     if (cooldownUntil <= Date.now()) {
@@ -143,12 +152,10 @@ function LoginForm() {
     setBusy(true);
     setMessage("");
     const supabase = createSupabaseBrowserClient();
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${origin}${safeNext}`,
+        emailRedirectTo: buildAuthCallbackUrl(safeNext),
       },
     });
     if (error) {

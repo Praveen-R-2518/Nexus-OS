@@ -6,6 +6,8 @@ import type { PlanTier, SignupSnapshot } from "@/components/signup/types";
 
 function planLabel(tier: PlanTier | null): string {
   if (!tier) return "—";
+  if (tier === "pro") return "Professional";
+  if (tier === "enterprise") return "Enterprise";
   return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 

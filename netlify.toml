@@ -5,7 +5,7 @@
 [build.environment]
   # NEXT_PUBLIC_* variables are intentionally inlined into the client bundle by Next.js.
   # Tell Netlify's secrets scanner to skip these keys so the build is not blocked.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_APP_URL"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

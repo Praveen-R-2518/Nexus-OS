@@ -1,14 +1,17 @@
 import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { safeNextPath } from "@/lib/auth/redirect-url";
 
 export const dynamic = "force-dynamic";
 
-function safeNextPath(raw: string | null): string {
-  if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
-  return "/onboarding";
+function isRateLimitError(error: {
+  status?: number;
+  message?: string;
+}): boolean {
+  if (error.status === 429) return true;
+  return /rate limit|too many/i.test(error.message ?? "");
 }
-
 export async function GET(request: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
@@ -21,7 +24,7 @@ export async function GET(request: Request) {
 
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = safeNextPath(requestUrl.searchParams.get("next"));
+  const next = safeNextPath(requestUrl.searchParams.get("next"), "/onboarding");
 
   const cookieStore = cookies();
 
@@ -46,7 +49,14 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       const login = new URL("/login", requestUrl.origin);
-      login.searchParams.set("error", error.message);
+      if (isRateLimitError(error)) {
+        login.searchParams.set(
+          "error",
+          "Too many requests right now. Please wait a moment, then click the confirmation link again.",
+        );
+      } else {
+        login.searchParams.set("error", error.message);
+      }
       return NextResponse.redirect(login);
     }
   }

@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { LayoutGroup, motion } from "framer-motion";
-import { ChevronDown, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { prefetchNavRoute } from "@/lib/queries/nav-prefetch";
@@ -20,17 +19,11 @@ const appNav = [
   { href: "/logs", label: "Workflow Logs" },
 ] as const;
 
-const solutionsLinks = [
-  { href: "/#protocol", label: "Protocol" },
-  { href: "/#process", label: "Pipeline" },
-  { href: "/signup", label: "Onboard" },
-] as const;
-
 const marketingLinks = [
   { href: "/docs", label: "Docs" },
   { href: "/customers", label: "Customers" },
   { href: "/resources", label: "Resources" },
-  { href: "/signup", label: "Pricing" },
+  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 function marketingNavLinkClass(active: boolean) {
@@ -54,22 +47,6 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const tenant = useTenantScopeOptional();
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
-  const solutionsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onDocMouseDown(e: MouseEvent) {
-      if (!solutionsRef.current?.contains(e.target as Node)) {
-        setSolutionsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
-  }, []);
-
-  useEffect(() => {
-    setSolutionsOpen(false);
-  }, [pathname]);
 
   async function signOut() {
     queryClient.clear();
@@ -95,42 +72,6 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             className="flex flex-1 flex-wrap items-center justify-center gap-4 overflow-x-auto md:gap-6 lg:gap-10"
             aria-label="Primary"
           >
-            <div className="relative" ref={solutionsRef}>
-              <button
-                type="button"
-                aria-expanded={solutionsOpen}
-                aria-haspopup="menu"
-                onClick={() => setSolutionsOpen((o) => !o)}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-black transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 dark:text-white dark:focus-visible:ring-border-strong"
-              >
-                Solutions
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 shrink-0 transition-transform duration-interaction",
-                    solutionsOpen && "rotate-180",
-                  )}
-                  aria-hidden
-                />
-              </button>
-              {solutionsOpen ? (
-                <div
-                  role="menu"
-                  className="absolute left-1/2 top-full z-50 mt-2 min-w-[12rem] -translate-x-1/2 rounded-lg border border-border bg-white py-1 dark:border-border dark:bg-surface-card"
-                >
-                  {solutionsLinks.map(({ href, label }) => (
-                    <Link
-                      key={href}
-                      role="menuitem"
-                      href={href}
-                      className="block cursor-pointer px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:bg-ref-mint dark:text-white dark:hover:bg-surface-elevated"
-                      onClick={() => setSolutionsOpen(false)}
-                    >
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
             {marketingLinks.map(({ href, label }) => {
               const active =
                 pathname === href || pathname.startsWith(href);
@@ -193,15 +134,21 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <>
               <Link
                 href="mailto:support@example.com"
-                className="hidden cursor-pointer rounded-full border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-white dark:hover:border-border-strong dark:hover:bg-surface-elevated"
+                className="hidden cursor-pointer rounded-full border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-slate-200 dark:hover:border-border-strong dark:hover:bg-surface-elevated"
               >
                 Contact sales
               </Link>
               <Link
                 href="/login"
-                className="hidden cursor-pointer rounded-full border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-surface-elevated dark:text-[#e2e2e2]"
+                className="hidden cursor-pointer rounded-full border border-border bg-ref-cta px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 sm:inline-flex dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
               >
                 Access console
+              </Link>
+              <Link
+                href="/signup"
+                className="hidden cursor-pointer rounded-full border border-border/80 bg-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black transition-colors hover:border-border hover:bg-ref-mint sm:inline-flex dark:border-border dark:text-slate-200 dark:hover:border-border-strong dark:hover:bg-surface-elevated"
+              >
+                Get started
               </Link>
             </>
           ) : (
@@ -223,12 +170,6 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
       {marketing ? (
         <div className="hairline-t px-4 py-2 md:hidden">
           <nav className="flex flex-wrap items-center justify-center gap-3" aria-label="Primary mobile">
-            <Link href="/#protocol" className={marketingNavLinkClass(false)}>
-              Protocol
-            </Link>
-            <Link href="/#process" className={marketingNavLinkClass(false)}>
-              Pipeline
-            </Link>
             <Link
               href="/docs"
               className={marketingNavLinkClass(pathname.startsWith("/docs"))}
@@ -247,11 +188,14 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             >
               Resources
             </Link>
-            <Link href="/signup" className={marketingNavLinkClass(false)}>
+            <Link href="/pricing" className={marketingNavLinkClass(pathname.startsWith("/pricing"))}>
               Pricing
             </Link>
             <Link href="/login" className={marketingNavLinkClass(false)}>
               Console
+            </Link>
+            <Link href="/signup" className={marketingNavLinkClass(pathname.startsWith("/signup"))}>
+              Get started
             </Link>
           </nav>
         </div>

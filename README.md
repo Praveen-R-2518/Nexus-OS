@@ -260,6 +260,7 @@ Open [http://localhost:3000](http://localhost:3000) → complete **signup/onboar
 |-------|-----|
 | `Unauthorized` on API routes | Sign in via Supabase Auth; ensure `profiles.team_id` is set after onboarding |
 | Login shows "Too many requests" (429) | Supabase Auth rate limit. The login UI now throttles retries with a cooldown; for legitimate volume, raise limits and add SMTP (see [Supabase Auth rate limits](#supabase-auth-rate-limits)) |
+| Signup shows "We could not send the verification email" | Run `npm run check:auth-email`. If SMTP credentials changed, set the `SUPABASE_SMTP_*` variables locally and run `npm run fix:auth-email`. |
 | IMAP test fails | Set `ENCRYPTION_KEY` (32+ chars); restart `next dev`; verify Gmail app password |
 | n8n writes wrong tenant | Align `NEXUS_GMAIL_DESTINATION_MAILBOX` with `business_profiles.gmail_destination_email` |
 | No dashboard data | Confirm WF0a → WF2 chain executed; check `workflow_logs` in Supabase |
@@ -275,9 +276,26 @@ Open [http://localhost:3000](http://localhost:3000) → complete **signup/onboar
 # Supabase (public — safe for browser)
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+NEXT_PUBLIC_SITE_URL=https://your-production-origin.com
 
 # Server-only
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Supabase Management API for auth-email checks and repair scripts
+SUPABASE_ACCESS_TOKEN=sbp_...
+SUPABASE_PROJECT_REF=xuvodbcdmfhlbldbvwvt
+
+# Supabase Auth email delivery
+SUPABASE_AUTH_SITE_URL=https://your-production-origin.com
+SUPABASE_AUTH_REDIRECT_URLS=https://preview.example.com/auth/callback/**,https://staging.example.com/auth/callback/**
+SUPABASE_AUTH_EMAIL_RATE_LIMIT=100
+SUPABASE_AUTH_DISABLE_SEND_EMAIL_HOOK=true
+SUPABASE_SMTP_ADMIN_EMAIL=no-reply@your-domain.com
+SUPABASE_SMTP_HOST=smtp.your-provider.com
+SUPABASE_SMTP_PORT=587
+SUPABASE_SMTP_USER=your_smtp_user
+SUPABASE_SMTP_PASS=your_smtp_password_or_api_key
+SUPABASE_SMTP_SENDER_NAME=Nexus OS
 
 # AES-256 key material for Gmail IMAP password storage (32+ characters)
 ENCRYPTION_KEY=your_long_random_secret
@@ -320,9 +338,28 @@ Full reference: [`docs/n8n_workspace_env.md`](docs/n8n_workspace_env.md).
 
 Login surfaces an HTTP 429 ("Too many requests") when Supabase Auth (GoTrue) rate-limits sign-in or magic-link requests. The client already throttles retries (cooldown + exponential backoff in `app/login/page.tsx`), but if you legitimately hit the cap:
 
-- **Raise auth limits:** Supabase Dashboard → Authentication → Rate Limits. Increase token/sign-in and OTP/email limits to match expected traffic.
+- **Raise auth limits:** Supabase Dashboard → Authentication → Rate Limits. Increase token/sign-in and OTP/email limits to match expected traffic. GoTrue limits are **per IP**, so users behind a shared NAT / corporate egress IP (common in production) share one bucket and can collectively exhaust it — raise the limits accordingly.
 - **Add custom SMTP:** Supabase Dashboard → Authentication → Emails (SMTP Settings). The default shared mailer caps magic-link emails very low (a few per hour); a custom SMTP provider lifts this and is required for production magic-link / OTP volume.
 - **Prefer password auth** for high-frequency sign-ins; reserve magic links for recovery to avoid the email cap.
+
+### Supabase Auth email delivery
+
+Signup email delivery depends on Supabase Auth config and the SMTP provider accepting the message. Use these commands whenever signup reports a verification-email failure:
+
+```bash
+npm run check:auth-email
+npm run fix:auth-email
+```
+
+`check:auth-email` reads the live Supabase Auth config through the Management API and prints a redacted health report: email provider status, confirmation requirement, SMTP field presence, Send Email Hook status, Site URL, redirect allowlist, and `rate_limit_email_sent`.
+
+`fix:auth-email` keeps verified-email signup enabled, sets the email-send limit to `100`, applies the Site URL and redirect allowlist, and disables an accidental Send Email Hook by default. It only patches SMTP when all `SUPABASE_SMTP_*` variables are present, so a half-filled credential set cannot overwrite a working provider.
+
+After changing SMTP, confirm the provider-side sender/domain authentication in your email service, then run one fresh signup and check the provider delivery logs before retrying production signups.
+
+#### Email confirmation auto-login
+
+Clicking the confirmation email link hits `/auth/callback`, which exchanges the code for a session and redirects back into the signup wizard (`/signup`). The wizard's `reconcile()` then auto-advances to workspace setup — **no separate manual login is required**. This avoids stacking an extra sign-in token call on top of the callback's session exchange, which previously contributed to first-login 429s. The confirmation link must be opened in the **same browser** that started signup (PKCE `code_verifier` is stored locally); if it fails, the callback redirects to `/login?error=...` and the login page now surfaces that message.
 
 ---
 
