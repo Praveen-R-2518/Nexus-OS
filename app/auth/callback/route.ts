@@ -6,7 +6,15 @@ export const dynamic = "force-dynamic";
 
 function safeNextPath(raw: string | null): string {
   if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
-  return "/onboarding";
+  return "/signup";
+}
+
+function isRateLimitError(error: {
+  status?: number;
+  message?: string;
+}): boolean {
+  if (error.status === 429) return true;
+  return /rate limit|too many/i.test(error.message ?? "");
 }
 
 export async function GET(request: Request) {
@@ -46,7 +54,14 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       const login = new URL("/login", requestUrl.origin);
-      login.searchParams.set("error", error.message);
+      if (isRateLimitError(error)) {
+        login.searchParams.set(
+          "error",
+          "Too many requests right now. Please wait a moment, then click the confirmation link again.",
+        );
+      } else {
+        login.searchParams.set("error", error.message);
+      }
       return NextResponse.redirect(login);
     }
   }
