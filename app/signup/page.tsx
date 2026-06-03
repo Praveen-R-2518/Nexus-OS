@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ProgressBar from "@/components/signup/ProgressBar";
-import StepAccountOrg from "@/components/signup/StepAccountOrg";
-import StepBillingConfirm from "@/components/signup/StepBillingConfirm";
-import StepPlanSelection from "@/components/signup/StepPlanSelection";
+import StepAccount from "@/components/signup/StepAccount";
+import StepDone from "@/components/signup/StepDone";
+import StepGmail from "@/components/signup/StepGmail";
+import StepPayment from "@/components/signup/StepPayment";
+import StepPlan from "@/components/signup/StepPlan";
+import StepWorkspace from "@/components/signup/StepWorkspace";
 import {
   defaultSignupSnapshot,
   loadSignupSnapshot,
@@ -16,7 +19,14 @@ import {
 import { parsePlanFromUrl } from "@/lib/pricing/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-const STEP_LABELS = ["Plan", "Account", "Billing"] as const;
+const STEP_LABELS = [
+  "Account",
+  "Workspace",
+  "Plan",
+  "Payment",
+  "Gmail",
+  "Done",
+] as const;
 
 export default function SignupPage() {
   const searchParams = useSearchParams();
@@ -57,37 +67,28 @@ export default function SignupPage() {
 
       if (session) {
         setSnapshot((s) => {
-          if (s.accountVerificationPending) {
-            return { ...s, accountVerificationPending: false };
-          }
-          if (s.workspaceId && s.currentStep < 3) {
-            return { ...s, currentStep: 3 };
-          }
-          if (s.currentStep === 2 && s.workspaceId) {
-            return { ...s, currentStep: 3 };
-          }
-          return s;
+          if (s.currentStep !== 1) return s;
+          return { ...s, currentStep: 2, accountVerificationPending: false };
         });
         return;
       }
 
       setSnapshot((s) => {
         if (s.accountVerificationPending) {
-          if (s.currentStep !== 2) {
-            return { ...s, currentStep: 2 };
+          if (s.currentStep !== 1) {
+            return { ...s, currentStep: 1 };
           }
           return s;
         }
-        if (s.currentStep > 2 && !s.workspaceId) {
+        if (s.currentStep > 1) {
           return {
             ...defaultSignupSnapshot(),
             planTier: s.planTier ?? "starter",
             billingCycle: s.billingCycle ?? "monthly",
             accountEmail: s.accountEmail,
             accountFullName: s.accountFullName,
-            companyName: s.companyName,
+            accountPhone: s.accountPhone,
             accountVerificationPending: false,
-            currentStep: 2,
           };
         }
         return s;
@@ -112,7 +113,7 @@ export default function SignupPage() {
     setSnapshot((s) => ({
       ...s,
       ...(patch ?? {}),
-      currentStep: Math.min(3, Math.max(1, step)),
+      currentStep: Math.min(6, Math.max(1, step)),
     }));
   }, []);
 
@@ -127,7 +128,7 @@ export default function SignupPage() {
             Revenue command center
           </h1>
           <p className="mx-auto mt-3 max-w-lg font-mono text-xs leading-relaxed text-black/90 dark:text-white/90">
-            Choose a plan, create your account, and launch your console.
+            Multi-step signup — flat panels, monospace labels, navy primary actions.
           </p>
           <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-black/70 dark:text-white/70">
             Already registered?{" "}
@@ -140,20 +141,31 @@ export default function SignupPage() {
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
           <div className="mt-8 border-t border-dashed border-border pt-8 sm:mt-10 dark:border-border">
             {snapshot.currentStep === 1 ? (
-              <StepPlanSelection
+              <StepAccount
                 snapshot={snapshot}
-                onComplete={(patch) => goToStep(2, patch)}
+                onPatch={patchSnapshot}
+                onNext={() => goToStep(2)}
               />
             ) : null}
             {snapshot.currentStep === 2 ? (
-              <StepAccountOrg
+              <StepWorkspace
                 snapshot={snapshot}
-                onPatch={patchSnapshot}
                 onComplete={(patch) => goToStep(3, patch)}
-                onBack={() => goToStep(1)}
               />
             ) : null}
-            {snapshot.currentStep === 3 ? <StepBillingConfirm snapshot={snapshot} /> : null}
+            {snapshot.currentStep === 3 ? (
+              <StepPlan snapshot={snapshot} onComplete={(patch) => goToStep(4, patch)} />
+            ) : null}
+            {snapshot.currentStep === 4 ? (
+              <StepPayment snapshot={snapshot} onNext={() => goToStep(5)} />
+            ) : null}
+            {snapshot.currentStep === 5 ? (
+              <StepGmail
+                snapshot={snapshot}
+                onComplete={(patch) => goToStep(6, patch)}
+              />
+            ) : null}
+            {snapshot.currentStep === 6 ? <StepDone snapshot={snapshot} /> : null}
           </div>
         </div>
       </div>
