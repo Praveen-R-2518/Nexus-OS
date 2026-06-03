@@ -37,7 +37,7 @@ export const defaultSignupSnapshot = (): SignupSnapshot => ({
   workspaceType: "solo",
   teamSize: 2,
   teamEmails: [""],
-  planTier: null,
+  planTier: "starter",
   billingCycle: "monthly",
   gmailConnected: null,
   accountEmail: "",

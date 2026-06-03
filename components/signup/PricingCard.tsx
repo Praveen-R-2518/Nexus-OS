@@ -12,6 +12,8 @@ export type PricingCardProps = {
   emails: string;
   features?: string[];
   recommended?: boolean;
+  badge?: string;
+  highlighted?: boolean;
   disabled?: boolean;
   selected?: boolean;
   onSelect: (plan: PlanTier) => void;
@@ -26,25 +28,40 @@ export default function PricingCard({
   emails,
   features = [],
   recommended,
+  badge,
+  highlighted,
   disabled,
   selected,
   onSelect,
   ctaLabel = "Select",
 }: PricingCardProps) {
+  const topBadge = badge ?? (recommended ? "Recommended" : undefined);
+
   return (
     <div
       className={cn(
         "relative flex h-full flex-col rounded-xl border bg-white p-4 transition sm:p-5 dark:bg-surface-card",
+        highlighted &&
+          "shadow-[0_0_24px_rgba(12,74,110,0.28)] dark:shadow-[0_0_32px_rgba(12,74,110,0.4)]",
         selected
           ? "border border-selectable-edge-selected"
-          : "border border-selectable-edge",
+          : highlighted
+            ? "border-ref-cta dark:border-[color:var(--trajectory-blue)]"
+            : "border border-selectable-edge",
         disabled && "opacity-45 grayscale",
         !disabled && !selected && "hover:bg-[#eef6fb] dark:hover:bg-surface-elevated",
       )}
     >
-      {recommended ? (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-md border border-border bg-[#0f2336] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest text-white dark:border-border">
-          Recommended
+      {topBadge ? (
+        <span
+          className={cn(
+            "absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest",
+            highlighted
+              ? "border-ref-cta bg-ref-cta text-white dark:border-[color:var(--trajectory-blue)] dark:bg-[color:var(--trajectory-blue)]"
+              : "border-border bg-[#0f2336] text-white dark:border-border",
+          )}
+        >
+          {topBadge}
         </span>
       ) : null}
       <div className="mb-3 text-center">

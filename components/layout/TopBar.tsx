@@ -30,7 +30,7 @@ const marketingLinks = [
   { href: "/docs", label: "Docs" },
   { href: "/customers", label: "Customers" },
   { href: "/resources", label: "Resources" },
-  { href: "/signup", label: "Pricing" },
+  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 function marketingNavLinkClass(active: boolean) {
@@ -247,7 +247,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             >
               Resources
             </Link>
-            <Link href="/signup" className={marketingNavLinkClass(false)}>
+            <Link href="/pricing" className={marketingNavLinkClass(pathname.startsWith("/pricing"))}>
               Pricing
             </Link>
             <Link href="/login" className={marketingNavLinkClass(false)}>
