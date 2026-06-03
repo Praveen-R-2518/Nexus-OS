@@ -1,13 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
 function isValidUrl(val?: string): boolean {
   return !!val && (val.startsWith("http://") || val.startsWith("https://"));
 }
@@ -20,8 +12,8 @@ export function createBrowserClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!isValidUrl(url) || !anonKey) {
-    return new Proxy({} as any, {
-      get(target, prop) {
+    return new Proxy({} as SupabaseClient, {
+      get() {
         return () => ({});
       }
     });
@@ -38,8 +30,8 @@ export function createServerClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!isValidUrl(url) || !serviceRoleKey) {
-    return new Proxy({} as any, {
-      get(target, prop) {
+    return new Proxy({} as SupabaseClient, {
+      get() {
         return () => ({});
       }
     });

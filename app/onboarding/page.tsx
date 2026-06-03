@@ -20,6 +20,19 @@ function parseInviteEmails(raw: string): string[] {
   return out;
 }
 
+type LaunchWorkspaceResponse = {
+  workspace_id?: unknown;
+};
+
+function parseWorkspaceId(data: unknown): string | undefined {
+  if (typeof data === "string") return data;
+  if (data && typeof data === "object") {
+    const raw = (data as LaunchWorkspaceResponse).workspace_id;
+    return typeof raw === "string" && raw.trim() ? raw : undefined;
+  }
+  return undefined;
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { refetchProfile } = useAuthGuard();
@@ -52,12 +65,7 @@ export default function OnboardingPage() {
       setError(rpcError.message || "Could not launch workspace.");
       return;
     }
-    let wid: string | undefined;
-    if (typeof data === "string") {
-      wid = data;
-    } else if (data && typeof data === "object") {
-      wid = (data as any).workspace_id;
-    }
+    const wid = parseWorkspaceId(data);
 
     if (!wid) {
       setError("Unexpected response from server.");

@@ -10,8 +10,8 @@ export function createSupabaseRouteHandlerClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey || (!url.startsWith("http://") && !url.startsWith("https://"))) {
-    return new Proxy({} as any, {
-      get(target, prop) {
+    return new Proxy({} as SupabaseClient, {
+      get(_target, prop) {
         if (prop === "auth") {
           return {
             getSession: async () => ({ data: { session: null }, error: null }),

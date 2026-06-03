@@ -18,8 +18,8 @@ export function createSupabaseBrowserClient(): SupabaseClient {
       );
     }
     // Return a dummy client so we don't throw during SSR or initial page load
-    return new Proxy({} as any, {
-      get(target, prop) {
+    return new Proxy({} as SupabaseClient, {
+      get(_target, prop) {
         if (prop === "auth") {
           return {
             getSession: async () => ({ data: { session: null }, error: null }),

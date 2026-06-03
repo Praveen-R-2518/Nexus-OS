@@ -32,6 +32,19 @@ type StepWorkspaceProps = {
   onComplete: (patch: Partial<SignupSnapshot> & { workspaceId: string }) => void;
 };
 
+type LaunchWorkspaceResponse = {
+  workspace_id?: unknown;
+};
+
+function parseWorkspaceId(data: unknown): string | undefined {
+  if (typeof data === "string") return data;
+  if (data && typeof data === "object") {
+    const raw = (data as LaunchWorkspaceResponse).workspace_id;
+    return typeof raw === "string" && raw.trim() ? raw : undefined;
+  }
+  return undefined;
+}
+
 export default function StepWorkspace({ snapshot, onComplete }: StepWorkspaceProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [companyName, setCompanyName] = useState(snapshot.companyName || "");
@@ -95,12 +108,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
       return;
     }
 
-    let wid: string | undefined;
-    if (typeof rpcData === "string") {
-      wid = rpcData;
-    } else if (rpcData && typeof rpcData === "object") {
-      wid = (rpcData as any).workspace_id;
-    }
+    const wid = parseWorkspaceId(rpcData);
 
     if (!wid) {
       setError("Could not create workspace.");

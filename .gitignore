@@ -53,6 +53,9 @@ next-env.d.ts
 # ESLint cache
 .eslintcache
 
+# Supabase CLI local project metadata
+/supabase/.temp/
+
 # Turborepo
 .turbo
 
