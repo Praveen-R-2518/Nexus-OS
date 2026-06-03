@@ -10,6 +10,7 @@ import {
   Plug,
   Rocket,
   Workflow,
+  type LucideIcon,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/marketing/ScrollReveal";
 
@@ -24,7 +25,7 @@ type DocSection = {
   eyebrow: string;
   title: string;
   intro: string;
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  icon: LucideIcon;
   links: DocLink[];
 };
 
