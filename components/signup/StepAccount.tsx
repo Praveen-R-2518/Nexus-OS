@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Mail, Lock, User } from "lucide-react";
 import FormInput from "@/components/signup/FormInput";
 import type { SignupSnapshot } from "@/components/signup/types";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type StepAccountProps = {
@@ -46,12 +47,23 @@ const DUPLICATE_EMAIL_MSG =
 const PENDING_VERIFICATION_MSG =
   "This email already has a pending signup. Check your inbox or resend the verification link below.";
 
-function mapSignUpError(error: {
+type SupabaseAuthError = {
   message?: string;
   status?: number;
   name?: string;
   code?: string;
-}): string {
+};
+
+function logSupabaseAuthEmailError(source: "signup" | "resend", error: SupabaseAuthError) {
+  console.warn(`[${source}] Supabase auth email error`, {
+    status: error.status,
+    code: error.code,
+    name: error.name,
+    message: error.message,
+  });
+}
+
+function mapSignUpError(error: SupabaseAuthError): string {
   const msg = error.message?.toLowerCase() ?? "";
   const raw = error.message ?? "";
   const code = error.code?.toLowerCase() ?? "";
@@ -66,6 +78,74 @@ function mapSignUpError(error: {
       return "Too many attempts. Please wait about 20 seconds before requesting another email.";
     }
     return "Too many requests. Please wait a minute and try again.";
+  }
+
+  if (
+    msg.includes("email address is not authorized") ||
+    msg.includes("not authorized") ||
+    msg.includes("team email")
+  ) {
+    return "Supabase is blocking email delivery to this address. Configure custom SMTP for production signups, then try again.";
+  }
+
+  if (
+    msg.includes("redirect") ||
+    msg.includes("not allowed") ||
+    msg.includes("uri") ||
+    msg.includes("url")
+  ) {
+    return "The verification redirect URL is not allowed by Supabase. Add this app's /auth/callback URL to the Supabase Auth redirect allowlist.";
+  }
+
+  if (
+    msg.includes("send email hook") ||
+    msg.includes("hook") ||
+    msg.includes("webhook")
+  ) {
+    return "Supabase's Send Email Hook failed while sending the verification email. Disable the hook or make it return HTTP 200.";
+  }
+
+  if (
+    msg.includes("535") ||
+    msg.includes("authentication failed") ||
+    msg.includes("invalid login") ||
+    msg.includes("invalid credentials") ||
+    msg.includes("username and password not accepted")
+  ) {
+    return "The SMTP provider rejected the configured username or password. Update the Supabase SMTP credential, then try again.";
+  }
+
+  if (
+    msg.includes("sender") ||
+    msg.includes("domain") ||
+    msg.includes("dkim") ||
+    msg.includes("spf") ||
+    msg.includes("dmarc") ||
+    msg.includes("554") ||
+    msg.includes("rejected")
+  ) {
+    return "The SMTP provider rejected the sender. Verify the sender/domain authentication in your email provider, then try again.";
+  }
+
+  if (
+    msg.includes("timeout") ||
+    msg.includes("connection") ||
+    msg.includes("tls") ||
+    msg.includes("certificate") ||
+    msg.includes("econnrefused")
+  ) {
+    return "Supabase could not connect to the SMTP provider. Check SMTP host, port, TLS settings, and provider firewall rules.";
+  }
+
+  if (
+    msg.includes("error sending confirmation email") ||
+    msg.includes("error sending magic link") ||
+    msg.includes("smtp") ||
+    msg.includes("mailer") ||
+    msg.includes("email provider") ||
+    msg.includes("sending email")
+  ) {
+    return "We could not send the verification email. Run npm run check:auth-email, then repair the Supabase Auth SMTP settings if it keeps happening.";
   }
 
   if (
@@ -186,13 +266,11 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       return;
     }
 
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const verifyNext = encodeURIComponent("/signup");
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=${verifyNext}`,
+        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
@@ -201,6 +279,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     });
 
     if (error) {
+      logSupabaseAuthEmailError("signup", error);
       if (isRateLimitError(error)) {
         startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
       }
@@ -284,18 +363,16 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       }
     }
 
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
-    const verifyNext = encodeURIComponent("/signup");
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: target,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=${verifyNext}`,
+        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
       },
     });
     setBusy(false);
     if (error) {
+      logSupabaseAuthEmailError("resend", error);
       if (isRateLimitError(error)) {
         startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
       }
