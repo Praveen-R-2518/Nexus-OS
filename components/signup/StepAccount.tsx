@@ -33,6 +33,7 @@ const PENDING_VERIFICATION_MSG =
   "This email already has a pending signup. Check your inbox or resend the verification link below.";
 
 const RESEND_COOLDOWN_SECONDS = 60;
+const SIGNUP_RESUME_PATH = "/signup?step=workspace";
 
 type SupabaseAuthError = {
   message?: string;
@@ -242,7 +243,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
+        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
@@ -335,7 +336,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       type: "signup",
       email: target,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
+        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
       },
     });
     setBusy(false);
@@ -356,7 +357,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
             We sent a confirmation link to{" "}
             <span className="font-medium text-foreground">{lockedEmail}</span>. After you
-            confirm, sign in to continue workspace setup.
+            confirm, this signup page will reopen at workspace setup.
           </p>
         </div>
         <div className="border border-border bg-[#e3eef6] px-4 py-3 font-mono text-sm text-foreground dark:border-border dark:bg-surface-elevated">
@@ -364,15 +365,15 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
             <li>Open the email and click the confirmation link.</li>
             <li>
-              Sign in on the login page — you&apos;ll return here to finish onboarding.
+              Return here to finish workspace, plan, payment, and Gmail setup.
             </li>
           </ol>
         </div>
         <Link
-          href="/login?next=%2Fsignup"
+          href={`/login?next=${encodeURIComponent(SIGNUP_RESUME_PATH)}`}
           className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] dark:border-border"
         >
-          Go to sign in
+          Sign in to resume
         </Link>
         <button
           type="button"
@@ -405,8 +406,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <div>
         <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Create your account</h2>
         <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
-          After you create your account, we&apos;ll email you a verification link. Once
-          your email is confirmed, sign in to continue with workspace setup.
+          After you create your account, we&apos;ll email you a verification link.
+          Once your email is confirmed, signup resumes here with workspace setup.
         </p>
       </div>
       <FormInput

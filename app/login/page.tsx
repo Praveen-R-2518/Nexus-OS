@@ -15,6 +15,7 @@ const PASSWORD_BACKOFF_SECONDS = [5, 15, 30, 60] as const;
 const MAGIC_LINK_COOLDOWN_SECONDS = 60;
 
 type AuthLikeError = { status?: number; message?: string } | null | undefined;
+type SessionLike = { user?: { id?: string | null } } | null;
 
 function isRateLimitError(error: AuthLikeError): boolean {
   if (!error) return false;
@@ -28,6 +29,28 @@ function backoffSeconds(attempt: number): number {
     PASSWORD_BACKOFF_SECONDS.length - 1,
   );
   return PASSWORD_BACKOFF_SECONDS[idx];
+}
+
+async function resolvePostLoginPath(safeNext: string, session: SessionLike): Promise<string> {
+  const userId = session?.user?.id;
+  if (!userId || safeNext.startsWith("/signup")) return safeNext;
+
+  const supabase = createSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("team_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) return safeNext;
+
+  const rawTeamId = data && (data as { team_id?: unknown }).team_id;
+  const teamId =
+    typeof rawTeamId === "string" && rawTeamId.trim()
+      ? rawTeamId.trim()
+      : null;
+
+  return teamId ? safeNext : "/signup?step=workspace";
 }
 
 function LoginForm() {
@@ -80,10 +103,11 @@ function LoginForm() {
     const supabase = createSupabaseBrowserClient();
     let cancelled = false;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled) return;
       if (data.session) {
-        router.replace(safeNext);
+        const destination = await resolvePostLoginPath(safeNext, data.session);
+        if (!cancelled) router.replace(destination);
         return;
       }
       setLoading(false);
@@ -94,7 +118,9 @@ function LoginForm() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (cancelled) return;
       if (session) {
-        router.replace(safeNext);
+        void resolvePostLoginPath(safeNext, session).then((destination) => {
+          if (!cancelled) router.replace(destination);
+        });
       }
     });
 

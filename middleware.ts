@@ -17,6 +17,14 @@ function isProtectedPath(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
+    const signupUrl = new URL("/signup", request.url);
+    signupUrl.searchParams.set("step", "workspace");
+    return NextResponse.redirect(signupUrl);
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -50,8 +58,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/auth/callback")) {
     return response;

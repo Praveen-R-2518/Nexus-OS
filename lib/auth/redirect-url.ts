@@ -21,6 +21,6 @@ export function safeNextPath(raw: string | null | undefined, fallback = "/dashbo
 
 export function buildAuthCallbackUrl(nextPath: string): string {
   const origin = getAuthRedirectOrigin();
-  const next = encodeURIComponent(safeNextPath(nextPath, "/onboarding"));
+  const next = encodeURIComponent(safeNextPath(nextPath, "/signup?step=workspace"));
   return `${origin}/auth/callback?next=${next}`;
 }
