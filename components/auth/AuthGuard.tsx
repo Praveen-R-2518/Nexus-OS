@@ -96,9 +96,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       pathname + (nextParam ? `?${nextParam}` : "");
 
     if (teamId === null) {
-      if (pathname !== "/onboarding") {
-        router.replace(`/onboarding?next=${encodeURIComponent(next)}`);
-      }
+      router.replace(`/signup?step=workspace&next=${encodeURIComponent(next)}`);
       return;
     }
 
@@ -131,10 +129,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  if (teamId === null && !isPublicAuthPath(pathname) && pathname !== "/onboarding") {
+  if (teamId === null && !isPublicAuthPath(pathname)) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center font-mono text-xs uppercase tracking-widest text-muted">
-        Redirecting to workspace setup…
+        Redirecting to signup…
       </div>
     );
   }

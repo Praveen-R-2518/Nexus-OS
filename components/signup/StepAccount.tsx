@@ -47,11 +47,17 @@ const DUPLICATE_EMAIL_MSG =
 const PENDING_VERIFICATION_MSG =
   "This email already has a pending signup. Check your inbox or resend the verification link below.";
 
+const SIGNUP_RESUME_PATH = "/signup?step=workspace";
 type SupabaseAuthError = {
   message?: string;
   status?: number;
   name?: string;
   code?: string;
+};
+
+type LocalDevSignupResponse = {
+  success?: boolean;
+  error?: string;
 };
 
 function logSupabaseAuthEmailError(source: "signup" | "resend", error: SupabaseAuthError) {
@@ -164,6 +170,23 @@ function mapSignUpError(error: SupabaseAuthError): string {
   return raw || "Something went wrong. Please try again.";
 }
 
+function isEmailDeliveryError(error: SupabaseAuthError): boolean {
+  const msg = error.message?.toLowerCase() ?? "";
+  return (
+    error.status === 500 &&
+    (error.code === "unexpected_failure" ||
+      msg.includes("error sending confirmation email") ||
+      msg.includes("smtp") ||
+      msg.includes("mailer") ||
+      msg.includes("sending email"))
+  );
+}
+
+function canUseLocalDevSignupFallback(): boolean {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
 export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [fullName, setFullName] = useState(
@@ -210,6 +233,52 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const pwError = password ? validatePassword(password) : undefined;
   const confirmError =
     confirm && password !== confirm ? "Passwords do not match" : undefined;
+
+  async function completeLocalDevSignup(normalizedEmail: string): Promise<boolean> {
+    const res = await fetch("/api/auth/local-dev-signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: normalizedEmail,
+        password,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+      }),
+    });
+    const json = (await res.json()) as LocalDevSignupResponse;
+    if (!res.ok || !json.success) {
+      setFormError(
+        json.error ||
+          "Local development signup fallback failed. Check the server console.",
+      );
+      return false;
+    }
+
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+    if (signInError || !signInData.session) {
+      setFormError(
+        signInError?.message ||
+          "Local account was created, but sign-in failed. Try signing in manually.",
+      );
+      return false;
+    }
+
+    onPatch({
+      accountEmail: normalizedEmail,
+      accountFullName: fullName.trim(),
+      accountPhone: phone.trim(),
+      accountVerificationPending: false,
+    });
+    setPassword("");
+    setConfirm("");
+    onNext();
+    return true;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -261,6 +330,12 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       return;
     }
     if (checkJson.status === "pending_verification") {
+      if (canUseLocalDevSignupFallback()) {
+        const completed = await completeLocalDevSignup(normalizedEmail);
+        setBusy(false);
+        if (completed) return;
+        return;
+      }
       setFormError(PENDING_VERIFICATION_MSG);
       setBusy(false);
       return;
@@ -270,7 +345,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
+        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
@@ -280,6 +355,12 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
 
     if (error) {
       logSupabaseAuthEmailError("signup", error);
+      if (isEmailDeliveryError(error) && canUseLocalDevSignupFallback()) {
+        const completed = await completeLocalDevSignup(normalizedEmail);
+        setBusy(false);
+        if (completed) return;
+        return;
+      }
       if (isRateLimitError(error)) {
         startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
       }
@@ -367,7 +448,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       type: "signup",
       email: target,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
+        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
       },
     });
     setBusy(false);
@@ -438,8 +519,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <div>
         <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Create your account</h2>
         <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
-          After you create your account, we&apos;ll email you a verification link. Once
-          your email is confirmed, sign in to continue with workspace setup.
+          After you create your account, we&apos;ll email you a verification link.
+          Once your email is confirmed, signup resumes here with workspace setup.
         </p>
       </div>
       <FormInput

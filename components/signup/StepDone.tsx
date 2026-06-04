@@ -2,7 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { PartyPopper, Check } from "lucide-react";
-import type { PlanTier, SignupSnapshot } from "@/components/signup/types";
+import {
+  clearSignupSnapshot,
+  type PlanTier,
+  type SignupSnapshot,
+} from "@/components/signup/types";
 
 function planLabel(tier: PlanTier | null): string {
   if (!tier) return "—";
@@ -86,7 +90,10 @@ export default function StepDone({ snapshot }: StepDoneProps) {
       </div>
       <button
         type="button"
-        onClick={() => router.push("/dashboard")}
+        onClick={() => {
+          clearSignupSnapshot();
+          router.push("/dashboard");
+        }}
         className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-3 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] sm:w-auto sm:px-8 dark:border-border"
       >
         Go to dashboard →

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProgressBar from "@/components/signup/ProgressBar";
 import StepAccount from "@/components/signup/StepAccount";
 import StepDone from "@/components/signup/StepDone";
@@ -28,7 +28,31 @@ const STEP_LABELS = [
   "Done",
 ] as const;
 
+const STEP_FROM_PARAM: Record<string, number> = {
+  account: 1,
+  workspace: 2,
+  plan: 3,
+  payment: 4,
+  gmail: 5,
+  done: 6,
+};
+
+function stepFromParam(raw: string | null): number | null {
+  if (!raw) return null;
+  return STEP_FROM_PARAM[raw.trim().toLowerCase()] ?? null;
+}
+
+function hasSignupProgress(snapshot: SignupSnapshot): boolean {
+  return (
+    snapshot.currentStep > 2 ||
+    Boolean(snapshot.workspaceId) ||
+    Boolean(snapshot.subscriptionId) ||
+    snapshot.gmailConnected !== null
+  );
+}
+
 export default function SignupPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [snapshot, setSnapshot] = useState<SignupSnapshot>(() => defaultSignupSnapshot());
   const [hydrated, setHydrated] = useState(false);
@@ -60,16 +84,80 @@ export default function SignupPage() {
     let cancelled = false;
 
     const reconcile = async () => {
+      const requestedStep = stepFromParam(searchParams.get("step"));
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (cancelled) return;
 
       if (session) {
+        let teamId: string | null = null;
+        let workspaceId: string | null = null;
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("team_id")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (!profileError) {
+          const rawTeamId = profile && (profile as { team_id?: unknown }).team_id;
+          teamId =
+            typeof rawTeamId === "string" && rawTeamId.trim()
+              ? rawTeamId.trim()
+              : null;
+        }
+
+        if (teamId) {
+          const { data: workspace } = await supabase
+            .from("workspaces")
+            .select("id")
+            .eq("team_id", teamId)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          const rawWorkspaceId =
+            workspace && (workspace as { id?: unknown }).id;
+          workspaceId =
+            typeof rawWorkspaceId === "string" && rawWorkspaceId.trim()
+              ? rawWorkspaceId.trim()
+              : null;
+        }
+
+        if (cancelled) return;
+
+        let shouldRedirectDashboard = false;
+
         setSnapshot((s) => {
-          if (s.currentStep !== 1) return s;
-          return { ...s, currentStep: 2, accountVerificationPending: false };
+          const progressExists = hasSignupProgress(s);
+          const next: SignupSnapshot = {
+            ...s,
+            accountEmail: s.accountEmail || session.user.email || "",
+            accountVerificationPending: false,
+            workspaceId: s.workspaceId || workspaceId,
+          };
+
+          if (!requestedStep && teamId && workspaceId && !progressExists) {
+            shouldRedirectDashboard = true;
+            return next;
+          }
+
+          if (requestedStep) {
+            next.currentStep = Math.max(next.currentStep, requestedStep);
+          } else if (next.currentStep === 1) {
+            next.currentStep = teamId && workspaceId ? 3 : 2;
+          }
+
+          if (!teamId && !next.workspaceId && next.currentStep > 2) {
+            next.currentStep = 2;
+          }
+
+          return next;
         });
+        if (shouldRedirectDashboard) {
+          router.replace("/dashboard");
+        }
         return;
       }
 
@@ -107,7 +195,7 @@ export default function SignupPage() {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [hydrated]);
+  }, [hydrated, router, searchParams]);
 
   const goToStep = useCallback((step: number, patch?: Partial<SignupSnapshot>) => {
     setSnapshot((s) => ({
