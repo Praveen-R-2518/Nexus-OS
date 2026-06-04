@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Mail, Lock, User } from "lucide-react";
 import FormInput from "@/components/signup/FormInput";
@@ -13,6 +12,22 @@ type StepAccountProps = {
   onPatch: (patch: Partial<SignupSnapshot>) => void;
   onNext: () => void;
 };
+
+// Email-sending auth calls (signUp/resend) share Supabase's project-wide
+// hourly email cap. Throttle the buttons so a user can't keep re-triggering
+// the limit once it's hit.
+const RATE_LIMIT_COOLDOWN_SECONDS = 60;
+
+function isRateLimitError(error: {
+  message?: string;
+  status?: number;
+  code?: string;
+}): boolean {
+  if (error.status === 429) return true;
+  const code = error.code?.toLowerCase() ?? "";
+  if (code === "over_email_send_rate_limit") return true;
+  return /rate limit|too many/i.test(error.message ?? "");
+}
 
 function validatePassword(pw: string): string | undefined {
   if (pw.length < 8) return "At least 8 characters";
@@ -32,9 +47,7 @@ const DUPLICATE_EMAIL_MSG =
 const PENDING_VERIFICATION_MSG =
   "This email already has a pending signup. Check your inbox or resend the verification link below.";
 
-const RESEND_COOLDOWN_SECONDS = 60;
 const SIGNUP_RESUME_PATH = "/signup?step=workspace";
-
 type SupabaseAuthError = {
   message?: string;
   status?: number;
@@ -189,8 +202,30 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [resendMessage, setResendMessage] = useState("");
-  const [resendCooldownUntil, setResendCooldownUntil] = useState(0);
-  const [resendRemaining, setResendRemaining] = useState(0);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) {
+      setCooldownRemaining(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((cooldownUntil - Date.now()) / 1000),
+      );
+      setCooldownRemaining(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
+
+  const startCooldown = (seconds: number) => {
+    setCooldownUntil(Date.now() + seconds * 1000);
+    setCooldownRemaining(seconds);
+  };
 
   const verificationPending = snapshot.accountVerificationPending;
   const lockedEmail = normalizeSignupEmail(snapshot.accountEmail || "");
@@ -198,21 +233,6 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const pwError = password ? validatePassword(password) : undefined;
   const confirmError =
     confirm && password !== confirm ? "Passwords do not match" : undefined;
-
-  useEffect(() => {
-    if (resendCooldownUntil <= Date.now()) {
-      setResendRemaining(0);
-      return;
-    }
-    const tick = () => {
-      setResendRemaining(
-        Math.max(0, Math.ceil((resendCooldownUntil - Date.now()) / 1000)),
-      );
-    };
-    tick();
-    const id = window.setInterval(tick, 500);
-    return () => window.clearInterval(id);
-  }, [resendCooldownUntil]);
 
   async function completeLocalDevSignup(normalizedEmail: string): Promise<boolean> {
     const res = await fetch("/api/auth/local-dev-signup", {
@@ -262,6 +282,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy || cooldownRemaining > 0) return;
     setFormError("");
     setResendMessage("");
     if (!terms) {
@@ -286,9 +307,16 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       body: JSON.stringify({ email: normalizedEmail }),
     });
     if (!checkRes.ok) {
-      setFormError(
-        "Could not verify if this email is available. Please try again in a moment.",
-      );
+      if (checkRes.status === 429) {
+        startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
+        setFormError(
+          `Too many requests. Please wait ${RATE_LIMIT_COOLDOWN_SECONDS}s and try again.`,
+        );
+      } else {
+        setFormError(
+          "Could not verify if this email is available. Please try again in a moment.",
+        );
+      }
       setBusy(false);
       return;
     }
@@ -332,6 +360,9 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
         setBusy(false);
         if (completed) return;
         return;
+      }
+      if (isRateLimitError(error)) {
+        startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
       }
       setFormError(mapSignUpError(error));
       setBusy(false);
@@ -389,7 +420,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
 
   async function resendVerification() {
     const target = lockedEmail;
-    if (!target || resendRemaining > 0) return;
+    if (!target) return;
+    if (busy || cooldownRemaining > 0) return;
     setResendMessage("");
     setFormError("");
     setBusy(true);
@@ -422,10 +454,15 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     setBusy(false);
     if (error) {
       logSupabaseAuthEmailError("resend", error);
+      if (isRateLimitError(error)) {
+        startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
+      }
       setFormError(mapSignUpError(error));
       return;
     }
-    setResendCooldownUntil(Date.now() + RESEND_COOLDOWN_SECONDS * 1000);
+    // Successful send consumes part of the email quota; lock briefly so the
+    // user doesn't immediately request another and trip the cap.
+    startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
     setResendMessage("Verification email sent. Check your inbox.");
   }
 
@@ -436,8 +473,9 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Verify your email</h2>
           <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
             We sent a confirmation link to{" "}
-            <span className="font-medium text-foreground">{lockedEmail}</span>. After you
-            confirm, this signup page will reopen at workspace setup.
+            <span className="font-medium text-foreground">{lockedEmail}</span>. Clicking it
+            signs you in automatically and continues your workspace setup — no separate
+            login needed.
           </p>
         </div>
         <div className="border border-border bg-[#e3eef6] px-4 py-3 font-mono text-sm text-foreground dark:border-border dark:bg-surface-elevated">
@@ -445,26 +483,21 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
             <li>Open the email and click the confirmation link.</li>
             <li>
-              Return here to finish workspace, plan, payment, and Gmail setup.
+              Open it in this same browser — this page continues automatically once
+              your email is confirmed.
             </li>
           </ol>
         </div>
-        <Link
-          href={`/login?next=${encodeURIComponent(SIGNUP_RESUME_PATH)}`}
-          className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] dark:border-border"
-        >
-          Sign in to resume
-        </Link>
         <button
           type="button"
-          disabled={busy || resendRemaining > 0}
+          disabled={busy || cooldownRemaining > 0}
           onClick={resendVerification}
-          className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-white py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-black transition hover:bg-[#eef6fb] disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
+          className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-white py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-black transition hover:bg-[#eef6fb] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
         >
-          {busy
-            ? "Sending…"
-            : resendRemaining > 0
-              ? `Resend in ${resendRemaining}s`
+          {cooldownRemaining > 0
+            ? `Wait ${cooldownRemaining}s`
+            : busy
+              ? "Sending…"
               : "Resend verification email"}
         </button>
         {formError ? (
@@ -563,10 +596,14 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       ) : null}
       <button
         type="submit"
-        disabled={busy}
-        className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-50 dark:border-border"
+        disabled={busy || cooldownRemaining > 0}
+        className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border"
       >
-        {busy ? "Creating account…" : "Continue"}
+        {cooldownRemaining > 0
+          ? `Wait ${cooldownRemaining}s`
+          : busy
+            ? "Creating account…"
+            : "Continue"}
       </button>
     </form>
   );

@@ -338,7 +338,7 @@ Full reference: [`docs/n8n_workspace_env.md`](docs/n8n_workspace_env.md).
 
 Login surfaces an HTTP 429 ("Too many requests") when Supabase Auth (GoTrue) rate-limits sign-in or magic-link requests. The client already throttles retries (cooldown + exponential backoff in `app/login/page.tsx`), but if you legitimately hit the cap:
 
-- **Raise auth limits:** Supabase Dashboard → Authentication → Rate Limits. Increase token/sign-in and OTP/email limits to match expected traffic.
+- **Raise auth limits:** Supabase Dashboard → Authentication → Rate Limits. Increase token/sign-in and OTP/email limits to match expected traffic. GoTrue limits are **per IP**, so users behind a shared NAT / corporate egress IP (common in production) share one bucket and can collectively exhaust it — raise the limits accordingly.
 - **Add custom SMTP:** Supabase Dashboard → Authentication → Emails (SMTP Settings). The default shared mailer caps magic-link emails very low (a few per hour); a custom SMTP provider lifts this and is required for production magic-link / OTP volume.
 - **Prefer password auth** for high-frequency sign-ins; reserve magic links for recovery to avoid the email cap.
 
@@ -356,6 +356,10 @@ npm run fix:auth-email
 `fix:auth-email` keeps verified-email signup enabled, sets the email-send limit to `100`, applies the Site URL and redirect allowlist, and disables an accidental Send Email Hook by default. It only patches SMTP when all `SUPABASE_SMTP_*` variables are present, so a half-filled credential set cannot overwrite a working provider.
 
 After changing SMTP, confirm the provider-side sender/domain authentication in your email service, then run one fresh signup and check the provider delivery logs before retrying production signups.
+
+#### Email confirmation auto-login
+
+Clicking the confirmation email link hits `/auth/callback`, which exchanges the code for a session and redirects back into the signup wizard (`/signup`). The wizard's `reconcile()` then auto-advances to workspace setup — **no separate manual login is required**. This avoids stacking an extra sign-in token call on top of the callback's session exchange, which previously contributed to first-login 429s. The confirmation link must be opened in the **same browser** that started signup (PKCE `code_verifier` is stored locally); if it fails, the callback redirects to `/login?error=...` and the login page now surfaces that message.
 
 ---
 
