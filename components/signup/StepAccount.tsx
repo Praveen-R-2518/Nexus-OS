@@ -42,6 +42,11 @@ type SupabaseAuthError = {
   code?: string;
 };
 
+type LocalDevSignupResponse = {
+  success?: boolean;
+  error?: string;
+};
+
 function logSupabaseAuthEmailError(source: "signup" | "resend", error: SupabaseAuthError) {
   console.warn(`[${source}] Supabase auth email error`, {
     status: error.status,
@@ -152,6 +157,23 @@ function mapSignUpError(error: SupabaseAuthError): string {
   return raw || "Something went wrong. Please try again.";
 }
 
+function isEmailDeliveryError(error: SupabaseAuthError): boolean {
+  const msg = error.message?.toLowerCase() ?? "";
+  return (
+    error.status === 500 &&
+    (error.code === "unexpected_failure" ||
+      msg.includes("error sending confirmation email") ||
+      msg.includes("smtp") ||
+      msg.includes("mailer") ||
+      msg.includes("sending email"))
+  );
+}
+
+function canUseLocalDevSignupFallback(): boolean {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
 export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [fullName, setFullName] = useState(
@@ -191,6 +213,52 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     const id = window.setInterval(tick, 500);
     return () => window.clearInterval(id);
   }, [resendCooldownUntil]);
+
+  async function completeLocalDevSignup(normalizedEmail: string): Promise<boolean> {
+    const res = await fetch("/api/auth/local-dev-signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: normalizedEmail,
+        password,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+      }),
+    });
+    const json = (await res.json()) as LocalDevSignupResponse;
+    if (!res.ok || !json.success) {
+      setFormError(
+        json.error ||
+          "Local development signup fallback failed. Check the server console.",
+      );
+      return false;
+    }
+
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+    if (signInError || !signInData.session) {
+      setFormError(
+        signInError?.message ||
+          "Local account was created, but sign-in failed. Try signing in manually.",
+      );
+      return false;
+    }
+
+    onPatch({
+      accountEmail: normalizedEmail,
+      accountFullName: fullName.trim(),
+      accountPhone: phone.trim(),
+      accountVerificationPending: false,
+    });
+    setPassword("");
+    setConfirm("");
+    onNext();
+    return true;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -234,6 +302,12 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       return;
     }
     if (checkJson.status === "pending_verification") {
+      if (canUseLocalDevSignupFallback()) {
+        const completed = await completeLocalDevSignup(normalizedEmail);
+        setBusy(false);
+        if (completed) return;
+        return;
+      }
       setFormError(PENDING_VERIFICATION_MSG);
       setBusy(false);
       return;
@@ -253,6 +327,12 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
 
     if (error) {
       logSupabaseAuthEmailError("signup", error);
+      if (isEmailDeliveryError(error) && canUseLocalDevSignupFallback()) {
+        const completed = await completeLocalDevSignup(normalizedEmail);
+        setBusy(false);
+        if (completed) return;
+        return;
+      }
       setFormError(mapSignUpError(error));
       setBusy(false);
       return;
