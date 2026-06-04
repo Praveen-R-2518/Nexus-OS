@@ -69,6 +69,8 @@ function LoginForm() {
   const nextPath = searchParams.get("next");
   const safeNext = safeNextPath(nextPath, "/dashboard");
 
+  const callbackError = searchParams.get("error");
+
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
@@ -76,6 +78,15 @@ function LoginForm() {
       setRememberMe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!callbackError) return;
+    setMessage(callbackError);
+    if (isRateLimitError({ message: callbackError })) {
+      startCooldown(PASSWORD_BACKOFF_SECONDS[PASSWORD_BACKOFF_SECONDS.length - 1]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callbackError]);
 
   useEffect(() => {
     if (cooldownUntil <= Date.now()) {
