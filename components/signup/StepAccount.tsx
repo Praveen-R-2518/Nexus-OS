@@ -47,6 +47,7 @@ const DUPLICATE_EMAIL_MSG =
 const PENDING_VERIFICATION_MSG =
   "This email already has a pending signup. Check your inbox or resend the verification link below.";
 
+const SIGNUP_RESUME_PATH = "/signup?step=workspace";
 type SupabaseAuthError = {
   message?: string;
   status?: number;
@@ -270,7 +271,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
+        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
@@ -367,7 +368,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       type: "signup",
       email: target,
       options: {
-        emailRedirectTo: buildAuthCallbackUrl("/onboarding"),
+        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
       },
     });
     setBusy(false);
@@ -438,8 +439,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <div>
         <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Create your account</h2>
         <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
-          After you create your account, we&apos;ll email you a verification link. Once
-          your email is confirmed, sign in to continue with workspace setup.
+          After you create your account, we&apos;ll email you a verification link.
+          Once your email is confirmed, signup resumes here with workspace setup.
         </p>
       </div>
       <FormInput
