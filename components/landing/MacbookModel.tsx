@@ -8,9 +8,13 @@ import type { Group, Mesh, Object3D } from "three";
 import {
   computeDashboardReveal,
   computeLidOpen,
-  computeMacbookRise,
+  computeMacbookRotationX,
   computeMacbookRotationY,
+  computeMacbookScale,
   computeMacbookVisibility,
+  computeMacbookY,
+  computeMacbookZ,
+  computeProductView,
 } from "@/lib/landing/scrollPhases";
 import { drawDashboardTexture } from "@/lib/landing/drawDashboardTexture";
 
@@ -101,20 +105,18 @@ export function MacbookModel({ progress }: MacbookModelProps) {
     });
   }, [dashboardTexture, modelScene]);
 
-  const rise = computeMacbookRise(progress);
   const rotationY = computeMacbookRotationY(progress);
+  const rotationX = computeMacbookRotationX(progress);
+  const scale = computeMacbookScale(progress);
+  const y = computeMacbookY(progress);
+  const z = computeMacbookZ(progress);
   const visibility = computeMacbookVisibility(progress);
   const lidOpen = computeLidOpen(progress);
   const dashboardReveal = computeDashboardReveal(progress);
+  const productView = computeProductView(progress);
 
   useFrame((_, delta) => {
     if (groupRef.current) {
-      const settledScale = THREE.MathUtils.lerp(0.34, 0.43, rise);
-      const scale = THREE.MathUtils.lerp(settledScale, 0.34, lidOpen);
-      const settledY = THREE.MathUtils.lerp(-28, -13.1, rise);
-      const y = THREE.MathUtils.lerp(settledY, -12.2, lidOpen);
-      const z = THREE.MathUtils.lerp(18, 20, rise);
-
       groupRef.current.position.set(0, y, z);
       groupRef.current.scale.setScalar(scale);
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
@@ -124,14 +126,16 @@ export function MacbookModel({ progress }: MacbookModelProps) {
       );
       groupRef.current.rotation.x = THREE.MathUtils.lerp(
         groupRef.current.rotation.x,
-        0,
-        Math.min(1, delta * 3),
+        rotationX,
+        Math.min(1, delta * 4),
       );
     }
 
     if (screenRef.current) {
       const closedX = THREE.MathUtils.degToRad(180);
-      const openX = THREE.MathUtils.degToRad(82);
+      const openX = THREE.MathUtils.degToRad(
+        THREE.MathUtils.lerp(82, 88, productView),
+      );
       screenRef.current.rotation.x = THREE.MathUtils.lerp(
         screenRef.current.rotation.x,
         THREE.MathUtils.lerp(closedX, openX, lidOpen),

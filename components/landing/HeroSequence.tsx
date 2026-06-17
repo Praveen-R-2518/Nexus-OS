@@ -21,7 +21,7 @@ const MacbookScene = dynamic(
   { ssr: false, loading: () => <div className="h-full w-full" /> },
 );
 
-const SEQUENCE_HEIGHT_VH = 450;
+const SEQUENCE_HEIGHT_VH = 540;
 
 function HeroIntroContent({ showCta = true }: { showCta?: boolean }) {
   return (
