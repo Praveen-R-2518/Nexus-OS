@@ -309,13 +309,13 @@ function InboxPageContent() {
       <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
         <div className="shrink-0 px-3 pt-3 pb-2">
           <div className="rounded-xl border border-selectable-edge bg-surface-muted p-4 dark:bg-surface-muted">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+            <p className="nexus-meta text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 font-sans text-3xl font-black tabular-nums tracking-tight text-ref-cta sm:text-4xl dark:text-muted">
+            <p className="mt-2 font-sans text-3xl font-semibold tabular-nums tracking-normal text-nexus-rescue sm:text-4xl">
               {formatCurrency(revenueAtRisk)}
             </p>
-            <p className="mt-1.5 font-mono text-xs text-muted">
+            <p className="mt-1.5 text-sm text-muted">
               Unresolved pipeline exposure
             </p>
           </div>
@@ -323,7 +323,7 @@ function InboxPageContent() {
 
         <div className="max-h-[min(38vh,320px)] shrink-0 space-y-4 overflow-y-auto overscroll-y-contain hairline-b p-4">
           <div>
-            <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
+            <p className="mb-2 nexus-meta text-muted">
               Urgency
             </p>
             <div className="flex flex-wrap gap-2">
@@ -336,9 +336,9 @@ function InboxPageContent() {
                     type="button"
                     onClick={() => setActiveUrgencyFilter(opt.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
                       active
-                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
                         : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
@@ -347,7 +347,7 @@ function InboxPageContent() {
                       className={cn(
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
                           : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
@@ -359,7 +359,7 @@ function InboxPageContent() {
             </div>
           </div>
           <div>
-            <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
+            <p className="mb-2 nexus-meta text-muted">
               Intent
             </p>
             <div className="flex flex-wrap gap-2">
@@ -372,9 +372,9 @@ function InboxPageContent() {
                     type="button"
                     onClick={() => setActiveIntentFilter(opt.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
                       active
-                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
                         : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
@@ -383,7 +383,7 @@ function InboxPageContent() {
                       className={cn(
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
                           : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
@@ -527,7 +527,7 @@ function InboxPageContent() {
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="font-sans text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
+                <h1 className="nexus-app-title text-foreground">
                   {selectedConversation.customer_name}
                 </h1>
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-base text-muted">
@@ -544,7 +544,7 @@ function InboxPageContent() {
               {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-positive-border focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium tracking-normal text-nexus-approval transition-colors duration-interaction hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
                 >
                   View Draft Reply
                 </Link>
@@ -597,7 +597,7 @@ function InboxPageContent() {
                   </div>
                   <div className="mt-3 h-2 w-full overflow-hidden rounded-full border border-border/50 bg-surface-input dark:border-border/50 dark:bg-surface-card">
                     <div
-                      className="h-full bg-ref-cta transition-all dark:bg-foreground/22"
+                      className="h-full bg-nexus-rescue transition-all"
                       style={{
                         width: `${Math.min(100, Math.max(0, selectedConversation.risk_score))}%`,
                       }}
@@ -606,7 +606,7 @@ function InboxPageContent() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted">Estimated value</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-status-positive sm:text-3xl">
+                  <p className="mt-2 text-2xl font-semibold tabular-nums text-nexus-growth sm:text-3xl">
                     {formatCurrency(selectedConversation.estimated_value)}
                   </p>
                   <p className="mt-2 text-sm text-muted">

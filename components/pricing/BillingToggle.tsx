@@ -22,7 +22,7 @@ export default function BillingToggle({ cycle, onChange, className }: BillingTog
     >
       <motion.div
         layout
-        className="absolute inset-y-1 rounded-full bg-[#0f2336] dark:bg-ref-cta"
+        className="absolute inset-y-1 rounded-full bg-nexus-approval"
         style={{
           left: cycle === "monthly" ? "4px" : "50%",
           width: "calc(50% - 4px)",
@@ -34,7 +34,7 @@ export default function BillingToggle({ cycle, onChange, className }: BillingTog
         type="button"
         onClick={() => onChange("monthly")}
         className={cn(
-          "relative z-10 cursor-pointer rounded-full px-5 py-2 font-mono text-[11px] font-medium uppercase tracking-widest transition-colors duration-200",
+          "relative z-10 cursor-pointer rounded-full px-5 py-2 text-[13px] font-medium tracking-normal transition-colors duration-200",
           cycle === "monthly"
             ? "text-white"
             : "text-muted hover:text-atmospheric-grey dark:text-slate-400 dark:hover:text-white",
@@ -46,7 +46,7 @@ export default function BillingToggle({ cycle, onChange, className }: BillingTog
         type="button"
         onClick={() => onChange("annual")}
         className={cn(
-          "relative z-10 cursor-pointer rounded-full px-5 py-2 font-mono text-[11px] font-medium uppercase tracking-widest transition-colors duration-200",
+          "relative z-10 cursor-pointer rounded-full px-5 py-2 text-[13px] font-medium tracking-normal transition-colors duration-200",
           cycle === "annual"
             ? "text-white"
             : "text-muted hover:text-atmospheric-grey dark:text-slate-400 dark:hover:text-white",

@@ -103,13 +103,13 @@ export default function CustomersPage() {
   return (
     <div className={`flex flex-1 flex-col ${styleScript.variable}`}>
       <ScrollReveal className="hairline-b pb-12 pt-4">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-muted">
+        <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
           Customers
         </p>
-        <h1 className="mt-3 max-w-3xl font-sans text-4xl font-black uppercase leading-[1.05] tracking-tighter text-atmospheric-grey sm:text-5xl md:text-6xl">
+        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey">
           Revenue teams that stopped losing deals
         </h1>
-        <p className="mt-5 max-w-2xl font-mono text-sm leading-relaxed text-muted">
+        <p className="mt-5 max-w-2xl nexus-body text-muted">
           From solo founders to 120-seat operations, teams use Nexus OS to
           intercept churn, route hot leads, and reclaim hours every week.
         </p>
@@ -125,13 +125,13 @@ export default function CustomersPage() {
               className="h-full"
             >
               <div className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 dark:border-border dark:bg-surface-card">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border text-ref-cta dark:border-white/15 dark:text-muted">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-nexus-growth-border bg-nexus-growth-soft text-nexus-growth dark:border-nexus-growth-border dark:bg-nexus-growth-soft dark:text-nexus-growth">
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
                 <p className="mt-5 text-4xl font-bold tabular-nums tracking-tight text-status-positive">
                   {stat.value}
                 </p>
-                <p className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-atmospheric-grey">
+                <p className="mt-2 text-sm font-semibold text-atmospheric-grey">
                   {stat.label}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-muted">
@@ -148,7 +148,7 @@ export default function CustomersPage() {
           {logos.map((logo) => (
             <span
               key={logo}
-              className="font-sans text-lg font-black uppercase tracking-tight text-atmospheric-grey/40 transition-colors hover:text-atmospheric-grey dark:text-white/30 dark:hover:text-white"
+              className="font-sans text-lg font-semibold tracking-normal text-atmospheric-grey/40 transition-colors hover:text-atmospheric-grey dark:text-white/30 dark:hover:text-white"
             >
               {logo}
             </span>
@@ -158,7 +158,7 @@ export default function CustomersPage() {
 
       <div className="space-y-6 py-12">
         <ScrollReveal>
-          <h2 className="font-sans text-2xl font-black uppercase tracking-tight text-atmospheric-grey md:text-3xl">
+          <h2 className="nexus-section-title text-atmospheric-grey">
             Case studies
           </h2>
         </ScrollReveal>
@@ -223,16 +223,16 @@ export default function CustomersPage() {
       <ScrollReveal className="pb-16">
         <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] border border-border bg-white p-10 dark:border-border dark:bg-surface-card md:flex-row md:items-center">
           <div>
-            <h2 className="font-sans text-xl font-black uppercase tracking-tight text-atmospheric-grey">
+            <h2 className="nexus-section-title text-atmospheric-grey">
               Your team could be next
             </h2>
-            <p className="mt-2 max-w-xl font-mono text-sm leading-relaxed text-muted">
+            <p className="mt-2 max-w-xl text-base leading-relaxed text-muted">
               See how much revenue Nexus OS can rescue for your operation.
             </p>
           </div>
           <Link
             href="/signup"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-ref-cta px-6 py-3 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:border-nexus-approval dark:bg-nexus-approval"
           >
             Start now
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />

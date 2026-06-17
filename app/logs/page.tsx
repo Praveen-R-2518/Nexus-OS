@@ -23,13 +23,13 @@ const FILTER_OPTIONS: { value: ResultFilter; label: string }[] = [
 function resultBadgeClass(result: string): string {
   const r = result.toLowerCase();
   if (r === "success") {
-    return "border-status-positive-border bg-status-positive-surface text-status-positive";
+    return "border-nexus-growth-border bg-nexus-growth-soft text-status-positive";
   }
   if (r === "failed") {
     return "border-status-critical-border bg-status-critical-surface text-status-critical";
   }
   if (r === "running") {
-    return "border-status-warning-border bg-status-warning-surface text-status-warning";
+    return "border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution";
   }
   return "border-border-strong bg-surface-muted text-muted";
 }
@@ -52,10 +52,10 @@ function CountTile({
         accent,
       )}
     >
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
+      <p className="nexus-meta text-muted">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-bold tabular-nums text-atmospheric-grey">
+      <p className="mt-2 text-3xl font-semibold tabular-nums text-atmospheric-grey">
         {value}
       </p>
     </div>
@@ -114,14 +114,14 @@ export default function LogsPage() {
     <div className="space-y-8">
       <header className="flex flex-col gap-4 hairline-b pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-muted">
+          <p className="nexus-meta text-nexus-execution">
             Nexus OS
           </p>
-          <h1 className="mt-3 flex items-center gap-3 font-sans text-2xl font-black uppercase tracking-tight text-atmospheric-grey sm:text-3xl">
-            <Activity className="h-8 w-8 text-status-positive" aria-hidden />
+          <h1 className="mt-3 flex items-center gap-3 nexus-app-title text-atmospheric-grey">
+            <Activity className="h-8 w-8 text-nexus-execution" aria-hidden />
             Workflow Logs
           </h1>
-          <p className="mt-2 max-w-xl font-mono text-sm text-muted">
+          <p className="mt-2 max-w-xl text-base text-muted">
             Latest workflow executions from Supabase.
           </p>
         </div>
@@ -129,7 +129,7 @@ export default function LogsPage() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-xl border border-border bg-white px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-atmospheric-grey transition-colors duration-interaction hover:bg-ref-mint disabled:cursor-not-allowed disabled:opacity-50 dark:border-border/60 dark:bg-surface-card dark:hover:bg-surface-elevated"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors duration-interaction hover:bg-nexus-execution-soft disabled:cursor-not-allowed disabled:opacity-50 dark:border-border/60 dark:bg-surface-card dark:hover:bg-surface-elevated"
         >
           <RefreshCw
             className={cn("h-5 w-5", loading && "animate-spin")}
@@ -159,7 +159,7 @@ export default function LogsPage() {
         <CountTile
           label="Success"
           value={counts.success}
-          accent="border border-status-positive-border/50 bg-status-positive-surface/25"
+          accent="border border-nexus-growth-border bg-nexus-growth-soft"
         />
         <CountTile
           label="Failed"
@@ -169,12 +169,12 @@ export default function LogsPage() {
         <CountTile
           label="Running"
           value={counts.running}
-          accent="border border-status-warning-border/50 bg-status-warning-surface/25"
+          accent="border border-nexus-execution-border bg-nexus-execution-soft"
         />
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted">
+        <span className="nexus-meta text-muted">
           Filter
         </span>
         {FILTER_OPTIONS.map(({ value, label }) => (
@@ -183,9 +183,9 @@ export default function LogsPage() {
             type="button"
             onClick={() => setFilter(value)}
             className={cn(
-              "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+              "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
               filter === value
-                ? "border border-selectable-edge-selected bg-ref-mint text-ref-cta dark:bg-surface-muted dark:text-muted"
+                ? "border border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution dark:bg-surface-muted dark:text-nexus-execution"
                 : "border border-selectable-edge bg-white text-muted hover:border-selectable-edge-hover hover:text-atmospheric-grey dark:bg-surface-card",
             )}
           >

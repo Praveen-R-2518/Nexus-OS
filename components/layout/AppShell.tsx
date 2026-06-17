@@ -56,11 +56,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <TopBar marketing />
           <main
             data-app-body
-            className={
+            className={cn(
+              "nexus-marketing-main",
               isLanding
                 ? "flex w-full flex-1 flex-col"
-                : "mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 md:px-8 md:py-10"
-            }
+                : "mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 md:px-8 md:py-10",
+            )}
           >
             {children}
           </main>
@@ -80,7 +81,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 <TopBar marketing={false} />
                 <main
                   data-app-body
-                  className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 md:px-8 md:py-10"
+                  className="nexus-app-main mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 md:px-8 md:py-10"
                 >
                   {children}
                 </main>

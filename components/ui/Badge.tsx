@@ -9,35 +9,35 @@ export interface BadgeProps {
 }
 
 const badgeShell =
-  "inline-flex min-h-[1.75rem] items-center border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction sm:text-xs";
+  "inline-flex min-h-[1.75rem] items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-normal transition-colors duration-interaction sm:text-xs";
 
 const urgencyColors: Record<string, string> = {
   critical: cn(
     "border-status-critical-border bg-status-critical-surface text-status-critical",
   ),
   high: cn(
-    "border-status-warning-border bg-status-warning-surface text-status-warning",
+    "border-nexus-rescue-border bg-nexus-rescue-soft text-nexus-rescue",
   ),
   medium: cn(
-    "border-status-caution-border bg-status-caution-surface text-status-caution",
+    "border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution",
   ),
   low: cn(
-    "border-status-positive-border bg-status-positive-surface text-status-positive",
+    "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake",
   ),
 };
 
 const intentColors: Record<string, string> = {
   purchase: cn(
-    "border-status-positive-border bg-status-positive-surface text-status-positive",
+    "border-nexus-growth-border bg-nexus-growth-soft text-status-positive",
   ),
   complaint: cn(
     "border-status-critical-border bg-status-critical-surface text-status-critical",
   ),
   churn_risk: cn(
-    "border-status-warning-border bg-status-warning-surface text-status-warning",
+    "border-nexus-rescue-border bg-nexus-rescue-soft text-nexus-rescue",
   ),
   support: cn(
-    "border-status-neutral-border bg-status-neutral-surface text-status-neutral",
+    "border-nexus-discovery-border bg-nexus-discovery-soft text-nexus-discovery",
   ),
   unknown: cn(
     "border-border-strong bg-surface-muted text-atmospheric-grey/70 dark:text-atmospheric-grey/60",
@@ -46,16 +46,16 @@ const intentColors: Record<string, string> = {
 
 const statusColors: Record<string, string> = {
   approved: cn(
-    "border-status-positive-border bg-status-positive-surface text-status-positive",
+    "border-nexus-growth-border bg-nexus-growth-soft text-status-positive",
   ),
   pending: cn(
-    "border-status-caution-border bg-status-caution-surface text-status-caution",
+    "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval",
   ),
   rejected: cn(
     "border-status-critical-border bg-status-critical-surface text-status-critical",
   ),
   sent: cn(
-    "border-status-neutral-border bg-status-neutral-surface text-status-neutral",
+    "border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution",
   ),
 };
 

@@ -11,7 +11,7 @@ export type ProgressBarProps = {
 export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
   return (
     <div className="w-full overflow-x-auto pb-2">
-      <ol className="flex min-w-[640px] items-start justify-between gap-2 px-1 font-mono text-[10px] uppercase tracking-widest sm:min-w-0 sm:px-0">
+      <ol className="flex min-w-[640px] items-start justify-between gap-2 px-1 text-[11px] sm:min-w-0 sm:px-0">
         {steps.map((label, index) => {
           const stepNumber = index + 1;
           const done = stepNumber < currentStep;
@@ -35,10 +35,10 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
                 className={cn(
                   "relative z-10 flex h-7 w-7 items-center justify-center border text-[10px] font-bold tabular-nums",
                   done &&
-                    "border-border bg-[#0f2336] text-white dark:border-border dark:bg-surface-elevated dark:text-white",
+                    "border-nexus-approval bg-nexus-approval text-white dark:border-nexus-approval dark:bg-nexus-approval dark:text-white",
                   active &&
                     !done &&
-                    "border border-selectable-edge-selected bg-[#e3eef6] text-black dark:bg-surface-elevated dark:text-white",
+                    "border border-nexus-approval-border bg-nexus-approval-soft text-black dark:bg-nexus-approval-soft dark:text-white",
                   !active &&
                     !done &&
                     "border border-selectable-edge bg-white text-black/45 dark:bg-surface-card dark:text-white/45",
@@ -48,7 +48,7 @@ export default function ProgressBar({ currentStep, steps }: ProgressBarProps) {
               </div>
               <p
                 className={cn(
-                  "mt-2 max-w-[104px] text-[10px] font-medium uppercase leading-snug tracking-wide sm:text-[10px]",
+                  "mt-2 max-w-[104px] text-[11px] font-medium leading-snug sm:text-[11px]",
                   active ? "text-black dark:text-white" : "text-black/50 dark:text-white/50",
                 )}
               >
