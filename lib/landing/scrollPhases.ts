@@ -2,10 +2,13 @@
 export const PHASES = {
   heroEnd: 0.18,
   macbookEnterStart: 0.2,
-  macbookCentered: 0.42,
-  macbookOpenStart: 0.46,
-  macbookOpenEnd: 0.68,
-  dashboardRevealEnd: 0.76,
+  macbookCentered: 0.36,
+  macbookRotateStart: 0.38,
+  macbookRotateEnd: 0.52,
+  macbookOpenStart: 0.56,
+  macbookOpenEnd: 0.72,
+  productViewEnd: 0.84,
+  dashboardRevealEnd: 0.86,
   settleEnd: 1,
 } as const;
 
@@ -67,6 +70,13 @@ export function computeMacbookRise(p: number): number {
   );
 }
 
+/** Closed device rotates from top/lid view into a screen-forward presentation angle. */
+export function computeMacbookPresentation(p: number): number {
+  return smoothstep(
+    phaseProgress(p, PHASES.macbookRotateStart, PHASES.macbookRotateEnd),
+  );
+}
+
 /** 0 is closed, 1 is the fully open product-view angle. */
 export function computeLidOpen(p: number): number {
   return smoothstep(
@@ -74,25 +84,78 @@ export function computeLidOpen(p: number): number {
   );
 }
 
+/** Final product-shot framing: full display, thin base lip, and centered body. */
+export function computeProductView(p: number): number {
+  return smoothstep(
+    phaseProgress(p, PHASES.macbookOpenEnd - 0.02, PHASES.productViewEnd),
+  );
+}
+
+export function computeProductViewCamera(p: number): number {
+  return smoothstep(
+    phaseProgress(p, PHASES.macbookRotateStart, PHASES.productViewEnd),
+  );
+}
+
 /** Screen UI glow ramps after the lid begins opening. */
 export function computeDashboardReveal(p: number): number {
   return smoothstep(
-    phaseProgress(p, PHASES.macbookOpenStart + 0.06, PHASES.dashboardRevealEnd),
+    phaseProgress(p, PHASES.macbookOpenStart + 0.04, PHASES.dashboardRevealEnd),
   );
 }
 
 /** Subtle entrance yaw; settles to face camera. */
 export function computeMacbookRotationY(p: number): number {
   const rise = computeMacbookRise(p);
-  return lerp(0.2, 0, smoothstep(rise));
+  const presentation = computeMacbookPresentation(p);
+  const productView = computeProductView(p);
+  const presentationYaw = lerp(lerp(0.2, 0, smoothstep(rise)), -0.02, presentation);
+  return lerp(presentationYaw, 0, productView);
 }
 
-/** Cards reveal once the MacBook has mostly risen into place. */
+/** Pitch the whole MacBook toward the screenshot-like screen-forward angle. */
+export function computeMacbookRotationX(p: number): number {
+  const presentation = computeMacbookPresentation(p);
+  const productView = computeProductView(p);
+  const presentationPitch = lerp(0, THREE_DEG_TO_RAD * -6, presentation);
+  return lerp(presentationPitch, THREE_DEG_TO_RAD * 1.8, productView);
+}
+
+export function computeMacbookScale(p: number): number {
+  const rise = computeMacbookRise(p);
+  const presentation = computeMacbookPresentation(p);
+  const productView = computeProductView(p);
+  const closedScale = lerp(0.34, 0.43, rise);
+  const presentationScale = lerp(closedScale, 0.4, presentation);
+  return lerp(presentationScale, 0.37, productView);
+}
+
+export function computeMacbookY(p: number): number {
+  const rise = computeMacbookRise(p);
+  const presentation = computeMacbookPresentation(p);
+  const productView = computeProductView(p);
+  const enteredY = lerp(-28, -13.1, rise);
+  const rotatedY = lerp(enteredY, -13.7, presentation);
+  return lerp(rotatedY, -12.15, productView);
+}
+
+export function computeMacbookZ(p: number): number {
+  const rise = computeMacbookRise(p);
+  const presentation = computeMacbookPresentation(p);
+  const productView = computeProductView(p);
+  const enteredZ = lerp(18, 20, rise);
+  const rotatedZ = lerp(enteredZ, 21, presentation);
+  return lerp(rotatedZ, 23.4, productView);
+}
+
+/** Cards support the final frame only after the laptop has opened. */
 export function computeCommsReveal(p: number, stagger = 0): number {
   const base = phaseProgress(
     p,
-    PHASES.macbookOpenStart + 0.12,
-    PHASES.dashboardRevealEnd + 0.1,
+    PHASES.productViewEnd + 0.02,
+    PHASES.settleEnd,
   );
   return smoothstep(clamp01(base - stagger));
 }
+
+const THREE_DEG_TO_RAD = Math.PI / 180;
