@@ -21,7 +21,26 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          "var(--font-inter)",
+          "Inter",
+          '"Helvetica Neue"',
+          "Helvetica",
+          "Arial",
+          "sans-serif",
+        ],
+        display: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"SF Pro Display"',
+          "var(--font-inter)",
+          "Inter",
+          "sans-serif",
+        ],
         chrome: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
         body: [
           "var(--font-source-sans-3)",
@@ -99,6 +118,16 @@ const config: Config = {
           cta: "var(--ref-cta)",
           ice: "var(--ref-ice)",
           mint: "var(--ref-mint)",
+        },
+        apple: {
+          text: "var(--apple-text)",
+          "text-secondary": "var(--apple-text-secondary)",
+          bg: "var(--apple-bg)",
+          "bg-alt": "var(--apple-bg-alt)",
+          accent: "var(--apple-accent)",
+          "accent-hover": "var(--apple-accent-hover)",
+          link: "var(--apple-link)",
+          cinematic: "var(--apple-cinematic)",
         },
         selectable: {
           edge: "var(--selectable-card-border)",

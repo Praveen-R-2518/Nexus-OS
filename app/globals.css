@@ -68,6 +68,17 @@
     --selectable-card-border: rgb(40, 40, 40);
     --selectable-card-border-selected: rgb(255, 255, 255);
     --selectable-card-border-hover: rgb(55, 55, 55);
+
+    /* Apple marketing palette */
+    --apple-text: #1d1d1f;
+    --apple-text-secondary: #6e6e73;
+    --apple-bg: #ffffff;
+    --apple-bg-alt: #f5f5f7;
+    --apple-accent: #0071e3;
+    --apple-accent-hover: #0077ed;
+    --apple-link: #2997ff;
+    --apple-cinematic: #000000;
+    --apple-hairline: rgba(0, 0, 0, 0.1);
   }
 
   html:not(.dark) .logo-nexus,
@@ -362,6 +373,174 @@
   .dark .ref-cta {
     background-color: #2a2a2a;
     color: #e2e2e2;
+  }
+
+  /* Apple marketing utilities */
+  .apple-section {
+    @apply px-4 py-20 md:px-8 md:py-[120px];
+  }
+
+  .apple-section-content {
+    @apply mx-auto w-full max-w-[980px];
+  }
+
+  .apple-hero-headline {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-size: clamp(2.65rem, 5.6vw, 4.75rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.05;
+  }
+
+  .apple-section-headline {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.08;
+  }
+
+  .apple-body {
+    font-size: clamp(1.0625rem, 1.5vw, 1.3125rem);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.47;
+    color: var(--apple-text-secondary);
+  }
+
+  .apple-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--apple-accent);
+  }
+
+  .apple-btn-primary {
+    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-[17px] font-normal text-white transition-colors duration-200;
+    background-color: var(--apple-accent);
+  }
+  .apple-btn-primary:hover {
+    background-color: var(--apple-accent-hover);
+  }
+
+  .apple-btn-link {
+    @apply inline-flex items-center gap-1 text-[17px] transition-opacity duration-200 hover:underline;
+    color: var(--apple-accent);
+  }
+
+  .apple-chrome-bar {
+    background-color: color-mix(in srgb, var(--apple-bg) 78%, transparent);
+    border-bottom: 1px solid var(--apple-hairline);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .landing-full-bleed main[data-app-body] {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), Inter, sans-serif;
+  }
+
+  .landing-full-bleed {
+    --apple-text: #1d1d1f;
+    --apple-text-secondary: #6e6e73;
+    --apple-bg: #ffffff;
+    --apple-bg-alt: #f5f5f7;
+    --apple-hairline: rgba(0, 0, 0, 0.1);
+    background-color: var(--apple-bg);
+    color: var(--apple-text);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) {
+    --foreground: var(--apple-text);
+    --atmospheric-grey: var(--apple-text);
+    --text-primary: var(--apple-text);
+    --text-secondary: var(--apple-text-secondary);
+    --text-tertiary: #86868b;
+    --surface-page: var(--apple-bg);
+    --surface-card: #ffffff;
+    --surface-muted: var(--apple-bg-alt);
+    --border-subtle: var(--apple-hairline);
+    background-color: var(--apple-bg);
+    color: var(--apple-text);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), Inter, sans-serif;
+    color: var(--apple-text);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(h1, h2, h3) {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--apple-text);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] h1 {
+    line-height: 1.06;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(p, li, summary, label) {
+    color: var(--apple-text-secondary);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] .font-mono {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), Inter, sans-serif;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(p, li, summary, label, span) {
+    letter-spacing: 0;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(article, figure, details, form, .surface-card, .landing-glass-card) {
+    border-color: var(--apple-hairline);
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(.rounded-2xl, .rounded-\[2rem\], .rounded-\[1\.75rem\]) {
+    border-radius: 8px;
+  }
+
+  .ambient-glow {
+    animation: ambient-drift 18s ease-in-out infinite alternate;
+  }
+
+  .ambient-grain {
+    animation: ambient-grain 24s linear infinite;
+  }
+
+  @keyframes ambient-drift {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+      transform: translate(-48%, -52%) scale(1.06);
+    }
+  }
+
+  @keyframes ambient-grain {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(-12px, 8px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-glow,
+    .ambient-grain {
+      animation: none;
+    }
   }
 }
 

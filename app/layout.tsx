@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
-import { Source_Sans_3 } from "next/font/google";
+import { Inter, Source_Sans_3 } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
@@ -18,6 +18,12 @@ const geistSans = localFont({
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -41,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} ${sourceSans3.variable}`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${sourceSans3.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-surface-page font-chrome text-atmospheric-grey antialiased transition-colors duration-300 dark:bg-obsidian">
