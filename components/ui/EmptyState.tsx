@@ -17,20 +17,20 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center border border-dashed border-border/40 bg-ref-mint/50 px-8 py-14 text-center dark:border-border/35 dark:bg-surface-page/80",
+        "flex flex-col items-center justify-center border border-dashed border-nexus-discovery-border bg-nexus-discovery-soft px-8 py-14 text-center dark:border-border/35 dark:bg-surface-page/80",
         className,
       )}
     >
       {icon ? (
-        <span className="mb-4 text-black/35 dark:text-white/35 [&>svg]:h-9 [&>svg]:w-9">
+        <span className="mb-4 text-nexus-discovery dark:text-white/45 [&>svg]:h-9 [&>svg]:w-9">
           {icon}
         </span>
       ) : null}
-      <p className="font-mono text-xs font-semibold uppercase tracking-widest text-atmospheric-grey">
+      <p className="nexus-section-title text-atmospheric-grey">
         {title}
       </p>
       {description ? (
-        <p className="mt-2 max-w-sm font-mono text-[11px] leading-relaxed text-muted">
+        <p className="mt-2 max-w-sm text-base leading-relaxed text-muted">
           {description}
         </p>
       ) : null}

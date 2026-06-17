@@ -4,16 +4,35 @@
 
 @layer base {
   :root {
-    /* Brand: sapphire (replaces forest green) */
-    --ref-cta: #0c4a6e;
-    --ref-ice: #e8f0fa;
-    --ref-mint: #f1f5f9;
+    /* Nexus OS image-derived palette */
+    --nexus-discovery: #5d3efb;
+    --nexus-intake: #0fbda4;
+    --nexus-rescue: #8b50fb;
+    --nexus-approval: #1274f9;
+    --nexus-execution: #fd7201;
+    --nexus-growth: #fd9f9f;
+    --nexus-discovery-soft: rgba(93, 62, 251, 0.08);
+    --nexus-intake-soft: rgba(15, 189, 164, 0.08);
+    --nexus-rescue-soft: rgba(139, 80, 251, 0.08);
+    --nexus-approval-soft: rgba(18,116,249,0.08);
+    --nexus-execution-soft: rgba(253, 114, 1, 0.08);
+    --nexus-growth-soft: rgba(253, 159, 159, 0.12);
+    --nexus-discovery-border: rgba(93, 62, 251, 0.2);
+    --nexus-intake-border: rgba(15, 189, 164, 0.2);
+    --nexus-rescue-border: rgba(139, 80, 251, 0.2);
+    --nexus-approval-border: rgba(18,116,249,0.2);
+    --nexus-execution-border: rgba(253, 114, 1, 0.22);
+    --nexus-growth-border: rgba(253, 159, 159, 0.28);
+
+    --ref-cta: var(--nexus-approval);
+    --ref-ice: #edf5ff;
+    --ref-mint: #f5f7fb;
 
     --background: var(--ref-mint);
     --foreground: #0a0f0c;
     --obsidian: #1f1f1e;
     --atmospheric-grey: #0a0f0c;
-    --trajectory-blue: #0c4a6e;
+    --trajectory-blue: var(--nexus-approval);
 
     --surface-page: var(--ref-mint);
     --surface-card: #ffffff;
@@ -33,22 +52,22 @@
     --text-secondary: #334155;
     --text-tertiary: #475569;
 
-    --status-positive-fg: #1a5580;
-    --status-positive-surface: rgba(10, 79, 138, 0.06);
-    --status-positive-border: rgba(10, 79, 138, 0.14);
+    --status-positive-fg: #c45f66;
+    --status-positive-surface: rgba(253, 159, 159, 0.14);
+    --status-positive-border: rgba(253, 159, 159, 0.34);
     --status-positive-glow: transparent;
 
-    --status-neutral-fg: #2d4560;
-    --status-neutral-surface: rgba(30, 58, 95, 0.05);
-    --status-neutral-border: rgba(30, 58, 95, 0.11);
+    --status-neutral-fg: #4f3ee0;
+    --status-neutral-surface: rgba(93, 62, 251, 0.07);
+    --status-neutral-border: rgba(93, 62, 251, 0.15);
 
-    --status-warning-fg: #5c4510;
-    --status-warning-surface: rgba(107, 66, 0, 0.06);
-    --status-warning-border: rgba(107, 66, 0, 0.13);
+    --status-warning-fg: #a84d00;
+    --status-warning-surface: rgba(253, 114, 1, 0.1);
+    --status-warning-border: rgba(253, 114, 1, 0.22);
 
-    --status-caution-fg: #6a5210;
-    --status-caution-surface: rgba(122, 90, 0, 0.06);
-    --status-caution-border: rgba(122, 90, 0, 0.12);
+    --status-caution-fg: #6e42db;
+    --status-caution-surface: rgba(139, 80, 251, 0.09);
+    --status-caution-border: rgba(139, 80, 251, 0.2);
 
     --status-critical-fg: #7a2834;
     --status-critical-surface: rgba(139, 31, 45, 0.06);
@@ -74,9 +93,9 @@
     --apple-text-secondary: #6e6e73;
     --apple-bg: #ffffff;
     --apple-bg-alt: #f5f5f7;
-    --apple-accent: #0071e3;
-    --apple-accent-hover: #0077ed;
-    --apple-link: #2997ff;
+    --apple-accent: var(--nexus-approval);
+    --apple-accent-hover: #2b82ff;
+    --apple-link: var(--nexus-approval);
     --apple-cinematic: #000000;
     --apple-hairline: rgba(0, 0, 0, 0.1);
   }
@@ -116,7 +135,7 @@
     --foreground: #ffffff;
     --obsidian: #121212;
     --atmospheric-grey: #ffffff;
-    --trajectory-blue: #8fbce6;
+    --trajectory-blue: #75adff;
 
     --app-chrome-bg: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
     --app-chrome-border: rgba(255, 255, 255, 0.12);
@@ -136,22 +155,22 @@
     --text-tertiary: #94a3b8;
     --text-accent: #e2e8f0;
 
-    --status-positive-fg: #7fc8a4;
-    --status-positive-surface: rgba(127, 200, 164, 0.09);
-    --status-positive-border: rgba(127, 200, 164, 0.18);
+    --status-positive-fg: #ffb3b3;
+    --status-positive-surface: rgba(253, 159, 159, 0.1);
+    --status-positive-border: rgba(253, 159, 159, 0.22);
     --status-positive-glow: transparent;
 
-    --status-neutral-fg: #9ab3d8;
-    --status-neutral-surface: rgba(154, 179, 216, 0.08);
-    --status-neutral-border: rgba(154, 179, 216, 0.15);
+    --status-neutral-fg: #a898ff;
+    --status-neutral-surface: rgba(93, 62, 251, 0.12);
+    --status-neutral-border: rgba(93, 62, 251, 0.24);
 
-    --status-warning-fg: #d6b36a;
-    --status-warning-surface: rgba(214, 179, 106, 0.08);
-    --status-warning-border: rgba(214, 179, 106, 0.15);
+    --status-warning-fg: #ffb36b;
+    --status-warning-surface: rgba(253, 114, 1, 0.11);
+    --status-warning-border: rgba(253, 114, 1, 0.22);
 
-    --status-caution-fg: #cbb58a;
-    --status-caution-surface: rgba(203, 181, 138, 0.08);
-    --status-caution-border: rgba(203, 181, 138, 0.15);
+    --status-caution-fg: #ba9cff;
+    --status-caution-surface: rgba(139, 80, 251, 0.12);
+    --status-caution-border: rgba(139, 80, 251, 0.24);
 
     --status-critical-fg: #e08b8b;
     --status-critical-surface: rgba(224, 139, 139, 0.08);
@@ -371,8 +390,52 @@
     border-radius: 0.75rem;
   }
   .dark .ref-cta {
-    background-color: #2a2a2a;
-    color: #e2e2e2;
+    background-color: var(--nexus-approval);
+    color: #ffffff;
+  }
+
+  .nexus-accent-discovery {
+    color: var(--nexus-discovery);
+  }
+  .nexus-accent-intake {
+    color: var(--nexus-intake);
+  }
+  .nexus-accent-rescue {
+    color: var(--nexus-rescue);
+  }
+  .nexus-accent-approval {
+    color: var(--nexus-approval);
+  }
+  .nexus-accent-execution {
+    color: var(--nexus-execution);
+  }
+  .nexus-accent-growth {
+    color: var(--nexus-growth);
+  }
+
+  .nexus-soft-discovery {
+    background-color: var(--nexus-discovery-soft);
+    border-color: var(--nexus-discovery-border);
+  }
+  .nexus-soft-intake {
+    background-color: var(--nexus-intake-soft);
+    border-color: var(--nexus-intake-border);
+  }
+  .nexus-soft-rescue {
+    background-color: var(--nexus-rescue-soft);
+    border-color: var(--nexus-rescue-border);
+  }
+  .nexus-soft-approval {
+    background-color: var(--nexus-approval-soft);
+    border-color: var(--nexus-approval-border);
+  }
+  .nexus-soft-execution {
+    background-color: var(--nexus-execution-soft);
+    border-color: var(--nexus-execution-border);
+  }
+  .nexus-soft-growth {
+    background-color: var(--nexus-growth-soft);
+    border-color: var(--nexus-growth-border);
   }
 
   /* Apple marketing utilities */
@@ -414,6 +477,54 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--apple-accent);
+  }
+
+  .nexus-hero-title {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-size: clamp(2.65rem, 5.6vw, 4.75rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.05;
+  }
+
+  .nexus-page-title {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-size: clamp(2.25rem, 4.5vw, 4rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.07;
+  }
+
+  .nexus-app-title {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-size: clamp(1.875rem, 2.8vw, 2.75rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.12;
+  }
+
+  .nexus-section-title {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
+    font-size: clamp(1.375rem, 2vw, 2rem);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.15;
+  }
+
+  .nexus-body {
+    font-size: clamp(1rem, 1.2vw, 1.1875rem);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .nexus-meta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--nexus-approval);
   }
 
   .apple-btn-primary {
@@ -469,12 +580,12 @@
     color: var(--apple-text);
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] {
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), Inter, sans-serif;
     color: var(--apple-text);
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(h1, h2, h3) {
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(h1, h2, h3) {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
     font-weight: 600;
     letter-spacing: 0;
@@ -482,31 +593,108 @@
     color: var(--apple-text);
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] h1 {
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main h1 {
+    font-size: clamp(2.25rem, 4.5vw, 4rem);
     line-height: 1.06;
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(p, li, summary, label) {
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main h2 {
+    font-size: clamp(1.5rem, 2.6vw, 2.5rem);
+    line-height: 1.12;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main h3 {
+    font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+    line-height: 1.18;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(p, li, summary, label) {
     color: var(--apple-text-secondary);
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] .font-mono {
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main .font-mono {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), Inter, sans-serif;
     letter-spacing: 0;
     text-transform: none;
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(p, li, summary, label, span) {
+  .nexus-app-main :is(h1, h2, h3) {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), Inter, sans-serif;
     letter-spacing: 0;
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(article, figure, details, form, .surface-card, .landing-glass-card) {
+  .nexus-app-main h1 {
+    font-size: clamp(1.875rem, 2.6vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.12;
+    text-transform: none;
+  }
+
+  .nexus-app-main h2 {
+    font-size: clamp(1.375rem, 2vw, 2rem);
+    font-weight: 600;
+    line-height: 1.15;
+    text-transform: none;
+  }
+
+  .nexus-app-main h3 {
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .nexus-app-main :is(p, li, summary, label) {
+    letter-spacing: 0;
+  }
+
+  .nexus-app-main .font-mono:is(p, span, label, li) {
+    letter-spacing: 0.01em;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(p, li, summary, label, span) {
+    letter-spacing: 0;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(h1, h2, h3).nexus-page-title {
+    font-size: clamp(2.25rem, 4.5vw, 4rem);
+    font-weight: 600;
+    line-height: 1.07;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(h1, h2, h3).nexus-section-title {
+    font-size: clamp(1.375rem, 2vw, 2rem);
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(h1, h2, h3).nexus-app-title {
+    font-size: clamp(1.875rem, 2.8vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.12;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(article, figure, details, .surface-card, .landing-glass-card) {
     border-color: var(--apple-hairline);
     background-color: #ffffff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
-  .marketing-apple-shell:not(.landing-full-bleed) main[data-app-body] :is(.rounded-2xl, .rounded-\[2rem\], .rounded-\[1\.75rem\]) {
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(input, select, textarea) {
+    background-color: #ffffff;
+    color: var(--apple-text);
+    border-color: var(--apple-hairline);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main [class*="dark:bg-surface-card"],
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main [class*="dark:bg-surface-elevated"] {
+    background-color: #ffffff;
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main [class*="dark:text-white"] {
+    color: var(--apple-text);
+  }
+
+  .marketing-apple-shell:not(.landing-full-bleed) .nexus-marketing-main :is(.rounded-2xl, .rounded-\[2rem\], .rounded-\[1\.75rem\]) {
     border-radius: 8px;
   }
 

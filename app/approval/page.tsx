@@ -377,7 +377,7 @@ export default function ApprovalPage() {
       {toast ? (
         <div
           className={cn(
-            "fixed right-6 top-6 z-50 rounded-xl border border-border bg-white px-5 py-4 font-mono text-sm dark:border-border/60 dark:bg-surface-card",
+            "fixed right-6 top-6 z-50 rounded-xl border border-border bg-white px-5 py-4 text-sm font-medium dark:border-border/60 dark:bg-surface-card",
             toast.kind === "success"
               ? "border-status-positive-border bg-status-positive-surface text-status-positive"
               : "border-status-critical-border bg-status-critical-surface text-status-critical",
@@ -390,20 +390,20 @@ export default function ApprovalPage() {
       <div className="flex min-h-[560px] flex-1 flex-col gap-4 lg:flex-row">
         <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card lg:w-[420px]">
           <div className="hairline-b p-5">
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
+            <p className="nexus-meta text-nexus-approval dark:text-nexus-approval">
               Approval Queue
             </p>
             <div className="mt-3 flex items-end justify-between gap-4">
               <div>
-                <p className="font-sans text-3xl font-black tabular-nums text-atmospheric-grey">
+                <p className="font-sans text-3xl font-semibold tabular-nums text-atmospheric-grey">
                   {counts.pending} pending
                 </p>
-                <p className="mt-2 font-mono text-xs text-muted">
+                <p className="mt-2 text-sm text-muted">
                   AI replies waiting on a founder decision
                 </p>
               </div>
               <div className="rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-status-warning">
+                <p className="text-sm font-medium text-status-warning">
                   At stake
                 </p>
                 <p className="mt-1 text-lg font-bold tabular-nums text-status-warning">
@@ -431,9 +431,9 @@ export default function ApprovalPage() {
                     type="button"
                     onClick={() => setActiveFilter(filter.value)}
                     className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-interaction",
+                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors duration-interaction",
                       active
-                        ? "border-selectable-edge-selected bg-status-positive-surface text-status-positive"
+                        ? "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval"
                         : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
                     )}
                   >
@@ -442,7 +442,7 @@ export default function ApprovalPage() {
                       className={cn(
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
-                          ? "border-selectable-edge-selected bg-status-positive-surface font-bold text-status-positive"
+                          ? "border-nexus-approval-border bg-nexus-approval-soft font-semibold text-nexus-approval"
                           : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
@@ -553,10 +553,10 @@ export default function ApprovalPage() {
               <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 pb-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-brand text-muted">
+                    <p className="nexus-meta text-muted">
                       Review Draft
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+                    <h1 className="mt-2 nexus-app-title text-foreground">
                       {selectedDraft.conversation.customer_name}
                     </h1>
                   </div>
@@ -577,7 +577,7 @@ export default function ApprovalPage() {
                     <span className="rounded-lg border border-status-positive-border bg-status-positive-surface px-3 py-2 font-mono text-lg font-bold tabular-nums text-status-positive">
                       {formatCurrency(selectedDraft.conversation.estimated_value)}
                     </span>
-                    <span className="rounded-lg border border-status-neutral-border bg-status-neutral-surface px-3 py-2 font-mono text-xs font-semibold uppercase tracking-wide tabular-nums text-status-neutral">
+                    <span className="rounded-lg border border-status-neutral-border bg-status-neutral-surface px-3 py-2 text-sm font-medium tabular-nums text-status-neutral">
                       Confidence:{" "}
                       {Math.round(
                         (selectedDraft.conversation.confidence > 1
@@ -590,7 +590,7 @@ export default function ApprovalPage() {
                 </div>
 
                 <section className="rounded-xl border border-border bg-white p-5 dark:border-border/70 dark:bg-surface-card">
-                  <h2 className="text-xs font-bold uppercase tracking-brand text-muted">
+                  <h2 className="nexus-meta text-muted">
                     Original Message
                   </h2>
                   <div className="mt-4 flex flex-wrap items-center gap-3 text-base text-muted">
@@ -607,7 +607,7 @@ export default function ApprovalPage() {
                 </section>
 
                 <section className="rounded-xl border border-border bg-white p-5 dark:border-border/70 dark:bg-surface-card">
-                  <h2 className="text-xs font-bold uppercase tracking-brand text-muted">
+                  <h2 className="nexus-meta text-muted">
                     AI Classification
                   </h2>
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -644,8 +644,8 @@ export default function ApprovalPage() {
 
                 <section className="rounded-xl border border-border bg-white p-5 dark:border-border/70 dark:bg-surface-card">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-brand text-muted">
-                      <Bot className="h-5 w-5 text-status-positive" aria-hidden />
+                    <h2 className="inline-flex items-center gap-2 nexus-meta text-muted">
+                      <Bot className="h-5 w-5 text-nexus-discovery" aria-hidden />
                       AI Draft Reply
                     </h2>
                     <span className="rounded-lg border border-status-neutral-border bg-status-neutral-surface px-2 py-1 font-mono text-xs font-semibold text-status-neutral">
@@ -698,7 +698,7 @@ export default function ApprovalPage() {
                       actionDraftId === selectedDraft.id ||
                       selectedDraft.approval_status === "rejected"
                     }
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-status-critical-border bg-transparent px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide text-status-critical transition-colors duration-interaction hover:bg-status-critical-surface disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-status-critical-border bg-transparent px-5 py-2.5 text-sm font-medium text-status-critical transition-colors duration-interaction hover:bg-status-critical-surface disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <XCircle className="h-5 w-5 shrink-0" aria-hidden />
                     Reject
@@ -710,7 +710,7 @@ export default function ApprovalPage() {
                       actionDraftId === selectedDraft.id ||
                       selectedDraft.approval_status === "approved"
                     }
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border bg-ref-cta px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-[#f3f6f1] transition-opacity duration-interaction hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-border/60 dark:bg-[#153d5c]"
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-6 py-2.5 text-sm font-medium text-white transition-opacity duration-interaction hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-nexus-approval dark:bg-nexus-approval"
                   >
                     {actionDraftId === selectedDraft.id ? (
                       <Spinner className="h-5 w-5" label="Approving draft" />
@@ -741,7 +741,7 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-border text-muted transition-colors hover:bg-ref-mint hover:text-atmospheric-grey dark:border-border/60 dark:hover:bg-surface-elevated"
+                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-border text-muted transition-colors hover:bg-nexus-approval-soft hover:text-atmospheric-grey dark:border-border/60 dark:hover:bg-surface-elevated"
                 aria-label="Close rejection modal"
               >
                 <XCircle className="h-6 w-6" aria-hidden />
@@ -761,7 +761,7 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="inline-flex min-h-11 cursor-pointer items-center border border-border bg-surface-muted px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-wide text-muted transition-colors hover:border-ref-cta hover:bg-white dark:border-border dark:hover:bg-surface-elevated"
+                className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-border bg-surface-muted px-5 py-2.5 text-sm font-medium text-muted transition-colors hover:border-nexus-approval hover:bg-white dark:border-border dark:hover:bg-surface-elevated"
               >
                 Cancel
               </button>
@@ -772,7 +772,7 @@ export default function ApprovalPage() {
                   rejectionReason.trim() === "" ||
                   actionDraftId === rejectingDraft.id
                 }
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-status-critical-border bg-status-critical-surface px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wide text-status-critical transition-colors hover:bg-status-critical-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-status-critical-border bg-status-critical-surface px-5 py-2.5 text-sm font-medium text-status-critical transition-colors hover:bg-status-critical-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {actionDraftId === rejectingDraft.id ? (
                   <Spinner className="h-5 w-5" label="Rejecting draft" />

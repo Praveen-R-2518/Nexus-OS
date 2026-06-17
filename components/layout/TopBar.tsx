@@ -35,7 +35,7 @@ function marketingNavLinkClass(active: boolean) {
 
 function appNavLinkClass(active: boolean) {
   return cn(
-    "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 font-mono text-[11px] uppercase tracking-[0.18em] transition-opacity duration-interaction",
+    "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 text-[13px] font-medium tracking-normal transition-opacity duration-interaction",
     active
       ? "text-atmospheric-grey"
       : "text-atmospheric-grey/75 hover:text-atmospheric-grey",
@@ -77,7 +77,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             "shrink-0 text-[21px] font-semibold tracking-tight",
             marketing
               ? "text-[19px] text-apple-text"
-              : "font-chrome text-base font-black uppercase text-black dark:text-white md:text-lg",
+              : "font-sans text-base font-semibold tracking-normal text-black dark:text-white md:text-lg",
           )}
         >
           {marketing ? (
@@ -136,7 +136,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
                     {active ? (
                       <motion.span
                         layoutId="topNavActiveBar"
-                        className="pointer-events-none h-0.5 w-full max-w-[2.5rem] shrink-0 bg-ref-cta dark:bg-[color:var(--trajectory-blue)]"
+                        className="pointer-events-none h-0.5 w-full max-w-[2.5rem] shrink-0 bg-nexus-approval"
                         transition={{
                           type: "spring",
                           stiffness: 380,
@@ -172,7 +172,7 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
             <button
               type="button"
               onClick={() => void signOut()}
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-transparent px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:bg-ref-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ref-cta focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-border-strong"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-transparent px-3 py-2 text-[13px] font-medium tracking-normal text-black transition-colors hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:border-border dark:text-white dark:hover:bg-surface-elevated dark:focus-visible:ring-nexus-approval"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               <span className="hidden sm:inline">Log out</span>

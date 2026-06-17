@@ -470,15 +470,15 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     return (
       <div className="mx-auto max-w-lg space-y-5">
         <div>
-          <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Verify your email</h2>
-          <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
+          <h2 className="nexus-section-title text-foreground">Verify your email</h2>
+          <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
             We sent a confirmation link to{" "}
             <span className="font-medium text-foreground">{lockedEmail}</span>. Clicking it
             signs you in automatically and continues your workspace setup — no separate
             login needed.
           </p>
         </div>
-        <div className="border border-border bg-[#e3eef6] px-4 py-3 font-mono text-sm text-foreground dark:border-border dark:bg-surface-elevated">
+        <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground dark:border-nexus-approval-border dark:bg-nexus-approval-soft">
           <p className="font-medium">Next steps</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
             <li>Open the email and click the confirmation link.</li>
@@ -492,7 +492,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           type="button"
           disabled={busy || cooldownRemaining > 0}
           onClick={resendVerification}
-          className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-white py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-black transition hover:bg-[#eef6fb] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
+          className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-border bg-white py-3 text-sm font-medium text-black transition hover:bg-nexus-approval-soft disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
         >
           {cooldownRemaining > 0
             ? `Wait ${cooldownRemaining}s`
@@ -506,7 +506,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           </p>
         ) : null}
         {resendMessage ? (
-          <p className="font-mono text-sm text-[#0f2336] dark:text-muted" role="status">
+          <p className="text-sm font-medium text-nexus-approval dark:text-nexus-approval" role="status">
             {resendMessage}
           </p>
         ) : null}
@@ -517,8 +517,8 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-lg space-y-5">
       <div>
-        <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">Create your account</h2>
-        <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
+        <h2 className="nexus-section-title text-foreground">Create your account</h2>
+        <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
           After you create your account, we&apos;ll email you a verification link.
           Once your email is confirmed, signup resumes here with workspace setup.
         </p>
@@ -578,15 +578,15 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
+          className="mt-1 h-4 w-4 border border-border bg-white text-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-nexus-approval dark:focus:ring-nexus-approval"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
         <span>
           I agree to the{" "}
-          <span className="font-mono text-[#0f2336] dark:text-muted">Terms of Service</span> and{" "}
-          <span className="font-mono text-[#0f2336] dark:text-muted">Privacy Policy</span>
+          <span className="font-medium text-nexus-approval dark:text-nexus-approval">Terms of Service</span> and{" "}
+          <span className="font-medium text-nexus-approval dark:text-nexus-approval">Privacy Policy</span>
         </span>
       </label>
       {formError ? (
@@ -597,7 +597,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       <button
         type="submit"
         disabled={busy || cooldownRemaining > 0}
-        className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border"
+        className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:cursor-not-allowed disabled:opacity-50 dark:border-nexus-approval"
       >
         {cooldownRemaining > 0
           ? `Wait ${cooldownRemaining}s`

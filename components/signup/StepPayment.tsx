@@ -14,7 +14,7 @@ type StepPaymentProps = {
 };
 
 const fieldClass =
-  "h-11 w-full border border-border bg-white px-3 font-mono text-sm text-gray-900 outline-none transition focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-border-strong dark:focus:ring-border-strong";
+  "h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-nexus-approval dark:focus:ring-nexus-approval";
 
 function planTitle(tier: SignupSnapshot["planTier"]): string {
   if (tier === "pro") return "Professional";
@@ -82,25 +82,25 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
         <div>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-border bg-[#eef6fb] dark:border-border dark:bg-surface-elevated">
-            <Check className="h-7 w-7 text-[#0f2336] dark:text-muted" aria-hidden />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-nexus-growth-border bg-nexus-growth-soft dark:border-nexus-growth-border dark:bg-nexus-growth-soft">
+            <Check className="h-7 w-7 text-nexus-growth dark:text-nexus-growth" aria-hidden />
           </div>
-          <h2 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-foreground">
+          <h2 className="mt-4 nexus-section-title text-foreground">
             You&apos;re all set
           </h2>
-          <p className="mt-2 font-mono text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
             No credit card required. Your Starter free trial is ready.
           </p>
         </div>
 
-        <div className="border border-border bg-white p-5 text-left dark:border-border dark:bg-surface-card">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
+        <div className="rounded-xl border border-border bg-white p-5 text-left dark:border-border dark:bg-surface-card">
+          <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
             What&apos;s included
           </p>
-          <ul className="mt-4 space-y-2 font-mono text-sm text-black/85 dark:text-white/80">
+          <ul className="mt-4 space-y-2 text-sm text-black/75 dark:text-white/75">
             {STARTER_TRIAL_INCLUDES.map((item) => (
               <li key={item} className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#0f2336] dark:text-muted" aria-hidden />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-nexus-growth dark:text-nexus-growth" aria-hidden />
                 {item}
               </li>
             ))}
@@ -108,7 +108,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </div>
 
         {error ? (
-          <p className="font-mono text-xs text-[#8B1A1A]" role="alert">
+          <p className="text-sm text-[#8B1A1A]" role="alert">
             {error}
           </p>
         ) : null}
@@ -117,7 +117,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           type="button"
           disabled={busy}
           onClick={() => void activatePlan()}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 border border-border bg-[#0f2336] py-3 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-60 dark:border-border"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:opacity-60 dark:border-nexus-approval"
         >
           {busy ? <Spinner className="h-5 w-5" label="Loading" /> : null}
           {busy ? "Continuing…" : "Continue →"}
@@ -128,24 +128,24 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <div className="border border-dashed border-amber-600/40 bg-amber-50 px-4 py-3 font-mono text-xs text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-100">
-        <p className="flex items-center gap-2 font-semibold uppercase tracking-widest">
+      <div className="rounded-xl border border-nexus-execution-border bg-nexus-execution-soft px-4 py-3 text-sm text-amber-950 dark:border-nexus-execution-border dark:bg-nexus-execution-soft dark:text-amber-100">
+        <p className="flex items-center gap-2 font-medium">
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
           Billing integration coming soon — you will not be charged yet.
         </p>
       </div>
 
       <div>
-        <h2 className="font-sans text-xl font-black uppercase tracking-tight text-foreground">
+        <h2 className="nexus-section-title text-foreground">
           Activate {planTitle(snapshot.planTier)}
         </h2>
-        <p className="mt-1 font-mono text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
           Enter payment details to activate your plan. Charges are disabled until billing goes live.
         </p>
       </div>
 
       {pricing ? (
-        <div className="border border-border bg-white p-4 font-mono text-sm dark:border-border dark:bg-surface-card">
+        <div className="rounded-xl border border-border bg-white p-4 text-sm dark:border-border dark:bg-surface-card">
           <div className="flex justify-between gap-4 text-xs">
             <span className="text-black/70 dark:text-white/65">Plan</span>
             <span className="text-black dark:text-white">{planTitle(snapshot.planTier)}</span>
@@ -161,11 +161,11 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
             <span className="tabular-nums">$0.00</span>
           </div>
           {pricing.compareAt ? (
-            <p className="mt-2 text-[10px] uppercase tracking-wider text-muted">
+            <p className="mt-2 nexus-meta text-muted">
               Then {pricing.display} (normally {pricing.compareAt})
             </p>
           ) : (
-            <p className="mt-2 text-[10px] uppercase tracking-wider text-muted">
+            <p className="mt-2 nexus-meta text-muted">
               Then {pricing.display}
             </p>
           )}
@@ -177,14 +177,14 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           e.preventDefault();
           void activatePlan();
         }}
-        className="space-y-4 border border-border bg-white p-4 dark:border-border dark:bg-surface-card"
+        className="space-y-4 rounded-xl border border-border bg-white p-4 dark:border-border dark:bg-surface-card"
       >
-        <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/80 dark:text-white/75">
+        <div className="flex items-center gap-2 nexus-meta text-nexus-approval dark:text-nexus-approval">
           <CreditCard className="h-4 w-4" aria-hidden />
           Payment details
         </div>
         <label className="block space-y-1.5">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+          <span className="text-sm font-medium text-black/75 dark:text-white/70">
             Card number
           </span>
           <input
@@ -199,7 +199,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+            <span className="text-sm font-medium text-black/75 dark:text-white/70">
               Expiry
             </span>
             <input
@@ -212,7 +212,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
             />
           </label>
           <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-black/75 dark:text-white/70">
+            <span className="text-sm font-medium text-black/75 dark:text-white/70">
               CVC
             </span>
             <input
@@ -230,7 +230,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </div>
 
         {error ? (
-          <p className={cn("font-mono text-xs text-[#8B1A1A]")} role="alert">
+          <p className={cn("text-sm text-[#8B1A1A]")} role="alert">
             {error}
           </p>
         ) : null}
@@ -238,7 +238,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 border border-border bg-[#0f2336] py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:opacity-60 dark:border-border"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:opacity-60 dark:border-nexus-approval"
         >
           {busy ? <Spinner className="h-5 w-5" label="Processing" /> : null}
           {busy ? "Activating…" : "Activate Plan →"}

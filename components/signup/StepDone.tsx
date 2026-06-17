@@ -19,7 +19,7 @@ type StepDoneProps = {
   snapshot: SignupSnapshot;
 };
 
-const accent = "text-[#0f2336] dark:text-muted";
+const accent = "text-nexus-growth dark:text-nexus-growth";
 
 export default function StepDone({ snapshot }: StepDoneProps) {
   const router = useRouter();
@@ -34,15 +34,15 @@ export default function StepDone({ snapshot }: StepDoneProps) {
         <div className="flex justify-center text-4xl" aria-hidden>
           <PartyPopper className={`h-12 w-12 ${accent}`} />
         </div>
-        <h2 className="mt-3 font-sans text-2xl font-black uppercase tracking-tight text-foreground">
+        <h2 className="mt-3 nexus-section-title text-foreground">
           Nexus OS is ready
         </h2>
-        <p className="mt-2 font-mono text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
           Your workspace is configured. Summary below.
         </p>
       </div>
-      <div className="border border-border bg-white p-5 text-left font-mono text-sm dark:border-border dark:bg-surface-card">
-        <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
+      <div className="rounded-xl border border-border bg-white p-5 text-left text-sm dark:border-border dark:bg-surface-card">
+        <p className="mb-3 nexus-meta text-nexus-growth dark:text-nexus-growth">
           Summary
         </p>
         <ul className="space-y-2 text-black/85 dark:text-white/80">
@@ -70,8 +70,8 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           </li>
         </ul>
       </div>
-      <div className="border border-border bg-[#eef6fb] p-5 text-left font-mono text-sm dark:border-border dark:bg-surface-elevated">
-        <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.28em] text-black/70 dark:text-white/65">
+      <div className="rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft p-5 text-left text-sm dark:border-nexus-discovery-border dark:bg-nexus-discovery-soft">
+        <p className="mb-3 nexus-meta text-nexus-discovery dark:text-nexus-discovery">
           Onboarding checklist
         </p>
         <ul className="space-y-2 text-black/70 dark:text-white/65">
@@ -94,7 +94,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           clearSignupSnapshot();
           router.push("/dashboard");
         }}
-        className="inline-flex w-full cursor-pointer items-center justify-center border border-border bg-[#0f2336] py-3 font-mono text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#172f45] sm:w-auto sm:px-8 dark:border-border"
+        className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] sm:w-auto sm:px-8 dark:border-nexus-approval"
       >
         Go to dashboard →
       </button>

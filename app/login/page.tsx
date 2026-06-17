@@ -8,7 +8,7 @@ import { buildAuthCallbackUrl, safeNextPath } from "@/lib/auth/redirect-url";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-border bg-white px-3 font-mono text-sm text-black outline-none transition placeholder:text-black/55 focus:border-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/55 dark:focus:border-border-strong dark:focus:ring-border-strong";
+  "h-11 w-full rounded-xl border border-border bg-white px-3 text-[15px] text-black outline-none transition placeholder:text-black/45 focus:border-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-white dark:placeholder:text-white/45 dark:focus:border-nexus-approval dark:focus:ring-nexus-approval";
 
 // Client-side throttle so users can't hammer Supabase Auth into a 429.
 const PASSWORD_BACKOFF_SECONDS = [5, 15, 30, 60] as const;
@@ -203,7 +203,7 @@ function LoginForm() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/80">
+      <div className="flex min-h-screen items-center justify-center text-sm font-medium text-black/70 dark:text-white/70">
         Loading secure workspace…
       </div>
     );
@@ -211,21 +211,21 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-[2rem] border border-border bg-white p-8 md:p-10 shadow-2xl dark:border-white/10 dark:bg-[#161616]">
+      <div className="w-full max-w-md rounded-[2rem] border border-border bg-white p-8 text-black shadow-2xl md:p-10 dark:border-border dark:bg-white dark:text-black">
         <div className="mb-6 border-b border-dashed border-border pb-6 dark:border-border">
-          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-black/75 dark:text-white/75">
-            [ AUTH / SESSION ]
+          <p className="nexus-meta text-nexus-approval dark:text-nexus-approval">
+            Auth session
           </p>
-          <h1 className="mt-4 font-sans text-2xl font-black uppercase tracking-tight text-black dark:text-white">
+          <h1 className="mt-4 nexus-section-title text-black dark:text-white">
             Sign in
           </h1>
-          <p className="mt-3 font-mono text-xs leading-relaxed text-black/90 dark:text-white/90">
-            Gmail and webhook data stay behind the founder dashboard. Monospace fields, navy actions.
+          <p className="mt-3 text-base leading-relaxed text-black/70 dark:text-white/70">
+            Gmail and webhook data stay protected behind the founder dashboard.
           </p>
         </div>
         <form className="space-y-5" onSubmit={signInWithPassword}>
           <label className="block space-y-2">
-            <span className="font-mono text-xs uppercase tracking-widest text-black/95 dark:text-white/95">
+            <span className="text-sm font-medium text-black/80 dark:text-white/80">
               Email
             </span>
             <input
@@ -238,7 +238,7 @@ function LoginForm() {
             />
           </label>
           <label className="block space-y-2">
-            <span className="font-mono text-xs uppercase tracking-widest text-black/95 dark:text-white/95">
+            <span className="text-sm font-medium text-black/80 dark:text-white/80">
               Password
             </span>
             <input
@@ -249,18 +249,18 @@ function LoginForm() {
               autoComplete="current-password"
             />
           </label>
-          <label className="flex cursor-pointer items-center gap-3 font-mono text-xs text-black dark:text-white">
+          <label className="flex cursor-pointer items-center gap-3 text-sm text-black/75 dark:text-white/75">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 shrink-0 border border-border bg-white text-[#0f2336] focus:ring-1 focus:ring-[#0f2336] dark:border-border dark:bg-surface-card dark:text-muted dark:focus:ring-border-strong"
+              className="h-4 w-4 shrink-0 border border-border bg-white text-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-nexus-approval dark:focus:ring-nexus-approval"
             />
             Remember me
           </label>
           {message ? (
             <p
-              className="border border-dashed border-border bg-[#e3eef6] px-3 py-2 font-mono text-xs text-black dark:border-border dark:bg-surface-elevated dark:text-white"
+              className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-3 py-2 text-sm text-black dark:border-nexus-approval-border dark:bg-nexus-approval-soft dark:text-white"
               role="alert"
             >
               {message}
@@ -270,7 +270,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={busy || cooldownRemaining > 0}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-[#0f2336] px-6 py-3 font-mono text-xs font-medium uppercase tracking-widest text-white transition hover:bg-[#172f45] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-6 py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:cursor-not-allowed disabled:opacity-50 dark:border-nexus-approval"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               {cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : "Sign in"}
@@ -279,18 +279,18 @@ function LoginForm() {
               type="button"
               disabled={busy || !email || cooldownRemaining > 0}
               onClick={sendMagicLink}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-white px-6 py-3 font-mono text-xs uppercase tracking-widest text-black transition hover:bg-[#e3eef6] disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-white/5"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-nexus-discovery-soft disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-white/5"
             >
               <Mail className="h-4 w-4 shrink-0" aria-hidden />
               Magic link
             </button>
           </div>
         </form>
-        <p className="mt-8 hairline-t pt-6 text-center font-mono text-[10px] uppercase tracking-widest text-black/80 dark:text-white/80">
+        <p className="mt-8 hairline-t pt-6 text-center text-sm text-black/70 dark:text-white/70">
           Need an account?{" "}
           <Link
             href="/signup"
-            className="cursor-pointer text-[#0f2336] underline underline-offset-4 hover:text-black dark:text-muted dark:hover:text-white"
+            className="cursor-pointer font-medium text-nexus-approval underline underline-offset-4 hover:text-black dark:text-nexus-approval dark:hover:text-white"
           >
             Start signup
           </Link>
@@ -304,7 +304,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center font-mono text-xs uppercase tracking-widest text-black/80 dark:text-white/80">
+        <div className="flex min-h-screen items-center justify-center text-sm font-medium text-black/70 dark:text-white/70">
           Loading…
         </div>
       }

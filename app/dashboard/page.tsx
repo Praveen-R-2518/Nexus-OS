@@ -227,15 +227,15 @@ export default function DashboardPage() {
   return (
     <div className="min-h-0 space-y-10">
         <header className="hairline-b pb-8">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-muted">
+          <p className="nexus-meta text-nexus-approval dark:text-nexus-approval">
             Operations
           </p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <h1 className="font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl md:text-5xl">
+            <h1 className="nexus-app-title text-atmospheric-grey">
               Command Center
             </h1>
           </div>
-          <p className="mb-2 mt-4 max-w-2xl font-mono text-sm leading-relaxed text-muted">
+          <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
             Live revenue rescue ops — prioritize revenue at risk, route hot
             leads, and intercept churn before it lands.
           </p>
@@ -291,6 +291,7 @@ export default function DashboardPage() {
                 subtitle="in unresolved conversations"
                 icon={<TrendingDown />}
                 variant="critical"
+                accent="text-nexus-rescue"
                 className="animate-fade-up [animation-delay:0ms]"
               />
               <Card
@@ -299,6 +300,7 @@ export default function DashboardPage() {
                 subtitle="high-intent buyers right now"
                 icon={<Flame />}
                 variant="critical"
+                accent="text-nexus-intake"
                 className="animate-fade-up [animation-delay:75ms]"
               />
               <Card
@@ -307,7 +309,7 @@ export default function DashboardPage() {
                 subtitle="customers showing churn signals"
                 icon={<AlertTriangle />}
                 variant="support"
-                accent="text-status-warning"
+                accent="text-nexus-rescue"
                 className="animate-fade-up [animation-delay:150ms]"
               />
               <Card
@@ -316,7 +318,7 @@ export default function DashboardPage() {
                 subtitle="saved by AI drafting"
                 icon={<Clock />}
                 variant="support"
-                accent="text-status-neutral"
+                accent="text-nexus-execution"
                 className="animate-fade-up [animation-delay:225ms]"
               />
             </div>
@@ -335,7 +337,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-end hairline-b px-4 py-3">
               <Link
                 href="/inbox"
-                className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[11px] font-semibold uppercase tracking-widest text-ref-cta transition-opacity hover:opacity-80 dark:text-muted"
+                className="inline-flex min-h-11 cursor-pointer items-center text-[13px] font-medium tracking-normal text-nexus-intake transition-opacity hover:opacity-80"
               >
                 Open inbox →
               </Link>
@@ -431,16 +433,16 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden rounded-xl border border-status-warning-border bg-status-warning-surface/30 dark:border-border/50 dark:bg-surface-card"
+              className="overflow-hidden rounded-xl border border-nexus-intake-border bg-nexus-intake-soft dark:border-border/50 dark:bg-surface-card"
             >
               <div className="flex items-center justify-between hairline-b px-4 py-3">
-                <h2 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-atmospheric-grey">
-                  <Flame className="h-4 w-4 text-status-warning" aria-hidden />{" "}
+                <h2 className="flex items-center gap-2 text-sm font-semibold tracking-normal text-atmospheric-grey">
+                  <Flame className="h-4 w-4 text-nexus-intake" aria-hidden />{" "}
                   Hot Leads
                 </h2>
                 <Link
                   href="/inbox?intent=purchase"
-                  className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[10px] font-semibold uppercase tracking-widest text-status-warning transition-opacity hover:opacity-80"
+                  className="inline-flex min-h-11 cursor-pointer items-center text-[13px] font-medium tracking-normal text-nexus-intake transition-opacity hover:opacity-80"
                 >
                   View all →
                 </Link>
@@ -485,7 +487,7 @@ export default function DashboardPage() {
                               className={cn(
                                 "border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
                                 isDraftPipelineReady(c.status)
-                                  ? "border-status-positive-border bg-status-positive-surface text-status-positive"
+                                  ? "border-nexus-growth-border bg-nexus-growth-soft text-status-positive"
                                   : "border-border bg-surface-muted text-muted",
                               )}
                             >
@@ -503,19 +505,19 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden rounded-xl border border-status-caution-border bg-status-caution-surface/25 dark:border-border/50 dark:bg-surface-card"
+              className="overflow-hidden rounded-xl border border-nexus-rescue-border bg-nexus-rescue-soft dark:border-border/50 dark:bg-surface-card"
             >
               <div className="flex items-center justify-between hairline-b px-4 py-3">
-                <h2 className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-atmospheric-grey">
+                <h2 className="flex items-center gap-2 text-sm font-semibold tracking-normal text-atmospheric-grey">
                   <AlertTriangle
-                    className="h-4 w-4 text-status-caution"
+                    className="h-4 w-4 text-nexus-rescue"
                     aria-hidden
                   />{" "}
                   Churn Risks
                 </h2>
                 <Link
                   href="/inbox?intent=churn_risk"
-                  className="inline-flex min-h-11 cursor-pointer items-center font-mono text-[10px] font-semibold uppercase tracking-widest text-status-caution transition-opacity hover:opacity-80"
+                  className="inline-flex min-h-11 cursor-pointer items-center text-[13px] font-medium tracking-normal text-nexus-rescue transition-opacity hover:opacity-80"
                 >
                   View all →
                 </Link>
