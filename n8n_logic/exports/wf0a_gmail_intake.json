@@ -539,7 +539,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
+        "url": "https://mahinsacw.app.n8n.cloud/webhook/nexus/classify",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
@@ -578,7 +578,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
+        "url": "https://mahinsacw.app.n8n.cloud/webhook/nexus/classify",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
