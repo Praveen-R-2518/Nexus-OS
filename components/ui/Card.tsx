@@ -38,7 +38,7 @@ export function Card({
   title,
   value,
   subtitle,
-  accent = "text-status-positive",
+  accent = "text-nexus-growth",
   icon,
   trend,
   className,
@@ -56,19 +56,19 @@ export function Card({
     >
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
+          <p className="nexus-meta text-muted">
             {title}
           </p>
           <p
             className={cn(
-              "mt-3 text-3xl font-bold tabular-nums tracking-tight sm:text-4xl",
-              isCritical ? "text-atmospheric-grey" : accent,
+              "mt-3 text-3xl font-semibold tabular-nums tracking-normal sm:text-4xl",
+              accent,
             )}
           >
             {value}
           </p>
           {subtitle ? (
-            <p className="mt-3 text-sm leading-relaxed text-muted">{subtitle}</p>
+            <p className="mt-3 text-base leading-relaxed text-muted">{subtitle}</p>
           ) : null}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-3">
@@ -76,7 +76,7 @@ export function Card({
             <span
               className={cn(
                 "[&>svg]:h-5 [&>svg]:w-5",
-                isCritical ? "text-ref-cta dark:text-muted" : "text-muted",
+                isCritical ? "text-nexus-rescue" : "text-nexus-discovery",
               )}
             >
               {icon}

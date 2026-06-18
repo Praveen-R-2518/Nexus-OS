@@ -14,10 +14,10 @@ export default function PricingPage() {
   return (
     <div className="flex flex-1 flex-col">
       <ScrollReveal className="text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-muted">
+        <p className="nexus-meta text-nexus-approval">
           Pricing
         </p>
-        <h1 className="mt-4 font-sans text-4xl font-black uppercase tracking-tight text-atmospheric-grey dark:text-white md:text-5xl">
+        <h1 className="mt-4 nexus-page-title text-atmospheric-grey dark:text-white">
           Simple, transparent pricing
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted dark:text-slate-300">

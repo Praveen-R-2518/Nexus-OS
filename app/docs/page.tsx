@@ -157,13 +157,13 @@ export default function DocsPage() {
   return (
     <div className="flex flex-1 flex-col">
       <ScrollReveal className="hairline-b pb-12 pt-4">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-ref-cta dark:text-muted">
+        <p className="nexus-meta text-nexus-discovery dark:text-nexus-discovery">
           Documentation
         </p>
-        <h1 className="mt-3 max-w-3xl font-sans text-4xl font-black uppercase leading-[1.05] tracking-tighter text-atmospheric-grey sm:text-5xl md:text-6xl">
+        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey">
           Everything you need to run Nexus OS
         </h1>
-        <p className="mt-5 max-w-2xl font-mono text-sm leading-relaxed text-muted">
+        <p className="mt-5 max-w-2xl nexus-body text-muted">
           Guides, concepts, and integration references for the AI revenue-rescue
           engine. Pick a track below or jump straight into the console.
         </p>
@@ -173,9 +173,9 @@ export default function DocsPage() {
             <Link
               key={step}
               href={href}
-              className="group inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-atmospheric-grey transition-colors hover:bg-ref-mint dark:border-border dark:bg-surface-card dark:hover:bg-surface-elevated"
+              className="group inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-nexus-discovery-soft dark:border-border dark:bg-surface-card dark:hover:bg-surface-elevated"
             >
-              <span className="text-ref-cta dark:text-muted">{step}</span>
+              <span className="text-nexus-discovery dark:text-nexus-discovery">{step}</span>
               {label}
               <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden />
             </Link>
@@ -191,7 +191,7 @@ export default function DocsPage() {
           <a
             key={section.id}
             href={`#${section.id}`}
-            className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted transition-colors hover:text-atmospheric-grey"
+            className="text-sm font-medium text-muted transition-colors hover:text-atmospheric-grey"
           >
             {section.title}
           </a>
@@ -205,17 +205,17 @@ export default function DocsPage() {
             <ScrollReveal key={section.id} className="scroll-mt-28">
               <section id={section.id}>
                 <div className="flex items-start gap-4">
-                  <span className="mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white text-ref-cta dark:border-border dark:bg-surface-card dark:text-muted">
+                  <span className="mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft text-nexus-discovery dark:border-nexus-discovery-border dark:bg-nexus-discovery-soft dark:text-nexus-discovery">
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
                   <div>
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-muted">
+                    <p className="nexus-meta text-muted">
                       {section.eyebrow}
                     </p>
-                    <h2 className="mt-2 font-sans text-2xl font-black uppercase tracking-tight text-atmospheric-grey md:text-3xl">
+                    <h2 className="mt-2 nexus-section-title text-atmospheric-grey">
                       {section.title}
                     </h2>
-                    <p className="mt-2 max-w-2xl font-mono text-sm leading-relaxed text-muted">
+                    <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted">
                       {section.intro}
                     </p>
                   </div>
@@ -231,7 +231,7 @@ export default function DocsPage() {
                       <div className="group relative flex h-full min-h-[15rem] w-full overflow-hidden rounded-[1.75rem] border border-border bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 hover:shadow-card-halo-light dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35 dark:hover:bg-[#1f1f1f] dark:hover:shadow-none">
                         <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-ref-cta/35 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:via-white/35" />
                         <div className="flex flex-col">
-                          <span className="inline-flex w-fit rounded-full border border-border bg-ref-mint px-2.5 py-1 font-mono text-[9px] uppercase tracking-widest text-muted dark:border-white/15 dark:bg-white/5">
+                          <span className="inline-flex w-fit rounded-full border border-nexus-discovery-border bg-nexus-discovery-soft px-2.5 py-1 text-xs font-medium text-nexus-discovery dark:border-white/15 dark:bg-white/5 dark:text-white">
                             {link.tag}
                           </span>
                           <h3 className="mt-5 font-sans text-xl font-semibold leading-tight tracking-tight text-atmospheric-grey">
@@ -254,14 +254,14 @@ export default function DocsPage() {
       <ScrollReveal className="pb-16">
         <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] border border-border bg-[#f8fafc] p-10 dark:border-white/20 dark:bg-[#1c1c1c] md:flex-row md:items-center">
           <div className="flex items-start gap-4">
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-white text-ref-cta dark:border-border dark:bg-surface-card dark:text-muted">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval dark:border-nexus-approval-border dark:bg-nexus-approval-soft dark:text-nexus-approval">
               <GraduationCap className="h-5 w-5" aria-hidden />
             </span>
             <div>
-              <h2 className="font-sans text-xl font-black uppercase tracking-tight text-atmospheric-grey">
+              <h2 className="nexus-section-title text-atmospheric-grey">
                 Ready to put it to work?
               </h2>
-              <p className="mt-2 max-w-xl font-mono text-sm leading-relaxed text-muted">
+              <p className="mt-2 max-w-xl text-base leading-relaxed text-muted">
                 Spin up a workspace and approve your first AI-drafted reply today.
               </p>
             </div>
@@ -269,14 +269,14 @@ export default function DocsPage() {
           <div className="flex shrink-0 flex-wrap gap-3">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-ref-cta px-5 py-2.5 font-mono text-[10px] font-medium uppercase tracking-widest text-[#f4f8fc] transition-opacity hover:opacity-90 dark:border-border dark:bg-ref-cta dark:text-[#f4f8fc]"
+              className="inline-flex items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:border-nexus-approval dark:bg-nexus-approval"
             >
               <Workflow className="h-3.5 w-3.5" aria-hidden />
               Get started
             </Link>
             <Link
               href="/resources"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest text-atmospheric-grey transition-colors hover:bg-ref-mint dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-5 py-2.5 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-nexus-discovery-soft dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
             >
               <Database className="h-3.5 w-3.5" aria-hidden />
               Browse resources

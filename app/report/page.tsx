@@ -291,10 +291,10 @@ export default function ReportPage() {
       <div className="relative space-y-10">
         <header className="flex flex-col gap-5 hairline-b pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ref-cta dark:text-muted sm:text-[11px]">
+            <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
               Revenue Recovery Intelligence
             </p>
-            <h1 className="mt-3 font-sans text-3xl font-black uppercase tracking-tighter text-atmospheric-grey sm:text-4xl">
+            <h1 className="mt-3 nexus-app-title text-atmospheric-grey">
               Daily Buy-Back Report
             </h1>
             <p className="mt-3 font-mono text-xs text-muted">{reportDateLabel}</p>
@@ -343,39 +343,39 @@ export default function ReportPage() {
                 title="Messages Processed"
                 value={report.messages_processed}
                 subtitle="customer conversations analyzed"
-                accent="text-blue-600 dark:text-muted"
-                icon={<MessageSquareText className="text-blue-600 dark:text-muted" />}
+                accent="text-nexus-discovery"
+                icon={<MessageSquareText className="text-nexus-discovery" />}
                 className="surface-card"
               />
               <Card
                 title="Revenue Recovered"
                 value={formatCurrency(revenueRecovered)}
                 subtitle="approved conversations value"
-                accent="text-status-positive"
-                icon={<CheckCircle2 className="text-status-positive" />}
+                accent="text-nexus-growth"
+                icon={<CheckCircle2 className="text-nexus-growth" />}
                 className="surface-card"
               />
               <Card
                 title="Drafts Approved"
                 value={report.drafts_approved}
                 subtitle="human-approved AI responses"
-                accent="text-violet-600 dark:text-muted"
-                icon={<FileText className="text-violet-600 dark:text-muted" />}
+                accent="text-nexus-approval"
+                icon={<FileText className="text-nexus-approval" />}
                 className="surface-card"
               />
             </section>
 
             <section aria-labelledby="executive-summary" className="space-y-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-status-positive" />
+                <Sparkles className="h-5 w-5 text-nexus-discovery" />
                 <h2
                   id="executive-summary"
-                  className="font-mono text-sm font-bold uppercase tracking-widest text-atmospheric-grey"
+                  className="nexus-section-title text-atmospheric-grey"
                 >
                   Executive Summary
                 </h2>
               </div>
-              <div className="rounded-xl border border-status-positive-border/40 bg-status-positive-surface/30 p-5 dark:border-status-positive-border/25">
+              <div className="rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft p-5 dark:border-nexus-discovery-border">
                 <TypewriterSummary text={report.summary_text} />
               </div>
             </section>
@@ -388,7 +388,7 @@ export default function ReportPage() {
                 <div>
                   <h2
                     id="conversation-breakdown"
-                    className="text-lg font-black uppercase tracking-tight text-atmospheric-grey"
+                    className="nexus-section-title text-atmospheric-grey"
                   >
                     Today&apos;s Conversation Breakdown
                   </h2>
@@ -400,7 +400,7 @@ export default function ReportPage() {
                   type="button"
                   onClick={handleExportCsv}
                   disabled={sortedRows.length === 0}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-status-positive-border bg-status-positive-surface px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-status-positive transition-colors duration-interaction hover:bg-status-positive-surface/80 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-execution-border bg-nexus-execution-soft px-4 py-2 text-[13px] font-medium tracking-normal text-nexus-execution transition-colors duration-interaction hover:bg-nexus-execution-soft disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
                 >
                   <Download className="h-5 w-5 shrink-0" />
                   Export CSV
