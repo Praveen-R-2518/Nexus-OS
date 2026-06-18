@@ -11,7 +11,14 @@ import { TenantScopeGate } from "@/components/tenant/TenantScope";
 import { cn } from "@/lib/utils";
 
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
-const MARKETING_PREFIXES = ["/docs", "/customers", "/resources", "/pricing"] as const;
+const MARKETING_PREFIXES = [
+  "/docs",
+  "/customers",
+  "/resources",
+  "/pricing",
+  "/privacy",
+  "/terms",
+] as const;
 
 export function isMarketingShellRoute(pathname: string): boolean {
   if (pathname === "/") return true;
