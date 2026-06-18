@@ -178,10 +178,10 @@ export async function GET(request: Request) {
   try {
     const destinationEmail = email.toLowerCase().trim();
     if (destinationEmail) {
-      await supabase
-        .from("business_profiles")
-        .update({ gmail_destination_email: destinationEmail })
-        .eq("team_id", team_id);
+      await supabase.from("business_profiles").upsert(
+        { team_id, workspace_id, gmail_destination_email: destinationEmail },
+        { onConflict: "team_id" },
+      );
     }
   } catch {
     // best-effort routing sync; OAuth success is unaffected
