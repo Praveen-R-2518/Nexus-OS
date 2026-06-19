@@ -103,7 +103,7 @@ function extractWhatsappRoutingNumber(raw, envFallback) {
   const meta =
     value &&
     value.metadata &&
-    (value.metadata.display_phone_number || value.metadata.phone_number_id);
+    (value.metadata.phone_number_id || value.metadata.display_phone_number);
   if (meta) return normalizeRoutingNumber(meta);
 
   const msg = value && value.messages && value.messages[0];
@@ -116,8 +116,89 @@ function extractWhatsappRoutingNumber(raw, envFallback) {
   const q = body.query && typeof body.query === "object" ? body.query : {};
   if (q.to) return normalizeRoutingNumber(q.to);
   if (q.phone_number) return normalizeRoutingNumber(q.phone_number);
+  if (q.phone_number_id) return normalizeRoutingNumber(q.phone_number_id);
 
   return normalizeRoutingNumber(envFallback);
+}
+
+function extractInstagramAccountId(raw) {
+  const body = raw && typeof raw === "object" ? raw : {};
+  const entry = body.entry && body.entry[0];
+  const messaging = entry && entry.messaging && entry.messaging[0];
+  const recipientId = messaging && messaging.recipient && messaging.recipient.id;
+  if (recipientId) return String(recipientId).trim();
+
+  const objectType = String(body.object || "").toLowerCase();
+  if (objectType === "instagram" && entry && entry.id) {
+    return String(entry.id).trim();
+  }
+
+  const h = lowerHeaderMap(body.headers);
+  if (h["x-ig-account-id"]) return String(h["x-ig-account-id"]).trim();
+
+  const q = body.query && typeof body.query === "object" ? body.query : {};
+  if (q.ig_account_id) return String(q.ig_account_id).trim();
+
+  return "";
+}
+
+function extractFacebookPageId(raw) {
+  const body = raw && typeof raw === "object" ? raw : {};
+  const entry = body.entry && body.entry[0];
+  if (entry && entry.id) return String(entry.id).trim();
+
+  const messaging = entry && entry.messaging && entry.messaging[0];
+  const recipientId = messaging && messaging.recipient && messaging.recipient.id;
+  if (recipientId) return String(recipientId).trim();
+
+  const h = lowerHeaderMap(body.headers);
+  if (h["x-fb-page-id"]) return String(h["x-fb-page-id"]).trim();
+
+  const q = body.query && typeof body.query === "object" ? body.query : {};
+  if (q.page_id) return String(q.page_id).trim();
+
+  return "";
+}
+
+function isProbablyInstagramPayload(merged) {
+  const body = merged && typeof merged === "object" ? merged : {};
+  if (String(body.object || "").toLowerCase() === "instagram") return true;
+  const entry = body.entry && body.entry[0];
+  if (entry && Array.isArray(entry.messaging) && entry.messaging[0]) {
+    const platform = detectMetaMessagingPlatformFromBody(body);
+    return platform === "instagram";
+  }
+  const ch = String(body.channel || "").toLowerCase();
+  if (ch === "instagram") return true;
+  const h = lowerHeaderMap(body.headers);
+  if (String(h["x-nexus-channel"] || "").toLowerCase() === "instagram") return true;
+  return false;
+}
+
+function isProbablyFacebookPayload(merged) {
+  const body = merged && typeof merged === "object" ? merged : {};
+  if (String(body.object || "").toLowerCase() === "page") return true;
+  const entry = body.entry && body.entry[0];
+  if (entry && Array.isArray(entry.messaging) && entry.messaging[0]) {
+    const platform = detectMetaMessagingPlatformFromBody(body);
+    return platform === "facebook";
+  }
+  const ch = String(body.channel || "").toLowerCase();
+  if (ch === "facebook") return true;
+  const h = lowerHeaderMap(body.headers);
+  if (String(h["x-nexus-channel"] || "").toLowerCase() === "facebook") return true;
+  return false;
+}
+
+function detectMetaMessagingPlatformFromBody(body) {
+  const msg = body?.entry?.[0]?.messaging?.[0];
+  if (!msg) return null;
+  const objectType = String(body.object || "").toLowerCase();
+  if (objectType === "instagram") return "instagram";
+  if (objectType === "page") return "facebook";
+  const recipientId = msg.recipient?.id ? String(msg.recipient.id) : "";
+  if (recipientId.startsWith("ig")) return "instagram";
+  return "facebook";
 }
 
 function isProbablyWhatsappPayload(merged) {
@@ -146,9 +227,9 @@ function mergeTriggerForRouting(root) {
 }
 
 /**
- * Decide lookup route: webhook_token > whatsapp_number > gmail_mailbox.
+ * Decide lookup route: webhook_token > instagram > facebook > whatsapp > gmail_mailbox.
  *
- * @returns {{ type: 'webhook_token'|'whatsapp_number'|'gmail_mailbox', value: string }}
+ * @returns {{ type: string, value: string }}
  */
 function resolveRouteFromIntake(root) {
   const merged = mergeTriggerForRouting(root);
@@ -163,16 +244,28 @@ function resolveRouteFromIntake(root) {
     return { type: "webhook_token", value: token };
   }
 
+  if (isProbablyInstagramPayload(merged)) {
+    const ig = extractInstagramAccountId(merged);
+    if (ig) return { type: "ig_account_id", value: ig };
+  }
+
+  if (isProbablyFacebookPayload(merged)) {
+    const fb = extractFacebookPageId(merged);
+    if (fb) return { type: "fb_page_id", value: fb };
+  }
+
   if (isProbablyWhatsappPayload(merged)) {
     const wa = extractWhatsappRoutingNumber(merged, getEnv("NEXUS_WHATSAPP_DESTINATION_NUMBER"));
     if (wa) return { type: "whatsapp_number", value: wa };
+    const waPhoneId = extractWhatsappRoutingNumber(merged, getEnv("NEXUS_WA_PHONE_NUMBER_ID"));
+    if (waPhoneId) return { type: "wa_phone_number_id", value: waPhoneId };
   }
 
   const gmail = extractGmailDestinationMailbox(merged, getEnv("NEXUS_GMAIL_DESTINATION_MAILBOX"));
   if (gmail) return { type: "gmail_mailbox", value: gmail };
 
   throw new Error(
-    "tenant_route_resolver: could not resolve tenant route (set NEXUS_GMAIL_DESTINATION_MAILBOX for IMAP, or WhatsApp/token headers)",
+    "tenant_route_resolver: could not resolve tenant route (set routing keys on business_profiles or env fallbacks)",
   );
 }
 
@@ -191,6 +284,15 @@ function buildBusinessProfileLookupPath(route) {
   }
   if (route.type === "whatsapp_number") {
     return `${base}&whatsapp_routing_number=eq.${enc}`;
+  }
+  if (route.type === "wa_phone_number_id") {
+    return `${base}&wa_phone_number_id=eq.${enc}`;
+  }
+  if (route.type === "ig_account_id") {
+    return `${base}&ig_account_id=eq.${enc}`;
+  }
+  if (route.type === "fb_page_id") {
+    return `${base}&fb_page_id=eq.${enc}`;
   }
   if (route.type === "webhook_token") {
     return `${base}&webhook_route_token=eq.${enc}`;
@@ -240,11 +342,15 @@ if (typeof module !== "undefined" && module.exports) {
     getEnv,
     extractGmailDestinationMailbox,
     extractWhatsappRoutingNumber,
+    extractInstagramAccountId,
+    extractFacebookPageId,
     resolveRouteFromIntake,
     buildBusinessProfileLookupPath,
     verifySingleBusinessProfile,
     buildIntakeEnvelope,
     isProbablyWhatsappPayload,
+    isProbablyInstagramPayload,
+    isProbablyFacebookPayload,
     mergeTriggerForRouting,
     isUuid,
   };

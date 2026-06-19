@@ -176,18 +176,50 @@ function looksLikeMetaWhatsapp(raw) {
   return Boolean(r.entry && Array.isArray(r.entry) && r.entry[0] && r.entry[0].changes);
 }
 
+function looksLikeMetaMessaging(raw) {
+  const r = raw || {};
+  return Boolean(
+    r.entry &&
+      Array.isArray(r.entry) &&
+      r.entry[0] &&
+      Array.isArray(r.entry[0].messaging) &&
+      r.entry[0].messaging.length > 0,
+  );
+}
+
+function metaMessagingObject(raw) {
+  return raw?.entry?.[0]?.messaging?.[0] || null;
+}
+
+function detectMetaMessagingPlatform(raw) {
+  const msg = metaMessagingObject(raw);
+  if (!msg) return null;
+  const recipientId = msg.recipient?.id ? String(msg.recipient.id) : "";
+  const objectType = String(raw?.object || "").toLowerCase();
+  if (objectType === "instagram") return "instagram";
+  if (objectType === "page") return "facebook";
+  if (recipientId.startsWith("ig")) return "instagram";
+  return "facebook";
+}
+
 function detectSource(rawInput) {
   const raw = unwrapBody(rawInput) || {};
   const explicit = raw.__source || raw.source;
   if (explicit) {
     const e = String(explicit).toLowerCase();
-    if (e === "whatsapp") return "whatsapp";
+    if (["whatsapp", "instagram", "facebook"].includes(e)) return e;
     if (["gmail", "demo"].includes(e)) return e;
   }
   const ch = String(raw.channel || "").toLowerCase();
   if (ch === "whatsapp") return "whatsapp";
+  if (ch === "instagram") return "instagram";
+  if (ch === "facebook") return "facebook";
   if (raw.customer_email && raw.message) return "demo";
   if (looksLikeMetaWhatsapp(raw)) return "whatsapp";
+  if (looksLikeMetaMessaging(raw)) {
+    const platform = detectMetaMessagingPlatform(raw);
+    if (platform) return platform;
+  }
   if (
     raw.from ||
     raw.From ||
@@ -199,7 +231,9 @@ function detectSource(rawInput) {
   ) {
     return "gmail";
   }
-  throw new Error("multi_channel_normalizer: could not detect gmail, whatsapp, or demo payload");
+  throw new Error(
+    "multi_channel_normalizer: could not detect gmail, whatsapp, instagram, facebook, or demo payload",
+  );
 }
 
 function parseGmail(rawInput) {
@@ -286,13 +320,19 @@ function parseWhatsapp(rawInput) {
       }
     }
 
+    const displayPhone = value?.metadata?.display_phone_number
+      ? String(value.metadata.display_phone_number).replace(/\D/g, "")
+      : "";
+    const permalink = displayPhone ? `https://wa.me/${displayPhone}` : null;
+
     return {
-      source: "webhook",
+      source: "whatsapp",
       channel: "whatsapp",
       customer_name: String(profileName || "").trim(),
       customer_email_or_phone: waFrom,
       message: String(bodyText || "").trim(),
       external_thread_id: msg?.id ? `wa:${msg.id}` : null,
+      external_permalink: permalink,
       received_at: receivedAt,
       raw_payload: rawInput,
       _filter: {
@@ -308,13 +348,15 @@ function parseWhatsapp(rawInput) {
 
   const message = String(raw.message || raw.text || raw.body || "").trim();
   const waFrom = String(raw.from || raw.wa_id || raw.customer_phone || "").trim();
+  const phoneDigits = waFrom.replace(/\D/g, "");
   return {
-    source: "webhook",
+    source: "whatsapp",
     channel: "whatsapp",
     customer_name: String(raw.profile_name || raw.customer_name || "").trim(),
     customer_email_or_phone: waFrom,
     message,
     external_thread_id: raw.message_id ? `wa:${raw.message_id}` : null,
+    external_permalink: phoneDigits ? `https://wa.me/${phoneDigits}` : null,
     received_at: raw.received_at || new Date().toISOString(),
     raw_payload: rawInput,
     _filter: {
@@ -326,6 +368,77 @@ function parseWhatsapp(rawInput) {
       body_for_rules: message,
     },
   };
+}
+
+function parseMetaMessaging(rawInput, platform) {
+  const raw = unwrapBody(rawInput) || {};
+  const msg = metaMessagingObject(raw);
+  if (!msg) {
+    throw new Error(`multi_channel_normalizer: invalid ${platform} messaging payload`);
+  }
+
+  const sender = msg.sender || {};
+  const senderId = sender.id ? String(sender.id).trim() : "";
+  const senderName = sender.name ? String(sender.name).trim() : "";
+  const messageObj = msg.message || {};
+  const bodyText =
+    (messageObj.text && String(messageObj.text)) ||
+    (messageObj.quick_reply && messageObj.quick_reply.payload) ||
+    "";
+
+  const ts = msg.timestamp;
+  let receivedAt = new Date().toISOString();
+  if (ts != null) {
+    const n = Number(ts);
+    if (Number.isFinite(n)) {
+      receivedAt = new Date(n < 1e12 ? n * 1000 : n).toISOString();
+    }
+  }
+
+  const mid = messageObj.mid ? String(messageObj.mid) : "";
+  const prefix = platform === "instagram" ? "ig" : "fb";
+  const threadId = mid ? `${prefix}:${mid}` : null;
+
+  let externalPermalink = null;
+  if (platform === "instagram") {
+    externalPermalink = sender.username
+      ? `https://ig.me/m/${encodeURIComponent(String(sender.username))}`
+      : threadId
+        ? `https://www.instagram.com/direct/t/${encodeURIComponent(mid)}`
+        : null;
+  } else if (platform === "facebook") {
+    externalPermalink = threadId
+      ? `https://www.facebook.com/messages/t/${encodeURIComponent(mid)}`
+      : null;
+  }
+
+  return {
+    source: platform,
+    channel: platform,
+    customer_name: senderName,
+    customer_email_or_phone: senderId,
+    message: String(bodyText || "").trim(),
+    external_thread_id: threadId,
+    external_permalink: externalPermalink,
+    received_at: receivedAt,
+    raw_payload: rawInput,
+    _filter: {
+      from_header: senderId,
+      subject: "",
+      list_unsubscribe: false,
+      auto_submitted: "",
+      has_attachment: false,
+      body_for_rules: String(bodyText || "").trim(),
+    },
+  };
+}
+
+function parseInstagram(rawInput) {
+  return parseMetaMessaging(rawInput, "instagram");
+}
+
+function parseFacebook(rawInput) {
+  return parseMetaMessaging(rawInput, "facebook");
 }
 
 function normalizeItem(raw) {
@@ -340,6 +453,8 @@ function normalizeItem(raw) {
   if (source === "gmail") return attachTenant(parseGmail(raw), tenant);
   if (source === "demo") return attachTenant(parseDemo(raw), tenant);
   if (source === "whatsapp") return attachTenant(parseWhatsapp(raw), tenant);
+  if (source === "instagram") return attachTenant(parseInstagram(raw), tenant);
+  if (source === "facebook") return attachTenant(parseFacebook(raw), tenant);
   throw new Error(`multi_channel_normalizer: unsupported source "${source}"`);
 }
 
@@ -366,6 +481,8 @@ if (typeof module !== "undefined" && module.exports) {
     parseGmail,
     parseDemo,
     parseWhatsapp,
+    parseInstagram,
+    parseFacebook,
     readVerifiedTenant,
     attachTenant,
     isUuid,
@@ -374,5 +491,7 @@ if (typeof module !== "undefined" && module.exports) {
     parseFromHeader,
     unwrapBody,
     looksLikeMetaWhatsapp,
+    looksLikeMetaMessaging,
+    detectMetaMessagingPlatform,
   };
 }
