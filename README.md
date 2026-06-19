@@ -395,8 +395,23 @@ Clicking the confirmation email link hits `/auth/callback`, which exchanges the 
 | `POST /api/internal/n8n/conversations` | `N8N_INGEST_TOKEN` | Alternative n8n ingest |
 | `POST /api/internal/n8n/workflow-logs` | `N8N_INGEST_TOKEN` | Workflow audit ingest |
 | `POST /api/gmail/test-imap` | User session | Validate Gmail credentials |
+| `GET /api/meta/connect` | User session | Start Meta OAuth (WhatsApp / Instagram / Facebook) |
+| `GET /api/meta/callback` | User session | Meta OAuth callback (encrypt tokens, sync routing keys) |
+| `GET /api/meta/status` | User session | Meta connection status per platform |
+| `GET/POST /api/meta/webhook` | Meta verify token + HMAC signature | Unified Meta webhook → forward to n8n intake |
+| `GET/POST /api/internal/n8n/meta-credentials` | `N8N_INGEST_TOKEN` | Decrypted Meta page tokens for n8n send workflows |
 
-n8n webhooks (configure in your instance): `/webhook/gmail-inbound`, `/webhook/approval-trigger`.
+n8n webhooks (configure in your instance): `/webhook/gmail-inbound` (Gmail + Meta forwarded payloads), `/webhook/approval-trigger`.
+
+### Meta unified inbox
+
+WhatsApp Business, Instagram DMs, and Facebook Messenger share one Meta app webhook at `{NEXT_PUBLIC_SITE_URL}/api/meta/webhook`. Next.js verifies the handshake and `X-Hub-Signature-256`, dedupes by message id, returns HTTP 200 quickly, and forwards the raw payload to `{N8N_WEBHOOK_BASE_URL}/webhook/gmail-inbound` so messages flow through the same tenant routing → noise filter → WF2 classify → WF3 reply → approval pipeline as Gmail.
+
+**Connect:** `GET /api/meta/connect` (Facebook Login for Business). Callback stores encrypted tokens in `meta_credentials` and syncs `ig_account_id`, `fb_page_id`, `wa_phone_number_id` on `business_profiles`.
+
+**Manual Meta dashboard steps:** Create a Meta app → add WhatsApp, Instagram, and Messenger products → set webhook URL and verify token → subscribe to `messages` fields → add testers (≤25 before App Review) → request production permissions (`whatsapp_business_messaging`, `instagram_business_manage_messages`, `pages_messaging`, etc.).
+
+See `docs/meta_unified_inbox.md` for verification commands and test payloads.
 
 ---
 
