@@ -204,7 +204,7 @@ export async function GET(request: Request) {
   const expiresIn =
     typeof longTokenJson?.expires_in === "number" && longTokenJson.expires_in > 0
       ? longTokenJson.expires_in
-      : typeof shortTokenJson.expires_in === "number" && shortTokenJson.expires_in > 0
+      : typeof shortTokenJson?.expires_in === "number" && shortTokenJson.expires_in > 0
         ? shortTokenJson.expires_in
         : 60 * 24 * 60 * 60;
   const tokenExpiry = new Date(Date.now() + expiresIn * 1000).toISOString();
