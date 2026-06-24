@@ -1,0 +1,20 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "102000000000555",
+      "time": 1718900000,
+      "messaging": [
+        {
+          "sender": { "id": "7766554433221100" },
+          "recipient": { "id": "102000000000555" },
+          "timestamp": 1718900000000,
+          "message": {
+            "mid": "m_FbMessageIDsanitized0001AbCdEf",
+            "text": "What are your hours today?"
+          }
+        }
+      ]
+    }
+  ]
+}

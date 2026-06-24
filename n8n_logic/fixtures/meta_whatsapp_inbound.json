@@ -1,0 +1,35 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "104000000000001",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550009999",
+              "phone_number_id": "109999888777666"
+            },
+            "contacts": [
+              {
+                "profile": { "name": "Jordan Rivera" },
+                "wa_id": "15551234567"
+              }
+            ],
+            "messages": [
+              {
+                "from": "15551234567",
+                "id": "wamid.HBgLMTU1NTEyMzQ1NjcVAgASGBQ3RUYxQTBDOEE1RTk0MQA=",
+                "timestamp": "1718900000",
+                "type": "text",
+                "text": { "body": "Hi, is the downtown unit still available?" }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
