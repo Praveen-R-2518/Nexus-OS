@@ -4,6 +4,15 @@
  * Converts Gmail/IMAP, WhatsApp (Meta-style), and demo webhook payloads into the
  * canonical object for the noise filter and WF2. Requires a verified tenant from
  * upstream **Verify Tenant Context** (`_tenant.team_id`).
+ *
+ * Canonical Meta output (WA/IG/FB): { source, channel, customer_name, customer_email_or_phone
+ * (sender identity), message (text body), external_thread_id, external_permalink, received_at,
+ * timestamp_utc }.
+ *
+ * NOTE (Task 2): for Meta channels the tenant is now resolved at the EDGE (Next.js webhook,
+ * lib/meta-tenant.ts) and forwarded as `_tenant`. The n8n `tenant_route_resolver.js` node is
+ * therefore redundant on the Meta path (still used for Gmail/IMAP intake). It is retained, not
+ * deleted — see its header note.
  */
 
 const UUID_RE =
@@ -320,10 +329,10 @@ function parseWhatsapp(rawInput) {
       }
     }
 
-    const displayPhone = value?.metadata?.display_phone_number
-      ? String(value.metadata.display_phone_number).replace(/\D/g, "")
-      : "";
-    const permalink = displayPhone ? `https://wa.me/${displayPhone}` : null;
+    // Deep link must target the CUSTOMER number so "open native inbox" starts a chat with them.
+    // `metadata.display_phone_number` is the BUSINESS number — never link to it.
+    const customerDigits = waFrom.replace(/\D/g, "");
+    const permalink = customerDigits ? `https://wa.me/${customerDigits}` : null;
 
     return {
       source: "whatsapp",
@@ -334,6 +343,7 @@ function parseWhatsapp(rawInput) {
       external_thread_id: msg?.id ? `wa:${msg.id}` : null,
       external_permalink: permalink,
       received_at: receivedAt,
+      timestamp_utc: receivedAt,
       raw_payload: rawInput,
       _filter: {
         from_header: waFrom,
@@ -358,6 +368,7 @@ function parseWhatsapp(rawInput) {
     external_thread_id: raw.message_id ? `wa:${raw.message_id}` : null,
     external_permalink: phoneDigits ? `https://wa.me/${phoneDigits}` : null,
     received_at: raw.received_at || new Date().toISOString(),
+    timestamp_utc: raw.received_at || new Date().toISOString(),
     raw_payload: rawInput,
     _filter: {
       from_header: waFrom,
@@ -395,22 +406,20 @@ function parseMetaMessaging(rawInput, platform) {
     }
   }
 
+  // NOTE: the message `mid` is NOT a conversation thread id. We keep it as `external_thread_id`
+  // for traceability/idempotency, but must NEVER synthesize a `.../t/<mid>` deep link from it —
+  // that produces a wrong link. Only emit a permalink we can trust.
   const mid = messageObj.mid ? String(messageObj.mid) : "";
   const prefix = platform === "instagram" ? "ig" : "fb";
   const threadId = mid ? `${prefix}:${mid}` : null;
 
   let externalPermalink = null;
-  if (platform === "instagram") {
-    externalPermalink = sender.username
-      ? `https://ig.me/m/${encodeURIComponent(String(sender.username))}`
-      : threadId
-        ? `https://www.instagram.com/direct/t/${encodeURIComponent(mid)}`
-        : null;
-  } else if (platform === "facebook") {
-    externalPermalink = threadId
-      ? `https://www.facebook.com/messages/t/${encodeURIComponent(mid)}`
-      : null;
+  if (platform === "instagram" && sender.username) {
+    // ig.me/m/<username> reliably opens a chat with the customer.
+    externalPermalink = `https://ig.me/m/${encodeURIComponent(String(sender.username))}`;
   }
+  // Facebook: a page has no reliable customer deep link from a PSID/mid alone → leave null so the
+  // UI shows a graceful "native inbox unavailable" state instead of a broken link.
 
   return {
     source: platform,
@@ -421,6 +430,7 @@ function parseMetaMessaging(rawInput, platform) {
     external_thread_id: threadId,
     external_permalink: externalPermalink,
     received_at: receivedAt,
+    timestamp_utc: receivedAt,
     raw_payload: rawInput,
     _filter: {
       from_header: senderId,

@@ -1,6 +1,13 @@
 /**
  * Nexus OS — Tenant route extraction and business_profiles REST helpers (n8n + Node tests).
  * Used by WF0a intake Code nodes (inlined via build script) and by unit tests.
+ *
+ * NOTE (Task 2): Meta (WhatsApp/IG/FB) tenant routing now happens at the EDGE in the Next.js
+ * webhook (`lib/meta-tenant.ts`), which stamps `inbound_events` and forwards a pre-resolved
+ * `_tenant`. This module's Meta extractors (extractWhatsappRoutingNumber / extractInstagramAccountId
+ * / extractFacebookPageId) are therefore REDUNDANT on the Meta path and kept only for the Gmail/IMAP
+ * intake route and existing tests. Do not delete without confirming the Gmail path no longer needs
+ * it. If/when Gmail also resolves at the edge, this file can be retired.
  */
 
 const UUID_RE =

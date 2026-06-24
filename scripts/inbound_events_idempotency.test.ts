@@ -25,7 +25,15 @@ function assert(cond: unknown, msg: string): void {
 
 // --- In-memory Supabase fake (simulates the UNIQUE index) ----------------------------------------
 type Row = Record<string, unknown> & { id: string };
-const store: Record<string, Row[]> = { inbound_events: [], workflow_logs: [] };
+const store: Record<string, Row[]> = {
+  inbound_events: [],
+  workflow_logs: [],
+  // Seeded so the edge tenant resolver matches the waPayload metadata.phone_number_id "PNID1"
+  // and the forward path (Task 1 behaviour under test here) is reached.
+  business_profiles: [
+    { id: "bp_test", team_id: "t-1", workspace_id: "w-1", wa_phone_number_id: "PNID1" },
+  ],
+};
 let rowSeq = 0;
 let forceError: string | null = null; // flip to simulate a persist failure
 
@@ -66,6 +74,20 @@ const fakeClient = {
       insert(row: Record<string, unknown>) {
         rows.push({ id: `row_${++rowSeq}`, ...row });
         return Promise.resolve({ data: null, error: null });
+      },
+      select(_cols: string) {
+        const filters: Array<[string, unknown]> = [];
+        const builder = {
+          eq(col: string, val: unknown) {
+            filters.push([col, val]);
+            return builder;
+          },
+          limit(n: number) {
+            const res = rows.filter((r) => filters.every(([c, v]) => r[c] === v)).slice(0, n);
+            return Promise.resolve({ data: res, error: null });
+          },
+        };
+        return builder;
       },
     };
   },

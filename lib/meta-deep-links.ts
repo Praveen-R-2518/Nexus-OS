@@ -6,31 +6,32 @@ type DeepLinkInput = Pick<
 >;
 
 /**
- * Resolve a platform-native inbox deep link for "open real inbox".
- * Prefers stored permalink; falls back to thread id patterns.
+ * Resolve a platform-native inbox deep link for "open real inbox", or `null` when no trustworthy
+ * link exists (the UI renders a graceful "native inbox link unavailable" state for `null`).
+ *
+ * Correctness rules (Task 2):
+ * - WhatsApp: ALWAYS target the CUSTOMER number, derived from the stored customer phone — never the
+ *   stored permalink (which could be the business number). `wa.me/<customer>` opens a chat with them.
+ * - Instagram/Facebook: a message `mid` is NOT a thread id, so we never synthesize `.../t/<mid>`.
+ *   Prefer a trustworthy stored permalink (e.g. `ig.me/m/<username>`); otherwise return `null`.
  */
 export function resolveExternalInboxUrl(
   conversation: DeepLinkInput,
 ): string | null {
-  const permalink = conversation.external_permalink?.trim();
-  if (permalink && /^https?:\/\//i.test(permalink)) {
-    return permalink;
-  }
-
-  const threadId = conversation.external_thread_id?.trim() ?? "";
+  const permalink = conversation.external_permalink?.trim() ?? "";
+  const hasPermalink = /^https?:\/\//i.test(permalink);
   const customerRef = conversation.customer_email?.trim() ?? "";
 
   switch (conversation.source) {
     case "whatsapp": {
+      // Derive from the customer number directly; ignore any stored permalink to avoid ever
+      // linking to the business number.
       const phone = customerRef.replace(/\D/g, "");
-      if (phone) return `https://wa.me/${phone}`;
-      return null;
+      return phone ? `https://wa.me/${phone}` : null;
     }
     case "instagram": {
-      if (threadId.startsWith("ig:")) {
-        const id = threadId.slice(3);
-        if (id) return `https://www.instagram.com/direct/t/${encodeURIComponent(id)}`;
-      }
+      if (hasPermalink) return permalink;
+      // Best-effort: ig.me/m/<username> reliably opens a chat with the customer.
       if (customerRef && !/^\d+$/.test(customerRef)) {
         const user = customerRef.replace(/^@/, "");
         return `https://ig.me/m/${encodeURIComponent(user)}`;
@@ -38,13 +39,8 @@ export function resolveExternalInboxUrl(
       return null;
     }
     case "facebook": {
-      if (threadId.startsWith("fb:")) {
-        const id = threadId.slice(3);
-        if (id) return `https://www.facebook.com/messages/t/${encodeURIComponent(id)}`;
-      }
-      if (customerRef) {
-        return `https://m.me/${encodeURIComponent(customerRef)}`;
-      }
+      // Only a real, stored thread permalink is trustworthy; a PSID/mid is not. No link → null.
+      if (hasPermalink) return permalink;
       return null;
     }
     default:

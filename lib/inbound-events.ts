@@ -111,6 +111,31 @@ export async function recordInboundEvents(
 }
 
 /**
+ * Stamp the resolved tenant onto already-persisted events (the webhook resolves the tenant at the
+ * edge AFTER the idempotent persist). Setting `workspace_id` lets the DB trigger derive `team_id`,
+ * but we pass both so the ledger is correct even if the trigger is absent. Best-effort: never
+ * throws — tenant bookkeeping must not break the ack path. Returns true on success.
+ */
+export async function setInboundEventsTenant(
+  supabase: SupabaseClient,
+  ids: string[],
+  workspaceId: string | null,
+  teamId: string | null,
+): Promise<boolean> {
+  if (ids.length === 0) return true;
+
+  try {
+    const { error } = await supabase
+      .from(INBOUND_EVENTS_TABLE)
+      .update({ workspace_id: workspaceId ?? null, team_id: teamId ?? null })
+      .in("id", ids);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Advance the status of already-persisted events (e.g. to `processing` once handed to n8n, or
  * `failed` if the hand-off fails). Best-effort: never throws — status bookkeeping must not break
  * the ack path. Returns true on success.
