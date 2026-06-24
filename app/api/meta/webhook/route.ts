@@ -1,87 +1,17 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/api-security";
+import { createServerClient } from "@/lib/supabase";
+import {
+  markInboundEventsStatus,
+  recordInboundEvents,
+} from "@/lib/inbound-events";
+import { extractMessages, verifyMetaSignature } from "./parse";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const DEDUPE_TTL_MS = 24 * 60 * 60 * 1000;
-const seenMessageIds = new Map<string, number>();
-
-function pruneDedupeStore(now: number) {
-  for (const [key, expiresAt] of seenMessageIds) {
-    if (expiresAt <= now) seenMessageIds.delete(key);
-  }
-}
-
-function verifyMetaSignature(
-  rawBody: string,
-  signatureHeader: string | null,
-  appSecret: string,
-): boolean {
-  if (!signatureHeader?.startsWith("sha256=")) return false;
-  const expected = createHmac("sha256", appSecret)
-    .update(rawBody, "utf8")
-    .digest("hex");
-  const received = signatureHeader.slice("sha256=".length);
-  if (expected.length !== received.length) return false;
-  try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(received));
-  } catch {
-    return false;
-  }
-}
-
-function extractMessageIds(payload: unknown): string[] {
-  const ids: string[] = [];
-  if (!payload || typeof payload !== "object") return ids;
-  const root = payload as Record<string, unknown>;
-  const entries = Array.isArray(root.entry) ? root.entry : [];
-
-  for (const entry of entries) {
-    if (!entry || typeof entry !== "object") continue;
-    const e = entry as Record<string, unknown>;
-
-    const changes = Array.isArray(e.changes) ? e.changes : [];
-    for (const change of changes) {
-      if (!change || typeof change !== "object") continue;
-      const value = (change as Record<string, unknown>).value;
-      if (!value || typeof value !== "object") continue;
-      const v = value as Record<string, unknown>;
-      const messages = Array.isArray(v.messages) ? v.messages : [];
-      for (const msg of messages) {
-        if (msg && typeof msg === "object" && (msg as Record<string, unknown>).id) {
-          ids.push(String((msg as Record<string, unknown>).id));
-        }
-      }
-    }
-
-    const messaging = Array.isArray(e.messaging) ? e.messaging : [];
-    for (const evt of messaging) {
-      if (!evt || typeof evt !== "object") continue;
-      const m = evt as Record<string, unknown>;
-      const message = m.message;
-      if (message && typeof message === "object" && (message as Record<string, unknown>).mid) {
-        ids.push(String((message as Record<string, unknown>).mid));
-      }
-    }
-  }
-
-  return ids;
-}
-
-function isDuplicateMessage(ids: string[]): boolean {
-  const now = Date.now();
-  pruneDedupeStore(now);
-  for (const id of ids) {
-    const key = `meta:${id}`;
-    if (seenMessageIds.has(key)) return true;
-  }
-  for (const id of ids) {
-    seenMessageIds.set(`meta:${id}`, now + DEDUPE_TTL_MS);
-  }
-  return false;
-}
+type ForwardOutcome = "forwarded" | "skipped" | "failed";
 
 function n8nIntakeWebhookUrl(): string | null {
   const base = process.env.N8N_WEBHOOK_BASE_URL?.trim()?.replace(/\/$/, "");
@@ -89,11 +19,11 @@ function n8nIntakeWebhookUrl(): string | null {
   return `${base}/webhook/gmail-inbound`;
 }
 
-async function forwardToN8n(payload: unknown): Promise<void> {
+async function forwardToN8n(payload: unknown): Promise<ForwardOutcome> {
   const url = n8nIntakeWebhookUrl();
   if (!url) {
-    console.warn("[meta/webhook] N8N_WEBHOOK_BASE_URL not set; skipping forward");
-    return;
+    console.warn("[meta/webhook] N8N_WEBHOOK_BASE_URL not set; leaving events for later retry");
+    return "skipped";
   }
 
   try {
@@ -107,9 +37,34 @@ async function forwardToN8n(payload: unknown): Promise<void> {
     });
     if (!res.ok) {
       console.error("[meta/webhook] n8n forward failed:", res.status, await res.text());
+      return "failed";
     }
+    return "forwarded";
   } catch (err) {
     console.error("[meta/webhook] n8n forward error:", err);
+    return "failed";
+  }
+}
+
+/** Best-effort audit trail for a dropped/deferred forward. Never throws. */
+async function logForwardFailure(
+  supabase: SupabaseClient,
+  outcome: ForwardOutcome,
+  eventCount: number,
+): Promise<void> {
+  try {
+    await supabase.from("workflow_logs").insert({
+      workflow_name: "meta_webhook",
+      step: "forward_to_n8n",
+      result: outcome === "skipped" ? "skipped" : "error",
+      payload: { event_count: eventCount, outcome },
+      error:
+        outcome === "skipped"
+          ? "N8N_WEBHOOK_BASE_URL not configured; events left as received for retry"
+          : "n8n forward failed; events left as received for retry",
+    });
+  } catch (err) {
+    console.error("[meta/webhook] failed to write workflow_logs:", err);
   }
 }
 
@@ -166,12 +121,63 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const messageIds = extractMessageIds(payload);
-  if (messageIds.length > 0 && isDuplicateMessage(messageIds)) {
+  const messages = extractMessages(payload);
+  if (messages.length === 0) {
+    // No inbound message id (status/read receipts etc.) — nothing to dedup or process.
+    return NextResponse.json({ status: "ignored" }, { status: 200 });
+  }
+
+  const supabase = createServerClient();
+
+  // Persist the raw event BEFORE acking. Idempotent: re-delivery collides on
+  // (platform, external_message_id) and is dropped.
+  const results = await recordInboundEvents(
+    supabase,
+    messages.map((m) => ({
+      platform: m.platform,
+      externalMessageId: m.id,
+      rawPayload: payload,
+    })),
+  );
+
+  const persistFailed = results.filter((r) => r.error);
+  if (persistFailed.length > 0) {
+    // Could not durably persist — refuse to ack so Meta redelivers. Never silently drop.
+    console.error(
+      "[meta/webhook] failed to persist inbound events:",
+      persistFailed.map((r) => r.error),
+    );
+    return NextResponse.json(
+      { status: "error", error: "persist_failed" },
+      { status: 503 },
+    );
+  }
+
+  const newIds = results.filter((r) => r.inserted && r.id).map((r) => r.id as string);
+
+  if (newIds.length === 0) {
+    // Every message was a duplicate of an already-persisted event.
     return NextResponse.json({ status: "duplicate" }, { status: 200 });
   }
 
-  void forwardToN8n(payload);
+  // Persisted. Hand off to n8n — awaited and failure-tolerant. On any failure the rows stay
+  // `received` so a retry sweep can re-forward; the event is never thrown away.
+  const outcome = await forwardToN8n(payload);
 
-  return NextResponse.json({ status: "received" }, { status: 200 });
+  if (outcome === "forwarded") {
+    await markInboundEventsStatus(supabase, newIds, "processing");
+  } else {
+    await markInboundEventsStatus(
+      supabase,
+      newIds,
+      "received",
+      outcome === "skipped" ? "n8n not configured" : "n8n forward failed",
+    );
+    await logForwardFailure(supabase, outcome, newIds.length);
+  }
+
+  return NextResponse.json(
+    { status: "received", recorded: newIds.length },
+    { status: 200 },
+  );
 }
