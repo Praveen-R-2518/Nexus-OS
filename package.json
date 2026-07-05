@@ -16,6 +16,8 @@
     "test:tenant-intake": "node scripts/tenant_intake_mapping.test.mjs",
     "test:inbound-events": "tsx scripts/inbound_events_idempotency.test.ts",
     "test:meta-routing": "tsx scripts/meta_routing.test.ts",
+    "test:chat-analyst": "tsx scripts/chat_analyst.test.ts",
+    "seed:demo": "tsx scripts/seed_demo_inbox.ts",
     "test:launch-workspace": "node scripts/launch_workspace_rpc.test.mjs",
     "n8n:export-workflows": "node scripts/build_n8n_workflow_exports.js"
   },

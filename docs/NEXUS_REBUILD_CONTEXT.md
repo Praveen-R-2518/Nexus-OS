@@ -135,3 +135,15 @@ with the report-back block from `CLAUDE.md`.
 - **Tenant resolution location:** resolve at the EDGE (Next.js webhook), not in n8n — so the
   `inbound_events` ledger is tenant-stamped at write time and routing lives in one typed place.
   (Adopted in Task 2.)
+- **Task 2 shipped (2026-06-24):** edge tenant resolution (`lib/meta-tenant.ts`), ledger stamping,
+  normalizer canonical fields + customer-number WhatsApp permalink, IG/FB return null (graceful
+  "unavailable") instead of wrong links. Tested via sanitized WA/IG/FB fixtures. Real routing-key
+  fields to be confirmed against live payloads once Meta App Review clears.
+- **No business documents in beta (confirmed with product owner).** Therefore the **Chat Agent v1
+  does NOT use pgvector / document RAG.** It answers from STRUCTURED tenant data (leads,
+  conversations, reply_drafts, daily_reports, business_profiles) via read-only SQL, plus the
+  onboarding business profile. The `embeddings`/pgvector store is DEFERRED until customers actually
+  upload documents — do not build it speculatively.
+- **Both Gmail and Meta are domain-blocked for live use** (production domain not finalized; Meta
+  also needs App Review). So `conversations`/`leads` may be empty in dev — the Chat Agent task
+  includes a demo-seed script so it can be built and demoed before live intake exists.
