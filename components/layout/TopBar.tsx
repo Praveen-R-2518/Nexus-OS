@@ -28,8 +28,8 @@ const marketingLinks = [
 
 function marketingNavLinkClass(active: boolean) {
   return cn(
-    "cursor-pointer whitespace-nowrap text-[12px] font-normal text-apple-text transition-opacity duration-200 hover:opacity-65",
-    active && "opacity-100",
+    "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 text-[13px] font-medium tracking-normal transition-opacity duration-interaction",
+    active ? "text-apple-text" : "text-apple-text/75 hover:text-apple-text",
   );
 }
 
@@ -60,15 +60,15 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
     <header
       className={cn(
         "sticky top-0 z-50 font-sans",
-        marketing ? "apple-chrome-bar" : "app-chrome-bar rounded-b-xl font-chrome",
+        marketing ? "apple-chrome-bar font-chrome" : "app-chrome-bar rounded-b-xl font-chrome",
       )}
     >
       <div
         className={cn(
-          "mx-auto flex max-w-[1024px] items-center justify-between gap-3",
+          "mx-auto max-w-[1024px]",
           marketing
-            ? "min-h-11 px-4 md:gap-8 md:px-6"
-            : "px-4 py-3 md:gap-8 md:px-8",
+            ? "flex items-center justify-between gap-3 px-4 py-3 md:gap-8 md:px-8"
+            : "flex items-center justify-between gap-3 px-4 py-3 md:gap-8 md:px-8",
         )}
       >
         <Link
@@ -76,38 +76,46 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
           className={cn(
             "shrink-0 text-[21px] font-semibold tracking-tight",
             marketing
-              ? "text-[19px] text-apple-text"
+              ? "font-sans text-base font-semibold tracking-normal text-apple-text md:text-lg"
               : "font-sans text-base font-semibold tracking-normal text-black dark:text-white md:text-lg",
           )}
         >
-          {marketing ? (
-            <>Nexus OS</>
-          ) : (
-            <>
-              <span className="logo-nexus">Nexus</span>
-              <span className="logo-os"> OS</span>
-            </>
-          )}
+          <span className="logo-nexus">Nexus</span>
+          <span className="logo-os"> OS</span>
         </Link>
 
         {marketing ? (
           <nav
-            className="hidden flex-1 items-center justify-center gap-6 overflow-x-auto md:flex lg:gap-10"
+            className="relative flex max-w-[min(100vw-10rem,40rem)] flex-1 flex-wrap items-center justify-center gap-x-4 gap-y-2 overflow-x-auto sm:gap-x-6 lg:gap-x-8"
             aria-label="Primary"
           >
-            {marketingLinks.map(({ href, label }) => {
-              const active =
-                pathname === href || pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={marketingNavLinkClass(active)}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+            <LayoutGroup id="topbar-marketing-nav">
+              {marketingLinks.map(({ href, label }) => {
+                const active =
+                  pathname === href || pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={marketingNavLinkClass(active)}
+                  >
+                    <span className="relative z-10 whitespace-nowrap">{label}</span>
+                    {active ? (
+                      <motion.span
+                        layoutId="marketingTopNavActiveBar"
+                        className="pointer-events-none h-0.5 w-full max-w-[2.5rem] shrink-0 bg-nexus-approval"
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 32,
+                          mass: 0.55,
+                        }}
+                      />
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </LayoutGroup>
           </nav>
         ) : (
           <nav
@@ -152,21 +160,29 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
           </nav>
         )}
 
-        <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        <div
+          className={cn(
+            "flex shrink-0 items-center gap-2 md:gap-3",
+            marketing && "font-chrome",
+          )}
+        >
           {marketing ? (
             <>
               <Link
                 href="mailto:support@example.com"
-                className="hidden text-[12px] text-apple-text transition-opacity hover:opacity-65 lg:inline-flex"
+                className="hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[color:var(--apple-hairline)] bg-transparent px-3 py-2 text-[13px] font-medium tracking-normal text-apple-text transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.06] lg:inline-flex"
               >
                 Contact sales
               </Link>
               <Link
                 href="/signup"
-                className="apple-btn-primary px-3.5 py-1.5 text-[14px]"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-nexus-approval px-4 py-2 text-[13px] font-medium tracking-normal text-white transition-colors hover:bg-[color:var(--apple-accent-hover)]"
               >
                 Get started
               </Link>
+              <div className="rounded-lg border border-[color:var(--apple-hairline)] p-0.5">
+                <ThemeToggle />
+              </div>
             </>
           ) : (
             <button
@@ -186,26 +202,6 @@ export default function TopBar({ marketing }: { marketing: boolean }) {
         </div>
       </div>
 
-      {marketing ? (
-        <div className="border-t border-[color:var(--apple-hairline)] px-4 py-2 md:hidden">
-          <nav className="flex flex-wrap items-center justify-center gap-4" aria-label="Primary mobile">
-            {marketingLinks.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={marketingNavLinkClass(
-                  pathname === href || pathname.startsWith(href),
-                )}
-              >
-                {label}
-              </Link>
-            ))}
-            <Link href="/login" className={marketingNavLinkClass(false)}>
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      ) : null}
     </header>
   );
 }
