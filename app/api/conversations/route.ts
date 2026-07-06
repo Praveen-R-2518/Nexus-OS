@@ -40,6 +40,9 @@ const CONVERSATION_SOURCES = [
   "gmail",
   "email",
   "imap",
+  "whatsapp",
+  "instagram",
+  "facebook",
 ] as const;
 
 const POST_STATUSES = [
@@ -268,6 +271,8 @@ export async function POST(request: Request) {
     const customerPhone = boundedString(body.customer_phone, 80);
     const channel = boundedString(body.channel, 80) ?? "email";
     const status = pickAllowed(body.status, POST_STATUSES, "unread");
+    const externalThreadId = boundedString(body.external_thread_id, 500);
+    const externalPermalink = boundedString(body.external_permalink, 2000);
 
     const intent = pickIntentForInsert(body.intent);
     const urgency = pickUrgencyForInsert(body.urgency);
@@ -289,6 +294,8 @@ export async function POST(request: Request) {
         customer_phone: customerPhone,
         channel,
         message: message.trim().slice(0, 20_000),
+        external_thread_id: externalThreadId,
+        external_permalink: externalPermalink,
         raw_payload: rawPayload,
         status,
         intent,

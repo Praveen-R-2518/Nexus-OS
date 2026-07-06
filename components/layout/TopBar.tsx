@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const appNav = [
   { href: "/dashboard", label: "Command Center" },
   { href: "/inbox", label: "Inbox" },
+  { href: "/chat", label: "Revenue Analyst" },
   { href: "/approval", label: "Approval Queue" },
   { href: "/report", label: "Buy-Back Report" },
   { href: "/logs", label: "Workflow Logs" },

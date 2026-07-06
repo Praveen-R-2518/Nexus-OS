@@ -17,6 +17,9 @@ const CONVERSATION_SOURCES = [
   "gmail",
   "email",
   "imap",
+  "whatsapp",
+  "instagram",
+  "facebook",
 ] as const;
 
 const POST_STATUSES = [
@@ -117,6 +120,8 @@ export async function POST(request: Request) {
       customer_phone: boundedString(body.customer_phone, 80),
       channel: boundedString(body.channel, 80) ?? "email",
       message,
+      external_thread_id: boundedString(body.external_thread_id, 500),
+      external_permalink: boundedString(body.external_permalink, 2000),
       raw_payload: rawPayload,
       status: pickAllowed(body.status, POST_STATUSES, "unread"),
       received_at:
