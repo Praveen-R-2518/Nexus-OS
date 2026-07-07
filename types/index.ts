@@ -4,9 +4,11 @@ export interface Conversation {
   workspace_id?: string | null;
   /** Tenant / organization; enforced by RLS. */
   team_id?: string | null;
-  source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form";
+  source: "gmail" | "email" | "imap" | "demo" | "webhook" | "manual" | "chat" | "form" | "whatsapp" | "instagram" | "facebook";
   customer_name: string;
   customer_email?: string;
+  external_thread_id?: string | null;
+  external_permalink?: string | null;
   /** Ingest/plain text column from Supabase. */
   message?: string;
   /** Legacy / mock inbox body (prefer `message` when both exist). */

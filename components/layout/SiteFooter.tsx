@@ -24,7 +24,10 @@ export default function SiteFooter() {
           <Link href="/pricing" className="transition-opacity hover:text-apple-text hover:opacity-80">
             Pricing
           </Link>
-          <Link href="#" className="transition-opacity hover:text-apple-text hover:opacity-80">
+          <Link href="/privacy" className="transition-opacity hover:text-apple-text hover:opacity-80">
+            Privacy
+          </Link>
+          <Link href="/terms" className="transition-opacity hover:text-apple-text hover:opacity-80">
             Terms
           </Link>
           <Link href="/login" className="transition-opacity hover:text-apple-text hover:opacity-80">

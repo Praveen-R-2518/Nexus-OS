@@ -350,7 +350,7 @@ function buildConnections(map) {
 }
 
 const supabaseBaseUrl = "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1";
-const wf2WebhookUrl = "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify";
+const wf2WebhookUrl = "https://mahinsacw.app.n8n.cloud/webhook/nexus/classify";
 
 const supabaseCredentialHeaders = [
   { name: "Content-Type", value: "application/json" },
@@ -442,7 +442,7 @@ const gmailWebhook = {
 
 const nodesGmail = [
   sticky(
-    "## Nexus OS - WF0a Gmail Intake\n\n**Tenant routing:** `Tenant Route Extract` resolves `business_profiles` via `gmail_destination_email`, `whatsapp_routing_number`, or `webhook_route_token` (see migration `0012_business_profiles_integration_routing.sql`).\n\n**n8n env:** `NEXUS_GMAIL_DESTINATION_MAILBOX` (IMAP), `NEXUS_WHATSAPP_DESTINATION_NUMBER`, `NEXUS_WHATSAPP_TOKEN_HEADER` (default `x-nexus-webhook-token`), `NEXUS_WORKSPACE_ID` (fallback if profile has no workspace).\n\nPrimary path: IMAP trigger. Fallback: POST to `/webhook/gmail-inbound`. Normalizer requires verified `_tenant` from **Verify Tenant Context**.",
+    "## Nexus OS - WF0a Gmail Intake\n\n**Tenant routing:** `Tenant Route Extract` resolves `business_profiles` via `gmail_destination_email`, `whatsapp_routing_number`, `wa_phone_number_id`, `ig_account_id`, `fb_page_id`, or `webhook_route_token` (see migrations `0012` + `20260619120000_meta_unified_inbox_foundation.sql`).\n\n**n8n env:** `NEXUS_GMAIL_DESTINATION_MAILBOX` (IMAP), `NEXUS_WHATSAPP_DESTINATION_NUMBER`, `NEXUS_WA_PHONE_NUMBER_ID`, `NEXUS_WHATSAPP_TOKEN_HEADER` (default `x-nexus-webhook-token`), `NEXUS_WORKSPACE_ID` (fallback if profile has no workspace).\n\nPrimary path: IMAP trigger. Fallback: POST to `/webhook/gmail-inbound` (also receives Meta payloads forwarded from Next.js `/api/meta/webhook`). Normalizer requires verified `_tenant` from **Verify Tenant Context**.",
     [-220, 0],
     520,
   ),
@@ -487,7 +487,7 @@ const nodesGmail = [
     url: `${supabaseBaseUrl}/conversations`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
-    body: '={{ { source: $json.normalized.source, channel: $json.normalized.channel || "email", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}',
+    body: '={{ { source: $json.normalized.source, channel: $json.normalized.channel || "email", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", external_thread_id: $json.normalized.external_thread_id || null, external_permalink: $json.normalized.external_permalink || null, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, external_permalink: $json.normalized.external_permalink, ingest_source: $json.normalized.source }) } }}',
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
     retries: { maxTries: 4, waitMs: 1500 },
     onError: "continueErrorOutput",
@@ -506,7 +506,7 @@ const nodesGmail = [
     url: `${supabaseBaseUrl}/conversations`,
     supabaseCredential: true,
     headers: supabaseCredentialHeaders,
-    body: '={{ { source: $json.normalized.source, channel: $json.normalized.channel || "email", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, ingest_source: $json.normalized.source }) } }}',
+    body: '={{ { source: $json.normalized.source, channel: $json.normalized.channel || "email", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: "unread", external_thread_id: $json.normalized.external_thread_id || null, external_permalink: $json.normalized.external_permalink || null, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, external_permalink: $json.normalized.external_permalink, ingest_source: $json.normalized.source }) } }}',
     options: { response: { response: { fullResponse: true, responseFormat: "json" } } },
     retries: { maxTries: 4, waitMs: 1500 },
     onError: "continueErrorOutput",

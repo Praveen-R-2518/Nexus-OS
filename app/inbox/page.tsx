@@ -9,6 +9,9 @@ import {
   Inbox as InboxIcon,
   Mail,
   MessagesSquare,
+  Camera,
+  MessageCircle,
+  ExternalLink,
   Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -26,6 +29,11 @@ import {
   formatRelativeTime,
   getRiskHeatPinClass,
 } from "@/lib/utils";
+import {
+  externalInboxLabel,
+  resolveExternalInboxUrl,
+  supportsExternalInbox,
+} from "@/lib/meta-deep-links";
 
 const REFRESH_MS = 30_000;
 const FETCH_LIMIT = 100;
@@ -57,12 +65,47 @@ function sourceIcon(source: Conversation["source"]) {
     case "gmail":
     case "imap":
       return <Mail className={common} aria-hidden />;
+    case "whatsapp":
+      return <MessagesSquare className={cn(common, "text-emerald-600")} aria-hidden />;
+    case "instagram":
+      return <Camera className={cn(common, "text-pink-500")} aria-hidden />;
+    case "facebook":
+      return <MessageCircle className={cn(common, "text-blue-600")} aria-hidden />;
     case "chat":
       return <MessagesSquare className={common} aria-hidden />;
     case "form":
       return <ClipboardList className={common} aria-hidden />;
     default:
       return <InboxIcon className={common} aria-hidden />;
+  }
+}
+
+function sourceLabel(source: Conversation["source"]): string {
+  switch (source) {
+    case "gmail":
+      return "Gmail";
+    case "email":
+      return "Email";
+    case "imap":
+      return "IMAP";
+    case "whatsapp":
+      return "WhatsApp";
+    case "instagram":
+      return "Instagram";
+    case "facebook":
+      return "Facebook";
+    case "webhook":
+      return "Webhook";
+    case "manual":
+      return "Manual";
+    case "demo":
+      return "Demo";
+    case "chat":
+      return "Chat";
+    case "form":
+      return "Form";
+    default:
+      return source;
   }
 }
 
@@ -142,6 +185,7 @@ function InboxPageContent() {
   const [activeIntentFilter, setActiveIntentFilter] =
     useState<IntentFilter>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [openInboxConfirm, setOpenInboxConfirm] = useState(false);
 
   const {
     data: detailDrafts = [],
@@ -239,6 +283,15 @@ function InboxPageContent() {
       conversations.find((c) => c.id === selectedConversationId) ?? null
     );
   }, [conversations, selectedConversationId]);
+
+  const externalInboxUrl = useMemo(() => {
+    if (!selectedConversation) return null;
+    return resolveExternalInboxUrl(selectedConversation);
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    setOpenInboxConfirm(false);
+  }, [selectedConversationId]);
 
   const urgencyCounts = useMemo(() => {
     const base = { "": conversations.length } as Record<string, number>;
@@ -531,9 +584,9 @@ function InboxPageContent() {
                   {selectedConversation.customer_name}
                 </h1>
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-base text-muted">
-                  <span className="inline-flex items-center gap-2 capitalize">
+                  <span className="inline-flex items-center gap-2">
                     {sourceIcon(selectedConversation.source)}
-                    {selectedConversation.source}
+                    {sourceLabel(selectedConversation.source)}
                   </span>
                   <span aria-hidden>·</span>
                   <time dateTime={selectedConversation.created_at}>
@@ -541,7 +594,27 @@ function InboxPageContent() {
                   </time>
                 </p>
               </div>
-              {detailDrafts.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {supportsExternalInbox(selectedConversation.source) ? (
+                  externalInboxUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => setOpenInboxConfirm(true)}
+                      className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-selectable-edge bg-surface-input px-4 py-2 text-[13px] font-medium text-foreground transition-colors duration-interaction hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval"
+                    >
+                      <ExternalLink className="h-4 w-4" aria-hidden />
+                      Open in {externalInboxLabel(selectedConversation.source)}
+                    </button>
+                  ) : (
+                    <span
+                      className="inline-flex min-h-11 items-center rounded-xl border border-dashed border-border px-4 py-2 text-[13px] text-muted"
+                      title="No deep link stored for this message"
+                    >
+                      Native inbox link unavailable
+                    </span>
+                  )
+                ) : null}
+                {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
                   className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium tracking-normal text-nexus-approval transition-colors duration-interaction hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
@@ -549,6 +622,7 @@ function InboxPageContent() {
                   View Draft Reply
                 </Link>
               ) : null}
+              </div>
             </div>
 
             {detailError ? (
@@ -662,6 +736,41 @@ function InboxPageContent() {
             ) : null}
           </div>
         )}
+
+        {openInboxConfirm && selectedConversation && externalInboxUrl ? (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/65 p-4">
+            <div className="w-full max-w-lg rounded-xl border border-border bg-surface-elevated p-6 dark:border-border/60">
+              <h2 className="text-lg font-semibold text-foreground">
+                Open in {externalInboxLabel(selectedConversation.source)}?
+              </h2>
+              <p className="mt-3 text-sm text-muted">
+                You will leave Nexus OS and open this conversation in the
+                native {externalInboxLabel(selectedConversation.source)} inbox
+                in a new browser tab.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOpenInboxConfirm(false)}
+                  className="inline-flex min-h-11 items-center rounded-xl border border-selectable-edge px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.open(externalInboxUrl, "_blank", "noopener,noreferrer");
+                    setOpenInboxConfirm(false);
+                  }}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-sm font-medium text-nexus-approval hover:bg-nexus-approval-soft"
+                >
+                  <ExternalLink className="h-4 w-4" aria-hidden />
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
     </div>

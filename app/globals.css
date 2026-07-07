@@ -566,6 +566,28 @@
     color: var(--apple-text);
   }
 
+  .dark .landing-full-bleed,
+  .dark .marketing-apple-shell {
+    --apple-text: #f5f5f7;
+    --apple-text-secondary: #a1a1aa;
+    --apple-bg: #0b0d10;
+    --apple-bg-alt: #111318;
+    --apple-hairline: rgba(255, 255, 255, 0.12);
+    --surface-page: var(--apple-bg);
+    --surface-card: #16181d;
+    --surface-elevated: #1c1f26;
+    --surface-muted: var(--apple-bg-alt);
+    --border-subtle: var(--apple-hairline);
+    --foreground: var(--apple-text);
+    --atmospheric-grey: var(--apple-text);
+    --text-primary: var(--apple-text);
+    --text-secondary: var(--apple-text-secondary);
+  }
+
+  .marketing-apple-shell .logo-os {
+    color: var(--nexus-approval);
+  }
+
   .marketing-apple-shell:not(.landing-full-bleed) {
     --foreground: var(--apple-text);
     --atmospheric-grey: var(--apple-text);

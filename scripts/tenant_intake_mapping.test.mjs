@@ -105,6 +105,7 @@ const wa = normalizer.normalizeItem({
   channel: "whatsapp",
   from: "+15550001",
   message: "Hello from WA",
+  message_id: "msg123",
   _tenant: {
     team_id: TEAM,
     workspace_id: WS,
@@ -113,7 +114,79 @@ const wa = normalizer.normalizeItem({
     route_key: "+15550001",
   },
 });
-assert(wa.source === "webhook" && wa.channel === "whatsapp", JSON.stringify(wa));
+assert(wa.source === "whatsapp" && wa.channel === "whatsapp", JSON.stringify(wa));
+assert(wa.external_thread_id === "wa:msg123", wa.external_thread_id);
+
+const igPayload = {
+  object: "instagram",
+  entry: [
+    {
+      id: "17841400001",
+      messaging: [
+        {
+          sender: { id: "12345", name: "Jane" },
+          recipient: { id: "17841400001" },
+          timestamp: 1710000000,
+          message: { mid: "mid.ig.1", text: "Hi from IG" },
+        },
+      ],
+    },
+  ],
+};
+const ig = normalizer.normalizeItem({
+  ...igPayload,
+  _tenant: {
+    team_id: TEAM,
+    workspace_id: WS,
+    business_profile_id: "a47ac10b-58cc-4372-a867-0e02b2c3d479",
+    route_source: "ig_account_id",
+    route_key: "17841400001",
+  },
+});
+assert(ig.source === "instagram" && ig.channel === "instagram", JSON.stringify(ig));
+assert(ig.message === "Hi from IG", ig.message);
+assert(ig.external_thread_id === "ig:mid.ig.1", ig.external_thread_id);
+
+const fbPayload = {
+  object: "page",
+  entry: [
+    {
+      id: "1122334455",
+      messaging: [
+        {
+          sender: { id: "998877", name: "Bob" },
+          recipient: { id: "1122334455" },
+          timestamp: 1710000001,
+          message: { mid: "mid.fb.1", text: "Hello Messenger" },
+        },
+      ],
+    },
+  ],
+};
+const fb = normalizer.normalizeItem({
+  ...fbPayload,
+  _tenant: {
+    team_id: TEAM,
+    workspace_id: WS,
+    business_profile_id: "a47ac10b-58cc-4372-a867-0e02b2c3d479",
+    route_source: "fb_page_id",
+    route_key: "1122334455",
+  },
+});
+assert(fb.source === "facebook" && fb.channel === "facebook", JSON.stringify(fb));
+assert(fb.message === "Hello Messenger", fb.message);
+
+const igRoute = tenant.resolveRouteFromIntake({ headers: {}, body: igPayload, query: {} });
+assert(igRoute.type === "ig_account_id" && igRoute.value === "17841400001", JSON.stringify(igRoute));
+
+const fbRoute = tenant.resolveRouteFromIntake({ headers: {}, body: fbPayload, query: {} });
+assert(fbRoute.type === "fb_page_id" && fbRoute.value === "1122334455", JSON.stringify(fbRoute));
+
+const igPath = tenant.buildBusinessProfileLookupPath({ type: "ig_account_id", value: "17841400001" });
+assert(igPath.includes("ig_account_id=eq."), igPath);
+
+const fbPath = tenant.buildBusinessProfileLookupPath({ type: "fb_page_id", value: "1122334455" });
+assert(fbPath.includes("fb_page_id=eq."), fbPath);
 
 try {
   normalizer.normalizeItem({ from: "a@b.com", subject: "s", textPlain: "x" });
