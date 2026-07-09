@@ -38,12 +38,12 @@ export default function PricingTierCard({ tier, cycle }: PricingTierCardProps) {
       ) : null}
 
       <div className="text-center">
-        <p className="nexus-meta text-muted">
+        <p className="nexus-meta text-muted dark:text-slate-400">
           {tier.title}
         </p>
         <div className="mt-4 flex flex-col items-center gap-1">
           {compareAt ? (
-            <span className="font-mono text-sm text-muted line-through decoration-muted/60">
+            <span className="font-mono text-sm text-muted line-through decoration-muted/60 dark:text-slate-400">
               {compareAt}
             </span>
           ) : null}
@@ -51,7 +51,7 @@ export default function PricingTierCard({ tier, cycle }: PricingTierCardProps) {
             {display}
           </p>
           {cycle === "annual" && tier.annualMonthlyPrice !== null ? (
-            <p className="text-xs font-medium tracking-normal text-muted">
+            <p className="text-xs font-medium tracking-normal text-muted dark:text-slate-400">
               Billed annually
             </p>
           ) : null}
