@@ -279,7 +279,7 @@ export default function DashboardPage() {
             <EmptyState
               title="Metrics unavailable"
               description={metricsErrorMsg}
-              className="app-glass-card bg-glass/40"
+              className="app-glass-card"
             />
           ) : metricsPending && queriesEnabled && !metrics ? (
             <MetricsSkeletonRow />
@@ -433,7 +433,7 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="app-glass-card overflow-hidden rounded-xl border-nexus-intake-border bg-nexus-intake-soft/80"
+              className="app-glass-card overflow-hidden rounded-xl border-nexus-intake-border"
             >
               <div className="flex items-center justify-between hairline-b px-4 py-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold tracking-normal text-atmospheric-grey">
@@ -505,7 +505,7 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="app-glass-card overflow-hidden rounded-xl border-nexus-rescue-border bg-nexus-rescue-soft/80"
+              className="app-glass-card overflow-hidden rounded-xl border-nexus-rescue-border"
             >
               <div className="flex items-center justify-between hairline-b px-4 py-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold tracking-normal text-atmospheric-grey">

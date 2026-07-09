@@ -91,7 +91,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   <div className="flex min-w-0 flex-1 flex-col">
                     <main
                       data-app-body
-                      className="nexus-app-main flex-1 overflow-y-auto px-4 pb-8 pt-16 md:px-8 md:pt-8 lg:px-10"
+                      className="nexus-app-main flex-1 px-4 pb-8 pt-16 md:px-8 md:pt-8 lg:px-10"
                     >
                       {children}
                     </main>
