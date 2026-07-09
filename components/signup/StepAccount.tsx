@@ -6,6 +6,9 @@ import FormInput from "@/components/signup/FormInput";
 import type { SignupSnapshot } from "@/components/signup/types";
 import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { branchForSignupEmailStatus } from "@/lib/auth/signup-step1-branch";
 
 type StepAccountProps = {
   snapshot: SignupSnapshot;
@@ -41,11 +44,11 @@ function normalizeSignupEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-const DUPLICATE_EMAIL_MSG =
-  "An account with this email already exists. Sign in to continue onboarding.";
+const CONFIRMED_EMAIL_REDIRECT_MSG =
+  "This email already has an account. Sign in to continue.";
 
-const PENDING_VERIFICATION_MSG =
-  "This email already has a pending signup. Check your inbox or resend the verification link below.";
+const PENDING_VERIFICATION_INFO =
+  "You already started signing up with this email — we’ve re-sent your confirmation link. Confirm it to pick up where you left off.";
 
 const SIGNUP_RESUME_PATH = "/signup?step=workspace";
 type SupabaseAuthError = {
@@ -160,7 +163,7 @@ function mapSignUpError(error: SupabaseAuthError): string {
     msg.includes("exists") ||
     msg.includes("user already")
   ) {
-    return DUPLICATE_EMAIL_MSG;
+    return CONFIRMED_EMAIL_REDIRECT_MSG;
   }
 
   if (msg.includes("password") && msg.includes("weak")) {
@@ -188,6 +191,7 @@ function canUseLocalDevSignupFallback(): boolean {
 }
 
 export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountProps) {
+  const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [fullName, setFullName] = useState(
     () => snapshot.accountFullName || "",
@@ -202,6 +206,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [resendMessage, setResendMessage] = useState("");
+  const [pendingInfo, setPendingInfo] = useState("");
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
 
@@ -324,19 +329,43 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       registered?: boolean;
       status?: string;
     };
-    if (checkJson.status === "confirmed" || checkJson.registered) {
-      setFormError(DUPLICATE_EMAIL_MSG);
+    const branch = checkJson.registered
+      ? "confirmed"
+      : branchForSignupEmailStatus(checkJson.status);
+    if (branch === "confirmed") {
+      const login = new URL("/login", window.location.origin);
+      login.searchParams.set("error", CONFIRMED_EMAIL_REDIRECT_MSG);
+      login.searchParams.set("next", "/signup?step=workspace");
+      router.replace(login.toString());
       setBusy(false);
       return;
     }
-    if (checkJson.status === "pending_verification") {
-      if (canUseLocalDevSignupFallback()) {
-        const completed = await completeLocalDevSignup(normalizedEmail);
-        setBusy(false);
-        if (completed) return;
-        return;
+    if (branch === "pending_verification") {
+      onPatch({
+        accountEmail: normalizedEmail,
+        accountFullName: fullName.trim(),
+        accountPhone: phone.trim(),
+        accountVerificationPending: true,
+      });
+      setPendingInfo(PENDING_VERIFICATION_INFO);
+      // Best-effort resend (server-side rate-limited). Even if it fails, the user can try again.
+      try {
+        const resendRes = await fetch("/api/auth/resend-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: normalizedEmail }),
+        });
+        if (resendRes.ok) {
+          startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
+          setResendMessage("Confirmation email sent. Check your inbox.");
+        } else if (resendRes.status === 429) {
+          startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
+        }
+      } catch {
+        // ignore network errors; UI still offers manual resend
       }
-      setFormError(PENDING_VERIFICATION_MSG);
+      setPassword("");
+      setConfirm("");
       setBusy(false);
       return;
     }
@@ -423,6 +452,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
     if (!target) return;
     if (busy || cooldownRemaining > 0) return;
     setResendMessage("");
+    setPendingInfo(PENDING_VERIFICATION_INFO);
     setFormError("");
     setBusy(true);
 
@@ -438,32 +468,37 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       };
       if (checkJson.status === "confirmed" || checkJson.registered) {
         onPatch({ accountVerificationPending: false });
-        setFormError(DUPLICATE_EMAIL_MSG);
+        const login = new URL("/login", window.location.origin);
+        login.searchParams.set("error", CONFIRMED_EMAIL_REDIRECT_MSG);
+        login.searchParams.set("next", "/signup?step=workspace");
+        router.replace(login.toString());
         setBusy(false);
         return;
       }
     }
 
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: target,
-      options: {
-        emailRedirectTo: buildAuthCallbackUrl(SIGNUP_RESUME_PATH),
-      },
+    const res = await fetch("/api/auth/resend-confirmation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: target }),
     });
     setBusy(false);
-    if (error) {
-      logSupabaseAuthEmailError("resend", error);
-      if (isRateLimitError(error)) {
+    if (!res.ok) {
+      if (res.status === 429) {
         startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
+        setFormError(
+          `Too many requests. Please wait ${RATE_LIMIT_COOLDOWN_SECONDS}s and try again.`,
+        );
+        return;
       }
-      setFormError(mapSignUpError(error));
+      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      setFormError(json?.error || "Unable to resend confirmation email. Try again.");
       return;
     }
     // Successful send consumes part of the email quota; lock briefly so the
     // user doesn't immediately request another and trip the cap.
     startCooldown(RATE_LIMIT_COOLDOWN_SECONDS);
-    setResendMessage("Verification email sent. Check your inbox.");
+    setResendMessage("Confirmation email sent. Check your inbox.");
   }
 
   if (verificationPending) {
@@ -478,6 +513,11 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
             login needed.
           </p>
         </div>
+        {pendingInfo ? (
+          <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground dark:border-nexus-approval-border dark:bg-nexus-approval-soft">
+            {pendingInfo}
+          </div>
+        ) : null}
         <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground dark:border-nexus-approval-border dark:bg-nexus-approval-soft">
           <p className="font-medium">Next steps</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
@@ -498,8 +538,14 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
             ? `Wait ${cooldownRemaining}s`
             : busy
               ? "Sending…"
-              : "Resend verification email"}
+              : "Resend confirmation email"}
         </button>
+        <Link
+          href="/login?next=%2Fsignup%3Fstep%3Dworkspace"
+          className="block text-center text-sm font-medium text-nexus-approval underline underline-offset-4 dark:text-nexus-approval"
+        >
+          Log in instead
+        </Link>
         {formError ? (
           <p className="text-sm text-[#8B1A1A]" role="alert">
             {formError}
