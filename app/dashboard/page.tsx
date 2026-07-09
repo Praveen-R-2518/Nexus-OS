@@ -78,7 +78,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-36 animate-pulse rounded-xl border border-border/50 bg-surface-muted dark:border-border/50"
+          className="glass-skeleton h-36 animate-pulse rounded-xl"
         />
       ))}
     </div>
@@ -91,14 +91,14 @@ function FeedSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse gap-3 rounded-xl border border-border/50 bg-surface-muted/80 p-3 dark:border-border/50"
+          className="glass-skeleton flex animate-pulse gap-3 rounded-xl p-3"
         >
-          <div className="h-6 w-14 shrink-0 rounded-md border border-border/40 bg-white/50 dark:border-border/40 dark:bg-surface-card/80" />
+          <div className="glass-skeleton h-6 w-14 shrink-0 rounded-md" />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-3 w-1/3 rounded-md border border-border/40 bg-white/50 dark:border-border/40 dark:bg-surface-card/80" />
-            <div className="h-3 w-full rounded-md border border-border/40 bg-white/40 dark:border-border/40 dark:bg-surface-card/60" />
+            <div className="glass-skeleton h-3 w-1/3 rounded-md" />
+            <div className="glass-skeleton h-3 w-full rounded-md" />
           </div>
-          <div className="hidden h-8 w-12 shrink-0 rounded-md border border-border/40 bg-white/50 dark:border-border/40 dark:bg-surface-card/80 sm:block" />
+          <div className="glass-skeleton hidden h-8 w-12 shrink-0 rounded-md sm:block" />
         </div>
       ))}
     </div>
@@ -107,13 +107,13 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-border/50 bg-surface-muted p-4 dark:border-border/50">
-      <div className="mb-4 h-4 w-36 rounded-md border border-border/40 bg-white/40 dark:border-border/40 dark:bg-surface-card/60" />
+    <div className="glass-skeleton animate-pulse rounded-xl p-4">
+      <div className="glass-skeleton mb-4 h-4 w-36 rounded-md" />
       <div className="space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-12 rounded-md border border-border/40 bg-white/40 dark:border-border/40 dark:bg-surface-card/50"
+            className="glass-skeleton h-12 rounded-md"
           />
         ))}
       </div>
@@ -273,13 +273,13 @@ export default function DashboardPage() {
               title="Workspace setup required"
               description="Complete onboarding to bind your team and activate metrics."
               icon={<Inbox className="shrink-0" aria-hidden />}
-              className="surface-card"
+              className="app-glass-card"
             />
           ) : metricsErrorMsg && queriesEnabled ? (
             <EmptyState
               title="Metrics unavailable"
               description={metricsErrorMsg}
-              className="border-border bg-surface-muted/50"
+              className="app-glass-card bg-glass/40"
             />
           ) : metricsPending && queriesEnabled && !metrics ? (
             <MetricsSkeletonRow />
@@ -332,7 +332,7 @@ export default function DashboardPage() {
           {/* Inbox feed */}
           <section
             aria-label="Inbox feed preview"
-            className="overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card"
+            className="app-glass-card overflow-hidden rounded-xl"
           >
             <div className="flex items-center justify-end hairline-b px-4 py-3">
               <Link
@@ -366,7 +366,7 @@ export default function DashboardPage() {
                   return (
                     <li
                       key={c.id}
-                      className="bg-white dark:bg-surface-card"
+                      className="bg-glass/80"
                     >
                       <div
                         className={cn(
@@ -414,7 +414,7 @@ export default function DashboardPage() {
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-ref-mint text-atmospheric-grey transition-colors duration-interaction hover:border-ref-cta hover:bg-white dark:border-border/60 dark:bg-surface-elevated dark:hover:border-border-strong"
+                            className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-atmospheric-grey transition-colors duration-interaction hover:border-nexus-approval hover:bg-glass"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-5 w-5" />
@@ -433,7 +433,7 @@ export default function DashboardPage() {
             {/* Hot Leads */}
             <section
               aria-label="Hot leads"
-              className="overflow-hidden rounded-xl border border-nexus-intake-border bg-nexus-intake-soft dark:border-border/50 dark:bg-surface-card"
+              className="app-glass-card overflow-hidden rounded-xl border-nexus-intake-border bg-nexus-intake-soft/80"
             >
               <div className="flex items-center justify-between hairline-b px-4 py-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold tracking-normal text-atmospheric-grey">
@@ -468,7 +468,7 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {hotLeadsList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-xl border border-border/50 bg-white px-3 py-3 dark:border-border/50 dark:bg-surface-elevated">
+                        <div className="glass-pill rounded-xl px-3 py-3">
                           <div className="flex items-start justify-between gap-3">
                             <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}
@@ -505,7 +505,7 @@ export default function DashboardPage() {
             {/* Churn Risks */}
             <section
               aria-label="Churn risks"
-              className="overflow-hidden rounded-xl border border-nexus-rescue-border bg-nexus-rescue-soft dark:border-border/50 dark:bg-surface-card"
+              className="app-glass-card overflow-hidden rounded-xl border-nexus-rescue-border bg-nexus-rescue-soft/80"
             >
               <div className="flex items-center justify-between hairline-b px-4 py-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold tracking-normal text-atmospheric-grey">
@@ -543,7 +543,7 @@ export default function DashboardPage() {
                   <ul className="space-y-3">
                     {churnRisksList.map((c) => (
                       <li key={c.id}>
-                        <div className="rounded-xl border border-border/50 bg-white px-3 py-3 dark:border-border/50 dark:bg-surface-elevated">
+                        <div className="glass-pill rounded-xl px-3 py-3">
                           <div className="flex items-start justify-between gap-3">
                             <p className="truncate text-base font-semibold text-atmospheric-grey">
                               {c.customer_name}

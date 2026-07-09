@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { SessionGate } from "@/components/auth/SessionGate";
 import SiteFooter from "@/components/layout/SiteFooter";
+import AppSidebar from "@/components/layout/AppSidebar";
 import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
 import { cn } from "@/lib/utils";
@@ -60,7 +61,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       )}
       {marketing ? (
         <>
-          <TopBar marketing />
+          <TopBar />
           <main
             data-app-body
             className={cn(
@@ -85,14 +86,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
           >
             <AuthGuard>
               <TenantScopeGate>
-                <TopBar marketing={false} />
-                <main
-                  data-app-body
-                  className="nexus-app-main mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 md:px-8 md:py-10"
-                >
-                  {children}
-                </main>
-                <SiteFooter />
+                <div className="nexus-app-shell app-shell-bg relative flex min-h-screen">
+                  <AppSidebar />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <main
+                      data-app-body
+                      className="nexus-app-main flex-1 overflow-y-auto px-4 pb-8 pt-16 md:px-8 md:pt-8 lg:px-10"
+                    >
+                      {children}
+                    </main>
+                  </div>
+                </div>
               </TenantScopeGate>
             </AuthGuard>
           </Suspense>

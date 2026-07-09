@@ -48,7 +48,7 @@ function CountTile({
   return (
     <div
       className={cn(
-        "rounded-xl border border-selectable-edge bg-white px-4 py-4 dark:bg-surface-card",
+        "app-glass-card rounded-xl px-4 py-4",
         accent,
       )}
     >
@@ -105,7 +105,7 @@ export default function LogsPage() {
         title="Workspace setup required"
         description="Complete onboarding to view workflow executions for your team."
         icon={<Activity className="shrink-0" aria-hidden />}
-        className="min-h-[50vh] surface-card"
+        className="min-h-[50vh] app-glass-card"
       />
     );
   }
@@ -129,7 +129,7 @@ export default function LogsPage() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors duration-interaction hover:bg-nexus-execution-soft disabled:cursor-not-allowed disabled:opacity-50 dark:border-border/60 dark:bg-surface-card dark:hover:bg-surface-elevated"
+          className="glass-pill inline-flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-xl px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors duration-interaction hover:bg-nexus-execution-soft disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw
             className={cn("h-5 w-5", loading && "animate-spin")}
@@ -186,7 +186,7 @@ export default function LogsPage() {
               "inline-flex min-h-11 cursor-pointer items-center rounded-xl border px-4 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
               filter === value
                 ? "border border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution dark:bg-surface-muted dark:text-nexus-execution"
-                : "border border-selectable-edge bg-white text-muted hover:border-selectable-edge-hover hover:text-atmospheric-grey dark:bg-surface-card",
+                : "glass-pill border-glass-border text-muted hover:border-glass-border hover:text-atmospheric-grey",
             )}
           >
             {label}
@@ -195,7 +195,7 @@ export default function LogsPage() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex min-h-[260px] items-center justify-center rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
+        <div className="app-glass-card flex min-h-[260px] items-center justify-center rounded-xl">
           <Spinner className="h-10 w-10 text-status-positive" />
         </div>
       ) : logs.length === 0 ? (
@@ -203,14 +203,14 @@ export default function LogsPage() {
           title="No executions detected. Core pipelines standing by."
           description="When n8n workflows write to workflow_logs, they will show up here."
           icon={<Activity className="shrink-0" aria-hidden />}
-          className="border-border surface-card"
+          className="app-glass-card border-glass-border"
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
+        <div className="app-glass-card overflow-hidden rounded-xl">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-base">
               <thead>
-                <tr className="hairline-b bg-surface-muted/80 text-sm font-bold uppercase tracking-brand text-muted">
+                <tr className="hairline-b bg-glass/50 text-sm font-bold uppercase tracking-brand text-muted">
                   <th className="px-5 py-4">Time</th>
                   <th className="px-5 py-4">Workflow</th>
                   <th className="px-5 py-4">Step</th>
@@ -222,7 +222,7 @@ export default function LogsPage() {
                 {logs.map((row) => (
                   <tr
                     key={row.id}
-                    className="hairline-b transition-colors last:border-b-0 hover:bg-surface-muted/50"
+                    className="hairline-b transition-colors last:border-b-0 hover:bg-glass/40"
                   >
                     <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-muted">
                       {new Date(row.timestamp).toLocaleString()}
