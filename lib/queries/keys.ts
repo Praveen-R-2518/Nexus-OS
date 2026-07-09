@@ -21,9 +21,6 @@ export const queryKeys = {
   dailyReport: (teamId: string | null) =>
     [...queryKeys.root(teamId), "dailyReport"] as const,
 
-  workflowLogs: (teamId: string | null, filter: string) =>
-    [...queryKeys.root(teamId), "workflowLogs", filter] as const,
-
   conversationDetail: (teamId: string | null, id: string) =>
     [...queryKeys.root(teamId), "conversationDetail", id] as const,
 } as const;

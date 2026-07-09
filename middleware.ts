@@ -6,7 +6,6 @@ const PROTECTED_PREFIXES = [
   "/inbox",
   "/approval",
   "/report",
-  "/logs",
   "/onboarding",
 ] as const;
 
@@ -99,8 +98,6 @@ export const config = {
     "/approval/:path*",
     "/report",
     "/report/:path*",
-    "/logs",
-    "/logs/:path*",
     "/login",
     "/login/:path*",
     "/onboarding",

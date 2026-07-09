@@ -83,11 +83,6 @@ const sections: DocSection[] = [
         desc: "Daily summary of revenue rescued and at-risk deals, with a sortable table and CSV export.",
         tag: "Reporting",
       },
-      {
-        title: "Workflow Logs",
-        desc: "Full audit trail of every automated action so you can trace what fired, when, and why.",
-        tag: "Audit",
-      },
     ],
   },
   {
