@@ -98,6 +98,19 @@
     --apple-link: var(--nexus-approval);
     --apple-cinematic: #000000;
     --apple-hairline: rgba(0, 0, 0, 0.1);
+
+    /* App glass dashboard (light) */
+    --glass-bg: rgba(255, 255, 255, 0.62);
+    --glass-border: rgba(15, 23, 42, 0.08);
+    --glass-blur: 20px;
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
+    --app-orb-1: rgba(253, 159, 159, 0.35);
+    --app-orb-2: rgba(18, 116, 249, 0.22);
+    --app-orb-3: rgba(139, 80, 251, 0.2);
+    --app-sidebar-bg: rgba(255, 255, 255, 0.55);
+    --app-sidebar-border: rgba(15, 23, 42, 0.08);
+    --glass-input-bg: rgba(255, 255, 255, 0.72);
   }
 
   html:not(.dark) .logo-nexus,
@@ -193,6 +206,19 @@
     .logo-os {
       color: var(--text-secondary);
     }
+
+    /* App glass dashboard (dark) */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 20px;
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    --app-orb-1: rgba(253, 114, 1, 0.18);
+    --app-orb-2: rgba(18, 116, 249, 0.15);
+    --app-orb-3: rgba(139, 80, 251, 0.14);
+    --app-sidebar-bg: rgba(255, 255, 255, 0.04);
+    --app-sidebar-border: rgba(255, 255, 255, 0.08);
+    --glass-input-bg: rgba(255, 255, 255, 0.06);
   }
 
   body {
@@ -247,16 +273,98 @@
   }
 
   .glass-panel {
-    background-color: var(--surface-card);
-    border: 1px solid var(--border-strong);
+    position: relative;
+    isolation: isolate;
+    background-color: var(--glass-bg);
+    border: 1px solid var(--glass-border);
     border-radius: 0.75rem;
-    box-shadow: none;
-    backdrop-filter: none;
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   }
-  .dark .glass-panel {
-    background-color: var(--surface-card);
-    border-color: var(--border-strong);
-    backdrop-filter: none;
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: var(--glass-highlight);
+  }
+
+  .app-glass-card {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--glass-border);
+    border-radius: 0.75rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow: var(--glass-shadow);
+  }
+  .app-glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 50% 0%,
+      rgba(255, 255, 255, 0.08),
+      transparent 55%
+    );
+    box-shadow: var(--glass-highlight);
+  }
+
+  .app-shell-bg {
+    position: relative;
+    background-color: var(--surface-page);
+    overflow: hidden;
+  }
+  .app-shell-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 55% 45% at 12% 18%,
+        var(--app-orb-1),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 88% 12%,
+        var(--app-orb-2),
+        transparent 68%
+      ),
+      radial-gradient(
+        ellipse 45% 50% at 72% 88%,
+        var(--app-orb-3),
+        transparent 72%
+      );
+    filter: blur(48px);
+  }
+  .app-shell-bg > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .app-sidebar {
+    background: var(--app-sidebar-bg);
+    border-right: 1px solid var(--app-sidebar-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .nexus-app-shell .surface-card {
+    background-color: var(--glass-bg);
+    border-color: var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow: var(--glass-shadow);
   }
 
   .landing-glass-card {
@@ -277,19 +385,36 @@
   }
 
   .glass-input {
-    background: var(--surface-input);
-    border: 1px solid var(--border-strong);
+    background: var(--glass-input-bg);
+    border: 1px solid var(--glass-border);
     border-radius: 0.75rem;
     color: var(--foreground);
-    backdrop-filter: none;
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
   }
   .glass-input:focus {
     border-color: var(--ref-cta);
-    background: var(--surface-input);
+    background: var(--glass-input-bg);
     outline: none;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ref-cta) 35%, transparent);
   }
   .dark .glass-input:focus {
-    border-color: var(--border-strong);
+    border-color: var(--nexus-approval);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--nexus-approval) 40%, transparent);
+  }
+
+  .glass-pill {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+  }
+
+  .glass-skeleton {
+    background: color-mix(in srgb, var(--glass-bg) 60%, transparent);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .space-bg {

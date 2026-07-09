@@ -20,7 +20,7 @@ export function ExecutiveEmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl border border-dashed border-border/50 bg-white/50 px-8 py-12 text-center dark:border-border/45 dark:bg-surface-card/50",
+        "flex flex-col items-center justify-center rounded-xl border border-dashed border-glass-border bg-glass/40 px-8 py-12 text-center backdrop-blur-xl",
         className,
       )}
     >

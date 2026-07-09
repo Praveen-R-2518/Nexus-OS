@@ -154,6 +154,12 @@ const config: Config = {
           "edge-selected": "var(--selectable-card-border-selected)",
           "edge-hover": "var(--selectable-card-border-hover)",
         },
+        glass: {
+          DEFAULT: "var(--glass-bg)",
+          border: "var(--glass-border)",
+          input: "var(--glass-input-bg)",
+          sidebar: "var(--app-sidebar-bg)",
+        },
       },
       boxShadow: {
         "glow-positive": "none",

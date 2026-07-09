@@ -281,7 +281,7 @@ export default function ReportPage() {
         title="Workspace setup required"
         description="Complete onboarding to view daily buy-back reports for your team."
         icon={<FileText className="shrink-0" aria-hidden />}
-        className="min-h-[50vh] surface-card"
+        className="min-h-[50vh] app-glass-card"
       />
     );
   }
@@ -329,7 +329,7 @@ export default function ReportPage() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-40 animate-pulse border border-border/60 bg-surface-muted dark:border-border"
+                className="glass-skeleton h-40 animate-pulse rounded-xl"
               />
             ))}
           </div>
@@ -345,7 +345,7 @@ export default function ReportPage() {
                 subtitle="customer conversations analyzed"
                 accent="text-nexus-discovery"
                 icon={<MessageSquareText className="text-nexus-discovery" />}
-                className="surface-card"
+                className="app-glass-card"
               />
               <Card
                 title="Revenue Recovered"
@@ -353,7 +353,7 @@ export default function ReportPage() {
                 subtitle="approved conversations value"
                 accent="text-nexus-growth"
                 icon={<CheckCircle2 className="text-nexus-growth" />}
-                className="surface-card"
+                className="app-glass-card"
               />
               <Card
                 title="Drafts Approved"
@@ -361,7 +361,7 @@ export default function ReportPage() {
                 subtitle="human-approved AI responses"
                 accent="text-nexus-approval"
                 icon={<FileText className="text-nexus-approval" />}
-                className="surface-card"
+                className="app-glass-card"
               />
             </section>
 
@@ -382,7 +382,7 @@ export default function ReportPage() {
 
             <section
               aria-labelledby="conversation-breakdown"
-              className="overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card"
+              className="app-glass-card overflow-hidden rounded-xl"
             >
               <div className="flex flex-col gap-3 hairline-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -409,7 +409,7 @@ export default function ReportPage() {
 
               <div className="overflow-x-auto">
                 <table className="min-w-full text-base">
-                  <thead className="bg-surface-card">
+                  <thead className="bg-glass/60">
                     <tr className="hairline-b">
                       {[
                         ["customer_name", "Customer"],
@@ -516,7 +516,7 @@ export default function ReportPage() {
             title="No report generated yet today."
             description="Reports are generated daily at 9 AM."
             icon={<Clock className="shrink-0" aria-hidden />}
-            className="surface-card"
+            className="app-glass-card"
           />
         )}
       </div>

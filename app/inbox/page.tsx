@@ -359,9 +359,9 @@ function InboxPageContent() {
         </p>
       ) : null}
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-      <aside className="flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
+      <aside className="app-glass-card flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl">
         <div className="shrink-0 px-3 pt-3 pb-2">
-          <div className="rounded-xl border border-selectable-edge bg-surface-muted p-4 dark:bg-surface-muted">
+          <div className="glass-pill rounded-xl p-4">
             <p className="nexus-meta text-muted">
               Revenue at Risk
             </p>
@@ -392,7 +392,7 @@ function InboxPageContent() {
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
                       active
                         ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
-                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
+                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
                     )}
                   >
                     {opt.label}
@@ -401,7 +401,7 @@ function InboxPageContent() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {count}
@@ -428,7 +428,7 @@ function InboxPageContent() {
                       "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
                       active
                         ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
-                        : "border-selectable-edge bg-surface-card text-slate-600 hover:border-selectable-edge-hover hover:bg-surface-muted dark:text-slate-300",
+                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
                     )}
                   >
                     {opt.label}
@@ -437,7 +437,7 @@ function InboxPageContent() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "border-selectable-edge bg-surface-muted font-medium text-slate-700 dark:text-slate-200",
+                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
                       )}
                     >
                       {pillCount}
@@ -456,7 +456,7 @@ function InboxPageContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Name or message…"
-              className="h-11 w-full rounded-xl border border-border bg-surface-input px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta dark:border-border dark:focus:border-border-strong dark:focus:ring-border-strong"
+              className="glass-input h-11 w-full px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
             />
           </div>
         </div>
@@ -498,10 +498,10 @@ function InboxPageContent() {
                       className={cn(
                         "w-full cursor-pointer rounded-xl p-3 text-left transition-colors duration-interaction",
                         selected
-                          ? "border border-selectable-edge-selected bg-ref-ice dark:bg-surface-muted"
-                          : "border border-selectable-edge bg-white dark:bg-surface-elevated",
+                          ? "glass-pill border-glass-border bg-glass"
+                          : "glass-pill border-glass-border bg-glass/50",
                         !selected &&
-                          "hover:bg-ref-mint dark:hover:bg-surface-muted hover:border-selectable-edge-hover",
+                          "hover:bg-glass/70 hover:border-glass-border",
                       )}
                     >
                       <div className="flex items-start gap-3">
@@ -553,7 +553,7 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
+      <section className="app-glass-card flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl">
         {!selectedConversation ? (
           !queriesEnabled && tenant.ready ? (
             <ExecutiveEmptyState
@@ -600,7 +600,7 @@ function InboxPageContent() {
                     <button
                       type="button"
                       onClick={() => setOpenInboxConfirm(true)}
-                      className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-selectable-edge bg-surface-input px-4 py-2 text-[13px] font-medium text-foreground transition-colors duration-interaction hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval"
+                      className="glass-pill inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-medium text-foreground transition-colors duration-interaction hover:bg-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval"
                     >
                       <ExternalLink className="h-4 w-4" aria-hidden />
                       Open in {externalInboxLabel(selectedConversation.source)}
@@ -635,11 +635,11 @@ function InboxPageContent() {
               </div>
             ) : null}
 
-            <div className="mb-6 rounded-xl border border-selectable-edge bg-surface-input p-4 font-mono text-sm leading-relaxed text-atmospheric-grey">
+            <div className="glass-pill mb-6 rounded-xl p-4 font-mono text-sm leading-relaxed text-atmospheric-grey">
               {conversationMessageText(selectedConversation)}
             </div>
 
-            <div className="mb-6 rounded-xl border border-selectable-edge bg-white p-4 dark:bg-surface-elevated">
+            <div className="glass-pill mb-6 rounded-xl p-4">
               <h2 className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
                 Classification
               </h2>
@@ -655,7 +655,7 @@ function InboxPageContent() {
                   label={`Urgency: ${urgencyBadgeLabel(selectedConversation.urgency)}`}
                 />
               </div>
-              <div className="mt-6 rounded-lg border border-selectable-edge bg-surface-muted/90 p-4 dark:bg-surface-muted/60">
+              <div className="glass-pill mt-6 rounded-lg p-4">
                 <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-medium text-muted">Risk score</p>
@@ -739,7 +739,7 @@ function InboxPageContent() {
 
         {openInboxConfirm && selectedConversation && externalInboxUrl ? (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/65 p-4">
-            <div className="w-full max-w-lg rounded-xl border border-border bg-surface-elevated p-6 dark:border-border/60">
+            <div className="app-glass-card w-full max-w-lg rounded-xl p-6">
               <h2 className="text-lg font-semibold text-foreground">
                 Open in {externalInboxLabel(selectedConversation.source)}?
               </h2>
@@ -752,7 +752,7 @@ function InboxPageContent() {
                 <button
                   type="button"
                   onClick={() => setOpenInboxConfirm(false)}
-                  className="inline-flex min-h-11 items-center rounded-xl border border-selectable-edge px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+                  className="glass-pill inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-sm font-medium text-foreground hover:bg-glass"
                 >
                   Cancel
                 </button>

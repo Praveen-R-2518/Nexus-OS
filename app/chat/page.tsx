@@ -191,11 +191,11 @@ export default function ChatPage() {
         </p>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-selectable-edge bg-white dark:bg-surface-card">
+      <div className="app-glass-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
           {isEmpty ? (
             <div className="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
-              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-selectable-edge bg-surface-muted text-nexus-discovery">
+              <span className="glass-pill mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-nexus-discovery">
                 <MessageSquare className="h-6 w-6" aria-hidden />
               </span>
               <h2 className="text-lg font-semibold text-foreground">
@@ -211,7 +211,7 @@ export default function ChatPage() {
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-selectable-edge bg-surface-input px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted"
+                    className="glass-pill inline-flex min-h-11 cursor-pointer items-center rounded-xl px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-glass"
                   >
                     {s}
                   </button>
@@ -232,8 +232,8 @@ export default function ChatPage() {
                     className={cn(
                       "max-w-[80%] whitespace-pre-wrap rounded-xl px-4 py-3 text-sm leading-relaxed",
                       m.role === "user"
-                        ? "border border-selectable-edge-selected bg-ref-ice text-atmospheric-grey dark:bg-surface-muted"
-                        : "border border-selectable-edge bg-surface-input text-atmospheric-grey",
+                        ? "glass-pill border-glass-border bg-glass text-atmospheric-grey"
+                        : "glass-pill border-glass-border bg-glass/70 text-atmospheric-grey",
                     )}
                   >
                     {m.content ||
@@ -257,7 +257,7 @@ export default function ChatPage() {
         ) : null}
 
         <form
-          className="flex shrink-0 items-end gap-2 border-t border-selectable-edge p-3"
+          className="flex shrink-0 items-end gap-2 border-t border-glass-border p-3"
           onSubmit={(e) => {
             e.preventDefault();
             void send(input);
@@ -274,7 +274,7 @@ export default function ChatPage() {
             }}
             rows={1}
             placeholder="Ask what's at risk, who to reply to first…"
-            className="max-h-40 min-h-11 flex-1 resize-none rounded-xl border border-border bg-surface-input px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted focus:border-ref-cta focus:ring-1 focus:ring-ref-cta"
+            className="glass-input max-h-40 min-h-11 flex-1 resize-none px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
           />
           <button
             type="submit"
