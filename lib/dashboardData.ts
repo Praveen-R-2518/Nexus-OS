@@ -52,17 +52,6 @@ export type FollowupRow = {
   created_at: string;
 };
 
-export type WorkflowLogRow = {
-  id: string;
-  workflow_name: string;
-  step: string;
-  result: string;
-  payload: Record<string, unknown>;
-  error: string | null;
-  timestamp: string;
-  created_at?: string;
-};
-
 export type DailyReportRow = {
   id: string;
   date?: string;
@@ -83,7 +72,6 @@ export type DashboardSnapshot = {
   leads: LeadRow[];
   drafts: ReplyDraftRow[];
   followups: FollowupRow[];
-  logs: WorkflowLogRow[];
   reports: DailyReportRow[];
   errors: string[];
 };
@@ -93,7 +81,6 @@ export const emptyDashboardSnapshot: DashboardSnapshot = {
   leads: [],
   drafts: [],
   followups: [],
-  logs: [],
   reports: [],
   errors: [],
 };
@@ -101,34 +88,53 @@ export const emptyDashboardSnapshot: DashboardSnapshot = {
 type QueryError = { message: string } | null;
 
 function errorMessages(errors: QueryError[]) {
-  return errors.filter((error): error is { message: string } => Boolean(error)).map((error) => error.message);
+  return errors
+    .filter((error): error is { message: string } => Boolean(error))
+    .map((error) => error.message);
 }
 
-export async function fetchDashboardSnapshot(supabase: SupabaseClient): Promise<DashboardSnapshot> {
-
-  const [conversations, leads, drafts, followups, logs, reports] =
-    await Promise.all([
-      supabase.from("conversations").select("*").order("created_at", { ascending: false }).limit(20),
-      supabase.from("leads").select("*").order("updated_at", { ascending: false }).limit(20),
-      supabase.from("reply_drafts").select("*").order("created_at", { ascending: false }).limit(20),
-      supabase.from("followups").select("*").order("scheduled_for", { ascending: true }).limit(20),
-      supabase.from("workflow_logs").select("*").order("timestamp", { ascending: false }).limit(30),
-      supabase.from("daily_reports").select("*").order("created_at", { ascending: false }).limit(7),
-    ]);
+export async function fetchDashboardSnapshot(
+  supabase: SupabaseClient,
+): Promise<DashboardSnapshot> {
+  const [conversations, leads, drafts, followups, reports] = await Promise.all([
+    supabase
+      .from("conversations")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("leads")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("reply_drafts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("followups")
+      .select("*")
+      .order("scheduled_for", { ascending: true })
+      .limit(20),
+    supabase
+      .from("daily_reports")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(7),
+  ]);
 
   return {
     conversations: (conversations.data || []) as ConversationRow[],
     leads: (leads.data || []) as LeadRow[],
     drafts: (drafts.data || []) as ReplyDraftRow[],
     followups: (followups.data || []) as FollowupRow[],
-    logs: (logs.data || []) as WorkflowLogRow[],
     reports: (reports.data || []) as DailyReportRow[],
     errors: errorMessages([
       conversations.error,
       leads.error,
       drafts.error,
       followups.error,
-      logs.error,
       reports.error,
     ]),
   };

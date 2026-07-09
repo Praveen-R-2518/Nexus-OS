@@ -49,8 +49,8 @@ export function Card({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-white p-6 sm:p-7 dark:border-border dark:bg-surface-card",
-        isCritical ? "border-border dark:border-border" : "",
+        "relative overflow-hidden rounded-xl app-glass-card p-6 sm:p-7",
+        isCritical ? "border-glass-border" : "",
         className,
       )}
     >

@@ -98,6 +98,23 @@
     --apple-link: var(--nexus-approval);
     --apple-cinematic: #000000;
     --apple-hairline: rgba(0, 0, 0, 0.1);
+
+    /* App glass dashboard (light) */
+    --glass-bg: rgba(255, 255, 255, 0.48);
+    --glass-border: rgba(15, 23, 42, 0.09);
+    --glass-blur: 20px;
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    --glass-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+    --glass-gradient-start: rgba(255, 255, 255, 0.42);
+    --glass-gradient-end: rgba(255, 255, 255, 0.12);
+    --app-orb-1: rgba(253, 159, 159, 0.35);
+    --app-orb-2: rgba(18, 116, 249, 0.22);
+    --app-orb-3: rgba(139, 80, 251, 0.2);
+    --app-sidebar-bg: rgba(255, 255, 255, 0.52);
+    --app-sidebar-border: rgba(15, 23, 42, 0.08);
+    --app-sidebar-nav-active: #0a0f0c;
+    --app-sidebar-nav-inactive: rgba(10, 15, 12, 0.46);
+    --glass-input-bg: rgba(255, 255, 255, 0.72);
   }
 
   html:not(.dark) .logo-nexus,
@@ -128,6 +145,10 @@
     --selectable-card-border: rgba(10, 15, 12, 0.12);
     --selectable-card-border-selected: rgb(0, 0, 0);
     --selectable-card-border-hover: rgba(10, 15, 12, 0.25);
+    --app-sidebar-bg: rgba(255, 255, 255, 0.52);
+    --app-sidebar-border: rgba(15, 23, 42, 0.08);
+    --app-sidebar-nav-active: #0a0f0c;
+    --app-sidebar-nav-inactive: rgba(10, 15, 12, 0.46);
   }
 
   .dark {
@@ -193,6 +214,23 @@
     .logo-os {
       color: var(--text-secondary);
     }
+
+    /* App glass dashboard (dark) */
+    --glass-bg: rgba(255, 255, 255, 0.045);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-blur: 20px;
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+    --glass-gradient-start: rgba(255, 255, 255, 0.07);
+    --glass-gradient-end: rgba(255, 255, 255, 0.015);
+    --app-orb-1: rgba(253, 114, 1, 0.18);
+    --app-orb-2: rgba(18, 116, 249, 0.15);
+    --app-orb-3: rgba(139, 80, 251, 0.14);
+    --app-sidebar-bg: rgba(18, 18, 18, 0.58);
+    --app-sidebar-border: rgba(255, 255, 255, 0.08);
+    --app-sidebar-nav-active: #ffffff;
+    --app-sidebar-nav-inactive: rgba(255, 255, 255, 0.42);
+    --glass-input-bg: rgba(255, 255, 255, 0.06);
   }
 
   body {
@@ -247,16 +285,169 @@
   }
 
   .glass-panel {
-    background-color: var(--surface-card);
-    border: 1px solid var(--border-strong);
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--glass-border);
     border-radius: 0.75rem;
-    box-shadow: none;
-    backdrop-filter: none;
+    background: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--glass-gradient-start) 88%, var(--glass-bg)) 0%,
+      var(--glass-bg) 42%,
+      color-mix(in srgb, var(--glass-gradient-end) 70%, transparent) 100%
+    );
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   }
-  .dark .glass-panel {
-    background-color: var(--surface-card);
-    border-color: var(--border-strong);
-    backdrop-filter: none;
+  .glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: var(--glass-highlight);
+  }
+
+  .app-glass-card {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--glass-border);
+    border-radius: 0.75rem;
+    background: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--glass-gradient-start) 88%, var(--glass-bg)) 0%,
+      var(--glass-bg) 42%,
+      color-mix(in srgb, var(--glass-gradient-end) 70%, transparent) 100%
+    );
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow: var(--glass-shadow);
+  }
+  .app-glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 120% 80% at 50% -20%,
+      var(--glass-gradient-start),
+      transparent 58%
+    );
+    box-shadow: var(--glass-highlight);
+  }
+  .app-glass-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .app-shell-bg {
+    position: relative;
+    background-color: var(--surface-page);
+    overflow-x: hidden;
+  }
+  .app-shell-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 55% 45% at 12% 18%,
+        var(--app-orb-1),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 88% 12%,
+        var(--app-orb-2),
+        transparent 68%
+      ),
+      radial-gradient(
+        ellipse 45% 50% at 72% 88%,
+        var(--app-orb-3),
+        transparent 72%
+      );
+    filter: blur(48px);
+  }
+  .app-shell-bg > * {
+    position: relative;
+    z-index: 1;
+  }
+  .app-shell-bg > .app-sidebar,
+  .app-shell-bg > .app-sidebar-mobile-trigger {
+    position: fixed;
+  }
+
+  .app-sidebar {
+    isolation: isolate;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-sidebar-bg) 92%, var(--glass-gradient-start)) 0%,
+      var(--app-sidebar-bg) 55%,
+      color-mix(in srgb, var(--app-sidebar-bg) 88%, transparent) 100%
+    );
+    border-right: 1px solid var(--app-sidebar-border);
+    border-radius: 0;
+    box-shadow: none;
+    height: 100svh;
+    min-height: 100svh;
+    max-height: 100svh;
+    backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+  }
+  .app-sidebar-inner {
+    position: relative;
+    z-index: 1;
+    min-height: 0;
+  }
+  .app-sidebar-nav-link {
+    color: var(--app-sidebar-nav-inactive);
+  }
+  .app-sidebar-nav-link:hover {
+    color: color-mix(in srgb, var(--app-sidebar-nav-active) 78%, transparent);
+  }
+  .app-sidebar-nav-link[data-active="true"] {
+    color: var(--app-sidebar-nav-active);
+  }
+  .app-sidebar-chrome-btn {
+    color: var(--app-sidebar-nav-inactive);
+  }
+  .app-sidebar-chrome-btn:hover {
+    color: var(--app-sidebar-nav-active);
+    background: color-mix(in srgb, var(--app-sidebar-nav-active) 7%, transparent);
+  }
+  .app-sidebar-theme-toggle {
+    color: var(--app-sidebar-nav-inactive);
+    background: color-mix(in srgb, var(--app-sidebar-nav-active) 6%, transparent);
+    border: 1px solid var(--app-sidebar-border);
+  }
+  .app-sidebar-theme-toggle:hover {
+    color: var(--app-sidebar-nav-active);
+    background: color-mix(in srgb, var(--app-sidebar-nav-active) 10%, transparent);
+  }
+  .app-sidebar .logo-nexus {
+    color: var(--app-sidebar-nav-active);
+  }
+  .app-sidebar .logo-os {
+    color: color-mix(in srgb, var(--ref-cta) 88%, var(--app-sidebar-nav-active));
+  }
+  .dark .app-sidebar .logo-os {
+    color: color-mix(in srgb, var(--app-sidebar-nav-active) 62%, transparent);
+  }
+  .nexus-app-shell .surface-card {
+    border-color: var(--glass-border);
+    background: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--glass-gradient-start) 88%, var(--glass-bg)) 0%,
+      var(--glass-bg) 42%,
+      color-mix(in srgb, var(--glass-gradient-end) 70%, transparent) 100%
+    );
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    box-shadow: var(--glass-shadow);
   }
 
   .landing-glass-card {
@@ -277,19 +468,36 @@
   }
 
   .glass-input {
-    background: var(--surface-input);
-    border: 1px solid var(--border-strong);
+    background: var(--glass-input-bg);
+    border: 1px solid var(--glass-border);
     border-radius: 0.75rem;
     color: var(--foreground);
-    backdrop-filter: none;
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
   }
   .glass-input:focus {
     border-color: var(--ref-cta);
-    background: var(--surface-input);
+    background: var(--glass-input-bg);
     outline: none;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ref-cta) 35%, transparent);
   }
   .dark .glass-input:focus {
-    border-color: var(--border-strong);
+    border-color: var(--nexus-approval);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--nexus-approval) 40%, transparent);
+  }
+
+  .glass-pill {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+  }
+
+  .glass-skeleton {
+    background: color-mix(in srgb, var(--glass-bg) 60%, transparent);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .space-bg {

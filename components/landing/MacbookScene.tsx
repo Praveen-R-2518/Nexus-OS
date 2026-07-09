@@ -3,7 +3,12 @@
 import { Suspense, useLayoutEffect } from "react";
 import type { CSSProperties } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, PerspectiveCamera } from "@react-three/drei";
+import {
+  ContactShadows,
+  Environment,
+  Lightformer,
+  PerspectiveCamera,
+} from "@react-three/drei";
 import {
   MacbookModel,
   MACBOOK_MODEL_PATH,
@@ -19,10 +24,13 @@ useGLTF.preload(MACBOOK_MODEL_PATH);
 
 const CAMERA_START = new THREE.Vector3(0, 1.2, 38);
 const CAMERA_PRESENTATION = new THREE.Vector3(0, 2.2, 36);
-const CAMERA_PRODUCT = new THREE.Vector3(0, -13.15, 47);
+// Product shot: camera and look-at share the same y (screen-center height)
+// so the view ray is horizontal and perpendicular to the 90°-open screen —
+// the display renders as a true parallel rectangle, no keystone.
+const CAMERA_PRODUCT = new THREE.Vector3(0, -8.3, 47);
 const LOOK_AT_START = new THREE.Vector3(0, -10.6, 20);
 const LOOK_AT_PRESENTATION = new THREE.Vector3(0, -10.2, 20);
-const LOOK_AT_PRODUCT = new THREE.Vector3(0, -8.7, 20.8);
+const LOOK_AT_PRODUCT = new THREE.Vector3(0, -8.3, 19.4);
 
 type MacbookSceneProps = {
   progress: number;
@@ -72,42 +80,49 @@ function SceneContent({ progress }: { progress: number }) {
     <>
       <PerspectiveCamera makeDefault position={[0, 1.2, 38]} fov={34} />
       <CameraRig progress={progress} />
-      <ambientLight intensity={0.65} />
+      {/* Product-studio rig: one coherent softbox environment instead of
+          stacked point sources. Space Black aluminum reads as metal only via
+          the long bright rim reflections from the side strips. */}
+      <Environment resolution={256}>
+        <Lightformer
+          intensity={4}
+          rotation-x={Math.PI / 2}
+          position={[0, 6, 0]}
+          scale={[10, 10, 1]}
+        />
+        <Lightformer
+          intensity={3}
+          rotation-y={Math.PI / 2}
+          position={[-6, 1, 0]}
+          scale={[16, 0.8, 1]}
+        />
+        <Lightformer
+          intensity={3}
+          rotation-y={-Math.PI / 2}
+          position={[6, 1, 0]}
+          scale={[16, 0.8, 1]}
+        />
+        <Lightformer
+          color="#dfe8ff"
+          intensity={1.2}
+          rotation-y={Math.PI}
+          position={[0, 2, 9]}
+          scale={[12, 5, 1]}
+        />
+      </Environment>
       <directionalLight
-        position={[6, 12, 14]}
-        intensity={2.1}
+        position={[4, 10, 6]}
+        intensity={0.7}
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      <directionalLight position={[-8, 6, -6]} intensity={0.7} color="#d8e6ff" />
-      <directionalLight position={[0, 4, -10]} intensity={0.5} color="#ffffff" />
-      <directionalLight
-        position={[-10, 2, 12]}
-        intensity={0.85}
-        color="#e8edf5"
-      />
-      <spotLight
-        position={[0, 14, 10]}
-        angle={0.45}
-        penumbra={0.85}
-        intensity={0.9}
-        castShadow
-      />
-      <spotLight
-        position={[8, 0, 18]}
-        angle={0.35}
-        penumbra={0.9}
-        intensity={0.55}
-        color="#ffffff"
-      />
-      <Environment preset="city" />
       <MacbookModel progress={progress} />
       <ContactShadows
         position={[0, -13.2, 20]}
-        opacity={0.55}
-        scale={14}
-        blur={2.2}
-        far={5}
+        opacity={0.4}
+        scale={16}
+        blur={2.8}
+        far={6}
       />
     </>
   );

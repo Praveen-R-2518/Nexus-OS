@@ -113,12 +113,13 @@ export function computeMacbookRotationY(p: number): number {
   return lerp(presentationYaw, 0, productView);
 }
 
-/** Pitch the whole MacBook toward the screenshot-like screen-forward angle. */
+/** Pitch the whole MacBook toward the screen-forward angle; the product
+ *  view ends at exactly 0 so the 90°-open screen is parallel to the viewport. */
 export function computeMacbookRotationX(p: number): number {
   const presentation = computeMacbookPresentation(p);
   const productView = computeProductView(p);
   const presentationPitch = lerp(0, THREE_DEG_TO_RAD * -6, presentation);
-  return lerp(presentationPitch, THREE_DEG_TO_RAD * 1.8, productView);
+  return lerp(presentationPitch, 0, productView);
 }
 
 export function computeMacbookScale(p: number): number {

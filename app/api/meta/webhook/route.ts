@@ -8,7 +8,6 @@ import {
 } from "@/lib/inbound-events";
 import { extractMetaRoute, resolveMetaTenant } from "@/lib/meta-tenant";
 import { extractMessages, verifyMetaSignature } from "./parse";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,48 +44,6 @@ async function forwardToN8n(payload: unknown): Promise<ForwardOutcome> {
   } catch (err) {
     console.error("[meta/webhook] n8n forward error:", err);
     return "failed";
-  }
-}
-
-/** Best-effort audit trail for a dropped/deferred forward. Never throws. */
-async function logForwardFailure(
-  supabase: SupabaseClient,
-  outcome: ForwardOutcome,
-  eventCount: number,
-): Promise<void> {
-  try {
-    await supabase.from("workflow_logs").insert({
-      workflow_name: "meta_webhook",
-      step: "forward_to_n8n",
-      result: outcome === "skipped" ? "skipped" : "error",
-      payload: { event_count: eventCount, outcome },
-      error:
-        outcome === "skipped"
-          ? "N8N_WEBHOOK_BASE_URL not configured; events left as received for retry"
-          : "n8n forward failed; events left as received for retry",
-    });
-  } catch (err) {
-    console.error("[meta/webhook] failed to write workflow_logs:", err);
-  }
-}
-
-/** Best-effort breadcrumb for an inbound event whose tenant could not be resolved. Never throws. */
-async function logTenantUnresolved(
-  supabase: SupabaseClient,
-  eventCount: number,
-  platform: string | null,
-  routingKey: string | null,
-): Promise<void> {
-  try {
-    await supabase.from("workflow_logs").insert({
-      workflow_name: "meta_webhook",
-      step: "resolve_tenant",
-      result: "error",
-      payload: { event_count: eventCount, platform, routing_key: routingKey },
-      error: "tenant_unresolved",
-    });
-  } catch (err) {
-    console.error("[meta/webhook] failed to write tenant_unresolved log:", err);
   }
 }
 
@@ -191,12 +148,6 @@ export async function POST(request: Request) {
     // Unmatched routing key (or none). Durably store as `failed` for inspection, log a breadcrumb,
     // and do NOT forward — but still ack so Meta does not hammer us with redeliveries.
     await markInboundEventsStatus(supabase, newIds, "failed", "tenant_unresolved");
-    await logTenantUnresolved(
-      supabase,
-      newIds.length,
-      route?.platform ?? null,
-      route?.routingKey ?? null,
-    );
     return NextResponse.json(
       { status: "tenant_unresolved", recorded: newIds.length },
       { status: 200 },
@@ -230,7 +181,13 @@ export async function POST(request: Request) {
       "received",
       outcome === "skipped" ? "n8n not configured" : "n8n forward failed",
     );
-    await logForwardFailure(supabase, outcome, newIds.length);
+    if (outcome === "skipped") {
+      console.warn(
+        "[meta/webhook] N8N_WEBHOOK_BASE_URL not configured; events left for later retry",
+      );
+    } else {
+      console.error("[meta/webhook] n8n forward failed; events left for later retry");
+    }
   }
 
   return NextResponse.json(

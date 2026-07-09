@@ -5,7 +5,6 @@ import {
   dailyReportQuery,
   metricsQuery,
   replyDraftsQuery,
-  workflowLogsWithMetaQuery,
 } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 
@@ -71,13 +70,5 @@ export function prefetchNavRoute(
       staleTime: STALE,
     });
     return;
-  }
-
-  if (href === "/logs" || href.startsWith("/logs")) {
-    void queryClient.prefetchQuery({
-      queryKey: queryKeys.workflowLogs(teamId, ""),
-      queryFn: () => workflowLogsWithMetaQuery(),
-      staleTime: STALE,
-    });
   }
 }
