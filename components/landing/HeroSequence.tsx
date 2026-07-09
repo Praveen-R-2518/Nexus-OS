@@ -139,6 +139,17 @@ function HeroSequenceAnimated() {
           style={{ opacity: Math.min(1, macbookEnter * 1.35) }}
         />
 
+        {/* Stage glow: Space Black needs a faintly lit backdrop to
+            silhouette against, or its edges dissolve into the page black. */}
+        <div
+          className="pointer-events-none absolute inset-0 will-change-opacity"
+          style={{
+            opacity: macbookEnter,
+            background:
+              "radial-gradient(ellipse 62% 48% at 50% 60%, rgba(96, 116, 152, 0.17), rgba(96, 116, 152, 0.05) 55%, transparent 74%)",
+          }}
+        />
+
         <div
           className="pointer-events-none absolute inset-0 z-20 flex transform-gpu flex-col items-center justify-center px-4 text-center will-change-transform"
           style={{
