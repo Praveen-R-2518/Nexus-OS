@@ -252,7 +252,7 @@ export function CommsCards({ progress, className }: CommsCardsProps) {
           return (
             <motion.div
               key={id}
-              className={cn("absolute max-w-[210px]", pos)}
+              className={cn("absolute max-w-[210px] transform-gpu will-change-transform", pos)}
               style={{
                 opacity: reveal,
                 transform: `translateY(${(1 - reveal) * 28}px) scale(${0.9 + reveal * 0.06}) rotate(${rotate * reveal}deg)`,

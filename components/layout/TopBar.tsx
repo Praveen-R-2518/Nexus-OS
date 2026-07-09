@@ -30,7 +30,9 @@ const marketingLinks = [
 function marketingNavLinkClass(active: boolean) {
   return cn(
     "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 text-[13px] font-medium tracking-normal transition-opacity duration-interaction",
-    active ? "text-apple-text" : "text-apple-text/75 hover:text-apple-text",
+    active
+      ? "text-apple-text dark:text-white"
+      : "text-apple-text/75 hover:text-apple-text dark:text-white/70 dark:hover:text-white",
   );
 }
 

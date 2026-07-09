@@ -16,8 +16,16 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
 
     const lenis = new Lenis({
       smoothWheel: true,
-      wheelMultiplier: 0.85,
-      touchMultiplier: 1.35,
+      lerp: 0.075,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.15,
+      syncTouch: true,
+      syncTouchLerp: 0.08,
+      touchInertiaExponent: 1.6,
+      anchors: {
+        duration: 1.05,
+        easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
+      },
     });
 
     let rafId = 0;

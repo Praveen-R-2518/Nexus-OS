@@ -70,7 +70,7 @@ export function HeroSequenceStatic() {
 }
 
 const PROGRESS_EPSILON = 1e-4;
-const PROGRESS_LERP = 0.2;
+const PROGRESS_LERP = 0.16;
 
 /** Scroll progress for a tall pinned section — works with Lenis and avoids useScroll ref hydration issues. */
 function usePinnedScrollProgress(containerRef: React.RefObject<HTMLElement | null>) {
@@ -128,19 +128,19 @@ function HeroSequenceAnimated() {
     >
       <div className="sticky top-11 h-[calc(100svh-44px)] w-full overflow-hidden">
         <div
-          className="absolute inset-0 bg-apple-bg"
+          className="absolute inset-0 bg-apple-bg will-change-opacity"
           style={{ opacity: Math.max(0, 1 - macbookEnter * 1.15) }}
         >
           <AmbientBackground />
         </div>
 
         <div
-          className="absolute inset-0 bg-apple-cinematic"
+          className="absolute inset-0 bg-apple-cinematic will-change-opacity"
           style={{ opacity: Math.min(1, macbookEnter * 1.35) }}
         />
 
         <div
-          className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-4 text-center"
+          className="pointer-events-none absolute inset-0 z-20 flex transform-gpu flex-col items-center justify-center px-4 text-center will-change-transform"
           style={{
             opacity: heroOpacity,
             transform: `translateY(${heroY}px)`,
@@ -163,7 +163,7 @@ function HeroSequenceAnimated() {
         <div className="absolute inset-0 z-10">
           <MacbookScene
             progress={progress}
-            className="h-full w-full"
+            className="h-full w-full transform-gpu will-change-opacity"
             style={{ opacity: macbookVisibility }}
           />
         </div>

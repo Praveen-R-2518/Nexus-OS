@@ -106,10 +106,10 @@ export default function CustomersPage() {
         <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
           Customers
         </p>
-        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey">
+        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey dark:text-white">
           Revenue teams that stopped losing deals
         </h1>
-        <p className="mt-5 max-w-2xl nexus-body text-muted">
+        <p className="mt-5 max-w-2xl nexus-body text-muted dark:text-slate-300">
           From solo founders to 120-seat operations, teams use Nexus OS to
           intercept churn, route hot leads, and reclaim hours every week.
         </p>
@@ -131,10 +131,10 @@ export default function CustomersPage() {
                 <p className="mt-5 text-4xl font-bold tabular-nums tracking-tight text-status-positive">
                   {stat.value}
                 </p>
-                <p className="mt-2 text-sm font-semibold text-atmospheric-grey">
+                <p className="mt-2 text-sm font-semibold text-atmospheric-grey dark:text-white">
                   {stat.label}
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+                <p className="mt-2 text-sm leading-relaxed text-muted dark:text-slate-300">
                   {stat.desc}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export default function CustomersPage() {
 
       <div className="space-y-6 py-12">
         <ScrollReveal>
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
             Case studies
           </h2>
         </ScrollReveal>
@@ -166,20 +166,20 @@ export default function CustomersPage() {
           {caseStudies.map((cs, i) => (
             <ScrollReveal key={cs.company} delay={i * 0.08} className="h-full">
               <article className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35 dark:hover:bg-[#1f1f1f]">
-                <h3 className="font-sans text-xl font-semibold tracking-tight text-atmospheric-grey">
+                <h3 className="font-sans text-xl font-semibold tracking-tight text-atmospheric-grey dark:text-white">
                   {cs.company}
                 </h3>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted">
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted dark:text-slate-400">
                   {cs.segment}
                 </p>
                 <p className="mt-5 text-sm leading-relaxed text-muted dark:text-slate-300">
-                  <span className="font-semibold text-atmospheric-grey">
+                  <span className="font-semibold text-atmospheric-grey dark:text-white">
                     Challenge.{" "}
                   </span>
                   {cs.challenge}
                 </p>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-muted dark:text-slate-300">
-                  <span className="font-semibold text-atmospheric-grey">
+                  <span className="font-semibold text-atmospheric-grey dark:text-white">
                     Outcome.{" "}
                   </span>
                   {cs.outcome}
@@ -188,7 +188,7 @@ export default function CustomersPage() {
                   <p className="text-3xl font-bold tabular-nums tracking-tight text-status-positive">
                     {cs.metric}
                   </p>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted">
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted dark:text-slate-400">
                     {cs.metricLabel}
                   </p>
                 </div>
@@ -212,8 +212,8 @@ export default function CustomersPage() {
               >
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
-              <figcaption className="mt-8 font-mono text-xs uppercase tracking-[0.2em] text-muted">
-                <span className="text-atmospheric-grey">{t.name}</span> — {t.role}
+              <figcaption className="mt-8 font-mono text-xs uppercase tracking-[0.2em] text-muted dark:text-slate-400">
+                <span className="text-atmospheric-grey dark:text-white">{t.name}</span> — {t.role}
               </figcaption>
             </figure>
           </ScrollReveal>
@@ -223,10 +223,10 @@ export default function CustomersPage() {
       <ScrollReveal className="pb-16">
         <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] border border-border bg-white p-10 dark:border-border dark:bg-surface-card md:flex-row md:items-center">
           <div>
-            <h2 className="nexus-section-title text-atmospheric-grey">
+            <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
               Your team could be next
             </h2>
-            <p className="mt-2 max-w-xl text-base leading-relaxed text-muted">
+            <p className="mt-2 max-w-xl text-base leading-relaxed text-muted dark:text-slate-300">
               See how much revenue Nexus OS can rescue for your operation.
             </p>
           </div>

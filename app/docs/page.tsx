@@ -160,10 +160,10 @@ export default function DocsPage() {
         <p className="nexus-meta text-nexus-discovery dark:text-nexus-discovery">
           Documentation
         </p>
-        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey">
+        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey dark:text-white">
           Everything you need to run Nexus OS
         </h1>
-        <p className="mt-5 max-w-2xl nexus-body text-muted">
+        <p className="mt-5 max-w-2xl nexus-body text-muted dark:text-slate-300">
           Guides, concepts, and integration references for the AI revenue-rescue
           engine. Pick a track below or jump straight into the console.
         </p>
@@ -191,7 +191,7 @@ export default function DocsPage() {
           <a
             key={section.id}
             href={`#${section.id}`}
-            className="text-sm font-medium text-muted transition-colors hover:text-atmospheric-grey"
+            className="text-sm font-medium text-muted transition-colors hover:text-atmospheric-grey dark:text-slate-300 dark:hover:text-white"
           >
             {section.title}
           </a>
@@ -209,13 +209,13 @@ export default function DocsPage() {
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
                   <div>
-                    <p className="nexus-meta text-muted">
+                    <p className="nexus-meta text-muted dark:text-slate-400">
                       {section.eyebrow}
                     </p>
-                    <h2 className="mt-2 nexus-section-title text-atmospheric-grey">
+                    <h2 className="mt-2 nexus-section-title text-atmospheric-grey dark:text-white">
                       {section.title}
                     </h2>
-                    <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted">
+                    <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted dark:text-slate-300">
                       {section.intro}
                     </p>
                   </div>
@@ -234,7 +234,7 @@ export default function DocsPage() {
                           <span className="inline-flex w-fit rounded-full border border-nexus-discovery-border bg-nexus-discovery-soft px-2.5 py-1 text-xs font-medium text-nexus-discovery dark:border-white/15 dark:bg-white/5 dark:text-white">
                             {link.tag}
                           </span>
-                          <h3 className="mt-5 font-sans text-xl font-semibold leading-tight tracking-tight text-atmospheric-grey">
+                          <h3 className="mt-5 font-sans text-xl font-semibold leading-tight tracking-tight text-atmospheric-grey dark:text-white">
                             {link.title}
                           </h3>
                           <p className="mt-3 flex-1 text-sm leading-relaxed text-muted dark:text-slate-300">
@@ -258,10 +258,10 @@ export default function DocsPage() {
               <GraduationCap className="h-5 w-5" aria-hidden />
             </span>
             <div>
-              <h2 className="nexus-section-title text-atmospheric-grey">
+              <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
                 Ready to put it to work?
               </h2>
-              <p className="mt-2 max-w-xl text-base leading-relaxed text-muted">
+              <p className="mt-2 max-w-xl text-base leading-relaxed text-muted dark:text-slate-300">
                 Spin up a workspace and approve your first AI-drafted reply today.
               </p>
             </div>
