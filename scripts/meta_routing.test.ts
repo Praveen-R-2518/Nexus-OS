@@ -40,11 +40,10 @@ const waFixture = fixture("meta_whatsapp_inbound.json");
 const igFixture = fixture("meta_instagram_inbound.json");
 const fbFixture = fixture("meta_facebook_inbound.json");
 
-// --- In-memory Supabase fake (inbound_events + workflow_logs + business_profiles) ----------------
+// --- In-memory Supabase fake (inbound_events + business_profiles) ----------------
 type Row = Record<string, unknown> & { id: string };
 const store: Record<string, Row[]> = {
   inbound_events: [],
-  workflow_logs: [],
   business_profiles: [],
 };
 let rowSeq = 0;
@@ -251,7 +250,6 @@ const require = createRequire(import.meta.url);
   assert(forwards.length === forwardsBefore, "unresolved tenant must NOT forward to n8n");
   const igRow = store.inbound_events.find((r) => r.platform === "instagram");
   assert(igRow?.status === "failed" && igRow?.error === "tenant_unresolved", "inbound row failed=tenant_unresolved");
-  assert(store.workflow_logs.some((l) => l.step === "resolve_tenant" && l.error === "tenant_unresolved"), "tenant_unresolved breadcrumb logged");
 
   // E2. Matching business_profiles → tenant stamped + enriched forward.
   store.business_profiles.push({ id: "bp_1", team_id: TEAM_WA, workspace_id: WS_WA, wa_phone_number_id: "109999888777666" });

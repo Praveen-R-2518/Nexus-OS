@@ -16,7 +16,6 @@ const REQUIRED_COLUMNS = {
   leads: ["id", "team_id", "workspace_id", "conversation_id"],
   reply_drafts: ["id", "team_id", "workspace_id", "conversation_id"],
   followups: ["id", "team_id", "workspace_id", "conversation_id"],
-  workflow_logs: ["id", "team_id", "workspace_id"],
   daily_reports: ["id", "team_id", "workspace_id"],
   invitations: ["id", "team_id", "email", "status"],
 };

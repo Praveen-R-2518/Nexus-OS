@@ -113,12 +113,12 @@ Five-stage pipeline from inbox to send:
 | Stage | System | What happens |
 |-------|--------|----------------|
 | **1. Intake** | `WF0a Gmail Intake` | IMAP or webhook receives mail → tenant routing via `business_profiles` → normalizer → noise filter → dedup → conversation row in Supabase |
-| **2. Classification** | `WF2 - AI Classification` | GPT-4o classifies intent, urgency, revenue risk, churn signals → upserts `leads` + logs to `workflow_logs` |
+| **2. Classification** | `WF2 - AI Classification` | GPT-4o classifies intent, urgency, revenue risk, churn signals → upserts `leads` |
 | **3. Generation** | `WF3 Reply Agent` | Drafts contextual reply → `reply_drafts` with `pending_approval` |
 | **4. Approval** | Next.js `/approval` | Founder reviews, edits, approves or rejects → triggers n8n approval webhook |
 | **5. Sync** | n8n send workflow | Approved drafts dispatch via configured channel; status flows back to `conversations` |
 
-**Real-time path:** Supabase Realtime + React Query keep the Command Center (`/dashboard`), Inbox (`/inbox`), and Logs (`/logs`) current without manual refresh.
+**Real-time path:** Supabase Realtime + React Query keep the Command Center (`/dashboard`) and Inbox (`/inbox`) current without manual refresh.
 
 ---
 
@@ -166,7 +166,6 @@ Five-stage pipeline from inbox to send:
 | `conversations` | Raw inbound messages (`source`: `gmail`, `imap`, `webhook`, …) |
 | `leads` | AI classification output: intent, urgency, `estimated_value`, `risk_score` |
 | `reply_drafts` | Generated replies awaiting approval |
-| `workflow_logs` | Auditable n8n step trail per team |
 | `daily_reports` | Aggregated hours saved / revenue rescued |
 
 **RLS:** Policies scope reads and writes to the authenticated user's `team_id` (via `private.current_team_id()` helpers). API routes add defense-in-depth with `requireApiTenantContext()` before any mutation.
@@ -263,7 +262,7 @@ Open [http://localhost:3000](http://localhost:3000) → complete **signup/onboar
 | Signup shows "We could not send the verification email" | Run `npm run check:auth-email`. If SMTP credentials changed, set the `SUPABASE_SMTP_*` variables locally and run `npm run fix:auth-email`. |
 | IMAP test fails | Set `ENCRYPTION_KEY` (32+ chars); restart `next dev`; verify Gmail app password |
 | n8n writes wrong tenant | Align `NEXUS_GMAIL_DESTINATION_MAILBOX` with `business_profiles.gmail_destination_email` |
-| No dashboard data | Confirm WF0a → WF2 chain executed; check `workflow_logs` in Supabase |
+| No dashboard data | Confirm WF0a → WF2 chain executed; check n8n execution logs in Supabase `conversations` / `leads` |
 | Classification errors | Run `npm run test:classify` with `OPENAI_API_KEY` set |
 
 ---
@@ -371,7 +370,7 @@ Clicking the confirmation email link hits `/auth/callback`, which exchanges the 
 2. Send a test email to your configured Gmail inbox (or POST to the WF0a webhook fixture).
 3. Open **Dashboard** (`/dashboard`) — confirm conversation + lead appear.
 4. Open **Approval** (`/approval`) — review the AI draft.
-5. **Approve** or **Reject** — action logs to `workflow_logs` and triggers n8n when `N8N_WEBHOOK_BASE_URL` is set.
+5. **Approve** or **Reject** — action triggers n8n when `N8N_WEBHOOK_BASE_URL` is set.
 
 ### Dashboard
 

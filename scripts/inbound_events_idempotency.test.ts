@@ -27,7 +27,6 @@ function assert(cond: unknown, msg: string): void {
 type Row = Record<string, unknown> & { id: string };
 const store: Record<string, Row[]> = {
   inbound_events: [],
-  workflow_logs: [],
   // Seeded so the edge tenant resolver matches the waPayload metadata.phone_number_id "PNID1"
   // and the forward path (Task 1 behaviour under test here) is reached.
   business_profiles: [
@@ -207,9 +206,8 @@ function waPayload(messageId: string) {
   assert(store.inbound_events.length === 1, "first delivery persists exactly one row");
   assert(store.inbound_events[0].platform === "whatsapp", "row platform = whatsapp");
   assert(store.inbound_events[0].external_message_id === "wamid.DUP", "row external_message_id");
-  // n8n unconfigured → forward skipped → event left for retry + a workflow_logs breadcrumb.
+  // n8n unconfigured → forward skipped → event left for retry.
   assert(store.inbound_events[0].status === "received", "skipped forward leaves status=received for retry");
-  assert(store.workflow_logs.length === 1, "skipped forward logs to workflow_logs");
 
   // (1) Same (platform, message_id) again → ONE row total + duplicate response.
   const second = await post(POST, JSON.stringify(waPayload("wamid.DUP")));

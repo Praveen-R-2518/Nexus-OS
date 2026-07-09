@@ -3,7 +3,6 @@ import type {
   DailyReport,
   Metrics,
   ReplyDraftWithConversation,
-  WorkflowLog,
 } from "@/types";
 
 function resolveFetchUrl(path: string): string {
@@ -127,50 +126,6 @@ export async function fetchMetrics(): Promise<Metrics> {
     );
   }
   return json.metrics;
-}
-
-export async function fetchWorkflowLogs(): Promise<WorkflowLog[]> {
-  const { logs } = await fetchWorkflowLogsWithMeta();
-  return logs;
-}
-
-export type WorkflowLogsCounts = {
-  success: number;
-  failed: number;
-  running: number;
-};
-
-export type WorkflowLogsWithMeta = {
-  logs: WorkflowLog[];
-  counts: WorkflowLogsCounts;
-  source?: string;
-};
-
-/** GET /api/logs — optional `status` filters by `result` (success | failed | running). */
-export async function fetchWorkflowLogsWithMeta(
-  status?: string,
-): Promise<WorkflowLogsWithMeta> {
-  const params = new URLSearchParams();
-  if (status !== undefined && status !== "") {
-    params.set("status", status);
-  }
-  const qs = params.toString();
-  const json = await requestJson<{
-    logs: WorkflowLog[];
-    counts?: WorkflowLogsCounts;
-    source?: string;
-  }>(`/api/logs${qs ? `?${qs}` : ""}`);
-  if (!Array.isArray(json.logs)) {
-    throw new Error(
-      "fetchWorkflowLogsWithMeta: invalid response shape (expected { logs: WorkflowLog[] })",
-    );
-  }
-  const counts = json.counts ?? {
-    success: 0,
-    failed: 0,
-    running: 0,
-  };
-  return { logs: json.logs, counts, source: json.source };
 }
 
 export async function fetchDailyReport(): Promise<DailyReport | null> {

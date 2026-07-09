@@ -4,15 +4,16 @@ import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutGroup, motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Activity,
   CheckCircle2,
   FileText,
   Inbox,
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Sparkles,
   X,
 } from "lucide-react";
@@ -22,13 +23,14 @@ import { prefetchNavRoute } from "@/lib/queries/nav-prefetch";
 import { useTenantScopeOptional } from "@/components/tenant/TenantScope";
 import { cn } from "@/lib/utils";
 
+const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
+
 const appNav = [
   { href: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { href: "/inbox", label: "Inbox", icon: Inbox },
   { href: "/chat", label: "Revenue Analyst", icon: Sparkles },
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
-  { href: "/logs", label: "Workflow Logs", icon: Activity },
 ] as const;
 
 function isNavActive(pathname: string, href: string): boolean {
@@ -39,9 +41,11 @@ function isNavActive(pathname: string, href: string): boolean {
 }
 
 function SidebarNav({
+  collapsed,
   onNavigate,
   className,
 }: {
+  collapsed?: boolean;
   onNavigate?: () => void;
   className?: string;
 }) {
@@ -50,54 +54,49 @@ function SidebarNav({
   const tenant = useTenantScopeOptional();
 
   return (
-    <nav className={cn("flex flex-col gap-1", className)} aria-label="App">
-      <LayoutGroup id="app-sidebar-nav">
-        {appNav.map(({ href, label, icon: Icon }) => {
-          const active = isNavActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              onClick={onNavigate}
-              onMouseEnter={() => prefetchNavRoute(queryClient, href, tenant)}
-              onFocus={() => prefetchNavRoute(queryClient, href, tenant)}
+    <nav className={cn("flex shrink-0 flex-col gap-0.5", className)} aria-label="App">
+      {appNav.map(({ href, label, icon: Icon }) => {
+        const active = isNavActive(pathname, href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            title={collapsed ? label : undefined}
+            aria-label={collapsed ? label : undefined}
+            aria-current={active ? "page" : undefined}
+            onClick={onNavigate}
+            onMouseEnter={() => prefetchNavRoute(queryClient, href, tenant)}
+            onFocus={() => prefetchNavRoute(queryClient, href, tenant)}
+            className={cn(
+              "flex min-h-9 items-center rounded-xl text-[13px] font-medium transition-colors duration-interaction",
+              collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+              active
+                ? "bg-glass text-atmospheric-grey shadow-sm"
+                : "text-muted hover:bg-glass/60 hover:text-atmospheric-grey",
+            )}
+          >
+            <Icon
               className={cn(
-                "relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors duration-interaction",
-                active
-                  ? "bg-glass text-atmospheric-grey shadow-sm"
-                  : "text-muted hover:bg-glass/60 hover:text-atmospheric-grey",
+                "h-4 w-4 shrink-0",
+                active ? "text-nexus-approval" : "text-muted",
               )}
-            >
-              {active ? (
-                <motion.span
-                  layoutId="sidebarActiveIndicator"
-                  className="absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full bg-nexus-approval"
-                  transition={{
-                    type: "spring",
-                    stiffness: 380,
-                    damping: 32,
-                    mass: 0.55,
-                  }}
-                />
-              ) : null}
-              <Icon
-                className={cn(
-                  "h-4 w-4 shrink-0",
-                  active ? "text-nexus-approval" : "text-muted",
-                )}
-                aria-hidden
-              />
-              <span className="truncate">{label}</span>
-            </Link>
-          );
-        })}
-      </LayoutGroup>
+              aria-hidden
+            />
+            {!collapsed ? <span className="truncate">{label}</span> : null}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
 
-function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarFooter({
+  collapsed,
+  onNavigate,
+}: {
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -111,18 +110,88 @@ function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <div className="mt-auto flex flex-col gap-2 border-t border-glass-border pt-4">
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-glass-border bg-glass/50 px-2 py-1.5">
-        <span className="px-1 text-xs font-medium text-muted">Theme</span>
+    <div
+      className={cn(
+        "mt-auto shrink-0 border-t border-glass-border pt-3",
+        collapsed ? "flex flex-col items-center gap-2" : "flex flex-col gap-2",
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center rounded-xl border border-glass-border bg-glass/50",
+          collapsed
+            ? "h-9 w-9 justify-center p-0"
+            : "justify-between gap-2 px-2 py-1",
+        )}
+      >
+        {!collapsed ? (
+          <span className="px-1 text-xs font-medium text-muted">Theme</span>
+        ) : null}
         <ThemeToggle />
       </div>
       <button
         type="button"
         onClick={() => void signOut()}
-        className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-glass-border bg-glass/40 px-3 py-2 text-[13px] font-medium text-atmospheric-grey transition-colors hover:bg-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval"
+        title={collapsed ? "Log out" : undefined}
+        aria-label={collapsed ? "Log out" : undefined}
+        className={cn(
+          "inline-flex cursor-pointer items-center justify-center rounded-xl border border-glass-border bg-glass/40 text-[13px] font-medium text-atmospheric-grey transition-colors hover:bg-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval",
+          collapsed ? "h-9 w-9" : "min-h-9 w-full gap-2 px-3 py-2",
+        )}
       >
         <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-        Log out
+        {!collapsed ? "Log out" : null}
+      </button>
+    </div>
+  );
+}
+
+function SidebarHeader({
+  collapsed,
+  onToggleCollapse,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onNavigate?: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "mb-4 flex shrink-0 items-center",
+        collapsed ? "flex-col gap-2" : "justify-between gap-2",
+      )}
+    >
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        className={cn(
+          "font-semibold tracking-tight text-atmospheric-grey",
+          collapsed ? "flex h-9 w-9 items-center justify-center text-lg" : "px-2 text-[21px]",
+        )}
+        title={collapsed ? "Nexus OS" : undefined}
+      >
+        {collapsed ? (
+          <span className="logo-nexus">N</span>
+        ) : (
+          <>
+            <span className="logo-nexus">Nexus</span>
+            <span className="logo-os"> OS</span>
+          </>
+        )}
+      </Link>
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-glass-border bg-glass/50 text-atmospheric-grey transition-colors hover:bg-glass"
+      >
+        {collapsed ? (
+          <PanelLeftOpen className="h-4 w-4" aria-hidden />
+        ) : (
+          <PanelLeftClose className="h-4 w-4" aria-hidden />
+        )}
       </button>
     </div>
   );
@@ -130,7 +199,18 @@ function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function AppSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
+    } catch {
+      setCollapsed(false);
+    }
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -145,7 +225,20 @@ export default function AppSidebar() {
     };
   }, [mobileOpen]);
 
+  function toggleCollapse() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
   const closeMobile = () => setMobileOpen(false);
+  const desktopCollapsed = hydrated && collapsed;
 
   return (
     <>
@@ -158,16 +251,15 @@ export default function AppSidebar() {
         <Menu className="h-5 w-5" aria-hidden />
       </button>
 
-      <aside className="app-sidebar hidden w-64 shrink-0 flex-col px-4 py-6 lg:flex">
-        <Link
-          href="/dashboard"
-          className="mb-8 shrink-0 px-2 text-[21px] font-semibold tracking-tight"
-        >
-          <span className="logo-nexus text-atmospheric-grey">Nexus</span>
-          <span className="logo-os"> OS</span>
-        </Link>
-        <SidebarNav className="flex-1" />
-        <SidebarFooter />
+      <aside
+        className={cn(
+          "app-sidebar sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden py-4 transition-[width] duration-200 lg:flex",
+          desktopCollapsed ? "w-[4.5rem] px-2" : "w-64 px-4",
+        )}
+      >
+        <SidebarHeader collapsed={desktopCollapsed} onToggleCollapse={toggleCollapse} />
+        <SidebarNav collapsed={desktopCollapsed} />
+        <SidebarFooter collapsed={desktopCollapsed} />
       </aside>
 
       <AnimatePresence>
@@ -188,9 +280,9 @@ export default function AppSidebar() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 380, damping: 36 }}
-              className="app-sidebar fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] flex-col px-4 py-6 lg:hidden"
+              className="app-sidebar fixed inset-y-0 left-0 z-50 flex h-screen w-[min(18rem,85vw)] flex-col overflow-hidden px-4 py-4 lg:hidden"
             >
-              <div className="mb-6 flex items-center justify-between gap-3">
+              <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
                 <Link
                   href="/dashboard"
                   onClick={closeMobile}
@@ -202,13 +294,13 @@ export default function AppSidebar() {
                 <button
                   type="button"
                   onClick={closeMobile}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-glass-border bg-glass/60 text-atmospheric-grey"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-glass-border bg-glass/60 text-atmospheric-grey"
                   aria-label="Close menu"
                 >
                   <X className="h-5 w-5" aria-hidden />
                 </button>
               </div>
-              <SidebarNav className="flex-1" onNavigate={closeMobile} />
+              <SidebarNav onNavigate={closeMobile} />
               <SidebarFooter onNavigate={closeMobile} />
             </motion.aside>
           </>

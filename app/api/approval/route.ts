@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   JSON_LIMITS,
   rateLimit,
@@ -24,33 +23,6 @@ function approvalWebhookUrl(): string | null {
   }
   const normalized = base.replace(/\/+$/, "");
   return `${normalized}/webhook/approval-trigger`;
-}
-
-async function insertApprovalWorkflowLog(
-  supabase: SupabaseClient,
-  meta: {
-    team_id: string;
-    workspace_id: string;
-    draft_id: string;
-    conversation_id: string;
-    action: "approve" | "reject";
-  },
-) {
-  const { error } = await supabase.from("workflow_logs").insert({
-    team_id: meta.team_id,
-    workspace_id: meta.workspace_id,
-    workflow_name: "approval-trigger",
-    step: "human_approval",
-    result: "success",
-    payload: {
-      draft_id: meta.draft_id,
-      conversation_id: meta.conversation_id,
-      action: meta.action,
-    },
-  });
-  if (error) {
-    console.error("[approval] workflow_logs insert failed:", error.message);
-  }
 }
 
 export async function PATCH(request: Request) {
@@ -217,14 +189,6 @@ export async function PATCH(request: Request) {
       }
     }
 
-    await insertApprovalWorkflowLog(supabase, {
-      team_id: teamId,
-      workspace_id: workspaceId,
-      draft_id: draftId,
-      conversation_id: conversationId,
-      action: "approve",
-    });
-
     return NextResponse.json({
       success: true,
       draft: updatedDraft as ReplyDraft,
@@ -259,14 +223,6 @@ export async function PATCH(request: Request) {
   if (convErr) {
     return NextResponse.json({ error: convErr.message }, { status: 500 });
   }
-
-  await insertApprovalWorkflowLog(supabase, {
-    team_id: teamId,
-    workspace_id: workspaceId,
-    draft_id: draftId,
-    conversation_id: conversationId,
-    action: "reject",
-  });
 
   return NextResponse.json({
     success: true,

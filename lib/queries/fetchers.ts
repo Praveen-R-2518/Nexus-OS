@@ -1,12 +1,10 @@
 import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
-import type { WorkflowLogsCounts } from "@/lib/api";
 import type {
   Conversation,
   DailyReport,
   Metrics,
   ReplyDraft,
   ReplyDraftWithConversation,
-  WorkflowLog,
 } from "@/types";
 
 async function readJson<T>(res: Response): Promise<T> {
@@ -76,30 +74,6 @@ export async function dailyReportQuery(): Promise<DailyReport | null> {
     throw new Error("Invalid report response");
   }
   return json.report;
-}
-
-export async function workflowLogsWithMetaQuery(
-  status?: string,
-): Promise<{ logs: WorkflowLog[]; counts: WorkflowLogsCounts }> {
-  const params = new URLSearchParams();
-  if (status !== undefined && status !== "") params.set("status", status);
-  const qs = params.toString();
-  const res = await authenticatedFetch(`/api/logs${qs ? `?${qs}` : ""}`);
-  const json = await readJson<{
-    logs?: WorkflowLog[];
-    counts?: WorkflowLogsCounts;
-    error?: string;
-  }>(res);
-  if (!res.ok) throw new Error(errFrom(res, json));
-  if (!Array.isArray(json.logs)) {
-    throw new Error("Invalid logs response");
-  }
-  const counts = json.counts ?? {
-    success: 0,
-    failed: 0,
-    running: 0,
-  };
-  return { logs: json.logs, counts };
 }
 
 export async function conversationDraftsQuery(id: string): Promise<ReplyDraft[]> {
