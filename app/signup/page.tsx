@@ -18,6 +18,7 @@ import {
 } from "@/components/signup/types";
 import { parsePlanFromUrl } from "@/lib/pricing/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { fetchInvitePreview, type InvitePreview } from "@/lib/invites";
 
 const STEP_LABELS = [
   "Account",
@@ -57,9 +58,63 @@ export default function SignupPage() {
   const [snapshot, setSnapshot] = useState<SignupSnapshot>(() => defaultSignupSnapshot());
   const [hydrated, setHydrated] = useState(false);
 
+  // Invite link handling: ?invite=<token>. We resolve the org name + validity via
+  // the public invite_preview RPC so we can pre-warn on expired/used links before
+  // the auth.users trigger silently falls through to creating a brand-new org.
+  const inviteToken = (searchParams.get("invite") ?? "").trim() || null;
+  const [invitePreview, setInvitePreview] = useState<InvitePreview | null>(null);
+  const [inviteStatusError, setInviteStatusError] = useState<string | null>(null);
+
   const patchSnapshot = useCallback((patch: Partial<SignupSnapshot>) => {
     setSnapshot((s) => ({ ...s, ...patch }));
   }, []);
+
+  useEffect(() => {
+    if (!inviteToken) {
+      setInvitePreview(null);
+      setInviteStatusError(null);
+      return;
+    }
+    const supabase = createSupabaseBrowserClient();
+    let cancelled = false;
+    (async () => {
+      try {
+        const preview = await fetchInvitePreview(supabase, inviteToken);
+        if (cancelled) return;
+        if (!preview) {
+          setInvitePreview(null);
+          setInviteStatusError(
+            "This invite link is invalid. You can still create your own workspace below.",
+          );
+          return;
+        }
+        setInvitePreview(preview);
+        if (preview.status === "expired") {
+          setInviteStatusError(
+            `This invite to ${preview.organization_name} has expired. You can still create your own workspace below.`,
+          );
+        } else if (preview.status === "accepted") {
+          setInviteStatusError(
+            `This invite to ${preview.organization_name} was already used. Sign in instead, or create your own workspace below.`,
+          );
+        } else {
+          setInviteStatusError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setInvitePreview(null);
+          setInviteStatusError(
+            "We couldn't verify this invite link. You can still create your own workspace below.",
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteToken]);
+
+  const validInvite = invitePreview?.status === "pending";
 
   useEffect(() => {
     const loaded = loadSignupSnapshot();
@@ -209,30 +264,44 @@ export default function SignupPage() {
     <div className="min-h-screen px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 hairline-b pb-8 text-center sm:mb-10">
-          <p className="nexus-meta text-nexus-approval dark:text-nexus-approval">
+          <p className="nexus-meta text-nexus-approval">
             Onboard workspace
           </p>
-          <h1 className="mt-4 nexus-section-title text-black dark:text-white">
+          <h1 className="mt-4 nexus-section-title text-atmospheric-grey">
             Revenue command center
           </h1>
-          <p className="mx-auto mt-3 max-w-lg nexus-body text-black/70 dark:text-white/70">
+          <p className="mx-auto mt-3 max-w-lg nexus-body text-muted">
             Create a workspace, connect Gmail, and choose the automation setup that fits your team.
           </p>
-          <p className="mt-4 text-sm text-black/70 dark:text-white/70">
+          <p className="mt-4 text-sm text-muted">
             Already registered?{" "}
-            <Link href="/login" className="cursor-pointer font-medium text-nexus-approval underline underline-offset-4 dark:text-nexus-approval">
+            <Link href="/login" className="cursor-pointer font-medium text-nexus-approval underline underline-offset-4">
               Sign in
             </Link>
           </p>
+          {inviteToken && inviteStatusError ? (
+            <p
+              role="alert"
+              className="mx-auto mt-5 max-w-lg rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-sm text-status-warning"
+            >
+              {inviteStatusError}
+            </p>
+          ) : validInvite && invitePreview ? (
+            <p className="mx-auto mt-5 max-w-lg rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-nexus-approval">
+              You&apos;re joining <span className="font-semibold">{invitePreview.organization_name}</span>.
+            </p>
+          ) : null}
         </header>
-        <div className="border border-border bg-white p-4 text-black sm:p-8 dark:border-border dark:bg-white dark:text-black">
+        <div className="app-glass-card rounded-2xl p-4 sm:p-8">
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
-          <div className="mt-8 border-t border-dashed border-border pt-8 sm:mt-10 dark:border-border">
+          <div className="mt-8 hairline-t pt-8 sm:mt-10">
             {snapshot.currentStep === 1 ? (
               <StepAccount
                 snapshot={snapshot}
                 onPatch={patchSnapshot}
                 onNext={() => goToStep(2)}
+                inviteToken={validInvite ? inviteToken : null}
+                inviteOrgName={validInvite ? invitePreview?.organization_name ?? null : null}
               />
             ) : null}
             {snapshot.currentStep === 2 ? (

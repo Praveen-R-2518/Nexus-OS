@@ -7,6 +7,7 @@ import {
   type PlanTier,
   type SignupSnapshot,
 } from "@/components/signup/types";
+import { authPrimaryButton } from "@/components/signup/authStyles";
 
 function planLabel(tier: PlanTier | null): string {
   if (!tier) return "—";
@@ -41,11 +42,11 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           Your workspace is configured. Summary below.
         </p>
       </div>
-      <div className="rounded-xl border border-border bg-white p-5 text-left text-sm dark:border-border dark:bg-surface-card">
+      <div className="rounded-xl border border-glass-border bg-glass p-5 text-left text-sm">
         <p className="mb-3 nexus-meta text-nexus-growth dark:text-nexus-growth">
           Summary
         </p>
-        <ul className="space-y-2 text-black/85 dark:text-white/80">
+        <ul className="space-y-2 text-atmospheric-grey">
           <li className="flex items-center">
             <Check className={`mr-1 inline h-4 w-4 shrink-0 ${accent}`} aria-hidden />
             Account created
@@ -94,7 +95,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           clearSignupSnapshot();
           router.push("/dashboard");
         }}
-        className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] sm:w-auto sm:px-8 dark:border-nexus-approval"
+        className={`${authPrimaryButton} sm:w-auto sm:px-8`}
       >
         Go to dashboard →
       </button>
