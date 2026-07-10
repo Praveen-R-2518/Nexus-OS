@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
   FileText,
+  ImageIcon,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -31,6 +32,7 @@ const appNav = [
   { href: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { href: "/inbox", label: "Inbox", icon: Inbox },
   { href: "/chat", label: "Revenue Analyst", icon: Sparkles },
+  { href: "/posts", label: "Posts", icon: ImageIcon },
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
 ] as const;
