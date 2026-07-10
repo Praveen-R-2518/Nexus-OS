@@ -16,6 +16,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -35,6 +36,7 @@ const appNav = [
   { href: "/posts", label: "Posts", icon: ImageIcon },
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
+  { href: "/team", label: "Team", icon: Users },
 ] as const;
 
 function isNavActive(pathname: string, href: string): boolean {

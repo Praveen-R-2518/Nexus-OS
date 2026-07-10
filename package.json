@@ -18,6 +18,7 @@
     "test:meta-routing": "tsx scripts/meta_routing.test.ts",
     "test:chat-analyst": "tsx scripts/chat_analyst.test.ts",
     "test:social-posts": "tsx scripts/social_posts_unit.test.ts",
+    "test:invites": "tsx scripts/invites_unit.test.ts",
     "seed:demo": "tsx scripts/seed_demo_inbox.ts",
     "test:launch-workspace": "node scripts/launch_workspace_rpc.test.mjs",
     "n8n:export-workflows": "node scripts/build_n8n_workflow_exports.js"

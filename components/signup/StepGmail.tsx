@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import type { SignupSnapshot } from "@/components/signup/types";
+import { authPrimaryButton } from "@/components/signup/authStyles";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
@@ -135,7 +136,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           type="button"
           disabled={busy || gmailChecking || gmailConnected}
           onClick={handleGmailConnect}
-          className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:opacity-50 dark:border-nexus-approval"
+          className={authPrimaryButton}
         >
           {gmailChecking
             ? "Checking…"

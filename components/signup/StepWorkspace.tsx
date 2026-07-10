@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Building2, Plus, Trash2, User, Users } from "lucide-react";
 import FormInput, { FormSelect } from "@/components/signup/FormInput";
+import { authPrimaryButton } from "@/components/signup/authStyles";
 import type { SignupSnapshot, WorkspaceType } from "@/components/signup/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
@@ -257,7 +258,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                 <div key={i} className="flex gap-2">
                   <input
                     type="email"
-                    className="h-10 flex-1 rounded-xl border border-border bg-white px-3 text-sm text-gray-900 outline-none focus:border-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-nexus-approval dark:focus:ring-nexus-approval"
+                    className="glass-input h-10 flex-1 px-3 text-sm text-atmospheric-grey outline-none placeholder:text-muted"
                     placeholder="teammate@company.com"
                     value={row}
                     onChange={(e) => updateEmailRow(i, e.target.value)}
@@ -279,15 +280,11 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       ) : null}
       {error ? (
-        <p className="text-sm text-[#8B1A1A]" role="alert">
+        <p className="text-sm text-status-critical" role="alert">
           {error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={busy}
-        className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:opacity-50 dark:border-nexus-approval"
-      >
+      <button type="submit" disabled={busy} className={authPrimaryButton}>
         {busy ? "Saving…" : "Continue"}
       </button>
     </form>

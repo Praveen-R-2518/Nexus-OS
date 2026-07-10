@@ -40,16 +40,16 @@ export default function PricingCard({
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col rounded-xl border bg-white p-4 transition sm:p-5 dark:bg-surface-card",
+        "relative flex h-full flex-col rounded-xl border bg-glass p-4 transition sm:p-5",
         highlighted &&
           "shadow-[0_0_24px_rgba(18,116,249,0.18)] dark:shadow-[0_0_32px_rgba(18,116,249,0.22)]",
         selected
           ? "border border-selectable-edge-selected"
           : highlighted
             ? "border-ref-cta dark:border-[color:var(--trajectory-blue)]"
-            : "border border-selectable-edge",
+            : "border border-glass-border",
         disabled && "opacity-45 grayscale",
-        !disabled && !selected && "hover:bg-[rgba(18,116,249,0.06)] dark:hover:bg-surface-elevated",
+        !disabled && !selected && "hover:bg-glass",
       )}
     >
       {topBadge ? (
@@ -65,12 +65,12 @@ export default function PricingCard({
         </span>
       ) : null}
       <div className="mb-3 text-center">
-        <p className="font-sans text-base font-semibold tracking-normal text-black dark:text-white">{title}</p>
-        <p className="mt-2 font-sans text-xl font-semibold tabular-nums text-black dark:text-white">{priceLabel}</p>
-        <p className="mt-1 text-xs text-black/60 dark:text-white/55">{users}</p>
-        <p className="text-xs text-black/60 dark:text-white/55">{emails}</p>
+        <p className="font-sans text-base font-semibold tracking-normal text-atmospheric-grey">{title}</p>
+        <p className="mt-2 font-sans text-xl font-semibold tabular-nums text-atmospheric-grey">{priceLabel}</p>
+        <p className="mt-1 text-xs text-muted">{users}</p>
+        <p className="text-xs text-muted">{emails}</p>
       </div>
-      <ul className="mb-4 flex-1 space-y-1.5 border-t border-dashed border-border/40 pt-3 text-sm text-black/75 dark:border-border dark:text-white/75">
+      <ul className="mb-4 flex-1 space-y-1.5 hairline-t pt-3 text-sm text-muted">
         {features.map((f) => (
           <li key={f} className="flex gap-2">
             <span aria-hidden>
@@ -85,12 +85,12 @@ export default function PricingCard({
         disabled={disabled}
         onClick={() => !disabled && onSelect(plan)}
         className={cn(
-          "mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-border px-3 py-2 text-sm font-medium transition",
+          "mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
           disabled
-            ? "cursor-not-allowed border-border/80 bg-black/[0.04] text-black/40 dark:border-border dark:text-white/40"
+            ? "cursor-not-allowed border-glass-border bg-glass text-muted"
             : selected
-              ? "bg-nexus-approval text-white hover:bg-[#2b82ff]"
-              : "bg-white text-black hover:bg-[rgba(18,116,249,0.08)] dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated",
+              ? "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval"
+              : "glass-pill text-atmospheric-grey hover:bg-glass",
         )}
       >
         {ctaLabel}
