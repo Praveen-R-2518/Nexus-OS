@@ -68,3 +68,20 @@ next-env.d.ts
 *-private-key.pem
 *.p12
 *.pfx
+
+# graphify — local knowledge graph (regenerate with `graphify update .`)
+/graphify-out/
+
+# Local team working docs (not part of the product)
+TEAM_BUILD_CHECKLIST.md
+
+# iCloud sync duplicate files/dirs (canonical copies have no " 2" suffix)
+**/* 2
+**/* 2.*
+**/* 2/**
+
+# iCloud / OS junk
+New Text Document.txt
+
+# npm pack / local artifact placeholders
+nexus-os@*
