@@ -23,3 +23,16 @@ HTTP nodes use your n8n **Supabase API** custom auth credential (service role or
 ## Next.js internal ingest (`/api/internal/n8n/*`)
 
 These routes require a JSON field `workspace_id` (UUID) and verify it exists in `public.workspaces` before inserting. They are an alternative to direct Supabase REST from n8n.
+
+### Channel Sender — Approval Trigger workflow (`n8n_logic/exports/approval_trigger.json`)
+
+The approval-trigger workflow calls the send executor `POST /api/internal/n8n/send-reply`
+(see `docs/channel_sender.md`). It needs two n8n env vars:
+
+| Env var | Purpose |
+|---|---|
+| `NEXUS_APP_BASE_URL` | Base URL of the Next.js app (e.g. `https://app.example.com`) — the HTTP node targets `${NEXUS_APP_BASE_URL}/api/internal/n8n/send-reply`. No trailing slash. |
+| `N8N_INGEST_TOKEN` | Bearer token for all `/api/internal/n8n/*` routes (server-only; must match the app's env). |
+
+**Do not activate** this workflow until the send-reply tests pass and Gmail `gmail.send`
+scope is provisioned (until then the transport returns 403 — read-only OAuth).

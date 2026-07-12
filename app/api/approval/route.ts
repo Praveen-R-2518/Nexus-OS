@@ -172,6 +172,8 @@ export async function PATCH(request: Request) {
             draft_id: draftId,
             action: "approve",
             conversation_id: conversationId,
+            team_id: teamId,
+            workspace_id: workspaceId,
           }),
         });
         if (!res.ok) {

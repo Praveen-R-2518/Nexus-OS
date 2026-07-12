@@ -1,0 +1,228 @@
+{
+  "name": "WF3 - Revenue Rescue Agent",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "connections": {
+    "Receive Lead": { "main": [[{ "node": "Fetch Conversation", "type": "main", "index": 0 }, { "node": "Fetch Business Profile", "type": "main", "index": 0 }]] },
+    "Fetch Conversation": { "main": [[{ "node": "Wait for Context", "type": "main", "index": 0 }]] },
+    "Fetch Business Profile": { "main": [[{ "node": "Wait for Context", "type": "main", "index": 1 }]] },
+    "Wait for Context": { "main": [[{ "node": "Build Reply Context", "type": "main", "index": 0 }]] },
+    "Build Reply Context": { "main": [[{ "node": "Generate Reply Draft", "type": "main", "index": 0 }]] },
+    "Generate Reply Draft": { "main": [[{ "node": "Prepare Draft", "type": "main", "index": 0 }]] },
+    "Prepare Draft": { "main": [[{ "node": "Save Reply Draft", "type": "main", "index": 0 }]] },
+    "Save Reply Draft": { "main": [[{ "node": "Autopilot Send (policy-gated)", "type": "main", "index": 0 }]] },
+    "Autopilot Send (policy-gated)": { "main": [[{ "node": "Update Lead Status", "type": "main", "index": 0 }]] },
+    "Update Lead Status": { "main": [[{ "node": "Schedule Follow-up", "type": "main", "index": 0 }]] },
+    "Schedule Follow-up": { "main": [[{ "node": "Log Rescue Complete", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "nexus/rescue", "responseMode": "lastNode", "options": {} },
+      "id": "84c5ed3c-4341-4eef-9bd2-7ad1b102247c",
+      "name": "Receive Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-288, 128],
+      "webhookId": "cac7bc3a-f48c-4e11-8fd2-4b2e7e4178af"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations?id=eq.' + encodeURIComponent($('Receive Lead').item.json.body.conversation_id) + '&select=*' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "5fb911b7-7a79-4190-9804-c276caded8b6",
+      "name": "Fetch Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/business_profiles?select=id,name,tone,services,pricing_rules&team_id=eq.' + encodeURIComponent($('Receive Lead').item.json.body.team_id) + '&limit=1' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "8c6ec1d6-8524-4c9d-9617-7413eaa8e5bd",
+      "name": "Fetch Business Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 256]
+    },
+    {
+      "parameters": { "mode": "combine", "combineBy": "combineByPosition", "options": {} },
+      "id": "086c54f5-bfe1-4c82-a510-fc5a2f3461d0",
+      "name": "Wait for Context",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [272, 128]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "lead_id", "name": "lead_id", "value": "={{ $('Receive Lead').item.json.body.lead_id }}", "type": "string" },
+            { "id": "conversation_id", "name": "conversation_id", "value": "={{ $('Receive Lead').item.json.body.conversation_id }}", "type": "string" },
+            { "id": "intent", "name": "intent", "value": "={{ $('Receive Lead').item.json.body.intent }}", "type": "string" },
+            { "id": "urgency", "name": "urgency", "value": "={{ $('Receive Lead').item.json.body.urgency }}", "type": "string" },
+            { "id": "estimated_value", "name": "estimated_value", "value": "={{ Number($('Receive Lead').item.json.body.estimated_value) || 0 }}", "type": "number" },
+            { "id": "missing_fields", "name": "missing_fields", "value": "={{ JSON.stringify($('Receive Lead').item.json.body.missing_fields || []) }}", "type": "string" },
+            { "id": "confidence", "name": "confidence", "value": "={{ Number($('Receive Lead').item.json.body.confidence) || 0 }}", "type": "number" },
+            { "id": "approval_mode", "name": "approval_mode", "value": "={{ $('Receive Lead').item.json.body.approval_mode || 'approval_queue' }}", "type": "string" },
+            { "id": "customer_message", "name": "customer_message", "value": "={{ ((Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).message) || '' }}", "type": "string" },
+            { "id": "customer_name", "name": "customer_name", "value": "={{ ((Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).customer_name) || '' }}", "type": "string" },
+            { "id": "business_name", "name": "business_name", "value": "={{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).name) || '' }}", "type": "string" },
+            { "id": "business_tone", "name": "business_tone", "value": "={{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).tone) || '' }}", "type": "string" },
+            { "id": "services", "name": "services", "value": "={{ JSON.stringify(((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).services) || []) }}", "type": "string" },
+            { "id": "pricing_rules", "name": "pricing_rules", "value": "={{ JSON.stringify(((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).pricing_rules) || {}) }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e85d1ff-37a5-40da-884d-265a1fe04212",
+      "name": "Build Reply Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [560, 128]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "chatModel": "gpt-4o",
+        "prompt": {
+          "messages": [
+            { "role": "system", "content": "=You are a professional customer success assistant for {{ $json.business_name }}.\n\nBusiness tone: {{ $json.business_tone }}\nServices and pricing: {{ $json.services }}\nPricing rules: {{ $json.pricing_rules }}\n\nRules for your reply:\n1. Address the customer by their first name only\n2. Directly answer their specific question or request\n3. Use the pricing and services context to give accurate information\n4. If the intent is a pricing_request, include the relevant package price and a clear next step (e.g., \"I can schedule a quick call\")\n5. If the intent is a complaint, acknowledge the issue first, then offer a solution - do not be defensive\n6. Keep the reply to 3-5 sentences maximum\n7. End with one clear, specific call to action\n8. Match the business tone exactly: {{ $json.business_tone }}\n9. Sound human. Never use phrases like \"I hope this message finds you well\" or \"Please do not hesitate to contact us\"\n10. Return ONLY the reply text. No subject line. No metadata. No markdown formatting." },
+            { "content": "=Customer name: {{ $json.customer_name }}\nIntent: {{ $json.intent }}\nUrgency: {{ $json.urgency }}\nMissing information needed: {{ $json.missing_fields }}\nCustomer message: {{ $json.customer_message }}" }
+          ]
+        },
+        "options": { "maxTokens": 400, "temperature": 0.4 },
+        "requestOptions": {}
+      },
+      "id": "9d2edac8-d8fb-4ce1-b323-f1bdedc3b392",
+      "name": "Generate Reply Draft",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.1,
+      "position": [832, 128],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "draft_text", "name": "draft_text", "value": "={{ (($json.message && $json.message.content) || $json.text || $json.content || '').trim() }}", "type": "string" },
+            { "id": "lead_id", "name": "lead_id", "value": "={{ $('Build Reply Context').item.json.lead_id }}", "type": "string" },
+            { "id": "confidence", "name": "confidence", "value": "={{ Number($('Build Reply Context').item.json.confidence) || 0 }}", "type": "number" },
+            { "id": "approval_mode", "name": "approval_mode", "value": "={{ $('Build Reply Context').item.json.approval_mode }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee53a565-4dd6-41b2-bbaa-9772089f5e45",
+      "name": "Prepare Draft",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 128]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/reply_drafts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=representation" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  lead_id: $json.lead_id,\n  conversation_id: $('Receive Lead').item.json.body.conversation_id,\n  team_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).team_id,\n  workspace_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).workspace_id,\n  draft_text: $json.draft_text,\n  confidence: Number($json.confidence) || 0,\n  approval_status: 'pending'\n} }}",
+        "options": { "response": { "response": { "fullResponse": true, "responseFormat": "json" } } }
+      },
+      "id": "9361173d-24bc-42ae-928a-b5a5131e5cf5",
+      "name": "Save Reply Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1392, 128]
+    },
+    {
+      "id": "bb000001-0000-4000-8000-000000000001",
+      "name": "Autopilot Send (policy-gated)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1820, 128],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXUS_APP_BASE_URL }}/api/internal/n8n/autopilot-send",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{ $env.N8N_INGEST_TOKEN }}" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  draft_id: (($('Save Reply Draft').item.json.body && $('Save Reply Draft').item.json.body[0] && $('Save Reply Draft').item.json.body[0].id) || (Array.isArray($('Save Reply Draft').item.json) && $('Save Reply Draft').item.json[0] && $('Save Reply Draft').item.json[0].id) || $('Save Reply Draft').item.json.id),\n  team_id: $('Receive Lead').item.json.body.team_id,\n  lead_id: $('Build Reply Context').item.json.lead_id\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads?id=eq.' + $('Build Reply Context').item.json.lead_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  status: 'new',\n  next_action: 'awaiting_approval',\n  updated_at: $now.toISO()\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "befb95b9-ce6a-4e56-a00a-884f5b0af641",
+      "name": "Update Lead Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2240, 128]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  lead_id: $('Build Reply Context').item.json.lead_id,\n  conversation_id: $('Receive Lead').item.json.body.conversation_id,\n  team_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).team_id,\n  workspace_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).workspace_id,\n  scheduled_for: $now.plus({ hours: 48 }).toISO(),\n  action: 'Follow-up: no response received after reply was drafted.',\n  message: 'Follow-up: no response received after reply was drafted.',\n  status: 'pending'\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "ef0d64e1-9f4d-45a7-ba25-e13ccc2bddaa",
+      "name": "Schedule Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2512, 128]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  workflow_name: 'reply_generation',\n  step: 'reply_generated',\n  result: 'success',\n  payload: {\n    lead_id: $('Build Reply Context').item.json.lead_id,\n    draft_id: (($('Save Reply Draft').item.json.body && $('Save Reply Draft').item.json.body[0] && $('Save Reply Draft').item.json.body[0].id) || (Array.isArray($('Save Reply Draft').item.json) && $('Save Reply Draft').item.json[0] && $('Save Reply Draft').item.json[0].id) || $('Save Reply Draft').item.json.id),\n    approval_mode: $('Build Reply Context').item.json.approval_mode,\n    confidence: Number($('Build Reply Context').item.json.confidence) || 0\n  },\n  timestamp: $now.toISO()\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "2caacb6f-62f2-4882-bd9e-837fb4f6c033",
+      "name": "Log Rescue Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2800, 128]
+    }
+  ]
+}
