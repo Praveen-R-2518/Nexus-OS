@@ -1,0 +1,223 @@
+{
+  "name": "WF4 - Follow-up Scheduler",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "Fetch Pending Follow-ups", "type": "main", "index": 0 }]] },
+    "Fetch Pending Follow-ups": { "main": [[{ "node": "Any Pending?", "type": "main", "index": 0 }]] },
+    "Any Pending?": {
+      "main": [
+        [{ "node": "Normalize Pending Follow-ups", "type": "main", "index": 0 }],
+        [{ "node": "Log Nothing Pending", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalize Pending Follow-ups": { "main": [[{ "node": "Process Each Follow-up", "type": "main", "index": 0 }]] },
+    "Process Each Follow-up": {
+      "main": [
+        [],
+        [{ "node": "Fetch Original Conversation", "type": "main", "index": 0 }, { "node": "Fetch Business Profile", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Original Conversation": { "main": [[{ "node": "Wait for Follow-up Context", "type": "main", "index": 0 }]] },
+    "Fetch Business Profile": { "main": [[{ "node": "Wait for Follow-up Context", "type": "main", "index": 1 }]] },
+    "Wait for Follow-up Context": { "main": [[{ "node": "Generate Follow-up Message", "type": "main", "index": 0 }]] },
+    "Generate Follow-up Message": { "main": [[{ "node": "Save Follow-up Draft", "type": "main", "index": 0 }]] },
+    "Save Follow-up Draft": { "main": [[{ "node": "Mark Follow-up Sent", "type": "main", "index": 0 }]] },
+    "Mark Follow-up Sent": { "main": [[{ "node": "Log Follow-up", "type": "main", "index": 0 }]] },
+    "Log Follow-up": { "main": [[{ "node": "Process Each Follow-up", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 1 }] } },
+      "id": "5860d069-eb09-4173-b209-6f35780671e8",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-1408, 224]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups?status=eq.pending&scheduled_for=lte.' + encodeURIComponent($now.toISO()) + '&select=*,leads(id,customer_name,customer_email,intent,urgency,estimated_value,conversation_id)' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "options": { "response": { "response": { "fullResponse": true, "responseFormat": "json" } } }
+      },
+      "id": "f924d70b-1350-4009-8dac-a407d70b32bb",
+      "name": "Fetch Pending Follow-ups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [-1120, 224]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "has-pending-followups", "leftValue": "={{ Array.isArray($json.body) ? $json.body.length : (Array.isArray($json) ? $json.length : $input.all().length) }}", "rightValue": 0, "operator": { "type": "number", "operation": "gt" } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9e889452-4a3d-4f36-812d-4b620920a0a0",
+      "name": "Any Pending?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-848, 224]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  workflow_name: 'followup',\n  step: 'no_pending_followups',\n  result: 'skipped',\n  payload: {},\n  timestamp: $now.toISO()\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "7c1136b6-8bab-49f6-a90f-f693dc0fb8a4",
+      "name": "Log Nothing Pending",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [-560, 416]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = [];\n\nfor (const item of $input.all()) {\n  const data = item.json;\n\n  if (Array.isArray(data?.body)) {\n    rows.push(...data.body);\n  } else if (Array.isArray(data)) {\n    rows.push(...data);\n  } else if (Array.isArray(data?.data)) {\n    rows.push(...data.data);\n  } else if (data && data.id) {\n    rows.push(data);\n  }\n}\n\nreturn rows.map(row => ({ json: row }));"
+      },
+      "id": "ea093bf5-59e2-4b09-91f7-84d63f46a5bb",
+      "name": "Normalize Pending Follow-ups",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-560, 144]
+    },
+    {
+      "parameters": { "options": {} },
+      "id": "b68a7f64-6db9-4f8c-80df-5cd66cfed0f9",
+      "name": "Process Each Follow-up",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-288, 144]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations?id=eq.' + encodeURIComponent($json.leads.conversation_id) + '&select=message,customer_name' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "20f19559-4532-47ce-960e-cfce8924fcb2",
+      "name": "Fetch Original Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/business_profiles?select=id,name,tone,services,pricing_rules&team_id=eq.' + encodeURIComponent($('Process Each Follow-up').item.json.team_id) + '&limit=1' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "c207e956-6b33-4e5c-8677-a5c08e772142",
+      "name": "Fetch Business Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 288]
+    },
+    {
+      "parameters": { "mode": "combine", "combineBy": "combineByPosition", "options": {} },
+      "id": "8889cfdd-2d64-4f2f-9b64-f5b6733405e0",
+      "name": "Wait for Follow-up Context",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [272, 144]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "chatModel": "gpt-4o",
+        "prompt": {
+          "messages": [
+            { "role": "system", "content": "=You are writing a short, polite follow-up message for {{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).name) || 'the business' }}.\nBusiness tone: {{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).tone) || 'warm and professional' }}\n\nRules:\n1. This is a follow-up because the customer has not responded\n2. Keep it to 2-3 sentences only\n3. Be warm but create gentle urgency - the customer's inquiry is still open\n4. Do NOT repeat pricing or detailed information\n5. End with a simple question or a single call to action\n6. Sound human, not templated\n7. Return ONLY the message text. No subject. No formatting." },
+            { "content": "=Customer name: {{ $('Process Each Follow-up').item.json.leads.customer_name }}\nOriginal intent: {{ $('Process Each Follow-up').item.json.leads.intent }}\nOriginal message: {{ ((Array.isArray($('Fetch Original Conversation').item.json) ? $('Fetch Original Conversation').item.json[0] : $('Fetch Original Conversation').item.json).message) || '' }}\nDays since last contact: 2" }
+          ]
+        },
+        "options": { "maxTokens": 200, "temperature": 0.5 },
+        "requestOptions": {}
+      },
+      "id": "ad2e9288-8bbc-488a-baf7-6e5903bc54b7",
+      "name": "Generate Follow-up Message",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.1,
+      "position": [560, 144],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/reply_drafts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  lead_id: $('Process Each Follow-up').item.json.leads.id,\n  conversation_id: $('Process Each Follow-up').item.json.leads.conversation_id,\n  team_id: $('Process Each Follow-up').item.json.team_id,\n  workspace_id: $('Process Each Follow-up').item.json.workspace_id,\n  draft_text: (($json.message && $json.message.content) || $json.text || $json.content || '').trim(),\n  confidence: 0.75,\n  approval_status: 'pending'\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "7afab99a-7f5d-4f73-990e-05d79bf19c9b",
+      "name": "Save Follow-up Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [832, 144]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups?id=eq.' + encodeURIComponent($('Process Each Follow-up').item.json.id) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  status: 'sent'\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "52accd87-4254-49ec-9a7a-9544a7a5f2d2",
+      "name": "Mark Follow-up Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1120, 144]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  workflow_name: 'followup',\n  step: 'followup_draft_created',\n  result: 'success',\n  payload: {\n    lead_id: $('Process Each Follow-up').item.json.leads.id,\n    followup_id: $('Process Each Follow-up').item.json.id\n  },\n  timestamp: $now.toISO()\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      },
+      "id": "d0a74486-c65f-456e-8f38-8a4473b15b74",
+      "name": "Log Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1392, 144]
+    }
+  ]
+}
