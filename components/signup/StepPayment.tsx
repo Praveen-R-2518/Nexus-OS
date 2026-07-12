@@ -5,6 +5,7 @@ import { CreditCard, Check, AlertTriangle } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { STARTER_TRIAL_INCLUDES, priceForTier, PRICING_TIERS } from "@/lib/pricing/plans";
 import type { SignupSnapshot } from "@/components/signup/types";
+import { authPrimaryButton } from "@/components/signup/authStyles";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,7 @@ type StepPaymentProps = {
 };
 
 const fieldClass =
-  "h-11 w-full rounded-xl border border-border bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-gray-100 dark:focus:border-nexus-approval dark:focus:ring-nexus-approval";
+  "glass-input h-11 w-full px-3 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted";
 
 function planTitle(tier: SignupSnapshot["planTier"]): string {
   if (tier === "pro") return "Professional";
@@ -93,11 +94,11 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-white p-5 text-left dark:border-border dark:bg-surface-card">
+        <div className="rounded-xl border border-glass-border bg-glass p-5 text-left">
           <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
             What&apos;s included
           </p>
-          <ul className="mt-4 space-y-2 text-sm text-black/75 dark:text-white/75">
+          <ul className="mt-4 space-y-2 text-sm text-muted">
             {STARTER_TRIAL_INCLUDES.map((item) => (
               <li key={item} className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-nexus-growth dark:text-nexus-growth" aria-hidden />
@@ -108,7 +109,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </div>
 
         {error ? (
-          <p className="text-sm text-[#8B1A1A]" role="alert">
+          <p className="text-sm text-status-critical" role="alert">
             {error}
           </p>
         ) : null}
@@ -117,7 +118,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           type="button"
           disabled={busy}
           onClick={() => void activatePlan()}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:opacity-60 dark:border-nexus-approval"
+          className={authPrimaryButton}
         >
           {busy ? <Spinner className="h-5 w-5" label="Loading" /> : null}
           {busy ? "Continuing…" : "Continue →"}
@@ -145,18 +146,18 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
       </div>
 
       {pricing ? (
-        <div className="rounded-xl border border-border bg-white p-4 text-sm dark:border-border dark:bg-surface-card">
+        <div className="rounded-xl border border-glass-border bg-glass p-4 text-sm">
           <div className="flex justify-between gap-4 text-xs">
-            <span className="text-black/70 dark:text-white/65">Plan</span>
-            <span className="text-black dark:text-white">{planTitle(snapshot.planTier)}</span>
+            <span className="text-muted">Plan</span>
+            <span className="text-atmospheric-grey">{planTitle(snapshot.planTier)}</span>
           </div>
           <div className="mt-2 flex justify-between gap-4 text-xs">
-            <span className="text-black/70 dark:text-white/65">Billing</span>
-            <span className="text-black dark:text-white">
+            <span className="text-muted">Billing</span>
+            <span className="text-atmospheric-grey">
               {cycle === "monthly" ? "Monthly" : "Annual (25% off)"}
             </span>
           </div>
-          <div className="mt-2 flex justify-between gap-4 border-t border-dashed border-border pt-2 font-semibold text-black dark:border-border dark:text-white">
+          <div className="mt-2 flex justify-between gap-4 hairline-t pt-2 font-semibold text-atmospheric-grey">
             <span>Due today</span>
             <span className="tabular-nums">$0.00</span>
           </div>
@@ -177,7 +178,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           e.preventDefault();
           void activatePlan();
         }}
-        className="space-y-4 rounded-xl border border-border bg-white p-4 dark:border-border dark:bg-surface-card"
+        className="space-y-4 rounded-xl border border-glass-border bg-glass p-4"
       >
         <div className="flex items-center gap-2 nexus-meta text-nexus-approval dark:text-nexus-approval">
           <CreditCard className="h-4 w-4" aria-hidden />
@@ -199,7 +200,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-black/75 dark:text-white/70">
+            <span className="text-sm font-medium text-atmospheric-grey">
               Expiry
             </span>
             <input
@@ -212,7 +213,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
             />
           </label>
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-black/75 dark:text-white/70">
+            <span className="text-sm font-medium text-atmospheric-grey">
               CVC
             </span>
             <input
@@ -230,7 +231,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         </div>
 
         {error ? (
-          <p className={cn("text-sm text-[#8B1A1A]")} role="alert">
+          <p className={cn("text-sm text-status-critical")} role="alert">
             {error}
           </p>
         ) : null}
@@ -238,7 +239,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:opacity-60 dark:border-nexus-approval"
+          className={authPrimaryButton}
         >
           {busy ? <Spinner className="h-5 w-5" label="Processing" /> : null}
           {busy ? "Activating…" : "Activate Plan →"}

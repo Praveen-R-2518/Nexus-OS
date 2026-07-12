@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Building2 } from "lucide-react";
 import FormInput from "@/components/signup/FormInput";
 import type { SignupSnapshot } from "@/components/signup/types";
 import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
@@ -9,11 +9,16 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { branchForSignupEmailStatus } from "@/lib/auth/signup-step1-branch";
+import { authPrimaryButton, authSecondaryButton } from "@/components/signup/authStyles";
 
 type StepAccountProps = {
   snapshot: SignupSnapshot;
   onPatch: (patch: Partial<SignupSnapshot>) => void;
   onNext: () => void;
+  /** When joining via a valid invite link, the token to pass to signUp(). */
+  inviteToken?: string | null;
+  /** Org name for the "You're joining {org}" note (invite path only). */
+  inviteOrgName?: string | null;
 };
 
 // Email-sending auth calls (signUp/resend) share Supabase's project-wide
@@ -190,12 +195,19 @@ function canUseLocalDevSignupFallback(): boolean {
   return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 }
 
-export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountProps) {
+export default function StepAccount({
+  snapshot,
+  onPatch,
+  onNext,
+  inviteToken = null,
+  inviteOrgName = null,
+}: StepAccountProps) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [fullName, setFullName] = useState(
     () => snapshot.accountFullName || "",
   );
+  const [orgName, setOrgName] = useState(() => snapshot.companyName || "");
   const [email, setEmail] = useState(() =>
     normalizeSignupEmail(snapshot.accountEmail || ""),
   );
@@ -378,6 +390,14 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
         data: {
           full_name: fullName,
           ...(phone.trim() ? { phone: phone.trim() } : {}),
+          // The handle_new_user() trigger reads these from raw_user_meta_data.
+          // invite_token always wins; org_name is only used when there's no
+          // valid token, so never send both.
+          ...(inviteToken
+            ? { invite_token: inviteToken }
+            : orgName.trim()
+              ? { org_name: orgName.trim() }
+              : {}),
         },
       },
     });
@@ -429,6 +449,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
         accountFullName: fullName.trim(),
         accountPhone: phone.trim(),
         accountVerificationPending: false,
+        ...(orgName.trim() && !inviteToken ? { companyName: orgName.trim() } : {}),
       });
       setBusy(false);
       onNext();
@@ -441,6 +462,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
       accountFullName: fullName.trim(),
       accountPhone: phone.trim(),
       accountVerificationPending: true,
+      ...(orgName.trim() && !inviteToken ? { companyName: orgName.trim() } : {}),
     });
     setPassword("");
     setConfirm("");
@@ -532,7 +554,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           type="button"
           disabled={busy || cooldownRemaining > 0}
           onClick={resendVerification}
-          className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-border bg-white py-3 text-sm font-medium text-black transition hover:bg-nexus-approval-soft disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
+          className={authSecondaryButton}
         >
           {cooldownRemaining > 0
             ? `Wait ${cooldownRemaining}s`
@@ -547,7 +569,7 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
           Log in instead
         </Link>
         {formError ? (
-          <p className="text-sm text-[#8B1A1A]" role="alert">
+          <p className="text-sm text-status-critical" role="alert">
             {formError}
           </p>
         ) : null}
@@ -621,10 +643,26 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
         onChange={(e) => setPhone(e.target.value)}
         autoComplete="tel"
       />
+      {inviteToken ? (
+        <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-nexus-approval">
+          You&apos;re joining{" "}
+          <span className="font-semibold">{inviteOrgName ?? "your team"}</span> — no
+          need to name an organization.
+        </div>
+      ) : (
+        <FormInput
+          id="orgName"
+          label="Organization name"
+          icon={Building2}
+          value={orgName}
+          onChange={(e) => setOrgName(e.target.value)}
+          hint="Optional — defaults to your name if left blank."
+        />
+      )}
       <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 border border-border bg-white text-nexus-approval focus:ring-1 focus:ring-nexus-approval dark:border-border dark:bg-surface-card dark:text-nexus-approval dark:focus:ring-nexus-approval"
+          className="mt-1 h-4 w-4 rounded border border-glass-border bg-glass text-nexus-approval focus:ring-1 focus:ring-nexus-approval"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
@@ -636,14 +674,14 @@ export default function StepAccount({ snapshot, onPatch, onNext }: StepAccountPr
         </span>
       </label>
       {formError ? (
-        <p className="text-sm text-[#8B1A1A]" role="alert">
+        <p className="text-sm text-status-critical" role="alert">
           {formError}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={busy || cooldownRemaining > 0}
-        className="inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-nexus-approval bg-nexus-approval py-3 text-sm font-medium text-white transition hover:bg-[#2b82ff] disabled:cursor-not-allowed disabled:opacity-50 dark:border-nexus-approval"
+        className={authPrimaryButton}
       >
         {cooldownRemaining > 0
           ? `Wait ${cooldownRemaining}s`

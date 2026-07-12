@@ -35,9 +35,17 @@ export function isMarketingShellRoute(pathname: string): boolean {
   );
 }
 
+/** Login/signup get their own dark, chromeless shell that matches the dashboard. */
+export function isAuthShellRoute(pathname: string): boolean {
+  return AUTH_ONLY_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const marketing = isMarketingShellRoute(pathname);
+  const auth = isAuthShellRoute(pathname);
+  const marketing = !auth && isMarketingShellRoute(pathname);
   const isLanding = pathname === "/";
   const isSupabaseConfigured = !!(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -48,9 +56,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div
       className={cn(
         "flex min-h-screen flex-col",
-        marketing
-          ? "marketing-apple-shell bg-apple-bg text-apple-text"
-          : "bg-surface-page text-atmospheric-grey dark:bg-obsidian",
+        auth
+          ? "app-shell-bg bg-surface-page text-atmospheric-grey dark:bg-obsidian"
+          : marketing
+            ? "marketing-apple-shell bg-apple-bg text-apple-text"
+            : "bg-surface-page text-atmospheric-grey dark:bg-obsidian",
         isLanding && "landing-full-bleed",
       )}
     >
@@ -59,7 +69,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
           ⚠️ <strong>Supabase Configuration Missing</strong>: Please create a <code>.env.local</code> file in the project root containing your Supabase credentials (see <code>.env.example</code>).
         </div>
       )}
-      {marketing ? (
+      {auth ? (
+        <main data-app-body className="relative z-[1] flex w-full flex-1 flex-col">
+          {children}
+        </main>
+      ) : marketing ? (
         <>
           <TopBar />
           <main

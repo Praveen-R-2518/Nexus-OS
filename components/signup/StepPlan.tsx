@@ -111,24 +111,24 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             return (
               <div
                 key={tier.slug}
-                className="relative flex h-full flex-col rounded-xl border border-selectable-edge bg-white p-4 sm:p-5 dark:bg-surface-card"
+                className="relative flex h-full flex-col rounded-xl border border-glass-border bg-glass p-4 sm:p-5"
               >
                 <div className="mb-3 text-center">
-                  <p className="font-sans text-base font-semibold tracking-normal text-black dark:text-white">
+                  <p className="font-sans text-base font-semibold tracking-normal text-atmospheric-grey">
                     {tier.title}
                   </p>
-                  <p className="mt-2 font-sans text-xl font-semibold tabular-nums text-black dark:text-white">
+                  <p className="mt-2 font-sans text-xl font-semibold tabular-nums text-atmospheric-grey">
                     Custom pricing
                   </p>
                 </div>
-                <ul className="mb-4 flex-1 space-y-1.5 border-t border-dashed border-border/40 pt-3 text-sm text-black/75 dark:border-border dark:text-white/75">
+                <ul className="mb-4 flex-1 space-y-1.5 hairline-t pt-3 text-sm text-muted">
                   {tier.features.slice(0, 4).map((f) => (
                     <li key={f}>{f}</li>
                   ))}
                 </ul>
                 <Link
                   href={tier.ctaHref}
-                  className="mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-border bg-white px-3 py-2 text-sm font-medium text-black transition hover:bg-nexus-discovery-soft dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
+                  className="glass-pill mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-xl px-3 py-2 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-glass"
                 >
                   Contact Sales
                 </Link>
@@ -163,7 +163,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
       </div>
 
       {error ? (
-        <p className="text-center text-sm text-[#8B1A1A]" role="alert">
+        <p className="text-center text-sm text-status-critical" role="alert">
           {error}
         </p>
       ) : null}

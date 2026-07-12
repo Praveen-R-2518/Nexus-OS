@@ -1,0 +1,227 @@
+{
+  "name": "WF1 - Message Intake",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "connections": {
+    "Receive Message": { "main": [[{ "node": "Require Tenant", "type": "main", "index": 0 }]] },
+    "Require Tenant": {
+      "main": [
+        [{ "node": "Normalize Payload", "type": "main", "index": 0 }],
+        [{ "node": "Reject Missing Tenant", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalize Payload": { "main": [[{ "node": "Insert Conversation", "type": "main", "index": 0 }]] },
+    "Insert Conversation": {
+      "main": [
+        [{ "node": "Check Insert Status", "type": "main", "index": 0 }],
+        [{ "node": "Log Intake Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Insert Status": {
+      "main": [
+        [{ "node": "Log Intake", "type": "main", "index": 0 }],
+        [{ "node": "Log Intake Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Intake": {
+      "main": [
+        [{ "node": "Trigger WF2", "type": "main", "index": 0 }],
+        [{ "node": "Trigger WF2", "type": "main", "index": 0 }]
+      ]
+    },
+    "Trigger WF2": {
+      "main": [
+        [{ "node": "Respond OK", "type": "main", "index": 0 }],
+        [{ "node": "Respond OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Intake Error": { "main": [[{ "node": "Respond Error", "type": "main", "index": 0 }]] }
+  },
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "nexus/intake", "responseMode": "responseNode", "options": {} },
+      "id": "69b3ff29-b00d-48e0-a10f-98f2ceb7cb34",
+      "name": "Receive Message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-1040, 128],
+      "webhookId": "0a4865d6-89f1-44fb-afa4-2bce70f92546",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "aa000001-0000-4000-8000-000000000001",
+      "name": "Require Tenant",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-784, 128],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "has-tenant",
+              "leftValue": "={{ Boolean($json.body && ($json.body.team_id || $json.body.workspace_id)) }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "aa000002-0000-4000-8000-000000000002",
+      "name": "Reject Missing Tenant",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [-528, 320],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'team_id or workspace_id required' }) }}",
+        "options": { "responseCode": 400 }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "source", "name": "source", "value": "={{ $json.body.source || 'demo' }}", "type": "string" },
+            { "id": "customer_name", "name": "customer_name", "value": "={{ ($json.body.customer_name || '').trim() }}", "type": "string" },
+            { "id": "customer_email", "name": "customer_email", "value": "={{ ($json.body.customer_email || '').toLowerCase().trim() }}", "type": "string" },
+            { "id": "message", "name": "message", "value": "={{ ($json.body.message || '').trim() }}", "type": "string" },
+            { "id": "received_at", "name": "received_at", "value": "={{ $now.toISO() }}", "type": "string" },
+            { "id": "status", "name": "status", "value": "unread", "type": "string" },
+            { "id": "raw_payload", "name": "raw_payload", "value": "={{ JSON.stringify($json.body || {}) }}", "type": "string" },
+            { "id": "team_id", "name": "team_id", "value": "={{ $json.body.team_id || '' }}", "type": "string" },
+            { "id": "workspace_id", "name": "workspace_id", "value": "={{ $json.body.workspace_id || '' }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3232633f-84f6-46f9-9bae-1de8a400a40d",
+      "name": "Normalize Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-768, 128]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/conversations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=representation" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { source: $json.source, customer_name: $json.customer_name, customer_email: $json.customer_email, message: $json.message, received_at: $json.received_at, status: $json.status, raw_payload: JSON.parse($json.raw_payload || '{}'), ...($json.team_id ? { team_id: $json.team_id } : {}), ...($json.workspace_id ? { workspace_id: $json.workspace_id } : {}) } }}",
+        "options": { "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "json" } } }
+      },
+      "id": "82101470-efbf-4fd9-a5cf-a3bfcb57a3d9",
+      "name": "Insert Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [-512, 128],
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "status-is-201", "leftValue": "={{ $json.statusCode }}", "rightValue": 201, "operator": { "type": "number", "operation": "equals" } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4e1a6310-e9fc-4916-9e3e-654d3a88f4f2",
+      "name": "Check Insert Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-256, 128]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=representation" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  workflow_name: 'intake',\n  step: 'message_stored',\n  result: 'success',\n  payload: {\n    conversation_id: $('Insert Conversation').item.json.body[0].id,\n    source: $('Normalize Payload').item.json.source\n  },\n  timestamp: $now.toISO()\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
+      },
+      "id": "1b2c0599-9b81-4186-9edd-cf605031c3eb",
+      "name": "Log Intake",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 0],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  conversation_id: $('Insert Conversation').item.json.body[0].id,\n  message: $('Normalize Payload').item.json.message,\n  customer_name: $('Normalize Payload').item.json.customer_name,\n  customer_email: $('Normalize Payload').item.json.customer_email\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } }, "timeout": 15000 }
+      },
+      "id": "f227efd3-87ff-42ca-b2b7-80a703132b96",
+      "name": "Trigger WF2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [272, 0],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"conversation_id\": \"{{ $('Insert Conversation').item.json.body[0].id }}\"\n}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "24ae8254-dc38-4df8-8e7a-8094272892a4",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [528, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=representation" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  workflow_name: 'intake',\n  step: 'message_stored',\n  result: 'error',\n  payload: {\n    source: $('Normalize Payload').item.json.source\n  },\n  error: $json.message || ($json.error && $json.error.message) || $json.statusMessage || ('Insert Conversation returned status ' + ($json.statusCode || 'unknown')),\n  timestamp: $now.toISO()\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
+      },
+      "id": "e20cc041-4172-4a0f-9cde-de6e0610612e",
+      "name": "Log Intake Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 288],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"conversation_insert_failed\"\n}",
+        "options": { "responseCode": 500 }
+      },
+      "id": "e38acba6-c9ad-4181-891f-9ee9e40ca199",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [272, 288]
+    }
+  ]
+}

@@ -17,6 +17,12 @@
     "test:inbound-events": "tsx scripts/inbound_events_idempotency.test.ts",
     "test:meta-routing": "tsx scripts/meta_routing.test.ts",
     "test:chat-analyst": "tsx scripts/chat_analyst.test.ts",
+    "test:social-posts": "tsx scripts/social_posts_unit.test.ts",
+    "test:invites": "tsx scripts/invites_unit.test.ts",
+    "test:approval-policy": "tsx scripts/approval_policy.test.ts",
+    "test:send-reply": "tsx scripts/send_reply.test.ts",
+    "test:autopilot-send": "tsx scripts/autopilot_send.test.ts",
+    "test:send-e2e": "CHANNEL_SENDER_TRANSPORT=sandbox tsx scripts/send_e2e.integration.ts",
     "seed:demo": "tsx scripts/seed_demo_inbox.ts",
     "test:launch-workspace": "node scripts/launch_workspace_rpc.test.mjs",
     "n8n:export-workflows": "node scripts/build_n8n_workflow_exports.js"
