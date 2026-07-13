@@ -7,7 +7,7 @@
         "height": 520,
         "width": 400
       },
-      "id": "00000037-0000-4000-8000-000000374354",
+      "id": "00000063-0000-4000-8000-000000631248",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -498,7 +498,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://mahinsacw.app.n8n.cloud/webhook/nexus/classify",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
@@ -537,7 +537,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://mahinsacw.app.n8n.cloud/webhook/nexus/classify",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
