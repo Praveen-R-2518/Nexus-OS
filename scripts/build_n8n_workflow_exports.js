@@ -350,7 +350,7 @@ function buildConnections(map) {
 }
 
 const supabaseBaseUrl = "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1";
-const wf2WebhookUrl = "https://mahinsacw.app.n8n.cloud/webhook/nexus/classify";
+const wf2WebhookUrl = "https://knurdz3o.app.n8n.cloud/webhook/nexus/classify";
 
 const supabaseCredentialHeaders = [
   { name: "Content-Type", value: "application/json" },

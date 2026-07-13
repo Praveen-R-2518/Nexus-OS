@@ -169,7 +169,7 @@
         "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  conversation_id: $('Insert Conversation').item.json.body[0].id,\n  message: $('Normalize Payload').item.json.message,\n  customer_name: $('Normalize Payload').item.json.customer_name,\n  customer_email: $('Normalize Payload').item.json.customer_email\n} }}",
+        "jsonBody": "={{ {\n  conversation_id: $('Insert Conversation').item.json.body[0].id,\n  message: $('Normalize Payload').item.json.message,\n  customer_name: $('Normalize Payload').item.json.customer_name,\n  customer_email: $('Normalize Payload').item.json.customer_email,\n  team_id: $('Normalize Payload').item.json.team_id,\n  workspace_id: $('Normalize Payload').item.json.workspace_id\n} }}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } }, "timeout": 15000 }
       },
       "id": "f227efd3-87ff-42ca-b2b7-80a703132b96",

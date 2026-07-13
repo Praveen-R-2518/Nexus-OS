@@ -14,6 +14,7 @@
     "fix:auth-email": "node scripts/supabase_auth_email_config.js patch",
     "test:buy-back-report": "node scripts/test-buy-back-report.mjs",
     "test:tenant-intake": "node scripts/tenant_intake_mapping.test.mjs",
+    "test:wf2-contract": "tsx scripts/wf2_tenant_contract.test.ts",
     "test:inbound-events": "tsx scripts/inbound_events_idempotency.test.ts",
     "test:inbound-replay": "tsx scripts/inbound_replay.test.ts",
     "test:meta-routing": "tsx scripts/meta_routing.test.ts",
