@@ -11,7 +11,7 @@
 
 ## How to keep this file current (all members)
 
-**Last synced:** 2026-07-13 · Member 4 · Task 4.4
+**Last synced:** 2026-07-13 · Member 4 · Task 4.5
 
 When you finish a checklist item:
 1. Change `- [ ]` → `- [x]` on that item only.
@@ -250,7 +250,7 @@ required-before-production). Gmail intake records to `inbound_events` via WF0a l
 `report_date`) → PostgREST 400; its "Log Report Generated" node has no `neverError` and will
 hard-fail on the dropped `workflow_logs` table. `social_credentials.access_token`/`refresh_token`
 are plaintext columns (0 rows today — cheap to fix now) violating the AES-encryption convention.
-An orphan duplicate workflow "WF8a (Claude)" (`YjEXyYnAHhoSSc2W`) exists. The repo contains
+Orphan duplicate WF8a (Claude) `YjEXyYnAHhoSSc2W` was archived 2026-07-13 (task 4.5). The repo contains
 iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 
 - [x] **4.1 Fix WF5 schema mismatch:** remove the `date` key from "Save Daily Report" (keep
@@ -271,9 +271,20 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
       `created_at`) + a tiny recorder in the send/classify/draft paths that already parse OpenAI
       responses (usage fields are in the responses WF2/WF3/WF5 receive). Start with n8n nodes
       POSTing to a token-guarded `app/api/internal/n8n/ai-usage` endpoint.
-- [ ] **4.5 n8n hygiene:** archive the duplicate "WF8a - Social Post Caption Generation (Claude)"
+- [x] **4.5 n8n hygiene:** archive the duplicate "WF8a - Social Post Caption Generation (Claude)"
       workflow (do not delete); note in this file. Verify the active WF8a/WF8b/WF8c descriptions
       match `lib/posts/webhooks.ts` contracts.
+      **Hygiene note (2026-07-13):** Archived orphan `YjEXyYnAHhoSSc2W` ("WF8a - Social Post
+      Caption Generation (Claude) [ARCHIVED]") via `POST /api/v1/workflows/{id}/archive`; active
+      false, isArchived true, not deleted. App calls path `/webhook/social-post-input` → active
+      WF8a `dTunsN6JW5P1nymB` (OpenAI), not the orphan. **Contract verification vs
+      `lib/posts/webhooks.ts`:** WF8a input match (`orgId`, `mediaUrl`, `userDescription`,
+      `platforms`); **response mismatch** — `Return Draft Post` passthrough of PostgREST insert is
+      likely a one-element array, app expects single `SocialPost`. WF8c match (`generate-post-image`,
+      `{ orgId, prompt, parentGenerationId }` → `{ generation_id, image_path, signed_url,
+      enhanced_prompt }`). WF8b not in `webhooks.ts` (by design); live path `/webhook/publish-social-post`
+      expects `{ postId, orgId }`; LinkedIn skipped in `Build Platform Post Items` (`SUPPORTED` =
+      instagram/facebook/x only).
 - [ ] **4.6 Repo hygiene:** produce the definitive list of `" 2"` iCloud duplicate files/dirs
       (e.g. `next 2/`, `tailwind.config 2.ts`, `next.config 2.mjs`, `package-lock 2.json`,
       `nexus-os@0.1.0 2/`) as a section appended to this file for the HUMAN to delete — do not
@@ -286,6 +297,7 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M4 · 4.5 · Archived orphan WF8a Claude YjEXyYnAHhoSSc2W (isArchived true); app wired to active WF8a dTunsN6JW5P1nymB /social-post-input. Contracts: WF8a response array-vs-object mismatch; WF8c match; WF8b no app caller (publish-social-post). 9 workflows active (audit stale).
 2026-07-13 · M4 · 4.4 · ai_usage table + /api/internal/n8n/ai-usage; WF2 MmA7EKsOYAZgx3ep + WF3 OjFlX2W2xYbl5roY emit usage (Record AI Usage nodes); WF5 deferred (template summary, no OpenAI usage). WF2 pinned exec 68758: usage node success, tokens 342/94 from OpenRouter; DB row blocked until migration + deploy.
 2026-07-13 · M4 · 4.3 · social_credentials row count 0 verified live; migration 20260713180000 adds access_token_encrypted+refresh_token_encrypted; writers: none (lib/social/credentials.ts helper added); readers: WF8b VZ9ZaA1S2JxSAeGQ → GET /api/internal/n8n/social-credentials (active).
 2026-07-13 · M4 · 4.2 · WF5 QoJIseLTX2jwDYEy verified E2E for seeded tenant 6d265fe4… (exec 68726/68727): daily_reports upsert with summary+metrics, /report API mapping confirmed, Chat Agent snapshot metrics consistent, idempotency confirmed (1 row), 08:00 UTC schedule active. Template summary Code node while n8n OpenAI quota blocked.
