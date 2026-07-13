@@ -341,7 +341,7 @@ directories.
 **Human action:** delete the 15 `" 2"` paths and `New Text Document.txt`, then run `git rm` on each
 tracked path and commit. Do not delete canonical (non-`" 2"`) files.
 
-- [ ] **4.7 Add `.gitignore` entry review:** ensure `graphify-out/` is either committed
+- [x] **4.7 Add `.gitignore` entry review:** ensure `graphify-out/` is either committed
       deliberately or ignored (currently untracked) — ask the human which they prefer, then do it.
 
 ---
@@ -349,6 +349,7 @@ tracked path and commit. Do not delete canonical (non-`" 2"`) files.
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M4 · 4.7 · Chose gitignore (regenerable artifact). `/graphify-out/` already in .gitignore since c2dba10; not tracked; dir absent on disk. Human deferred to best option.
 2026-07-13 · M4 · 4.6 · Inventoried 15 git-tracked iCloud " 2" paths + empty New Text Document.txt (paths/metadata only; none opened/deleted). See §4.6 inventory.
 2026-07-13 · M4 · 4.5 · Archived orphan WF8a Claude YjEXyYnAHhoSSc2W (isArchived true); app wired to active WF8a dTunsN6JW5P1nymB /social-post-input. Contracts: WF8a response array-vs-object mismatch; WF8c match; WF8b no app caller (publish-social-post). 9 workflows active (audit stale).
 2026-07-13 · M4 · 4.4 · ai_usage table + /api/internal/n8n/ai-usage; WF2 MmA7EKsOYAZgx3ep + WF3 OjFlX2W2xYbl5roY emit usage (Record AI Usage nodes); WF5 deferred (template summary, no OpenAI usage). WF2 pinned exec 68758: usage node success, tokens 342/94 from OpenRouter; DB row blocked until migration + deploy.
