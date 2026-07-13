@@ -38,7 +38,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Is Schedule Followup",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Has Existing Lead": {
@@ -134,7 +140,13 @@
     },
     "Check Classification Success": {
       "main": [
-        [],
+        [
+          {
+            "node": "Log Classification Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Has Existing Lead",
@@ -149,6 +161,24 @@
         [
           {
             "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Schedule Followup": {
+      "main": [
+        [
+          {
+            "node": "Create Followup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Unhandled Action",
             "type": "main",
             "index": 0
           }
@@ -628,10 +658,185 @@
         -400,
         260
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-schedule-followup",
+              "leftValue": "={{ $('Parse AI Response').item.json.recommended_action === 'schedule_followup' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7167d202-4886-415d-a473-5f98ce3999b7",
+      "name": "Is Schedule Followup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  lead_id: $('Normalize Lead Result').item.json.lead_id,\n  conversation_id: $('Parse AI Response').item.json.conversation_id,\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  scheduled_for: $now.plus({ hours: 48 }).toISO(),\n  action: 'Follow-up: ' + ($('Parse AI Response').item.json.summary || 'scheduled by classifier'),\n  message: $('Parse AI Response').item.json.summary || 'Follow-up scheduled by WF2 classification.',\n  status: 'pending'\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "1284a11a-2169-4e95-8c7d-10f8ff05232e",
+      "name": "Create Followup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        240
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "maxTries": 4,
+      "retryOnFail": true,
+      "waitBetweenTries": 1200
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id || null,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  workflow_name: 'WF2 - AI Classification',\n  step: 'route_by_action',\n  result: 'unhandled_action',\n  error: 'Unhandled recommended_action: ' + String($('Parse AI Response').item.json.recommended_action),\n  payload: {\n    conversation_id: $('Parse AI Response').item.json.conversation_id || null,\n    lead_id: $('Normalize Lead Result').item.json.lead_id || null\n  }\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "92c45f00-c5db-4371-81f0-9d1320e3a575",
+      "name": "Log Unhandled Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        440
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id || null,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  workflow_name: 'WF2 - AI Classification',\n  step: $json._errorNode || 'unknown',\n  result: 'error',\n  error: $json._errorMessage || 'unknown error',\n  payload: {\n    conversation_id: $('Receive from WF1').item.json.body.conversation_id || null,\n    timestamp: $json._timestamp || null\n  }\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "9e1ae96c-806f-4b69-ab69-4495eccd1766",
+      "name": "Log Classification Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -144,
+        420
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
     }
   ],
   "meta": {
-    "exportedAt": "2026-07-13T10:07:11.656Z",
+    "exportedAt": "2026-07-13T10:53:07.589Z",
     "workflowId": "MmA7EKsOYAZgx3ep",
     "source": "live n8n MCP export"
   }
