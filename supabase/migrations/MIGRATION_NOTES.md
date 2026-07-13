@@ -46,3 +46,11 @@ here (migrations are treated as additive/append-only).
 `20250516120000_signup_profiles_workspaces.sql` appears to be a legacy duplicate of
 `0006_signup_profiles_workspaces.sql` (the live DB records the applied one as
 `20260517010327 0006_signup_profiles_workspaces`). Left untouched; flagging for future cleanup.
+
+## 4. Task 4.3 — social credential encryption (2026-07-13)
+
+Applied live to `xuvodbcdmfhlbldbvwvt`:
+
+- Added `access_token_encrypted` / `refresh_token_encrypted` (`text`, nullable) to `social_credentials`
+- Dropped `NOT NULL` on legacy `access_token` so writers can stop populating plaintext columns
+- Legacy `access_token` / `refresh_token` columns retained (unused); drop deferred pending human sign-off

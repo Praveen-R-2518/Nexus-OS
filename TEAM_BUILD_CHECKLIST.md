@@ -11,7 +11,7 @@
 
 ## How to keep this file current (all members)
 
-**Last synced:** 2026-07-13 · Member 4 · Task 4.2
+**Last synced:** 2026-07-13 · Member 4 · Task 4.3
 
 When you finish a checklist item:
 1. Change `- [ ]` → `- [x]` on that item only.
@@ -260,7 +260,7 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 - [x] **4.2 Test + activate WF5:** run via its manual webhook (`/webhook/nexus/report`) with a
       `team_id` override for the seeded tenant; verify a `daily_reports` row with summary text;
       then enable the 08:00 schedule. Confirm `/report` page and the Chat Agent snapshot pick it up.
-- [ ] **4.3 Encrypt social credentials:** new additive migration adding
+- [x] **4.3 Encrypt social credentials:** new additive migration adding
       `access_token_encrypted`/`refresh_token_encrypted` (pattern: `meta_credentials`), update
       writers/readers (`lib/posts/*`, any social connect flow) to use `lib/encryption/`, and
       update WF8b to fetch tokens via a token-guarded internal decrypt endpoint instead of raw
@@ -286,6 +286,7 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M4 · 4.3 · social_credentials row count 0 verified live; migration 20260713180000 adds access_token_encrypted+refresh_token_encrypted; writers: none (lib/social/credentials.ts helper added); readers: WF8b VZ9ZaA1S2JxSAeGQ → GET /api/internal/n8n/social-credentials (active).
 2026-07-13 · M4 · 4.2 · WF5 QoJIseLTX2jwDYEy verified E2E for seeded tenant 6d265fe4… (exec 68726/68727): daily_reports upsert with summary+metrics, /report API mapping confirmed, Chat Agent snapshot metrics consistent, idempotency confirmed (1 row), 08:00 UTC schedule active. Template summary Code node while n8n OpenAI quota blocked.
 2026-07-13 · M3 · 3.5 E2E · tenant_routing_e2e.test.ts passed (meta_routing + tenant_intake + live WF0a). Live Gmail ledger tenant-stamped (team 6d265fe4-…). Meta conversations proof still NEEDS M2 2.3–2.4.
 2026-07-13 · M3 · 3.4 · Gmail backfill: migration 20260713170000_gmail_backfill_jobs applied live; lib/gmail/backfill*.ts + gmail-backfill endpoint + OAuth enqueue; WF0e Y54F1bZLJkRyexTH created+activated. test:gmail-backfill pass. Production deploy needed before WF0e live smoke (404 on nexusos.knurdz.org).

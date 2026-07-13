@@ -23,6 +23,7 @@
     "test:meta-routing": "tsx scripts/meta_routing.test.ts",
     "test:chat-analyst": "tsx scripts/chat_analyst.test.ts",
     "test:social-posts": "tsx scripts/social_posts_unit.test.ts",
+    "test:social-credentials": "tsx scripts/social_credentials_encryption.test.ts",
     "test:invites": "tsx scripts/invites_unit.test.ts",
     "test:approval-policy": "tsx scripts/approval_policy.test.ts",
     "test:send-reply": "tsx scripts/send_reply.test.ts",

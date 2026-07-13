@@ -10,6 +10,9 @@ Importable snapshots of the Nexus OS n8n workflows (instance `knurdz3o.app.n8n.c
 | `wf1_message_intake.json` | WF1 Message Intake | `zU8cDHJeoUGWbUgC` | **exported from live** (2026-07-12) |
 | `wf3_revenue_rescue.json` | WF3 Revenue Rescue Agent | `OjFlX2W2xYbl5roY` | **exported from live** (2026-07-12) |
 | `wf4_followup_scheduler.json` | WF4 Follow-up Scheduler | `qWHvc2AmqX10jEjk` | **exported from live** (2026-07-12) |
+| `wf0d_ledger_drain.json` | WF0d Ledger Drain | `lr4HzWo2QeghXxhH` | metadata stub (2026-07-13) — **active** |
+| `wf0e_gmail_backfill.json` | WF0e Gmail Backfill | `Y54F1bZLJkRyexTH` | metadata stub (2026-07-13) — **active** |
+| `wf8b_social_publish.json` | WF8b Social Post Publishing | `VZ9ZaA1S2JxSAeGQ` | metadata stub (2026-07-13, task 4.3) — **active** |
 
 ## Notes
 
