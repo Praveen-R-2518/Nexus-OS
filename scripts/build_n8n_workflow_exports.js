@@ -462,6 +462,14 @@ const nodesGmail = [
   codeNode(uuid(32), "Multi-Channel Normalizer", [940, 360], normalizerJs),
   codeNode(uuid(33), "Noise Filter", [1180, 360], noiseJs),
   ifKeepNode(uuid(34), "IF Keep", [1420, 360]),
+  httpNode(uuid(35), "Log Noise Drop", [1660, 160], {
+    method: "POST",
+    url: `${supabaseBaseUrl}/workflow_logs`,
+    supabaseCredential: true,
+    headers: supabaseMinimalHeaders,
+    body: '={{ { workflow_name: "WF0a Gmail Intake", step: "noise_filter_dropped", result: "skipped", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: $json } }}',
+    onError: "continueRegularOutput",
+  }),
   codeNode(uuid(36), "Dedup Lookup Query", [1660, 400], dedupLookupQuery),
   httpNode(uuid(37), "Supabase GET Lead Dedup", [1900, 400], {
     method: "GET",
@@ -521,11 +529,28 @@ const nodesGmail = [
     onError: "continueRegularOutput",
     alwaysOutputData: true,
   }),
+  httpNode(uuid(44), "Log Intake OK", [3340, 380], {
+    method: "POST",
+    url: `${supabaseBaseUrl}/workflow_logs`,
+    supabaseCredential: true,
+    headers: supabaseCredentialHeaders,
+    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}",
+    onError: "continueRegularOutput",
+  }),
+  httpNode(uuid(45), "Log Intake Error", [2860, 80], {
+    method: "POST",
+    url: `${supabaseBaseUrl}/workflow_logs`,
+    supabaseCredential: true,
+    headers: supabaseMinimalHeaders,
+    body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}",
+    onError: "continueRegularOutput",
+    retries: { maxTries: 2, waitMs: 800 },
+  }),
   stopAndErrNode(
     uuid(46),
     "Stop on Intake DB Error",
     [3100, 80],
-    "WF0a: conversation persistence failed after retries. Inspect the failed n8n execution.",
+    "WF0a: conversation persistence failed after retries. Inspect workflow_logs (gmail_intake_error) and the failed execution.",
   ),
 ];
 
@@ -539,7 +564,7 @@ const connGmail = buildConnections({
   "Noise Filter": [[{ node: "IF Keep", type: "main", index: 0 }]],
   "IF Keep": [
     [{ node: "Dedup Lookup Query", type: "main", index: 0 }],
-    [],
+    [{ node: "Log Noise Drop", type: "main", index: 0 }],
   ],
   "Dedup Lookup Query": [[{ node: "Supabase GET Lead Dedup", type: "main", index: 0 }]],
   "Supabase GET Lead Dedup": [[{ node: "Dedup Decision", type: "main", index: 0 }]],
@@ -551,18 +576,21 @@ const connGmail = buildConnections({
   "POST Conversation (append)": [[{ node: "PATCH Lead Touch", type: "main", index: 0 }]],
   "PATCH Lead Touch": [[{ node: "Trigger WF2 Classification (append)", type: "main", index: 0 }]],
   "POST Conversation (new)": [[{ node: "Trigger WF2 Classification (new)", type: "main", index: 0 }]],
-  "Trigger WF2 Classification (append)": [],
-  "Trigger WF2 Classification (new)": [],
+  "Trigger WF2 Classification (append)": [[{ node: "Log Intake OK", type: "main", index: 0 }]],
+  "Trigger WF2 Classification (new)": [[{ node: "Log Intake OK", type: "main", index: 0 }]],
 });
 
 connGmail["POST Conversation (append)"].main = [
   [{ node: "PATCH Lead Touch", type: "main", index: 0 }],
-  [{ node: "Stop on Intake DB Error", type: "main", index: 0 }],
+  [{ node: "Log Intake Error", type: "main", index: 0 }],
 ];
 connGmail["POST Conversation (new)"].main = [
   [{ node: "Trigger WF2 Classification (new)", type: "main", index: 0 }],
-  [{ node: "Stop on Intake DB Error", type: "main", index: 0 }],
+  [{ node: "Log Intake Error", type: "main", index: 0 }],
 ];
+connGmail["Log Intake Error"] = {
+  main: [[{ node: "Stop on Intake DB Error", type: "main", index: 0 }]],
+};
 
 fs.writeFileSync(
   path.join(outDir, "wf0a_gmail_intake.json"),

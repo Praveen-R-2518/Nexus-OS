@@ -7,7 +7,7 @@
         "height": 520,
         "width": 400
       },
-      "id": "00000063-0000-4000-8000-000000631248",
+      "id": "00000067-0000-4000-8000-000000678563",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -201,6 +201,47 @@
         360
       ],
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: $json } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000035",
+      "name": "Log Noise Drop",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1660,
+        160
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -575,8 +616,93 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000044",
+      "name": "Log Intake OK",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3340,
+        380
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "options": {},
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000045",
+      "name": "Log Intake Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2860,
+        80
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 800
+    },
+    {
+      "parameters": {
         "errorType": "errorMessage",
-        "errorMessage": "WF0a: conversation persistence failed after retries. Inspect the failed n8n execution."
+        "errorMessage": "WF0a: conversation persistence failed after retries. Inspect workflow_logs (gmail_intake_error) and the failed execution."
       },
       "id": "00000000-0000-4000-8000-000000000046",
       "name": "Stop on Intake DB Error",
@@ -675,7 +801,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Log Noise Drop",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Dedup Lookup Query": {
@@ -740,7 +872,7 @@
         ],
         [
           {
-            "node": "Stop on Intake DB Error",
+            "node": "Log Intake Error",
             "type": "main",
             "index": 0
           }
@@ -769,7 +901,7 @@
         ],
         [
           {
-            "node": "Stop on Intake DB Error",
+            "node": "Log Intake Error",
             "type": "main",
             "index": 0
           }
@@ -777,10 +909,37 @@
       ]
     },
     "Trigger WF2 Classification (append)": {
-      "main": []
+      "main": [
+        [
+          {
+            "node": "Log Intake OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Trigger WF2 Classification (new)": {
-      "main": []
+      "main": [
+        [
+          {
+            "node": "Log Intake OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Intake Error": {
+      "main": [
+        [
+          {
+            "node": "Stop on Intake DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
