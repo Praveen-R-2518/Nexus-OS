@@ -2,5 +2,5 @@
   "id": "QoJIseLTX2jwDYEy",
   "name": "WF5 - Daily Buy-Back Report",
   "active": true,
-  "note": "Exported metadata from live n8n (knurdz3o) on 2026-07-13 (M4 task 4.1). Fixes: Save Daily Report uses report_date + on_conflict upsert; Loop Over Items outputs rewired (0=done,1=loop); Supabase API credential on all REST nodes; Log Report Generated neverError+continueRegularOutput. Manual webhook /webhook/nexus/report verified exec 68719 success."
+  "note": "Exported metadata from live n8n (knurdz3o) on 2026-07-13 (M4 task 4.2). OpenAI summary node replaced with Build Report Summary Code node (template fallback while n8n OpenAI quota blocked). Manual webhook exec 68726/68727 success for test tenant 6d265fe4…; idempotent upsert confirmed; 08:00 UTC schedule active."
 }
