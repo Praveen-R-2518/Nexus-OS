@@ -5,6 +5,7 @@ import {
   dailyReportQuery,
   metricsQuery,
   replyDraftsQuery,
+  settingsQuery,
 } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 
@@ -70,5 +71,13 @@ export function prefetchNavRoute(
       staleTime: STALE,
     });
     return;
+  }
+
+  if (href === "/settings" || href.startsWith("/settings")) {
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.settings(teamId),
+      queryFn: settingsQuery,
+      staleTime: STALE,
+    });
   }
 }

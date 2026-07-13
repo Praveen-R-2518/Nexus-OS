@@ -5,6 +5,7 @@ import type {
   Metrics,
   ReplyDraft,
   ReplyDraftWithConversation,
+  WorkspaceSettings,
 } from "@/types";
 
 async function readJson<T>(res: Response): Promise<T> {
@@ -83,4 +84,38 @@ export async function conversationDraftsQuery(id: string): Promise<ReplyDraft[]>
   const json = await readJson<{ drafts?: ReplyDraft[]; error?: string }>(res);
   if (!res.ok) throw new Error(errFrom(res, json));
   return Array.isArray(json.drafts) ? json.drafts : [];
+}
+
+export async function settingsQuery(): Promise<WorkspaceSettings> {
+  const res = await authenticatedFetch("/api/settings");
+  const json = await readJson<{ settings?: WorkspaceSettings; error?: string }>(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!json.settings || typeof json.settings !== "object") {
+    throw new Error("Invalid settings response");
+  }
+  return json.settings;
+}
+
+export type SettingsPatchInput = {
+  name?: string;
+  industry?: string;
+  tone?: string;
+  services?: string[];
+  approval_mode?: "approval_queue" | "autopilot";
+};
+
+export async function updateSettingsMutation(
+  patch: SettingsPatchInput,
+): Promise<WorkspaceSettings> {
+  const res = await authenticatedFetch("/api/settings", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  const json = await readJson<{ settings?: WorkspaceSettings; error?: string }>(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!json.settings || typeof json.settings !== "object") {
+    throw new Error("Invalid settings response");
+  }
+  return json.settings;
 }
