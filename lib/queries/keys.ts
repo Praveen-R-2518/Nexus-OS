@@ -23,4 +23,7 @@ export const queryKeys = {
 
   conversationDetail: (teamId: string | null, id: string) =>
     [...queryKeys.root(teamId), "conversationDetail", id] as const,
+
+  settings: (teamId: string | null) =>
+    [...queryKeys.root(teamId), "settings"] as const,
 } as const;

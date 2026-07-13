@@ -88,3 +88,75 @@ export interface Metrics {
   churn_risks: number;
   hours_saved: number;
 }
+
+export type MetaChannelPlatform = "whatsapp" | "instagram" | "facebook";
+
+export interface MetaChannelStatus {
+  connected: boolean;
+  page_name: string | null;
+  ig_username: string | null;
+  wa_display_phone: string | null;
+  sync_enabled: boolean;
+  last_synced_at: string | null;
+}
+
+export interface WorkspaceSettings {
+  workspace: {
+    id: string | null;
+    name: string | null;
+    industry: string | null;
+  };
+  business_profile: {
+    id: string;
+    name: string;
+    industry: string;
+    tone: string;
+    services: string[];
+    approval_mode: string;
+    pricing_rules: Record<string, unknown>;
+  } | null;
+  channels: {
+    gmail: {
+      connected: boolean;
+      email: string | null;
+      last_synced_at: string | null;
+      sync_enabled: boolean;
+      credential_type: string | null;
+    };
+    meta: {
+      connected: boolean;
+      platforms: Record<MetaChannelPlatform, MetaChannelStatus>;
+    };
+  };
+  billing: {
+    plan_tier: string | null;
+    billing_cycle: string | null;
+    status: string | null;
+    trial_ends_at: string | null;
+    current_period_end: string | null;
+    message_count: number;
+    message_limit: number | null;
+    period_start: string;
+    period_end: string;
+  };
+  security: {
+    gmail_credential_present: boolean;
+    meta_credentials_count: number;
+    tokens_encrypted: boolean;
+    user_email: string | null;
+  };
+  policy: {
+    high_value_threshold: number;
+    high_risk_score: number;
+    thresholds_editable: boolean;
+  };
+  fields: {
+    timezone_supported: boolean;
+    currency_from_pricing_rules: string | null;
+    notifications_supported: boolean;
+  };
+  editable: {
+    workspace_profile: boolean;
+    ai_rules: boolean;
+  };
+}
