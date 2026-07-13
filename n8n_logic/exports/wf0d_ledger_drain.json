@@ -1,0 +1,6 @@
+{
+  "id": "lr4HzWo2QeghXxhH",
+  "name": "WF0d Ledger Drain",
+  "active": true,
+  "note": "Exported from live n8n (knurdz3o) on 2026-07-13. Replays inbound_events stuck at received/failed every 10 min via Supabase REST + gmail-inbound webhook."
+}

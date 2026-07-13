@@ -1,5 +1,13 @@
 import { strict as assert } from "node:assert";
-import { handleGmailOAuthCallback } from "../app/api/gmail/callback/handler";
+import Module from "node:module";
+
+const moduleWithLoad = Module as unknown as { _load: (...args: unknown[]) => unknown };
+const origLoad = moduleWithLoad._load;
+moduleWithLoad._load = function (this: unknown, ...args: unknown[]) {
+  const request = String(args[0] ?? "");
+  if (request === "server-only" || request.endsWith("server-only")) return {};
+  return origLoad.apply(this, args);
+};
 
 type FakeUser = { id: string };
 
@@ -103,20 +111,37 @@ function fakeSupabase(opts: {
   return api;
 }
 
+function baseDeps(overrides: Partial<Parameters<typeof handleGmailOAuthCallback>[1]> = {}) {
+  let enqueued = 0;
+  return {
+    createSupabase: () => fakeSupabase({ user: { id: USER } }) as any,
+    createServiceSupabase: () => ({ from: () => ({ insert: async () => ({ error: null }) }) }) as any,
+    fetchFn: async () => {
+      throw new Error("fetch should not run");
+    },
+    encrypt: () => "enc",
+    isEncryptionReady: () => true,
+    oauthConfigHasError: () => false,
+    redirectUri: () => "https://example.test/api/gmail/callback",
+    enqueueBackfill: async () => {
+      enqueued += 1;
+      return { enqueued: true, jobId: "job1", error: null };
+    },
+    get enqueuedCount() {
+      return enqueued;
+    },
+    ...overrides,
+  };
+}
+
 async function run() {
+  const { handleGmailOAuthCallback } = await import("../app/api/gmail/callback/handler");
+
   // 1) Missing params => redirect with reason code (never throw)
   {
     const req = makeReq({ state: "x" });
-    const res = await handleGmailOAuthCallback(req, {
-      createSupabase: () => fakeSupabase({ user: { id: USER } }) as any,
-      fetchFn: async () => {
-        throw new Error("fetch should not run");
-      },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    const deps = baseDeps();
+    const res = await handleGmailOAuthCallback(req, deps);
     expectRedirectTo(
       res,
       (loc) => loc.includes("/signup?") && loc.includes("gmail_error=missing_params"),
@@ -127,16 +152,7 @@ async function run() {
   // 2) Invalid state => redirect
   {
     const req = makeReq({ code: "abc", state: "not-base64" });
-    const res = await handleGmailOAuthCallback(req, {
-      createSupabase: () => fakeSupabase({ user: { id: USER } }) as any,
-      fetchFn: async () => {
-        throw new Error("fetch should not run");
-      },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    const res = await handleGmailOAuthCallback(req, baseDeps());
     expectRedirectTo(
       res,
       (loc) => loc.includes("gmail_error=invalid_state"),
@@ -153,16 +169,9 @@ async function run() {
   // 3) Missing session => /login redirect (never 500)
   {
     const req = makeReq({ code: "abc", state: goodState });
-    const res = await handleGmailOAuthCallback(req, {
+    const res = await handleGmailOAuthCallback(req, baseDeps({
       createSupabase: () => fakeSupabase({ user: null }) as any,
-      fetchFn: async () => {
-        throw new Error("fetch should not run");
-      },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    }));
     expectRedirectTo(
       res,
       (loc) => loc.includes("/login?next="),
@@ -173,17 +182,13 @@ async function run() {
   // 4) Already connected => success redirect, no token exchange needed
   {
     const req = makeReq({ code: "abc", state: goodState });
-    const res = await handleGmailOAuthCallback(req, {
+    const res = await handleGmailOAuthCallback(req, baseDeps({
       createSupabase: () =>
         fakeSupabase({ user: { id: USER }, alreadyConnected: true }) as any,
       fetchFn: async () => {
         throw new Error("fetch should not be called when already connected");
       },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    }));
     expectRedirectTo(
       res,
       (loc) => loc.includes("gmail_connected=true"),
@@ -194,19 +199,14 @@ async function run() {
   // 5) invalid_grant + not connected => graceful error redirect
   {
     const req = makeReq({ code: "abc", state: goodState });
-    const res = await handleGmailOAuthCallback(req, {
-      createSupabase: () => fakeSupabase({ user: { id: USER } }) as any,
+    const res = await handleGmailOAuthCallback(req, baseDeps({
       fetchFn: async (url: any) => {
         if (String(url).includes("/token")) {
           return new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 });
         }
         throw new Error("unexpected fetch url");
       },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    }));
     expectRedirectTo(
       res,
       (loc) => loc.includes("gmail_error=token_invalid_grant"),
@@ -217,8 +217,7 @@ async function run() {
   // 6) userinfo missing email => graceful error redirect
   {
     const req = makeReq({ code: "abc", state: goodState });
-    const res = await handleGmailOAuthCallback(req, {
-      createSupabase: () => fakeSupabase({ user: { id: USER } }) as any,
+    const res = await handleGmailOAuthCallback(req, baseDeps({
       fetchFn: async (url: any) => {
         if (String(url).includes("/token")) {
           return new Response(JSON.stringify({ access_token: "at", expires_in: 3600 }), {
@@ -230,11 +229,7 @@ async function run() {
         }
         throw new Error("unexpected fetch url");
       },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    }));
     expectRedirectTo(
       res,
       (loc) => loc.includes("gmail_error=userinfo_missing_email"),
@@ -245,7 +240,7 @@ async function run() {
   // 7) Upsert failure => graceful error redirect (never throw)
   {
     const req = makeReq({ code: "abc", state: goodState });
-    const res = await handleGmailOAuthCallback(req, {
+    const res = await handleGmailOAuthCallback(req, baseDeps({
       createSupabase: () =>
         fakeSupabase({ user: { id: USER }, upsertOk: false }) as any,
       fetchFn: async (url: any) => {
@@ -259,16 +254,37 @@ async function run() {
         }
         throw new Error("unexpected fetch url");
       },
-      encrypt: () => "enc",
-      isEncryptionReady: () => true,
-      oauthConfigHasError: () => false,
-      redirectUri: () => "https://example.test/api/gmail/callback",
-    });
+    }));
     expectRedirectTo(
       res,
       (loc) => loc.includes("gmail_error=upsert_gmail_credentials"),
       "upsert failure should redirect with reason",
     );
+  }
+
+  // 8) Successful OAuth enqueues backfill job (best-effort)
+  {
+    const req = makeReq({ code: "abc", state: goodState });
+    const deps = baseDeps({
+      fetchFn: async (url: any) => {
+        if (String(url).includes("/token")) {
+          return new Response(JSON.stringify({ access_token: "at", expires_in: 3600, refresh_token: "rt" }), {
+            status: 200,
+          });
+        }
+        if (String(url).includes("/userinfo")) {
+          return new Response(JSON.stringify({ email: "a@b.com" }), { status: 200 });
+        }
+        throw new Error("unexpected fetch url");
+      },
+    });
+    const res = await handleGmailOAuthCallback(req, deps);
+    expectRedirectTo(
+      res,
+      (loc) => loc.includes("gmail_connected=true"),
+      "successful oauth should redirect to success",
+    );
+    assert.equal(deps.enqueuedCount, 1, "should enqueue one backfill job");
   }
 
   console.log("gmail_callback_hardening.test.ts: all checks passed");

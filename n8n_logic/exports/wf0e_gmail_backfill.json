@@ -1,0 +1,6 @@
+{
+  "id": "Y54F1bZLJkRyexTH",
+  "name": "WF0e Gmail Backfill",
+  "active": true,
+  "note": "Created in live n8n on 2026-07-13. Polls gmail_backfill_jobs and POSTs to {NEXUS_APP_URL}/api/internal/n8n/gmail-backfill with NEXUS_INGEST_TOKEN. Requires deploy of Task 3.4 app code."
+}

@@ -11,7 +11,7 @@
 
 ## How to keep this file current (all members)
 
-**Last synced:** 2026-07-13 · Member 3 · Tasks 3.1–3.3
+**Last synced:** 2026-07-13 · Member 3 · Tasks 3.1–3.5
 
 When you finish a checklist item:
 1. Change `- [ ]` → `- [x]` on that item only.
@@ -81,7 +81,7 @@ RLS) + n8n + OpenAI.
 |---|---|
 | Supabase project | `xuvodbcdmfhlbldbvwvt` (REST: `https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/…`) |
 | n8n instance | `https://knurdz3o.app.n8n.cloud` |
-| n8n workflows | WF0a `bhGCrTSHrj91ojby` · WF0d `lr4HzWo2QeghXxhH` · WF1 `zU8cDHJeoUGWbUgC` · WF2 `MmA7EKsOYAZgx3ep` · WF3 `OjFlX2W2xYbl5roY` · WF4 `qWHvc2AmqX10jEjk` · WF5 `QoJIseLTX2jwDYEy` · WF8a(OpenAI) `dTunsN6JW5P1nymB` · WF8b `VZ9ZaA1S2JxSAeGQ` · WF8c `RfmuS0guiaq64Lrx` · WF8a(Claude, orphan) `YjEXyYnAHhoSSc2W` |
+| n8n workflows | WF0a `bhGCrTSHrj91ojby` · WF0d `lr4HzWo2QeghXxhH` · WF0e `Y54F1bZLJkRyexTH` · WF1 `zU8cDHJeoUGWbUgC` · WF2 `MmA7EKsOYAZgx3ep` · WF3 `OjFlX2W2xYbl5roY` · WF4 `qWHvc2AmqX10jEjk` · WF5 `QoJIseLTX2jwDYEy` · WF8a(OpenAI) `dTunsN6JW5P1nymB` · WF8b `VZ9ZaA1S2JxSAeGQ` · WF8c `RfmuS0guiaq64Lrx` · WF8a(Claude, orphan) `YjEXyYnAHhoSSc2W` |
 | Dropped table | `workflow_logs` (migration `20260709140000_drop_workflow_logs.sql`) — but WF0a/WF1/WF3/WF4/WF5 still POST to it |
 | Two tenant models | `teams`/`workspaces` (pipeline tables, `team_id` NOT NULL) vs `organizations`/`user_profiles` (social tables, `organization_id`) — WF2 currently conflates them |
 | Extensions NOT installed | `vector` (pgvector — intentionally deferred, do NOT install), `pg_cron` |
@@ -187,8 +187,9 @@ dropped `workflow_logs` table.
 webhook before ack — the webhook returns 200 so platforms will NOT redeliver (documented as
 required-before-production). Gmail intake records to `inbound_events` via WF0a ledger path
 (Supabase REST, **activated**). WF0d drains `received`/`failed` events every 10 min
-(**activated**); app endpoint `app/api/internal/n8n/inbound-replay/route.ts` also exists as an
-alternative drain path. Local migration drift resolved in 3.1 — see
+(**activated**); WF0e polls `gmail_backfill_jobs` every 5 min (**activated**, needs app deploy +
+`NEXUS_APP_URL`/`NEXUS_INGEST_TOKEN` n8n Variables). App endpoints: `inbound-replay`,
+`gmail-backfill`. Local migration drift resolved in 3.1 — see
 `supabase/migrations/MIGRATION_NOTES.md`. `pg_cron` is NOT installed.
 
 - [x] **3.1 Migration drift sync (do this FIRST — everyone depends on schema truth).** Pull the 5
@@ -211,27 +212,33 @@ alternative drain path. Local migration drift resolved in 3.1 — see
       `Normalizer → Ledger Key → Record Inbound Event → IF New Event → Restore Normalized → Noise Filter`.
       Duplicate = drop at IF node; `neverError: true` on Record node for 409 handling.
       **App (done):** `app/api/internal/n8n/inbound-record/route.ts` +
-      `scripts/inbound_record.test.ts` (on branch, not yet on `development`).
+      `scripts/inbound_record.test.ts` (PR #122 open → `development`).
 
 ### Open follow-ups (Member 3)
 
-- [ ] Merge Task 3.3 app code to `development` (branch `member3/intake-reliability-ledger-drain`,
-      commit `6c7681f` — 3.1/3.2 already on `development` via PR #117)
-- [ ] Member 2: set production `NEXUS_*` Variables in n8n UI (test fallbacks in WF0a:
-      `ledger-test@nexus.dev`, workspace `e4b2fa6f-6e12-4e57-9b18-e5300fc4ee2f`)
-- [ ] Optional: export WF0a/WF0d changes back to `n8n_logic/exports/` via
-      `scripts/build_n8n_workflow_exports.js`
+- [ ] Merge PR #122 to `development` (3.3 app + checklist + 3.4/3.5 code)
+- [ ] Deploy `development` to production so WF0e can reach `/api/internal/n8n/gmail-backfill`
+      (currently 404 on nexusos.knurdz.org until deploy)
+- [ ] Set n8n Variables `NEXUS_APP_URL` + `NEXUS_INGEST_TOKEN` for WF0e (WF0a test fallbacks OK for E2E tenant)
+- [x] Export WF0d/WF0e metadata to `n8n_logic/exports/` (2026-07-13)
 
-- [ ] **3.4 Historical backfill on connect (Gmail first).** On successful Gmail OAuth
+- [x] **3.4 Historical backfill on connect (Gmail first).** On successful Gmail OAuth
       (`app/api/gmail/callback/handler.ts`), enqueue a backfill of the last 60–90 days: fetch in
       small batches (e.g. 50), push each message through the SAME normalize→ledger→intake path
       (idempotency makes re-runs safe), tenant-stamped, rate-limit-aware, resumable. Add a
       `scripts/` test with fixture messages. Do NOT touch live Google auth wiring itself —
       the human is re-doing it on the production domain.
-- [ ] **3.5 Verify tenant routing end-to-end** with sanitized fixtures: Meta payload → webhook →
+      **Implementation (done):** migration `20260713170000_gmail_backfill_jobs.sql` (applied live),
+      `lib/gmail/backfill-jobs.ts`, `lib/gmail/backfill.ts`,
+      `app/api/internal/n8n/gmail-backfill/route.ts`, OAuth enqueue hook,
+      `scripts/gmail_backfill.test.ts`, WF0e (`Y54F1bZLJkRyexTH`, activated). Live endpoint smoke
+      blocked until production deploy.
+- [x] **3.5 Verify tenant routing end-to-end** with sanitized fixtures: Meta payload → webhook →
       ledger (tenant-stamped) → WF0a normalizer → `conversations` row with correct
       `team_id`/`workspace_id` (this closes audit weak-spot #3 from NEXUS_REBUILD_CONTEXT).
-      WF0a is active; full tenant-routing proof still depends on Member 2's 2.3–2.4 fixes.
+      **Done (Gmail + app layer):** `scripts/tenant_routing_e2e.test.ts` (meta_routing +
+      tenant_intake + live WF0a smoke with ledger tenant stamp). Meta → `conversations` full proof
+      still depends on Member 2's WF2 tenant fixes (2.3–2.4).
 
 ---
 
@@ -279,6 +286,10 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M3 · 3.5 E2E · tenant_routing_e2e.test.ts passed (meta_routing + tenant_intake + live WF0a). Live Gmail ledger tenant-stamped (team 6d265fe4-…). Meta conversations proof still NEEDS M2 2.3–2.4.
+2026-07-13 · M3 · 3.4 · Gmail backfill: migration 20260713170000_gmail_backfill_jobs applied live; lib/gmail/backfill*.ts + gmail-backfill endpoint + OAuth enqueue; WF0e Y54F1bZLJkRyexTH created+activated. test:gmail-backfill pass. Production deploy needed before WF0e live smoke (404 on nexusos.knurdz.org).
+2026-07-13 · M3 · 3.4 n8n · WF0e polls gmail_backfill_jobs every 5 min → POST /api/internal/n8n/gmail-backfill (uses $vars NEXUS_APP_URL + NEXUS_INGEST_TOKEN).
+2026-07-13 · M3 · exports · Added n8n_logic/exports/wf0d_ledger_drain.json + wf0e_gmail_backfill.json metadata stubs.
 2026-07-13 · M3 · 3.3 E2E · WF0a+WF0d activated. Dedup test Message-ID m3-e2e-ledger-20260713@nexus.dev: first run exec 68612 (18 nodes, 1 inbound_events row, pipeline through WF2); duplicate exec 68614 (8 nodes, stopped at IF New Event, still 1 row). Test tenant: team 6d265fe4-97f8-4556-822f-08833303787b, workspace e4b2fa6f-6e12-4e57-9b18-e5300fc4ee2f, business_profile "Ledger E2E Profile" (gmail_destination_email ledger-test@nexus.dev).
 2026-07-13 · M3 · 3.3 n8n env · Patched WF0a for n8n Cloud ($env blocked in Code): safe getEnv() + $vars fallbacks in Tenant Route Extract / Verify Tenant Context; Ledger Key reads Message-ID from webhook body.headers. Production NEXUS_* vars still needed (Member 2).
 2026-07-13 · M3 · 3.3 n8n · Wired WF0a ledger path (Ledger Key → Record → IF New Event → Restore Normalized → Noise Filter). Supabase REST dedup verified.

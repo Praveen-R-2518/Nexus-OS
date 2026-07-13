@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { decodeOAuthState, signupGmailUrl } from "@/app/api/gmail/helpers";
 import { oauthRedirectUri, oauthConfigError } from "@/app/api/gmail/helpers";
 import { encryptSecret, isEncryptionConfigured } from "@/lib/encryption/credential-secret";
+import { enqueueGmailBackfillJob } from "@/lib/gmail/backfill-jobs";
+import { createServerClient } from "@/lib/supabase";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 type Stage =
@@ -20,7 +22,8 @@ type Stage =
   | "userinfo_missing_email"
   | "encrypt"
   | "upsert_gmail_credentials"
-  | "sync_business_profiles";
+  | "sync_business_profiles"
+  | "enqueue_gmail_backfill";
 
 type GoogleTokenResponse = {
   access_token?: string;
@@ -65,20 +68,24 @@ function loginRedirect(request: Request): NextResponse {
 
 export type GmailCallbackDeps = {
   createSupabase: typeof createSupabaseRouteHandlerClient;
+  createServiceSupabase: typeof createServerClient;
   fetchFn: typeof fetch;
   encrypt: typeof encryptSecret;
   isEncryptionReady: typeof isEncryptionConfigured;
   oauthConfigHasError: typeof oauthConfigError;
   redirectUri: typeof oauthRedirectUri;
+  enqueueBackfill: typeof enqueueGmailBackfillJob;
 };
 
 export const defaultGmailCallbackDeps: GmailCallbackDeps = {
   createSupabase: createSupabaseRouteHandlerClient,
+  createServiceSupabase: createServerClient,
   fetchFn: fetch,
   encrypt: encryptSecret,
   isEncryptionReady: isEncryptionConfigured,
   oauthConfigHasError: oauthConfigError,
   redirectUri: oauthRedirectUri,
+  enqueueBackfill: enqueueGmailBackfillJob,
 };
 
 export async function handleGmailOAuthCallback(
@@ -337,6 +344,18 @@ export async function handleGmailOAuthCallback(
     }
   } catch (e) {
     logStageError("sync_business_profiles", e);
+  }
+
+  // Best-effort backfill enqueue; OAuth success is unaffected.
+  try {
+    const serviceSupabase = deps.createServiceSupabase();
+    const enqueue = await deps.enqueueBackfill(serviceSupabase, {
+      workspaceId: workspace_id,
+      teamId: team_id,
+    });
+    if (enqueue.error) logStageError("enqueue_gmail_backfill", enqueue.error);
+  } catch (e) {
+    logStageError("enqueue_gmail_backfill", e);
   }
 
   return successRedirect(request);
