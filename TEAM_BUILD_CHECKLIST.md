@@ -11,7 +11,7 @@
 
 ## How to keep this file current (all members)
 
-**Last synced:** 2026-07-13 · Member 4 · Task 4.5
+**Last synced:** 2026-07-13 · Member 4 · Task 4.6
 
 When you finish a checklist item:
 1. Change `- [ ]` → `- [x]` on that item only.
@@ -285,10 +285,62 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
       enhanced_prompt }`). WF8b not in `webhooks.ts` (by design); live path `/webhook/publish-social-post`
       expects `{ postId, orgId }`; LinkedIn skipped in `Build Platform Post Items` (`SUPPORTED` =
       instagram/facebook/x only).
-- [ ] **4.6 Repo hygiene:** produce the definitive list of `" 2"` iCloud duplicate files/dirs
+- [x] **4.6 Repo hygiene:** produce the definitive list of `" 2"` iCloud duplicate files/dirs
       (e.g. `next 2/`, `tailwind.config 2.ts`, `next.config 2.mjs`, `package-lock 2.json`,
       `nexus-os@0.1.0 2/`) as a section appended to this file for the HUMAN to delete — do not
       delete them yourself. Also flag `New Text Document.txt` (empty) for removal.
+      See inventory subsection below.
+
+### 4.6 — iCloud duplicate / cruft inventory (for human deletion, DO NOT auto-delete)
+
+**None of the files below have been opened or deleted by the agent. Human review required before deletion.**
+
+Scanned 2026-07-13 with three cross-validated methods (PowerShell `Get-ChildItem` recursive name
+match, `git ls-files` filter, `cmd dir /s /b "* 2*"`); all returned **15** `" 2"` paths. Excluded
+`node_modules`, `.git`, `.next`. All 15 are **git-tracked**; all share mtime `2026-07-13 20:05:40`
+(likely iCloud sync stamp). Every `" 2"` path has a canonical non-`" 2"` counterpart present.
+
+**Correction vs audit examples:** `next 2` and `nexus-os@0.1.0 2` are **zero-byte files**, not
+directories.
+
+#### Repo root (`" 2"` duplicates)
+
+- `next 2` — 0 B — 2026-07-13 20:05:40 — empty file; canonical `next` exists
+- `next-env.d 2.ts` — 233 B — 2026-07-13 20:05:40 — canonical `next-env.d.ts` exists
+- `next.config 2.mjs` — 1721 B — 2026-07-13 20:05:40 — canonical `next.config.mjs` exists
+- `nexus-os@0.1.0 2` — 0 B — 2026-07-13 20:05:40 — empty file; canonical `nexus-os@0.1.0` exists
+- `package-lock 2.json` — 283706 B — 2026-07-13 20:05:40 — canonical `package-lock.json` exists
+- `tailwind.config 2.ts` — 1967 B — 2026-07-13 20:05:40 — canonical `tailwind.config.ts` exists
+- `trigger.config 2.ts` — 634 B — 2026-07-13 20:05:40 — canonical `trigger.config.ts` exists
+
+#### `n8n_logic/`
+
+- `n8n_logic/multi_channel_normalizer 2.js` — 12611 B — 2026-07-13 20:05:40 — canonical `multi_channel_normalizer.js` exists
+- `n8n_logic/noise_filter 2.js` — 4296 B — 2026-07-13 20:05:40 — canonical `noise_filter.js` exists
+- `n8n_logic/workflow_4_buy_back_report 2.js` — 4653 B — 2026-07-13 20:05:40 — canonical `workflow_4_buy_back_report.js` exists
+
+#### `public/`
+
+- `public/logo 2.png` — 6696 B — 2026-07-13 20:05:40 — canonical `public/logo.png` exists
+
+#### `scripts/`
+
+- `scripts/member4_classification_tests 2.js` — 10336 B — 2026-07-13 20:05:40 — canonical `scripts/member4_classification_tests.js` exists
+- `scripts/smoke_classification_openai 2.js` — 2762 B — 2026-07-13 20:05:40 — canonical `scripts/smoke_classification_openai.js` exists
+- `scripts/test-buy-back-report 2.mjs` — 5282 B — 2026-07-13 20:05:40 — canonical `scripts/test-buy-back-report.mjs` exists
+
+#### `supabase/.temp/`
+
+- `supabase/.temp/cli-latest 2` — 7 B — 2026-07-13 20:05:40 — canonical `supabase/.temp/cli-latest` exists; parent dir is gitignored (`/supabase/.temp/` in `.gitignore`) but this duplicate is still tracked
+
+#### Other cruft (non-`" 2"` pattern)
+
+- `New Text Document.txt` — 0 B — 2026-07-13 20:05:40 — empty junk file at repo root; **git-tracked**; safe to delete after human review
+- No `.DS_Store`, `Thumbs.db`, or `Untitled*` files found outside ignored areas (`.DS_Store` / `Thumbs.db` already in `.gitignore`)
+
+**Human action:** delete the 15 `" 2"` paths and `New Text Document.txt`, then run `git rm` on each
+tracked path and commit. Do not delete canonical (non-`" 2"`) files.
+
 - [ ] **4.7 Add `.gitignore` entry review:** ensure `graphify-out/` is either committed
       deliberately or ignored (currently untracked) — ask the human which they prefer, then do it.
 
@@ -297,6 +349,7 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M4 · 4.6 · Inventoried 15 git-tracked iCloud " 2" paths + empty New Text Document.txt (paths/metadata only; none opened/deleted). See §4.6 inventory.
 2026-07-13 · M4 · 4.5 · Archived orphan WF8a Claude YjEXyYnAHhoSSc2W (isArchived true); app wired to active WF8a dTunsN6JW5P1nymB /social-post-input. Contracts: WF8a response array-vs-object mismatch; WF8c match; WF8b no app caller (publish-social-post). 9 workflows active (audit stale).
 2026-07-13 · M4 · 4.4 · ai_usage table + /api/internal/n8n/ai-usage; WF2 MmA7EKsOYAZgx3ep + WF3 OjFlX2W2xYbl5roY emit usage (Record AI Usage nodes); WF5 deferred (template summary, no OpenAI usage). WF2 pinned exec 68758: usage node success, tokens 342/94 from OpenRouter; DB row blocked until migration + deploy.
 2026-07-13 · M4 · 4.3 · social_credentials row count 0 verified live; migration 20260713180000 adds access_token_encrypted+refresh_token_encrypted; writers: none (lib/social/credentials.ts helper added); readers: WF8b VZ9ZaA1S2JxSAeGQ → GET /api/internal/n8n/social-credentials (active).
