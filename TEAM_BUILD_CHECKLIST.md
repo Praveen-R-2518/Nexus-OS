@@ -342,7 +342,7 @@ directories.
 tracked path and commit. Do not delete canonical (non-`" 2"`) files.
 
 - [x] **4.7 Add `.gitignore` entry review:** ensure `graphify-out/` is either committed
-      deliberately or ignored (currently untracked) — ask the human which they prefer, then do it.
+      deliberately or ignored — resolved: gitignored (`/graphify-out/` in `.gitignore`; regenerable via `graphify update .`).
 
 ---
 
