@@ -399,6 +399,7 @@ Clicking the confirmation email link hits `/auth/callback`, which exchanges the 
 | `GET /api/meta/status` | User session | Meta connection status per platform |
 | `GET/POST /api/meta/webhook` | Meta verify token + HMAC signature | Unified Meta webhook → forward to n8n intake |
 | `GET/POST /api/internal/n8n/meta-credentials` | `N8N_INGEST_TOKEN` | Decrypted Meta page tokens for n8n send workflows |
+| `GET /api/internal/n8n/social-credentials` | `N8N_INGEST_TOKEN` | Decrypted social platform tokens for WF8b publishing |
 
 n8n webhooks (configure in your instance): `/webhook/gmail-inbound` (Gmail + Meta forwarded payloads), `/webhook/approval-trigger`.
 

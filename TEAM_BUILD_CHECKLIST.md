@@ -11,7 +11,7 @@
 
 ## How to keep this file current (all members)
 
-**Last synced:** 2026-07-13 · Member 3 · Tasks 3.1–3.5
+**Last synced:** 2026-07-13 · Member 4 · Task 4.6
 
 When you finish a checklist item:
 1. Change `- [ ]` → `- [x]` on that item only.
@@ -250,42 +250,111 @@ required-before-production). Gmail intake records to `inbound_events` via WF0a l
 `report_date`) → PostgREST 400; its "Log Report Generated" node has no `neverError` and will
 hard-fail on the dropped `workflow_logs` table. `social_credentials.access_token`/`refresh_token`
 are plaintext columns (0 rows today — cheap to fix now) violating the AES-encryption convention.
-An orphan duplicate workflow "WF8a (Claude)" (`YjEXyYnAHhoSSc2W`) exists. The repo contains
+Orphan duplicate WF8a (Claude) `YjEXyYnAHhoSSc2W` was archived 2026-07-13 (task 4.5). The repo contains
 iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 
-- [ ] **4.1 Fix WF5 schema mismatch:** remove the `date` key from "Save Daily Report" (keep
+- [x] **4.1 Fix WF5 schema mismatch:** remove the `date` key from "Save Daily Report" (keep
       `report_date`); confirm the upsert (`resolution=merge-duplicates`) has a matching unique
       constraint on (`team_id`,`report_date`) — if not, add one via a new additive migration.
       Make the log node tolerant (`neverError`) until Member 2's 2.1 decision lands.
-- [ ] **4.2 Test + activate WF5:** run via its manual webhook (`/webhook/nexus/report`) with a
+- [x] **4.2 Test + activate WF5:** run via its manual webhook (`/webhook/nexus/report`) with a
       `team_id` override for the seeded tenant; verify a `daily_reports` row with summary text;
       then enable the 08:00 schedule. Confirm `/report` page and the Chat Agent snapshot pick it up.
-- [ ] **4.3 Encrypt social credentials:** new additive migration adding
+- [x] **4.3 Encrypt social credentials:** new additive migration adding
       `access_token_encrypted`/`refresh_token_encrypted` (pattern: `meta_credentials`), update
       writers/readers (`lib/posts/*`, any social connect flow) to use `lib/encryption/`, and
       update WF8b to fetch tokens via a token-guarded internal decrypt endpoint instead of raw
       table reads. Old plaintext columns: stop writing, then drop in a later migration once empty
       (they are empty today — verify first).
-- [ ] **4.4 Basic AI cost tracking (cross-cutting requirement):** new `ai_usage` table (additive
+- [x] **4.4 Basic AI cost tracking (cross-cutting requirement):** new `ai_usage` table (additive
       migration, RLS, `team_id`, `workflow_name`, `model`, `input_tokens`, `output_tokens`,
       `created_at`) + a tiny recorder in the send/classify/draft paths that already parse OpenAI
       responses (usage fields are in the responses WF2/WF3/WF5 receive). Start with n8n nodes
       POSTing to a token-guarded `app/api/internal/n8n/ai-usage` endpoint.
-- [ ] **4.5 n8n hygiene:** archive the duplicate "WF8a - Social Post Caption Generation (Claude)"
+- [x] **4.5 n8n hygiene:** archive the duplicate "WF8a - Social Post Caption Generation (Claude)"
       workflow (do not delete); note in this file. Verify the active WF8a/WF8b/WF8c descriptions
       match `lib/posts/webhooks.ts` contracts.
-- [ ] **4.6 Repo hygiene:** produce the definitive list of `" 2"` iCloud duplicate files/dirs
+      **Hygiene note (2026-07-13):** Archived orphan `YjEXyYnAHhoSSc2W` ("WF8a - Social Post
+      Caption Generation (Claude) [ARCHIVED]") via `POST /api/v1/workflows/{id}/archive`; active
+      false, isArchived true, not deleted. App calls path `/webhook/social-post-input` → active
+      WF8a `dTunsN6JW5P1nymB` (OpenAI), not the orphan. **Contract verification vs
+      `lib/posts/webhooks.ts`:** WF8a input match (`orgId`, `mediaUrl`, `userDescription`,
+      `platforms`); **response mismatch** — `Return Draft Post` passthrough of PostgREST insert is
+      likely a one-element array, app expects single `SocialPost`. WF8c match (`generate-post-image`,
+      `{ orgId, prompt, parentGenerationId }` → `{ generation_id, image_path, signed_url,
+      enhanced_prompt }`). WF8b not in `webhooks.ts` (by design); live path `/webhook/publish-social-post`
+      expects `{ postId, orgId }`; LinkedIn skipped in `Build Platform Post Items` (`SUPPORTED` =
+      instagram/facebook/x only).
+- [x] **4.6 Repo hygiene:** produce the definitive list of `" 2"` iCloud duplicate files/dirs
       (e.g. `next 2/`, `tailwind.config 2.ts`, `next.config 2.mjs`, `package-lock 2.json`,
       `nexus-os@0.1.0 2/`) as a section appended to this file for the HUMAN to delete — do not
       delete them yourself. Also flag `New Text Document.txt` (empty) for removal.
-- [ ] **4.7 Add `.gitignore` entry review:** ensure `graphify-out/` is either committed
-      deliberately or ignored (currently untracked) — ask the human which they prefer, then do it.
+      See inventory subsection below.
+
+### 4.6 — iCloud duplicate / cruft inventory (for human deletion, DO NOT auto-delete)
+
+**None of the files below have been opened or deleted by the agent. Human review required before deletion.**
+
+Scanned 2026-07-13 with three cross-validated methods (PowerShell `Get-ChildItem` recursive name
+match, `git ls-files` filter, `cmd dir /s /b "* 2*"`); all returned **15** `" 2"` paths. Excluded
+`node_modules`, `.git`, `.next`. All 15 are **git-tracked**; all share mtime `2026-07-13 20:05:40`
+(likely iCloud sync stamp). Every `" 2"` path has a canonical non-`" 2"` counterpart present.
+
+**Correction vs audit examples:** `next 2` and `nexus-os@0.1.0 2` are **zero-byte files**, not
+directories.
+
+#### Repo root (`" 2"` duplicates)
+
+- `next 2` — 0 B — 2026-07-13 20:05:40 — empty file; canonical `next` exists
+- `next-env.d 2.ts` — 233 B — 2026-07-13 20:05:40 — canonical `next-env.d.ts` exists
+- `next.config 2.mjs` — 1721 B — 2026-07-13 20:05:40 — canonical `next.config.mjs` exists
+- `nexus-os@0.1.0 2` — 0 B — 2026-07-13 20:05:40 — empty file; canonical `nexus-os@0.1.0` exists
+- `package-lock 2.json` — 283706 B — 2026-07-13 20:05:40 — canonical `package-lock.json` exists
+- `tailwind.config 2.ts` — 1967 B — 2026-07-13 20:05:40 — canonical `tailwind.config.ts` exists
+- `trigger.config 2.ts` — 634 B — 2026-07-13 20:05:40 — canonical `trigger.config.ts` exists
+
+#### `n8n_logic/`
+
+- `n8n_logic/multi_channel_normalizer 2.js` — 12611 B — 2026-07-13 20:05:40 — canonical `multi_channel_normalizer.js` exists
+- `n8n_logic/noise_filter 2.js` — 4296 B — 2026-07-13 20:05:40 — canonical `noise_filter.js` exists
+- `n8n_logic/workflow_4_buy_back_report 2.js` — 4653 B — 2026-07-13 20:05:40 — canonical `workflow_4_buy_back_report.js` exists
+
+#### `public/`
+
+- `public/logo 2.png` — 6696 B — 2026-07-13 20:05:40 — canonical `public/logo.png` exists
+
+#### `scripts/`
+
+- `scripts/member4_classification_tests 2.js` — 10336 B — 2026-07-13 20:05:40 — canonical `scripts/member4_classification_tests.js` exists
+- `scripts/smoke_classification_openai 2.js` — 2762 B — 2026-07-13 20:05:40 — canonical `scripts/smoke_classification_openai.js` exists
+- `scripts/test-buy-back-report 2.mjs` — 5282 B — 2026-07-13 20:05:40 — canonical `scripts/test-buy-back-report.mjs` exists
+
+#### `supabase/.temp/`
+
+- `supabase/.temp/cli-latest 2` — 7 B — 2026-07-13 20:05:40 — canonical `supabase/.temp/cli-latest` exists; parent dir is gitignored (`/supabase/.temp/` in `.gitignore`) but this duplicate is still tracked
+
+#### Other cruft (non-`" 2"` pattern)
+
+- `New Text Document.txt` — 0 B — 2026-07-13 20:05:40 — empty junk file at repo root; **git-tracked**; safe to delete after human review
+- No `.DS_Store`, `Thumbs.db`, or `Untitled*` files found outside ignored areas (`.DS_Store` / `Thumbs.db` already in `.gitignore`)
+
+**Human action:** delete the 15 `" 2"` paths and `New Text Document.txt`, then run `git rm` on each
+tracked path and commit. Do not delete canonical (non-`" 2"`) files.
+
+- [x] **4.7 Add `.gitignore` entry review:** ensure `graphify-out/` is either committed
+      deliberately or ignored — resolved: gitignored (`/graphify-out/` in `.gitignore`; regenerable via `graphify update .`).
 
 ---
 
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M4 · 4.7 · Chose gitignore (regenerable artifact). `/graphify-out/` already in .gitignore since c2dba10; not tracked; dir absent on disk. Human deferred to best option.
+2026-07-13 · M4 · 4.6 · Inventoried 15 git-tracked iCloud " 2" paths + empty New Text Document.txt (paths/metadata only; none opened/deleted). See §4.6 inventory.
+2026-07-13 · M4 · 4.5 · Archived orphan WF8a Claude YjEXyYnAHhoSSc2W (isArchived true); app wired to active WF8a dTunsN6JW5P1nymB /social-post-input. Contracts: WF8a response array-vs-object mismatch; WF8c match; WF8b no app caller (publish-social-post). 9 workflows active (audit stale).
+2026-07-13 · M4 · 4.4 · ai_usage table + /api/internal/n8n/ai-usage; WF2 MmA7EKsOYAZgx3ep + WF3 OjFlX2W2xYbl5roY emit usage (Record AI Usage nodes); WF5 deferred (template summary, no OpenAI usage). WF2 pinned exec 68758: usage node success, tokens 342/94 from OpenRouter; DB row blocked until migration + deploy.
+2026-07-13 · M4 · 4.3 · social_credentials row count 0 verified live; migration 20260713180000 adds access_token_encrypted+refresh_token_encrypted; writers: none (lib/social/credentials.ts helper added); readers: WF8b VZ9ZaA1S2JxSAeGQ → GET /api/internal/n8n/social-credentials (active).
+2026-07-13 · M4 · 4.2 · WF5 QoJIseLTX2jwDYEy verified E2E for seeded tenant 6d265fe4… (exec 68726/68727): daily_reports upsert with summary+metrics, /report API mapping confirmed, Chat Agent snapshot metrics consistent, idempotency confirmed (1 row), 08:00 UTC schedule active. Template summary Code node while n8n OpenAI quota blocked.
 2026-07-13 · M3 · 3.5 E2E · tenant_routing_e2e.test.ts passed (meta_routing + tenant_intake + live WF0a). Live Gmail ledger tenant-stamped (team 6d265fe4-…). Meta conversations proof still NEEDS M2 2.3–2.4.
 2026-07-13 · M3 · 3.4 · Gmail backfill: migration 20260713170000_gmail_backfill_jobs applied live; lib/gmail/backfill*.ts + gmail-backfill endpoint + OAuth enqueue; WF0e Y54F1bZLJkRyexTH created+activated. test:gmail-backfill pass. Production deploy needed before WF0e live smoke (404 on nexusos.knurdz.org).
 2026-07-13 · M3 · 3.4 n8n · WF0e polls gmail_backfill_jobs every 5 min → POST /api/internal/n8n/gmail-backfill (uses $vars NEXUS_APP_URL + NEXUS_INGEST_TOKEN).

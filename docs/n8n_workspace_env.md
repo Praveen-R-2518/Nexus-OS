@@ -42,3 +42,16 @@ Current wiring:
 
 **Do not activate** for real sends until Gmail `gmail.send` scope is provisioned (until then set
 `CHANNEL_SENDER_TRANSPORT=sandbox` on the app to complete the path without real email).
+
+### WF8b Social Post Publishing (calls into the Next.js app)
+
+WF8b (`VZ9ZaA1S2JxSAeGQ`) fetches decrypted social platform tokens via
+`GET /api/internal/n8n/social-credentials?organization_id={orgId}` — n8n must **never** read
+`social_credentials` tokens directly from Supabase REST.
+
+| Value | How it's supplied |
+|---|---|
+| App base URL | `{{ $vars.NEXUS_APP_URL }}` with fallback `https://nexusos.knurdz.org` |
+| `N8N_INGEST_TOKEN` | `{{ $vars.N8N_INGEST_TOKEN }}` (or `NEXUS_INGEST_TOKEN`) — n8n **Variable** |
+
+Requires app deploy of the social-credentials endpoint and migration `20260713180000`.
