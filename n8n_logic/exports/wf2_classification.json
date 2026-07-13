@@ -113,11 +113,22 @@
       "main": [
         [
           {
-            "node": "Parse AI Response",
+            "node": "Record AI Usage (WF2)",
             "type": "main",
             "index": 0
           }
         ],
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record AI Usage (WF2)": {
+      "main": [
         [
           {
             "node": "Parse AI Response",
@@ -459,7 +470,7 @@
           "response": {
             "response": {
               "neverError": true,
-              "responseFormat": "json"
+              "responseFormat": "text"
             }
           },
           "timeout": 30000
@@ -624,6 +635,44 @@
       "maxTries": 3,
       "retryOnFail": true,
       "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org') + '/api/internal/n8n/ai-usage' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workflow_name: 'WF2',\n  model: $('Build Classification Request').item.json.requestBody.model || $('Classify Message').item.json.model || 'unknown',\n  input_tokens: ($('Classify Message').item.json.usage && ($('Classify Message').item.json.usage.prompt_tokens ?? $('Classify Message').item.json.usage.input_tokens)) ?? null,\n  output_tokens: ($('Classify Message').item.json.usage && ($('Classify Message').item.json.usage.completion_tokens ?? $('Classify Message').item.json.usage.output_tokens)) ?? null\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "940ae1f9-c2c7-44a6-833d-9a844187084a",
+      "name": "Record AI Usage (WF2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -528,
+        220
+      ]
     },
     {
       "parameters": {

@@ -11,7 +11,7 @@
 
 ## How to keep this file current (all members)
 
-**Last synced:** 2026-07-13 · Member 4 · Task 4.3
+**Last synced:** 2026-07-13 · Member 4 · Task 4.4
 
 When you finish a checklist item:
 1. Change `- [ ]` → `- [x]` on that item only.
@@ -266,7 +266,7 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
       update WF8b to fetch tokens via a token-guarded internal decrypt endpoint instead of raw
       table reads. Old plaintext columns: stop writing, then drop in a later migration once empty
       (they are empty today — verify first).
-- [ ] **4.4 Basic AI cost tracking (cross-cutting requirement):** new `ai_usage` table (additive
+- [x] **4.4 Basic AI cost tracking (cross-cutting requirement):** new `ai_usage` table (additive
       migration, RLS, `team_id`, `workflow_name`, `model`, `input_tokens`, `output_tokens`,
       `created_at`) + a tiny recorder in the send/classify/draft paths that already parse OpenAI
       responses (usage fields are in the responses WF2/WF3/WF5 receive). Start with n8n nodes
@@ -286,6 +286,7 @@ iCloud `" 2"` duplicate files. No AI cost tracking exists anywhere.
 ## Progress log (append one line per completed item: date · member · item · note)
 
 <!-- e.g. 2026-07-12 · M2 · 2.2 · WF0a now targets knurdz3o /nexus/classify; mahinsacw confirmed stale -->
+2026-07-13 · M4 · 4.4 · ai_usage table + /api/internal/n8n/ai-usage; WF2 MmA7EKsOYAZgx3ep + WF3 OjFlX2W2xYbl5roY emit usage (Record AI Usage nodes); WF5 deferred (template summary, no OpenAI usage). WF2 pinned exec 68758: usage node success, tokens 342/94 from OpenRouter; DB row blocked until migration + deploy.
 2026-07-13 · M4 · 4.3 · social_credentials row count 0 verified live; migration 20260713180000 adds access_token_encrypted+refresh_token_encrypted; writers: none (lib/social/credentials.ts helper added); readers: WF8b VZ9ZaA1S2JxSAeGQ → GET /api/internal/n8n/social-credentials (active).
 2026-07-13 · M4 · 4.2 · WF5 QoJIseLTX2jwDYEy verified E2E for seeded tenant 6d265fe4… (exec 68726/68727): daily_reports upsert with summary+metrics, /report API mapping confirmed, Chat Agent snapshot metrics consistent, idempotency confirmed (1 row), 08:00 UTC schedule active. Template summary Code node while n8n OpenAI quota blocked.
 2026-07-13 · M3 · 3.5 E2E · tenant_routing_e2e.test.ts passed (meta_routing + tenant_intake + live WF0a). Live Gmail ledger tenant-stamped (team 6d265fe4-…). Meta conversations proof still NEEDS M2 2.3–2.4.
