@@ -17,6 +17,7 @@
     "test:wf2-contract": "tsx scripts/wf2_tenant_contract.test.ts",
     "test:inbound-events": "tsx scripts/inbound_events_idempotency.test.ts",
     "test:inbound-replay": "tsx scripts/inbound_replay.test.ts",
+    "test:inbound-record": "tsx scripts/inbound_record.test.ts",
     "test:meta-routing": "tsx scripts/meta_routing.test.ts",
     "test:chat-analyst": "tsx scripts/chat_analyst.test.ts",
     "test:social-posts": "tsx scripts/social_posts_unit.test.ts",
