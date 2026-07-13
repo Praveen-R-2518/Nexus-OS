@@ -158,9 +158,9 @@
       "position": [1820, 128],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.NEXUS_APP_BASE_URL }}/api/internal/n8n/autopilot-send",
+        "url": "https://nexusos.knurdz.org/api/internal/n8n/autopilot-send",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{ $env.N8N_INGEST_TOKEN }}" }, { "name": "Content-Type", "value": "application/json" }] },
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}" }, { "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ {\n  draft_id: (($('Save Reply Draft').item.json.body && $('Save Reply Draft').item.json.body[0] && $('Save Reply Draft').item.json.body[0].id) || (Array.isArray($('Save Reply Draft').item.json) && $('Save Reply Draft').item.json[0] && $('Save Reply Draft').item.json[0].id) || $('Save Reply Draft').item.json.id),\n  team_id: $('Receive Lead').item.json.body.team_id,\n  lead_id: $('Build Reply Context').item.json.lead_id\n} }}",

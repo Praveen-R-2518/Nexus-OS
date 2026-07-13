@@ -1,0 +1,843 @@
+{
+  "name": "WF2 - AI Classification",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "connections": {
+    "Receive from WF1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Business Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Business Profile": {
+      "main": [
+        [
+          {
+            "node": "Build Classification Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "Trigger WF3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Schedule Followup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Patch Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Patch Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Classification Input": {
+      "main": [
+        [
+          {
+            "node": "Build Classification Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Classification Request": {
+      "main": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Message": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Check Classification Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Classification Success": {
+      "main": [
+        [
+          {
+            "node": "Log Classification Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Has Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead Result": {
+      "main": [
+        [
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Schedule Followup": {
+      "main": [
+        [
+          {
+            "node": "Create Followup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Unhandled Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nexus/classify",
+        "options": {
+          "responseCode": {
+            "values": {}
+          },
+          "responseData": "{\"status\":\"received\",\"workflow\":\"WF2\"}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "a4c89bd5-3f50-47f9-9445-70c38f522879",
+      "name": "Receive from WF1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1568,
+        160
+      ],
+      "webhookId": "de1a1339-334f-4a70-a28d-5b40f905b62a",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/business_profiles?select=id,name,industry,tone,services,pricing_rules,approval_mode&team_id=eq.' + encodeURIComponent($('Receive from WF1').item.json.body.team_id) + '&limit=1' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "25b3556c-df13-4730-b96f-3e6c45043a42",
+      "name": "Fetch Business Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1296,
+        160
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "maxTries": 4,
+      "retryOnFail": true,
+      "waitBetweenTries": 1200
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "conversation_id",
+              "name": "conversation_id",
+              "value": "={{ $('Receive from WF1').item.json.body.conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "={{ $('Receive from WF1').item.json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "customer_name",
+              "name": "customer_name",
+              "value": "={{ $('Receive from WF1').item.json.body.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "customer_email",
+              "name": "customer_email",
+              "value": "={{ $('Receive from WF1').item.json.body.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "lead_id",
+              "name": "lead_id",
+              "value": "={{ $('Receive from WF1').item.json.body.lead_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "business_name",
+              "name": "business_name",
+              "value": "={{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).name) || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "industry",
+              "name": "industry",
+              "value": "={{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).industry) || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "tone",
+              "name": "tone",
+              "value": "={{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).tone) || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "services",
+              "name": "services",
+              "value": "={{ JSON.stringify(((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).services) || []) }}",
+              "type": "string"
+            },
+            {
+              "id": "pricing_rules",
+              "name": "pricing_rules",
+              "value": "={{ JSON.stringify(((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).pricing_rules) || {}) }}",
+              "type": "string"
+            },
+            {
+              "id": "approval_mode",
+              "name": "approval_mode",
+              "value": "={{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).approval_mode) || 'approval_queue' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10dca75a-481f-49c8-ae42-44f9af733a77",
+      "name": "Build Classification Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1040,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const j0 = items[0].json;\n  if (j0._error || j0.error) {\n    return [\n      {\n        json: {\n          _error: true,\n          _errorMessage:\n            (j0.error && j0.error.message) || j0.errorMessage || 'AI classification failed or returned empty',\n          _errorNode: 'ClassifyMessage',\n          _timestamp: new Date().toISOString(),\n        },\n      },\n    ];\n  }\n\n  const item = $input.first();\n  const rawText = item.json.message?.content\n  || item.json.text\n  || item.json.content\n  || item.json.choices?.[0]?.message?.content\n  || item.json.data?.choices?.[0]?.message?.content\n  || '';\n\nlet parsed;\ntry {\n  const cleaned = String(rawText)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n  parsed = JSON.parse(cleaned);\n  parsed.classification_failed = false;\n} catch (e) {\n  parsed = {\n    intent: 'other',\n    urgency: 'medium',\n    estimated_value: 0,\n    risk_type: 'none',\n    risk_score: 0.5,\n    missing_fields: [],\n    recommended_action: 'request_approval',\n    confidence: 0.3,\n    classification_failed: true,\n    summary: 'Classification failed - manual review needed'\n  };\n}\n\nconst input = $('Build Classification Input').first().json;\n\nreturn [\n  {\n    json: {\n      ...parsed,\n      estimated_value: Number(parsed.estimated_value) || 0,\n      risk_score: Number(parsed.risk_score) || 0,\n      confidence: Number(parsed.confidence) || 0,\n      missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],\n      conversation_id: input.conversation_id,\n      customer_name: input.customer_name,\n      customer_email: input.customer_email,\n      approval_mode: input.approval_mode,\n      lead_id: input.lead_id || '',\n    },\n  },\n];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'ParseAIResponse',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
+      },
+      "id": "1ecbb8f2-3319-466c-b2d5-f510c9d8db57",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        160
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  conversation_id: $json.conversation_id,\n  customer_name: $json.customer_name,\n  customer_email: $json.customer_email,\n  intent: $json.intent,\n  urgency: $json.urgency,\n  estimated_value: Number($json.estimated_value) || 0,\n  risk_type: $json.risk_type,\n  risk_score: Number($json.risk_score) || 0,\n  status: 'new',\n  next_action: $json.recommended_action,\n  confidence: Number($json.confidence) || 0\n} }}",
+        "method": "POST",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "sendHeaders": true,
+        "specifyBody": "json",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads"
+      },
+      "id": "156d99c8-2cd9-4070-8b31-f7de45abd74e",
+      "name": "Create Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        320
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "maxTries": 4,
+      "retryOnFail": true,
+      "waitBetweenTries": 1200
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "route-action",
+              "leftValue": "={{ ['draft_reply', 'request_approval', 'escalate_to_founder'].includes($('Parse AI Response').item.json.recommended_action) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4e87c8a2-2fb8-49f4-829d-021c034f9da7",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        160
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://knurdz3o.app.n8n.cloud/webhook/nexus/rescue",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  lead_id: $('Normalize Lead Result').item.json.lead_id,\n  conversation_id: $('Parse AI Response').item.json.conversation_id,\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  intent: $('Parse AI Response').item.json.intent,\n  urgency: $('Parse AI Response').item.json.urgency,\n  estimated_value: Number($('Parse AI Response').item.json.estimated_value) || 0,\n  missing_fields: $('Parse AI Response').item.json.missing_fields,\n  confidence: Number($('Parse AI Response').item.json.confidence) || 0,\n  approval_mode: $('Parse AI Response').item.json.approval_mode\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "dbf0025c-e7e5-4616-94fe-5f84fb63f635",
+      "name": "Trigger WF3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        16
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-lead-id",
+              "leftValue": "={{ !!$json.lead_id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e1d841b7-40be-450a-ab73-f2e911cba317",
+      "name": "Has Existing Lead",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        160
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads?id=eq.{{ $json.lead_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  conversation_id: $json.conversation_id,\n  customer_name: $json.customer_name,\n  customer_email: $json.customer_email,\n  intent: $json.intent,\n  urgency: $json.urgency,\n  estimated_value: Number($json.estimated_value) || 0,\n  risk_type: $json.risk_type,\n  risk_score: Number($json.risk_score) || 0,\n  next_action: $json.recommended_action,\n  confidence: Number($json.confidence) || 0,\n  updated_at: $now.toISO()\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "afe9f9e4-413b-4039-9262-e5910b184a88",
+      "name": "Patch Existing Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "maxTries": 4,
+      "retryOnFail": true,
+      "waitBetweenTries": 1200
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const parsed = $('Parse AI Response').first().json;\n  const current = $input.first().json;\n  const responseBody = current.body || current;\n  const row = Array.isArray(responseBody) ? responseBody[0] : responseBody;\n  const leadId = parsed.lead_id || (row && row.id) || current.id || '';\n\n  return [\n    {\n      json: {\n        ...parsed,\n        lead_id: leadId,\n        lead_row: row || null,\n      },\n    },\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'NormalizeLeadResult',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
+      },
+      "id": "57270f9d-755d-4ee8-b88b-2c18b45c0893",
+      "name": "Normalize Lead Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        160
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst businessName = item.business_name || '';\nconst industry = item.industry || '';\nconst services = item.services || '[]';\nconst pricingRules = item.pricing_rules || '{}';\nconst message = item.message || '';\n\nconst systemPrompt = 'You are a revenue intelligence classifier for a founder-led service business. You analyze customer messages and extract structured data.\\n\\nBusiness context:\\nName: ' + businessName + '\\nIndustry: ' + industry + '\\nServices: ' + services + '\\nPricing: ' + pricingRules + '\\n\\nClassify the incoming customer message and return ONLY a valid JSON object. No markdown. No explanation. No preamble.\\n\\nJSON schema (return exactly this structure):\\n{\\n  \"intent\": \"pricing_request | booking_request | proposal_followup | complaint | support | other\",\\n  \"urgency\": \"low | medium | high\",\\n  \"estimated_value\": number,\\n  \"risk_type\": \"lead_may_go_cold | churn_risk | none\",\\n  \"risk_score\": number between 0 and 1,\\n  \"missing_fields\": [\"field1\", \"field2\"],\\n  \"recommended_action\": \"draft_reply | request_approval | schedule_followup | escalate_to_founder\",\\n  \"confidence\": number between 0 and 1,\\n  \"summary\": \"one sentence summary of the customer message\"\\n}\\n\\nRules:\\n- urgency = high if message contains a pricing request, booking request, or any frustrated or angry tone\\n- urgency = medium for follow-ups or general inquiries\\n- urgency = low for informational questions only\\n- estimated_value: estimate in LKR using pricing_rules context; return 0 if impossible to estimate\\n- risk_score >= 0.8 means the lead is very likely to go cold or churn\\n- confidence reflects how certain you are about intent detection';\n\nconst requestBody = {\n  model: 'nvidia/nemotron-3-ultra-550b-a55b:free',\n  reasoning: { enabled: false },\n  response_format: { type: 'json_object' },\n  temperature: 0.1,\n  max_tokens: 500,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: 'Customer message: ' + message }\n  ]\n};\n\nreturn [{ json: { ...item, requestBody } }];",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "3d0ee2f0-979a-48e6-82a6-96ba1504a3c0",
+      "name": "Build Classification Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "contentType": "json",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.OpenRouter }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "jsonBody": "={{ $json.requestBody }}",
+        "method": "POST",
+        "sendBody": true,
+        "sendHeaders": true,
+        "specifyBody": "json",
+        "url": "https://openrouter.ai/api/v1/chat/completions"
+      },
+      "id": "c18782ee-c5ab-445b-a481-7ba4faa12780",
+      "name": "Classify Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -528,
+        100
+      ],
+      "credentials": {},
+      "onError": "continueErrorOutput",
+      "maxTries": 3,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "is-error",
+              "leftValue": "={{ $json._error === true }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              },
+              "rightValue": true
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          }
+        },
+        "options": {}
+      },
+      "id": "f3a1b8c2-1234-4a1e-9c3d-8b2e7a5f6d90",
+      "name": "Check Classification Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -400,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-schedule-followup",
+              "leftValue": "={{ $('Parse AI Response').item.json.recommended_action === 'schedule_followup' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7167d202-4886-415d-a473-5f98ce3999b7",
+      "name": "Is Schedule Followup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  lead_id: $('Normalize Lead Result').item.json.lead_id,\n  conversation_id: $('Parse AI Response').item.json.conversation_id,\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  scheduled_for: $now.plus({ hours: 48 }).toISO(),\n  action: 'Follow-up: ' + ($('Parse AI Response').item.json.summary || 'scheduled by classifier'),\n  message: $('Parse AI Response').item.json.summary || 'Follow-up scheduled by WF2 classification.',\n  status: 'pending'\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "1284a11a-2169-4e95-8c7d-10f8ff05232e",
+      "name": "Create Followup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        240
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      },
+      "maxTries": 4,
+      "retryOnFail": true,
+      "waitBetweenTries": 1200
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id || null,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  workflow_name: 'WF2 - AI Classification',\n  step: 'route_by_action',\n  result: 'unhandled_action',\n  error: 'Unhandled recommended_action: ' + String($('Parse AI Response').item.json.recommended_action),\n  payload: {\n    conversation_id: $('Parse AI Response').item.json.conversation_id || null,\n    lead_id: $('Normalize Lead Result').item.json.lead_id || null\n  }\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "92c45f00-c5db-4371-81f0-9d1320e3a575",
+      "name": "Log Unhandled Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        440
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id || null,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  workflow_name: 'WF2 - AI Classification',\n  step: $json._errorNode || 'unknown',\n  result: 'error',\n  error: $json._errorMessage || 'unknown error',\n  payload: {\n    conversation_id: $('Receive from WF1').item.json.body.conversation_id || null,\n    timestamp: $json._timestamp || null\n  }\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "9e1ae96c-806f-4b69-ab69-4495eccd1766",
+      "name": "Log Classification Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -144,
+        420
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    }
+  ],
+  "meta": {
+    "exportedAt": "2026-07-13T10:53:07.589Z",
+    "workflowId": "MmA7EKsOYAZgx3ep",
+    "source": "live n8n MCP export"
+  }
+}

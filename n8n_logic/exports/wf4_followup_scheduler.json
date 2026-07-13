@@ -28,7 +28,7 @@
   },
   "nodes": [
     {
-      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 1 }] } },
+      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] } },
       "id": "5860d069-eb09-4173-b209-6f35780671e8",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
@@ -37,7 +37,7 @@
     },
     {
       "parameters": {
-        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups?status=eq.pending&scheduled_for=lte.' + encodeURIComponent($now.toISO()) + '&select=*,leads(id,customer_name,customer_email,intent,urgency,estimated_value,conversation_id)' }}",
+        "url": "={{ 'https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/followups?status=eq.pending&scheduled_for=lte.' + encodeURIComponent($now.toISO()) + '&select=id,team_id,workspace_id,status,scheduled_for,lead_id,leads(id,team_id,workspace_id,customer_name,customer_email,intent,urgency,estimated_value,conversation_id)' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
@@ -86,7 +86,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = [];\n\nfor (const item of $input.all()) {\n  const data = item.json;\n\n  if (Array.isArray(data?.body)) {\n    rows.push(...data.body);\n  } else if (Array.isArray(data)) {\n    rows.push(...data);\n  } else if (Array.isArray(data?.data)) {\n    rows.push(...data.data);\n  } else if (data && data.id) {\n    rows.push(data);\n  }\n}\n\nreturn rows.map(row => ({ json: row }));"
+        "jsCode": "const rows = [];\n\nfor (const item of $input.all()) {\n  const data = item.json;\n\n  if (Array.isArray(data?.body)) {\n    rows.push(...data.body);\n  } else if (Array.isArray(data)) {\n    rows.push(...data);\n  } else if (Array.isArray(data?.data)) {\n    rows.push(...data.data);\n  } else if (data && data.id) {\n    rows.push(data);\n  }\n}\n\n// Fail closed: skip followups without tenant stamp (service-role global sweep).\nreturn rows\n  .filter(row => row && row.team_id)\n  .map(row => ({ json: row }));"
       },
       "id": "ea093bf5-59e2-4b09-91f7-84d63f46a5bb",
       "name": "Normalize Pending Follow-ups",

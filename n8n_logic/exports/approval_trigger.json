@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Nexus OS — Approval Trigger → Channel Sender\n\nReceives the POST that `app/api/approval/route.ts` fires on **Approve** and forwards it to the\ntyped, tenant-scoped send executor `POST /api/internal/n8n/send-reply` (docs/channel_sender.md).\n\n**Thin by design:** all send logic (decrypt, refresh, transport, idempotency, status writes)\nlives in the Next.js executor. This workflow only validates and forwards. n8n NEVER decrypts a\ntoken or talks to Gmail.\n\n**n8n env required:**\n- `NEXUS_APP_BASE_URL` — base URL of the Next.js app (e.g. https://app.nexus… ) \n- `N8N_INGEST_TOKEN` — bearer token for `/api/internal/n8n/*` (server-only)\n\n**DO NOT ACTIVATE** until: (1) send-reply tests pass, and (2) Gmail `gmail.send` scope is\nprovisioned on the production domain (currently read-only → transport 403). Import for review.",
+        "content": "## Nexus OS — Approval Trigger → Channel Sender\n\nReceives the POST that `app/api/approval/route.ts` fires on **Approve** and forwards it to the\ntyped, tenant-scoped send executor `POST /api/internal/n8n/send-reply` (docs/channel_sender.md).\n\n**Thin by design:** all send logic (decrypt, refresh, transport, idempotency, status writes)\nlives in the Next.js executor. This workflow only validates and forwards. n8n NEVER decrypts a\ntoken or talks to Gmail.\n\n**Auth/config (n8n Cloud blocks `$env` in nodes — use `$vars`):**\n- URL is hardcoded to the deployed app (`https://nexusos.knurdz.org`).\n- `N8N_INGEST_TOKEN` bearer read via `{{ $vars.N8N_INGEST_TOKEN }}` — add it as an n8n **Variable**\n  (Settings → Variables), NOT an env var.\n\n**Live workflow:** `PtfTN2YTN8bmHzDu` (this JSON is the importable reference; ids differ).",
         "height": 460,
         "width": 420
       },
@@ -62,11 +62,11 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.NEXUS_APP_BASE_URL }}/api/internal/n8n/send-reply",
+        "url": "https://nexusos.knurdz.org/api/internal/n8n/send-reply",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $env.N8N_INGEST_TOKEN }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}" },
             { "name": "Content-Type", "value": "application/json" }
           ]
         },
