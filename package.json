@@ -22,6 +22,7 @@
     "test:approval-policy": "tsx scripts/approval_policy.test.ts",
     "test:send-reply": "tsx scripts/send_reply.test.ts",
     "test:autopilot-send": "tsx scripts/autopilot_send.test.ts",
+    "test:meta-window": "tsx scripts/meta_window.test.ts",
     "test:send-e2e": "CHANNEL_SENDER_TRANSPORT=sandbox tsx scripts/send_e2e.integration.ts",
     "seed:demo": "tsx scripts/seed_demo_inbox.ts",
     "test:launch-workspace": "node scripts/launch_workspace_rpc.test.mjs",
