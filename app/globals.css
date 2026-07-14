@@ -115,15 +115,27 @@
     --app-sidebar-nav-active: #0a0f0c;
     --app-sidebar-nav-inactive: rgba(10, 15, 12, 0.46);
     --glass-input-bg: rgba(255, 255, 255, 0.72);
+
+    /* App top bar (Command / Signal light) */
+    --app-topbar-bg: rgba(255, 255, 255, 0.72);
+    --app-topbar-border: rgba(15, 23, 42, 0.08);
+    --app-topbar-search-bg: rgba(232, 238, 245, 0.92);
+    --app-topbar-search-fg: #0a0f0c;
+    --app-topbar-search-placeholder: #6b7280;
+    --app-topbar-icon-bg: rgba(255, 255, 255, 0.88);
+    --app-topbar-icon-fg: #334155;
+    --app-topbar-accent: #10b981;
   }
 
-  html:not(.dark) .logo-nexus,
+  html:not(.dark):not(.aurora-dark) .logo-nexus,
   .light .logo-nexus,
+  .aurora-light .logo-nexus,
   [data-theme="light"] .logo-nexus {
     color: var(--text-primary);
   }
-  html:not(.dark) .logo-os,
+  html:not(.dark):not(.aurora-dark) .logo-os,
   .light .logo-os,
+  .aurora-light .logo-os,
   [data-theme="light"] .logo-os {
     color: var(--ref-cta);
     letter-spacing: 0;
@@ -231,6 +243,139 @@
     --app-sidebar-nav-active: #ffffff;
     --app-sidebar-nav-inactive: rgba(255, 255, 255, 0.42);
     --glass-input-bg: rgba(255, 255, 255, 0.06);
+
+    /* App top bar (Command Night) */
+    --app-topbar-bg: rgba(18, 18, 18, 0.88);
+    --app-topbar-border: rgba(255, 255, 255, 0.08);
+    --app-topbar-search-bg: rgba(255, 255, 255, 0.06);
+    --app-topbar-search-fg: #ffffff;
+    --app-topbar-search-placeholder: #94a3b8;
+    --app-topbar-icon-bg: rgba(255, 255, 255, 0.06);
+    --app-topbar-icon-fg: #d1d5db;
+    --app-topbar-accent: #10b981;
+  }
+
+  .aurora-light {
+    --background: #f8f9fa;
+    --foreground: #1f2937;
+    --obsidian: #1f2937;
+    --atmospheric-grey: #1f2937;
+    --trajectory-blue: #3b82f6;
+    --ref-cta: #3b82f6;
+
+    --app-chrome-bg: #ffffff;
+    --app-chrome-border: #e5e7eb;
+
+    --surface-page: #f8f9fa;
+    --surface-card: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-sidebar: #ffffff;
+    --surface-input: #f3f4f6;
+    --surface-muted: #f3f4f6;
+
+    --border-subtle: #e5e7eb;
+    --border-strong: #d1d5db;
+
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+
+    --status-positive-fg: #059669;
+    --status-positive-surface: #ecfdf5;
+    --status-positive-border: #a7f3d0;
+
+    --selectable-card-border: #e5e7eb;
+    --selectable-card-border-selected: #1f2937;
+    --selectable-card-border-hover: #d1d5db;
+
+    --glass-bg: #ffffff;
+    --glass-border: #e5e7eb;
+    --glass-blur: 0px;
+    --glass-highlight: none;
+    --glass-shadow: none;
+    --glass-gradient-start: #ffffff;
+    --glass-gradient-end: #ffffff;
+    --app-orb-1: transparent;
+    --app-orb-2: transparent;
+    --app-orb-3: transparent;
+    --app-sidebar-bg: #ffffff;
+    --app-sidebar-border: #e5e7eb;
+    --app-sidebar-nav-active: #1f2937;
+    --app-sidebar-nav-inactive: #6b7280;
+    --glass-input-bg: #f3f4f6;
+
+    --app-topbar-bg: #ffffff;
+    --app-topbar-border: #e5e7eb;
+    --app-topbar-search-bg: #f3f4f6;
+    --app-topbar-search-fg: #1f2937;
+    --app-topbar-search-placeholder: #6b7280;
+    --app-topbar-icon-bg: #f3f4f6;
+    --app-topbar-icon-fg: #374151;
+    --app-topbar-accent: #10b981;
+  }
+
+  .aurora-dark {
+    --background: #0b0e14;
+    --foreground: #f3f4f6;
+    --obsidian: #0b0e14;
+    --atmospheric-grey: #f3f4f6;
+    --trajectory-blue: #3b82f6;
+    --ref-cta: #3b82f6;
+
+    --app-chrome-bg: #111827;
+    --app-chrome-border: #374151;
+
+    --surface-page: #0b0e14;
+    --surface-card: #111827;
+    --surface-elevated: #111827;
+    --surface-sidebar: #0b0e14;
+    --surface-input: #1f2937;
+    --surface-muted: #111827;
+
+    --border-subtle: #374151;
+    --border-strong: #4b5563;
+
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    --text-accent: #e5e7eb;
+
+    --status-positive-fg: #34d399;
+    --status-positive-surface: #064e3b;
+    --status-positive-border: #047857;
+
+    --status-neutral-fg: #93c5fd;
+    --status-neutral-surface: #1e3a5f;
+    --status-neutral-border: #2563eb;
+
+    --selectable-card-border: #374151;
+    --selectable-card-border-selected: #f3f4f6;
+    --selectable-card-border-hover: #4b5563;
+
+    --glass-bg: #111827;
+    --glass-border: #374151;
+    --glass-blur: 0px;
+    --glass-highlight: none;
+    --glass-shadow: none;
+    --glass-gradient-start: #111827;
+    --glass-gradient-end: #111827;
+    --app-orb-1: transparent;
+    --app-orb-2: transparent;
+    --app-orb-3: transparent;
+    --app-sidebar-bg: #0b0e14;
+    --app-sidebar-border: #374151;
+    --app-sidebar-nav-active: #f3f4f6;
+    --app-sidebar-nav-inactive: #9ca3af;
+    --glass-input-bg: #1f2937;
+
+    --app-topbar-bg: #0b0e14;
+    --app-topbar-border: #374151;
+    --app-topbar-search-bg: #111827;
+    --app-topbar-search-fg: #f3f4f6;
+    --app-topbar-search-placeholder: #9ca3af;
+    --app-topbar-icon-bg: #111827;
+    --app-topbar-icon-fg: #d1d5db;
+    --app-topbar-accent: #10b981;
   }
 
   body {
@@ -436,13 +581,56 @@
     color: var(--app-sidebar-nav-active);
     background: color-mix(in srgb, var(--app-sidebar-nav-active) 10%, transparent);
   }
+
+  .app-topbar {
+    background: var(--app-topbar-bg);
+    border-bottom: 1px solid var(--app-topbar-border);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+  }
+  .app-topbar-search {
+    background: var(--app-topbar-search-bg);
+    color: var(--app-topbar-search-fg);
+    border: 1px solid var(--app-topbar-border);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .app-topbar-search::placeholder {
+    color: var(--app-topbar-search-placeholder);
+  }
+  .app-topbar-search:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-topbar-accent) 35%, transparent);
+    border-color: color-mix(in srgb, var(--app-topbar-accent) 45%, transparent);
+  }
+  .app-topbar-icon-btn {
+    background: var(--app-topbar-icon-bg);
+    color: var(--app-topbar-icon-fg);
+    border: 1px solid var(--app-topbar-border);
+    border-radius: 9999px;
+  }
+  .app-topbar-icon-btn:hover {
+    color: var(--app-topbar-search-fg);
+    background: color-mix(in srgb, var(--app-topbar-icon-bg) 80%, var(--app-topbar-search-fg) 8%);
+  }
+  .app-topbar-profile-dot {
+    background: var(--app-topbar-accent);
+    border: 2px solid var(--app-topbar-bg);
+  }
+  .app-topbar-menu {
+    background: var(--surface-card);
+    border: 1px solid var(--app-topbar-border);
+    box-shadow: var(--glass-shadow);
+  }
   .app-sidebar .logo-nexus {
     color: var(--app-sidebar-nav-active);
   }
   .app-sidebar .logo-os {
     color: color-mix(in srgb, var(--ref-cta) 88%, var(--app-sidebar-nav-active));
   }
-  .dark .app-sidebar .logo-os {
+  .dark .app-sidebar .logo-os,
+  .aurora-dark .app-sidebar .logo-os {
     color: color-mix(in srgb, var(--app-sidebar-nav-active) 62%, transparent);
   }
   .nexus-app-shell[data-font-scale="compact"] {
@@ -465,6 +653,57 @@
     backdrop-filter: blur(var(--glass-blur)) saturate(180%);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
     box-shadow: var(--glass-shadow);
+  }
+
+  /* Aurora themes: flat opaque surfaces — no glass blur, gradients, or ambient orbs */
+  :is(.aurora-light, .aurora-dark) .app-shell-bg::before {
+    display: none;
+  }
+  :is(.aurora-light, .aurora-dark)
+    :is(.glass-panel, .app-glass-card, .surface-card, .nexus-app-shell .surface-card) {
+    background: var(--surface-card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  :is(.aurora-light, .aurora-dark) :is(.glass-panel, .app-glass-card)::before {
+    display: none;
+  }
+  :is(.aurora-light, .aurora-dark) .app-sidebar {
+    background: var(--app-sidebar-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  :is(.aurora-light, .aurora-dark) .app-topbar {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  :is(.aurora-light, .aurora-dark) .app-topbar-menu {
+    box-shadow: none;
+  }
+  :is(.aurora-light, .aurora-dark) :is(.hairline-b, .hairline-t) {
+    border-color: var(--border-subtle);
+  }
+  :is(.aurora-light, .aurora-dark) .glass-pill,
+  :is(.aurora-light, .aurora-dark) .glass-skeleton,
+  :is(.aurora-light, .aurora-dark) .glass-input {
+    background: var(--glass-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  :is(.aurora-light, .aurora-dark) .glass-skeleton {
+    background: var(--surface-muted);
+  }
+
+  /* Aurora themes: unified Inter typography */
+  :is(.aurora-light, .aurora-dark) .nexus-app-shell,
+  :is(.aurora-light, .aurora-dark) .nexus-app-shell .app-topbar,
+  :is(.aurora-light, .aurora-dark) .nexus-app-shell .app-sidebar,
+  :is(.aurora-light, .aurora-dark) main[data-app-body],
+  :is(.aurora-light, .aurora-dark) main[data-app-body] :is(h1, h2, h3, h4, h5, h6),
+  :is(.aurora-light, .aurora-dark) main[data-app-body] .font-sans {
+    font-family: var(--font-inter), Inter, system-ui, sans-serif;
   }
 
   .landing-glass-card {
