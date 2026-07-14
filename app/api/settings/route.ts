@@ -384,19 +384,25 @@ export async function PATCH(request: Request) {
   }
 
   if (workspaceId && typeof updates.name === "string") {
-    await supabase
+    const { error: wsNameErr } = await supabase
       .from("workspaces")
       .update({ name: updates.name, updated_at: new Date().toISOString() })
       .eq("id", workspaceId)
       .eq("team_id", teamId);
+    if (wsNameErr) {
+      return NextResponse.json({ error: wsNameErr.message }, { status: 500 });
+    }
   }
 
   if (workspaceId && typeof updates.industry === "string") {
-    await supabase
+    const { error: wsIndustryErr } = await supabase
       .from("workspaces")
       .update({ industry: updates.industry, updated_at: new Date().toISOString() })
       .eq("id", workspaceId)
       .eq("team_id", teamId);
+    if (wsIndustryErr) {
+      return NextResponse.json({ error: wsIndustryErr.message }, { status: 500 });
+    }
   }
 
   return GET();

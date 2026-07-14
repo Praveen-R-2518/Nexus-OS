@@ -82,6 +82,51 @@ for (const logNode of [logError, logUnhandled]) {
 }
 ok("schedule_followup branch + error logging wired");
 
+// 2026-07-14 release hardening: OpenAI swap + Parse wiring fix + missing-profile logging.
+const buildReq = wf2.nodes.find((n: { name: string }) => n.name === "Build Classification Request");
+const classify = wf2.nodes.find((n: { name: string }) => n.name === "Classify Message");
+const parseNode = wf2.nodes.find((n: { name: string }) => n.name === "Parse AI Response");
+const profileMissingIf = wf2.nodes.find((n: { name: string }) => n.name === "Is Profile Missing");
+const logMissingProfile = wf2.nodes.find((n: { name: string }) => n.name === "Log Missing Business Profile");
+
+assert(buildReq && classify && parseNode, "wf2 export missing classification nodes");
+assert(String(buildReq.parameters.jsCode).includes("'gpt-4o'"), "classification model must be gpt-4o");
+assert(!String(buildReq.parameters.jsCode).includes("nemotron"), "OpenRouter Nemotron model must be gone");
+assert(String(classify.parameters.url) === "https://api.openai.com/v1/chat/completions", "Classify Message must call OpenAI");
+const authHeader = classify.parameters.headerParameters.parameters.find(
+  (p: { name: string }) => p.name === "Authorization",
+);
+assert(String(authHeader?.value).includes("$vars.OPENAI_API_KEY"), "Classify Message must auth with $vars.OPENAI_API_KEY");
+
+// Record AI Usage (WF2) sits between Classify Message and Parse AI Response, so
+// Parse must read the model output by node name — reading $input silently
+// collapses every classification to the fallback (root cause of the empty dashboard).
+assert(
+  String(parseNode.parameters.jsCode).includes("$('Classify Message')"),
+  "Parse AI Response must read $('Classify Message'), not $input",
+);
+assert(
+  !String(parseNode.parameters.jsCode).includes("items[0].json"),
+  "Parse AI Response must not read items[0] (that is the ai-usage response)",
+);
+
+assert(profileMissingIf && logMissingProfile, "wf2 export missing no-business-profile logging branch");
+assert(fetchNode.alwaysOutputData === true, "Fetch Business Profile must alwaysOutputData so missing profiles can't kill the run");
+assert(
+  conns["Fetch Business Profile"].main[0]?.some((c) => c.node === "Is Profile Missing"),
+  "Fetch Business Profile must feed Is Profile Missing",
+);
+assert(
+  conns["Is Profile Missing"].main[0]?.[0]?.node === "Log Missing Business Profile",
+  "Is Profile Missing true branch must log no_business_profile",
+);
+assert(String(logMissingProfile.parameters.url).includes("rest/v1/workflow_logs"), "missing-profile log must target workflow_logs");
+assert(
+  logMissingProfile.parameters.options?.response?.response?.neverError === true,
+  "missing-profile log must be neverError",
+);
+ok("openai swap + parse wiring fix + missing-profile logging");
+
 if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
   console.log(`\n${passed} checks passed (Supabase live check skipped — no service role key)\n`);
   process.exit(0);

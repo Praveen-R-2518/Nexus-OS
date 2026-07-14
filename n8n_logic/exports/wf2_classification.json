@@ -25,6 +25,11 @@
             "node": "Build Classification Input",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Is Profile Missing",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -195,6 +200,17 @@
           }
         ]
       ]
+    },
+    "Is Profile Missing": {
+      "main": [
+        [
+          {
+            "node": "Log Missing Business Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodes": [
@@ -267,7 +283,8 @@
       },
       "maxTries": 4,
       "retryOnFail": true,
-      "waitBetweenTries": 1200
+      "waitBetweenTries": 1200,
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -354,7 +371,7 @@
     },
     {
       "parameters": {
-        "jsCode": "try {\n  const j0 = items[0].json;\n  if (j0._error || j0.error) {\n    return [\n      {\n        json: {\n          _error: true,\n          _errorMessage:\n            (j0.error && j0.error.message) || j0.errorMessage || 'AI classification failed or returned empty',\n          _errorNode: 'ClassifyMessage',\n          _timestamp: new Date().toISOString(),\n        },\n      },\n    ];\n  }\n\n  const item = $input.first();\n  const rawText = item.json.message?.content\n  || item.json.text\n  || item.json.content\n  || item.json.choices?.[0]?.message?.content\n  || item.json.data?.choices?.[0]?.message?.content\n  || '';\n\nlet parsed;\ntry {\n  const cleaned = String(rawText)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n  parsed = JSON.parse(cleaned);\n  parsed.classification_failed = false;\n} catch (e) {\n  parsed = {\n    intent: 'other',\n    urgency: 'medium',\n    estimated_value: 0,\n    risk_type: 'none',\n    risk_score: 0.5,\n    missing_fields: [],\n    recommended_action: 'request_approval',\n    confidence: 0.3,\n    classification_failed: true,\n    summary: 'Classification failed - manual review needed'\n  };\n}\n\nconst input = $('Build Classification Input').first().json;\n\nreturn [\n  {\n    json: {\n      ...parsed,\n      estimated_value: Number(parsed.estimated_value) || 0,\n      risk_score: Number(parsed.risk_score) || 0,\n      confidence: Number(parsed.confidence) || 0,\n      missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],\n      conversation_id: input.conversation_id,\n      customer_name: input.customer_name,\n      customer_email: input.customer_email,\n      approval_mode: input.approval_mode,\n      lead_id: input.lead_id || '',\n    },\n  },\n];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'ParseAIResponse',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
+        "jsCode": "try {\n  // Read the LLM output by node name: 'Record AI Usage (WF2)' sits between\n  // Classify Message and this node, so $input here is the ai-usage endpoint's\n  // response, NOT the model output.\n  const j0 = $('Classify Message').first().json;\n  if (j0._error || j0.error) {\n    return [\n      {\n        json: {\n          _error: true,\n          _errorMessage:\n            (j0.error && j0.error.message) || j0.errorMessage || 'AI classification failed or returned empty',\n          _errorNode: 'ClassifyMessage',\n          _timestamp: new Date().toISOString(),\n        },\n      },\n    ];\n  }\n\n  const rawText = j0.message?.content\n  || j0.text\n  || j0.content\n  || j0.choices?.[0]?.message?.content\n  || j0.data?.choices?.[0]?.message?.content\n  || '';\n\nlet parsed;\ntry {\n  const cleaned = String(rawText)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n  parsed = JSON.parse(cleaned);\n  parsed.classification_failed = false;\n} catch (e) {\n  parsed = {\n    intent: 'other',\n    urgency: 'medium',\n    estimated_value: 0,\n    risk_type: 'none',\n    risk_score: 0.5,\n    missing_fields: [],\n    recommended_action: 'request_approval',\n    confidence: 0.3,\n    classification_failed: true,\n    summary: 'Classification failed - manual review needed'\n  };\n}\n\nconst input = $('Build Classification Input').first().json;\n\nreturn [\n  {\n    json: {\n      ...parsed,\n      estimated_value: Number(parsed.estimated_value) || 0,\n      risk_score: Number(parsed.risk_score) || 0,\n      confidence: Number(parsed.confidence) || 0,\n      missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],\n      conversation_id: input.conversation_id,\n      customer_name: input.customer_name,\n      customer_email: input.customer_email,\n      approval_mode: input.approval_mode,\n      lead_id: input.lead_id || '',\n    },\n  },\n];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'ParseAIResponse',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
       },
       "id": "1ecbb8f2-3319-466c-b2d5-f510c9d8db57",
       "name": "Parse AI Response",
@@ -587,7 +604,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst businessName = item.business_name || '';\nconst industry = item.industry || '';\nconst services = item.services || '[]';\nconst pricingRules = item.pricing_rules || '{}';\nconst message = item.message || '';\n\nconst systemPrompt = 'You are a revenue intelligence classifier for a founder-led service business. You analyze customer messages and extract structured data.\\n\\nBusiness context:\\nName: ' + businessName + '\\nIndustry: ' + industry + '\\nServices: ' + services + '\\nPricing: ' + pricingRules + '\\n\\nClassify the incoming customer message and return ONLY a valid JSON object. No markdown. No explanation. No preamble.\\n\\nJSON schema (return exactly this structure):\\n{\\n  \"intent\": \"pricing_request | booking_request | proposal_followup | complaint | support | other\",\\n  \"urgency\": \"low | medium | high\",\\n  \"estimated_value\": number,\\n  \"risk_type\": \"lead_may_go_cold | churn_risk | none\",\\n  \"risk_score\": number between 0 and 1,\\n  \"missing_fields\": [\"field1\", \"field2\"],\\n  \"recommended_action\": \"draft_reply | request_approval | schedule_followup | escalate_to_founder\",\\n  \"confidence\": number between 0 and 1,\\n  \"summary\": \"one sentence summary of the customer message\"\\n}\\n\\nRules:\\n- urgency = high if message contains a pricing request, booking request, or any frustrated or angry tone\\n- urgency = medium for follow-ups or general inquiries\\n- urgency = low for informational questions only\\n- estimated_value: estimate in LKR using pricing_rules context; return 0 if impossible to estimate\\n- risk_score >= 0.8 means the lead is very likely to go cold or churn\\n- confidence reflects how certain you are about intent detection';\n\nconst requestBody = {\n  model: 'nvidia/nemotron-3-ultra-550b-a55b:free',\n  reasoning: { enabled: false },\n  response_format: { type: 'json_object' },\n  temperature: 0.1,\n  max_tokens: 500,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: 'Customer message: ' + message }\n  ]\n};\n\nreturn [{ json: { ...item, requestBody } }];",
+        "jsCode": "const item = $input.first().json;\nconst businessName = item.business_name || '';\nconst industry = item.industry || '';\nconst services = item.services || '[]';\nconst pricingRules = item.pricing_rules || '{}';\nconst message = item.message || '';\n\nconst systemPrompt = 'You are a revenue intelligence classifier for a founder-led service business. You analyze customer messages and extract structured data.\\n\\nBusiness context:\\nName: ' + businessName + '\\nIndustry: ' + industry + '\\nServices: ' + services + '\\nPricing: ' + pricingRules + '\\n\\nClassify the incoming customer message and return ONLY a valid JSON object. No markdown. No explanation. No preamble.\\n\\nJSON schema (return exactly this structure):\\n{\\n  \"intent\": \"pricing_request | booking_request | proposal_followup | complaint | support | other\",\\n  \"urgency\": \"low | medium | high\",\\n  \"estimated_value\": number,\\n  \"risk_type\": \"lead_may_go_cold | churn_risk | none\",\\n  \"risk_score\": number between 0 and 1,\\n  \"missing_fields\": [\"field1\", \"field2\"],\\n  \"recommended_action\": \"draft_reply | request_approval | schedule_followup | escalate_to_founder\",\\n  \"confidence\": number between 0 and 1,\\n  \"summary\": \"one sentence summary of the customer message\"\\n}\\n\\nRules:\\n- urgency = high if message contains a pricing request, booking request, or any frustrated or angry tone\\n- urgency = medium for follow-ups or general inquiries\\n- urgency = low for informational questions only\\n- estimated_value: estimate in LKR using pricing_rules context; return 0 if impossible to estimate\\n- risk_score >= 0.8 means the lead is very likely to go cold or churn\\n- confidence reflects how certain you are about intent detection';\n\nconst requestBody = {\n  model: 'gpt-4o',\n  response_format: { type: 'json_object' },\n  temperature: 0.1,\n  max_tokens: 500,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: 'Customer message: ' + message }\n  ]\n};\n\nreturn [{ json: { ...item, requestBody } }];",
         "mode": "runOnceForAllItems"
       },
       "id": "3d0ee2f0-979a-48e6-82a6-96ba1504a3c0",
@@ -607,7 +624,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $vars.OpenRouter }}"
+              "value": "=Bearer {{ $vars.OPENAI_API_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -620,7 +637,7 @@
         "sendBody": true,
         "sendHeaders": true,
         "specifyBody": "json",
-        "url": "https://openrouter.ai/api/v1/chat/completions"
+        "url": "https://api.openai.com/v1/chat/completions"
       },
       "id": "c18782ee-c5ab-445b-a481-7ba4faa12780",
       "name": "Classify Message",
@@ -882,11 +899,92 @@
           "name": "Supabase API"
         }
       }
+    },
+    {
+      "id": "wf2-profile-missing-if",
+      "name": "Is Profile Missing",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1296,
+        380
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "profile-missing",
+              "leftValue": "={{ !$json.id }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf2-profile-missing-log",
+      "name": "Log Missing Business Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1040,
+        440
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/workflow_logs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id || null,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  workflow_name: 'WF2 - AI Classification',\n  step: 'fetch_business_profile',\n  result: 'no_business_profile',\n  error: 'No business_profiles row for team_id; classified with generic defaults',\n  payload: {\n    conversation_id: $('Receive from WF1').item.json.body.conversation_id || null\n  }\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
     }
   ],
   "meta": {
-    "exportedAt": "2026-07-13T10:53:07.589Z",
+    "exportedAt": "2026-07-14T08:54:18.672294Z",
     "workflowId": "MmA7EKsOYAZgx3ep",
-    "source": "live n8n MCP export"
+    "source": "live n8n MCP export",
+    "note": "2026-07-14: OpenAI gpt-4o swap, Parse AI Response reads $('Classify Message'), missing-profile logging branch"
   }
 }

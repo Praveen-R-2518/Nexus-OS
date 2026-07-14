@@ -61,11 +61,6 @@ function successRedirect(request: Request): NextResponse {
   return absoluteRedirect(request, signupGmailUrl({ gmail_connected: "true" }));
 }
 
-function loginRedirect(request: Request): NextResponse {
-  const next = "/signup?step=gmail";
-  return absoluteRedirect(request, `/login?next=${encodeURIComponent(next)}`);
-}
-
 export type GmailCallbackDeps = {
   createSupabase: typeof createSupabaseRouteHandlerClient;
   createServiceSupabase: typeof createServerClient;
@@ -141,29 +136,40 @@ export async function handleGmailOAuthCallback(
     }
   })();
 
-  if (!authRes) return loginRedirect(request);
-
-  const user = authRes.data?.user ?? null;
-  const userErr = authRes.error ?? null;
+  const user = authRes?.data?.user ?? null;
+  const userErr = authRes?.error ?? null;
   if (userErr) logStageError("auth_get_user", userErr);
 
-  if (!user?.id) {
-    return loginRedirect(request);
-  }
-
-  if (user.id !== user_id) {
+  if (user?.id && user.id !== user_id) {
     logStageError("auth_user_mismatch", "user_id_mismatch");
     return errorRedirect(request, "auth_user_mismatch");
   }
 
+  // Safari ITP can drop the session cookie on the Google → app redirect. The
+  // state is HMAC-signed and expiring, so it proves which user started the
+  // flow; when the session is absent, continue with the service-role client
+  // (RLS would otherwise block every query) instead of dead-ending at /login.
+  const effectiveUserId = user?.id ?? user_id;
+  const db = user?.id
+    ? supabase
+    : (() => {
+        try {
+          return deps.createServiceSupabase();
+        } catch (e) {
+          logStageError("supabase_init", e);
+          return null;
+        }
+      })();
+  if (!db) return errorRedirect(request, "supabase_init");
+
   // Idempotent replay: if already connected, treat callback as success.
   const alreadyConnected = await (async () => {
     try {
-      const { data: row, error } = await supabase
+      const { data: row, error } = await db
         .from("gmail_credentials")
         .select("id, status")
         .eq("workspace_id", workspace_id)
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveUserId)
         .eq("credential_type", "oauth")
         .eq("status", "connected")
         .maybeSingle();
@@ -182,7 +188,7 @@ export async function handleGmailOAuthCallback(
 
   const workspaceRes = await (async () => {
     try {
-      return await supabase
+      return await db
         .from("workspaces")
         .select("id, owner_user_id")
         .eq("id", workspace_id)
@@ -198,7 +204,7 @@ export async function handleGmailOAuthCallback(
     logStageError("workspace_lookup", workspaceRes.error);
     return errorRedirect(request, "workspace_lookup");
   }
-  if (!workspaceRes.data || workspaceRes.data.owner_user_id !== user.id) {
+  if (!workspaceRes.data || workspaceRes.data.owner_user_id !== effectiveUserId) {
     logStageError("workspace_forbidden", "workspace_not_owned");
     return errorRedirect(request, "workspace_forbidden");
   }
@@ -294,7 +300,7 @@ export async function handleGmailOAuthCallback(
   const row = {
     workspace_id,
     team_id,
-    user_id: user.id,
+    user_id: effectiveUserId,
     email_address: email,
     imap_username: email,
     imap_password_encrypted: imapPlaceholderEncrypted,
@@ -310,19 +316,19 @@ export async function handleGmailOAuthCallback(
 
   const upsertOk = await (async () => {
     try {
-      const { error: upsertErr } = await supabase
+      const { error: upsertErr } = await db
         .from("gmail_credentials")
         .upsert(row, { onConflict: "workspace_id,user_id" });
       if (!upsertErr) return true;
 
       // Fallback for older unique/index states — should never 500.
-      await supabase
+      await db
         .from("gmail_credentials")
         .delete()
         .eq("workspace_id", workspace_id)
-        .eq("user_id", user.id);
+        .eq("user_id", effectiveUserId);
 
-      const { error: insErr } = await supabase.from("gmail_credentials").insert(row);
+      const { error: insErr } = await db.from("gmail_credentials").insert(row);
       return !insErr;
     } catch (e) {
       logStageError("upsert_gmail_credentials", e);
@@ -336,7 +342,7 @@ export async function handleGmailOAuthCallback(
   try {
     const destinationEmail = email.toLowerCase().trim();
     if (destinationEmail) {
-      const { error } = await supabase.from("business_profiles").upsert(
+      const { error } = await db.from("business_profiles").upsert(
         { team_id, workspace_id, gmail_destination_email: destinationEmail },
         { onConflict: "team_id" },
       );
