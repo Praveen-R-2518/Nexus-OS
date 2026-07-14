@@ -13,6 +13,29 @@ type StepGmailProps = {
   onComplete: (patch: { gmailConnected: boolean }) => void;
 };
 
+// Reason codes emitted by app/api/gmail/callback/handler.ts via ?gmail_error=<code>
+const GMAIL_ERROR_MESSAGES: Record<string, string> = {
+  parse_params: "Could not read Google's response. Please try again.",
+  missing_params: "Google did not return an authorization code. Please try again.",
+  invalid_state: "The connection request expired or was tampered with. Please try again.",
+  supabase_init: "Server error while connecting. Please try again.",
+  auth_user_mismatch:
+    "A different account is signed in than the one that started the connection. Sign back in and retry.",
+  workspace_lookup: "Could not verify your workspace. Please try again.",
+  workspace_forbidden: "This workspace does not belong to your account.",
+  oauth_config: "Gmail connection is not configured on the server yet.",
+  token_exchange: "Google rejected the authorization. Please try again.",
+  token_invalid_grant:
+    "That authorization was already used or expired. Click Connect to start again.",
+  userinfo_fetch: "Could not read your Gmail address from Google. Please try again.",
+  userinfo_missing_email: "Google did not share an email address for this account.",
+  encrypt: "Server error while securing your credentials. Please try again.",
+  upsert_gmail_credentials: "Could not save your Gmail connection. Please try again.",
+};
+
+const STATUS_POLL_INTERVAL_MS = 2000;
+const STATUS_POLL_MAX_ATTEMPTS = 30;
+
 export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -41,15 +64,25 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
 
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-    async function checkStatus() {
-      if (searchParams.get("gmail_error") === "true") {
-        setBanner({
-          type: "err",
-          text: "Gmail connection failed. Please try again.",
-        });
-      }
+    const errorCode = searchParams.get("gmail_error");
+    if (errorCode) {
+      setBanner({
+        type: "err",
+        text:
+          GMAIL_ERROR_MESSAGES[errorCode] ??
+          "Gmail connection failed. Please try again.",
+      });
+    }
 
+    // Keep polling after the OAuth redirect: the credential write can land a
+    // moment after we return, and a flaky redirect chain (Safari) may drop the
+    // ?gmail_connected param entirely — the status endpoint is the truth.
+    const shouldPoll =
+      searchParams.get("gmail_connected") === "true" && !errorCode;
+
+    async function checkStatus(attempt: number) {
       try {
         const res = await fetch("/api/gmail/status");
         const data = (await res.json()) as {
@@ -63,18 +96,27 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           setGmailEmail(data.email ?? null);
           setBanner({ type: "ok", text: "Gmail connected successfully!" });
           onComplete({ gmailConnected: true });
+          return;
         }
       } catch {
         // ignore
       } finally {
         if (!cancelled) setGmailChecking(false);
       }
+
+      if (!cancelled && shouldPoll && attempt < STATUS_POLL_MAX_ATTEMPTS) {
+        timer = setTimeout(
+          () => void checkStatus(attempt + 1),
+          STATUS_POLL_INTERVAL_MS,
+        );
+      }
     }
 
-    void checkStatus();
+    void checkStatus(0);
 
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [searchParams, onComplete]);
 

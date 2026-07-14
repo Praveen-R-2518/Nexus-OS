@@ -2,5 +2,5 @@
   "id": "QoJIseLTX2jwDYEy",
   "name": "WF5 - Daily Buy-Back Report",
   "active": true,
-  "note": "Exported metadata from live n8n (knurdz3o) on 2026-07-13 (M4 task 4.2). OpenAI summary node replaced with Build Report Summary Code node (template fallback while n8n OpenAI quota blocked). Manual webhook exec 68726/68727 success for test tenant 6d265fe4…; idempotent upsert confirmed; 08:00 UTC schedule active."
+  "note": "Exported from live n8n (knurdz3o) on 2026-07-14. 08:00 schedule + /webhook/nexus/report manual trigger; per-tenant stats -> Generate AI Summary (OpenAI gpt-4o via $vars.OPENAI_API_KEY, neverError) -> Build Report Summary (template fallback when AI empty/fails) -> daily_reports upsert on (team_id,report_date)."
 }

@@ -1,6 +1,11 @@
 import { strict as assert } from "node:assert";
 import Module from "node:module";
 
+// The OAuth state is HMAC-signed with ENCRYPTION_KEY; set it before the
+// handler/helpers are imported so encode/decode share the same key.
+process.env.ENCRYPTION_KEY =
+  process.env.ENCRYPTION_KEY || "test-encryption-key-for-oauth-state";
+
 const moduleWithLoad = Module as unknown as { _load: (...args: unknown[]) => unknown };
 const origLoad = moduleWithLoad._load;
 moduleWithLoad._load = function (this: unknown, ...args: unknown[]) {
@@ -136,6 +141,7 @@ function baseDeps(overrides: Partial<Parameters<typeof handleGmailOAuthCallback>
 
 async function run() {
   const { handleGmailOAuthCallback } = await import("../app/api/gmail/callback/handler");
+  const { encodeOAuthState } = await import("../app/api/gmail/helpers");
 
   // 1) Missing params => redirect with reason code (never throw)
   {
@@ -160,22 +166,67 @@ async function run() {
     );
   }
 
-  const goodState = makeStateBase64Url({
+  const goodState = encodeOAuthState({
     workspace_id: WS,
     team_id: TEAM,
     user_id: USER,
   });
 
-  // 3) Missing session => /login redirect (never 500)
+  // 2b) Legacy unsigned base64 state => rejected as invalid_state
+  {
+    const legacyState = makeStateBase64Url({
+      workspace_id: WS,
+      team_id: TEAM,
+      user_id: USER,
+    });
+    const req = makeReq({ code: "abc", state: legacyState });
+    const res = await handleGmailOAuthCallback(req, baseDeps());
+    expectRedirectTo(
+      res,
+      (loc) => loc.includes("gmail_error=invalid_state"),
+      "unsigned legacy state should be rejected",
+    );
+  }
+
+  // 3) Missing session cookie + valid signed state => completes via the
+  //    service-role client (Safari ITP path), NOT a /login dead-end.
+  {
+    const req = makeReq({ code: "abc", state: goodState });
+    const deps = baseDeps({
+      createSupabase: () => fakeSupabase({ user: null }) as any,
+      createServiceSupabase: () => fakeSupabase({ user: null }) as any,
+      fetchFn: (async (url: any) => {
+        if (String(url).includes("/token")) {
+          return new Response(
+            JSON.stringify({ access_token: "at", expires_in: 3600, refresh_token: "rt" }),
+            { status: 200 },
+          );
+        }
+        if (String(url).includes("/userinfo")) {
+          return new Response(JSON.stringify({ email: "a@b.com" }), { status: 200 });
+        }
+        throw new Error("unexpected fetch url");
+      }) as any,
+    });
+    const res = await handleGmailOAuthCallback(req, deps);
+    expectRedirectTo(
+      res,
+      (loc) => loc.includes("gmail_connected=true"),
+      "cookie-less callback with valid signed state should succeed",
+    );
+  }
+
+  // 3b) Session present but for a DIFFERENT user => auth_user_mismatch
   {
     const req = makeReq({ code: "abc", state: goodState });
     const res = await handleGmailOAuthCallback(req, baseDeps({
-      createSupabase: () => fakeSupabase({ user: null }) as any,
+      createSupabase: () =>
+        fakeSupabase({ user: { id: "33333333-4444-4333-8444-555555555555" } }) as any,
     }));
     expectRedirectTo(
       res,
-      (loc) => loc.includes("/login?next="),
-      "missing session should redirect to login",
+      (loc) => loc.includes("gmail_error=auth_user_mismatch"),
+      "mismatched session user should be rejected",
     );
   }
 

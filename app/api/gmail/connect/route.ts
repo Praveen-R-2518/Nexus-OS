@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { rateLimit, requireApiTenantContext } from "@/lib/api-security";
 import {
+  appUrl,
   encodeOAuthState,
   GMAIL_SCOPES,
   oauthConfigError,
@@ -19,6 +20,25 @@ export async function GET(request: Request) {
       { error: "Gmail OAuth is not configured" },
       { status: 500 },
     );
+  }
+
+  // Google always redirects back to NEXT_PUBLIC_SITE_URL's host. Starting the
+  // flow from a different host (e.g. localhost against a prod-configured env)
+  // strands the callback on the other host with no session — make that loud.
+  try {
+    const requestHost = new URL(request.url).host;
+    const configuredHost = new URL(appUrl()).host;
+    if (requestHost !== configuredHost) {
+      console.warn(
+        "[gmail.connect] host mismatch: request from",
+        requestHost,
+        "but OAuth callback will land on",
+        configuredHost,
+        "- the signup tab on this host will not see the redirect",
+      );
+    }
+  } catch {
+    // appUrl() unset/invalid is already covered by oauthConfigError()
   }
 
   const tenant = await requireApiTenantContext();
