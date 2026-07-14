@@ -13,7 +13,7 @@ export const PRIMARY_BTN =
   "inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium text-nexus-approval transition-colors hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
 
 export const SECONDARY_BTN =
-  "glass-pill inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-glass disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface-muted px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50";
 
 // This lucide build ships no brand marks, so each platform maps to a distinct
 // representative glyph instead.

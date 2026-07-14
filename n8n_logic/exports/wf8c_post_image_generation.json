@@ -1,0 +1,6 @@
+{
+  "id": "RfmuS0guiaq64Lrx",
+  "name": "WF8c - AI Post Image Generation",
+  "active": true,
+  "note": "Exported from live n8n (knurdz3o) on 2026-07-14. /webhook/generate-post-image: Enhance Prompt (OpenAI gpt-4o-mini) -> Generate Image (gpt-image-1, api.openai.com/v1/images/generations, 1024x1024, b64_json) -> Supabase Storage post-media -> post_generations row. Fully swapped off OpenRouter/Gemini 2026-07-14; auth via $vars.OPENAI_API_KEY header."
+}

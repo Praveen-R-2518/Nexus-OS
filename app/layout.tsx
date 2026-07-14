@@ -6,7 +6,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = localFont({
@@ -52,13 +51,20 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-surface-page font-chrome text-atmospheric-grey antialiased transition-colors duration-300 dark:bg-obsidian">
         <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.classList.toggle('dark',r==='dark');}catch(e){document.documentElement.classList.add('dark');}})();`}
+          {`(function(){try{var themes=['dark','light','aurora-dark','aurora-light'];var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(themes.indexOf(r)===-1)r='dark';var el=document.documentElement;themes.forEach(function(t){el.classList.remove(t);});el.classList.add(r);}catch(e){document.documentElement.classList.add('dark');}})();`}
         </Script>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <Script id="font-scale-init" strategy="beforeInteractive">
+          {`(function(){try{var k='nexus-ui-font-scale',s=localStorage.getItem(k),v=s;if(v!=='compact'&&v!=='default'&&v!=='comfortable')v='default';document.documentElement.setAttribute('data-font-scale',v);}catch(e){document.documentElement.setAttribute('data-font-scale','default');}})();`}
+        </Script>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          themes={["dark", "light", "aurora-dark", "aurora-light"]}
+          enableSystem
+          disableTransitionOnChange
+        >
           <QueryProvider>
-            <SmoothScrollProvider>
-              <AppShell>{children}</AppShell>
-            </SmoothScrollProvider>
+            <AppShell>{children}</AppShell>
           </QueryProvider>
         </ThemeProvider>
       </body>

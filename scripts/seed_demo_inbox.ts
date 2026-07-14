@@ -128,6 +128,30 @@ function fail(message: string): never {
   process.exit(1);
 }
 
+/** Live `leads.intent` check allows a smaller set than conversation intents. */
+function leadIntentFromDemo(row: DemoRow): string {
+  switch (row.intent) {
+    case "purchase":
+      return "booking_request";
+    case "churn_risk":
+    case "complaint":
+      return "complaint";
+    case "support":
+      return "support";
+    default:
+      return "other";
+  }
+}
+
+function leadRiskScore(row: DemoRow): number {
+  const raw = row.risk_score > 1 ? row.risk_score / 100 : row.risk_score;
+  return Math.min(1, Math.max(0, raw));
+}
+
+function leadUrgency(row: DemoRow): DemoRow["urgency"] {
+  return row.urgency === "critical" ? "high" : row.urgency;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const teardown = args.includes("--teardown");
@@ -221,11 +245,11 @@ async function main() {
         conversation_id: conversationId,
         customer_name: row.customer_name,
         customer_email: row.customer_email ?? "",
-        intent: row.intent,
-        urgency: row.urgency,
+        intent: leadIntentFromDemo(row),
+        urgency: leadUrgency(row),
         estimated_value: row.estimated_value,
-        risk_type: row.intent === "churn_risk" ? "churn" : "none",
-        risk_score: row.risk_score,
+        risk_type: row.intent === "churn_risk" ? "churn_risk" : "none",
+        risk_score: leadRiskScore(row),
         status: "new",
         next_action: "request_approval",
         confidence: row.confidence,

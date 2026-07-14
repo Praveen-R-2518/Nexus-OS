@@ -6,6 +6,7 @@ import {
   requireN8nToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
+import { upsertConversationEmbedding } from "@/lib/embeddings/store";
 import { parseWorkspaceId } from "@/lib/workspace-id";
 
 export const dynamic = "force-dynamic";
@@ -136,6 +137,21 @@ export async function POST(request: Request) {
       { success: false, error: "Failed to create conversation" },
       { status: 502 },
     );
+  }
+
+  // Embed the inbound message into the knowledge base (kind='conversation') so the Chat Agent
+  // can retrieve it semantically. Best-effort: swallows its own errors (e.g. no OPENAI key) and
+  // never affects the ingest result. team_id is stamped from workspace_id by the DB trigger.
+  if (data?.id && data?.team_id) {
+    const name = boundedString(data.customer_name, 250);
+    await upsertConversationEmbedding({
+      supabase,
+      teamId: data.team_id as string,
+      workspaceId: (data.workspace_id as string | null) ?? workspaceId,
+      sourceId: data.id as string,
+      content: name ? `${name}: ${message}` : message,
+      metadata: { source: data.source ?? null, channel: data.channel ?? null },
+    });
   }
 
   return NextResponse.json({ success: true, data }, { status: 201 });

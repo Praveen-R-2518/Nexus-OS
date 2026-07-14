@@ -192,7 +192,7 @@ export default function ChatPage() {
       </div>
 
       <div className="app-glass-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-6">
           {isEmpty ? (
             <div className="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
               <span className="glass-pill mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-nexus-discovery">
@@ -279,7 +279,7 @@ export default function ChatPage() {
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium text-nexus-approval transition-colors hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-medium"
           >
             {sending ? (
               <Spinner className="h-4 w-4" label="Sending" />

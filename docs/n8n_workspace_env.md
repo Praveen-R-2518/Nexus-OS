@@ -24,15 +24,34 @@ HTTP nodes use your n8n **Supabase API** custom auth credential (service role or
 
 These routes require a JSON field `workspace_id` (UUID) and verify it exists in `public.workspaces` before inserting. They are an alternative to direct Supabase REST from n8n.
 
-### Channel Sender — Approval Trigger workflow (`n8n_logic/exports/approval_trigger.json`)
+### Channel Sender — Approval Trigger + WF3 Autopilot (calls into the Next.js app)
 
-The approval-trigger workflow calls the send executor `POST /api/internal/n8n/send-reply`
-(see `docs/channel_sender.md`). It needs two n8n env vars:
+The approval-trigger workflow (`n8n_logic/exports/approval_trigger.json`, live id
+`PtfTN2YTN8bmHzDu`) and WF3's `Autopilot Send (policy-gated)` node call the Next.js executors
+`POST /api/internal/n8n/send-reply` and `/autopilot-send` (see `docs/channel_sender.md`).
 
-| Env var | Purpose |
+> ⚠️ **n8n Cloud blocks `$env` in node expressions** (`N8N_BLOCK_ENV_ACCESS_IN_NODE`, not
+> changeable on Cloud). Using `{{ $env.X }}` in a node fails with *"access to env vars denied"*.
+> Read config via **n8n Variables** (`{{ $vars.X }}`, Settings → Variables) or credentials instead.
+
+Current wiring:
+| Value | How it's supplied |
 |---|---|
-| `NEXUS_APP_BASE_URL` | Base URL of the Next.js app (e.g. `https://app.example.com`) — the HTTP node targets `${NEXUS_APP_BASE_URL}/api/internal/n8n/send-reply`. No trailing slash. |
-| `N8N_INGEST_TOKEN` | Bearer token for all `/api/internal/n8n/*` routes (server-only; must match the app's env). |
+| App base URL | **Hardcoded** in the node (`https://nexusos.knurdz.org`) — not secret, avoids a variable. |
+| `N8N_INGEST_TOKEN` | `{{ $vars.N8N_INGEST_TOKEN }}` — add as an n8n **Variable** (must match the app's env value). |
 
-**Do not activate** this workflow until the send-reply tests pass and Gmail `gmail.send`
-scope is provisioned (until then the transport returns 403 — read-only OAuth).
+**Do not activate** for real sends until Gmail `gmail.send` scope is provisioned (until then set
+`CHANNEL_SENDER_TRANSPORT=sandbox` on the app to complete the path without real email).
+
+### WF8b Social Post Publishing (calls into the Next.js app)
+
+WF8b (`VZ9ZaA1S2JxSAeGQ`) fetches decrypted social platform tokens via
+`GET /api/internal/n8n/social-credentials?organization_id={orgId}` — n8n must **never** read
+`social_credentials` tokens directly from Supabase REST.
+
+| Value | How it's supplied |
+|---|---|
+| App base URL | `{{ $vars.NEXUS_APP_URL }}` with fallback `https://nexusos.knurdz.org` |
+| `N8N_INGEST_TOKEN` | `{{ $vars.N8N_INGEST_TOKEN }}` (or `NEXUS_INGEST_TOKEN`) — n8n **Variable** |
+
+Requires app deploy of the social-credentials endpoint and migration `20260713180000`.

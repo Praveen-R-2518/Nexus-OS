@@ -72,7 +72,7 @@ export function HeroSequenceStatic() {
 const PROGRESS_EPSILON = 1e-4;
 const PROGRESS_LERP = 0.16;
 
-/** Scroll progress for a tall pinned section — works with Lenis and avoids useScroll ref hydration issues. */
+/** Scroll progress for a tall pinned section — reads native scroll and avoids useScroll ref hydration issues. */
 function usePinnedScrollProgress(containerRef: React.RefObject<HTMLElement | null>) {
   const [progress, setProgress] = useState(0);
   const smoothedRef = useRef(0);

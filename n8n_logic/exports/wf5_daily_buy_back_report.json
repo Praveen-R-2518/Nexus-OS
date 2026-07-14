@@ -1,0 +1,6 @@
+{
+  "id": "QoJIseLTX2jwDYEy",
+  "name": "WF5 - Daily Buy-Back Report",
+  "active": true,
+  "note": "Exported from live n8n (knurdz3o) on 2026-07-14. 08:00 schedule + /webhook/nexus/report manual trigger; per-tenant stats -> Generate AI Summary (OpenAI gpt-4o via $vars.OPENAI_API_KEY, neverError) -> Build Report Summary (template fallback when AI empty/fails) -> daily_reports upsert on (team_id,report_date)."
+}

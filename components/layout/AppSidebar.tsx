@@ -12,9 +12,9 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
-  Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  Settings,
   Sparkles,
   Users,
   X,
@@ -37,6 +37,7 @@ const appNav = [
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
   { href: "/team", label: "Team", icon: Users },
+  { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 function isNavActive(pathname: string, href: string): boolean {
@@ -243,8 +244,16 @@ function SidebarChrome({
   );
 }
 
-export default function AppSidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+export default function AppSidebar({
+  mobileOpen: controlledMobileOpen,
+  onMobileOpenChange,
+}: {
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
+} = {}) {
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false);
+  const mobileOpen = controlledMobileOpen ?? internalMobileOpen;
+  const setMobileOpen = onMobileOpenChange ?? setInternalMobileOpen;
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const pathname = usePathname();
@@ -260,7 +269,7 @@ export default function AppSidebar() {
 
   useEffect(() => {
     setMobileOpen(false);
-  }, [pathname]);
+  }, [pathname, setMobileOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -291,15 +300,6 @@ export default function AppSidebar() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setMobileOpen(true)}
-        className="app-sidebar-mobile-trigger fixed left-4 top-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-glass-border bg-glass text-atmospheric-grey shadow-sm backdrop-blur lg:hidden"
-        aria-label="Open navigation menu"
-      >
-        <Menu className="h-5 w-5" aria-hidden />
-      </button>
-
       {/* Layout spacer — keeps main content from sliding under the fixed sidebar */}
       <div
         className="hidden shrink-0 transition-[width] duration-200 lg:block"

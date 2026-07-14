@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterChip } from "@/components/ui/FilterChip";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
+import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
 import { conversationDraftsQuery, conversationsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 import type { Conversation } from "@/types";
@@ -184,7 +186,7 @@ function InboxPageContent() {
     useState<UrgencyFilter>("");
   const [activeIntentFilter, setActiveIntentFilter] =
     useState<IntentFilter>("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { query: searchQuery } = useAppChromeSearch();
   const [openInboxConfirm, setOpenInboxConfirm] = useState(false);
 
   const {
@@ -365,7 +367,7 @@ function InboxPageContent() {
             <p className="nexus-meta text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 font-sans text-3xl font-semibold tabular-nums tracking-normal text-nexus-rescue sm:text-4xl">
+            <p className="mt-2 font-sans text-3xl font-bold tabular-nums tracking-normal text-status-critical sm:text-4xl">
               {formatCurrency(revenueAtRisk)}
             </p>
             <p className="mt-1.5 text-sm text-muted">
@@ -384,16 +386,11 @@ function InboxPageContent() {
                 const active = activeUrgencyFilter === opt.value;
                 const count = urgencyCounts[opt.value] ?? 0;
                 return (
-                  <button
+                  <FilterChip
                     key={opt.label + opt.value}
-                    type="button"
+                    active={active}
+                    accent="intake"
                     onClick={() => setActiveUrgencyFilter(opt.value)}
-                    className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
-                      active
-                        ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
-                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
-                    )}
                   >
                     {opt.label}
                     <span
@@ -401,12 +398,12 @@ function InboxPageContent() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
+                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
                       )}
                     >
                       {count}
                     </span>
-                  </button>
+                  </FilterChip>
                 );
               })}
             </div>
@@ -420,16 +417,11 @@ function InboxPageContent() {
                 const active = activeIntentFilter === opt.value;
                 const pillCount = intentCounts[opt.value] ?? 0;
                 return (
-                  <button
+                  <FilterChip
                     key={opt.label}
-                    type="button"
+                    active={active}
+                    accent="intake"
                     onClick={() => setActiveIntentFilter(opt.value)}
-                    className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
-                      active
-                        ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
-                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
-                    )}
                   >
                     {opt.label}
                     <span
@@ -437,27 +429,15 @@ function InboxPageContent() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
+                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
                       )}
                     >
                       {pillCount}
                     </span>
-                  </button>
+                  </FilterChip>
                 );
               })}
             </div>
-          </div>
-          <div>
-            <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
-              Search
-            </label>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Name or message…"
-              className="glass-input h-11 w-full px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
-            />
           </div>
         </div>
 
@@ -577,7 +557,7 @@ function InboxPageContent() {
             />
           )
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-5 sm:p-6">
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h1 className="nexus-app-title text-foreground">
@@ -617,7 +597,7 @@ function InboxPageContent() {
                 {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium tracking-normal text-nexus-approval transition-colors duration-interaction hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
+                  className="btn-primary inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl px-4 py-2 text-[13px] font-medium tracking-normal duration-interaction"
                 >
                   View Draft Reply
                 </Link>
@@ -762,7 +742,7 @@ function InboxPageContent() {
                     window.open(externalInboxUrl, "_blank", "noopener,noreferrer");
                     setOpenInboxConfirm(false);
                   }}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-sm font-medium text-nexus-approval hover:bg-nexus-approval-soft"
+                  className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
                 >
                   <ExternalLink className="h-4 w-4" aria-hidden />
                   Continue

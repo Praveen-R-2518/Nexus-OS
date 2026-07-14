@@ -1,0 +1,6 @@
+{
+  "id": "rNjW8GyWfZHuXnnf",
+  "name": "WF0f Gmail Sync",
+  "active": false,
+  "note": "Created in live n8n (knurdz3o) 2026-07-14. Every 10 min: POST {NEXUS_APP_URL}/api/internal/n8n/gmail-sync (Bearer $vars.N8N_INGEST_TOKEN). The app endpoint walks sync-enabled OAuth gmail_credentials, pulls messages since last_synced_at via the Gmail API, and forwards each through the WF0a ledger intake (dedup by Message-ID). ACTIVATE ONLY AFTER production deploy exposes the endpoint; needs n8n Variables NEXUS_APP_URL + N8N_INGEST_TOKEN."
+}
