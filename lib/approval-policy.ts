@@ -37,6 +37,10 @@ export interface AutoSendInput {
   riskScore?: number | null;
   /** reply_drafts.confidence, 0..1. */
   confidence?: number | null;
+  /** business_profiles.high_value_threshold override. */
+  highValueThreshold?: number | null;
+  /** business_profiles.high_risk_score override (0..1). */
+  highRiskScore?: number | null;
 }
 
 export interface AutoSendDecision {
@@ -61,14 +65,23 @@ function num(value: number | null | undefined): number {
  * founder approval queue. Gate checks are evaluated first and win ties — when in doubt, gate.
  */
 export function decideAutoSend(input: AutoSendInput): AutoSendDecision {
+  const highValueThreshold =
+    typeof input.highValueThreshold === "number" && Number.isFinite(input.highValueThreshold)
+      ? input.highValueThreshold
+      : HIGH_VALUE_THRESHOLD;
+  const highRiskScore =
+    typeof input.highRiskScore === "number" && Number.isFinite(input.highRiskScore)
+      ? input.highRiskScore
+      : HIGH_RISK_SCORE;
+
   // Hard gates first — these override autopilot entirely.
   if (String(input.riskType ?? "") === "churn_risk") {
     return { autoSend: false, reason: "gated_churn_risk" };
   }
-  if (num(input.estimatedValue) >= HIGH_VALUE_THRESHOLD) {
+  if (num(input.estimatedValue) >= highValueThreshold) {
     return { autoSend: false, reason: "gated_high_value" };
   }
-  if (num(input.riskScore) >= HIGH_RISK_SCORE) {
+  if (num(input.riskScore) >= highRiskScore) {
     return { autoSend: false, reason: "gated_high_risk" };
   }
 

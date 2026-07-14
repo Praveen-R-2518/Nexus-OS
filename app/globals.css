@@ -437,6 +437,15 @@
   .dark .app-sidebar .logo-os {
     color: color-mix(in srgb, var(--app-sidebar-nav-active) 62%, transparent);
   }
+  .nexus-app-shell[data-font-scale="compact"] {
+    font-size: 0.9375rem;
+  }
+  .nexus-app-shell[data-font-scale="default"] {
+    font-size: 1rem;
+  }
+  .nexus-app-shell[data-font-scale="comfortable"] {
+    font-size: 1.0625rem;
+  }
   .nexus-app-shell .surface-card {
     border-color: var(--glass-border);
     background: linear-gradient(

@@ -98,4 +98,24 @@ check("empty input gates (safe default)", () => {
   assert(d.reason === "gated_not_autopilot", `reason was ${d.reason}`);
 });
 
+check("tenant high_value_threshold override gates at custom boundary", () => {
+  const d = decideAutoSend({
+    ...AUTOPILOT_SAFE,
+    estimatedValue: 300,
+    highValueThreshold: 300,
+  });
+  assert(d.autoSend === false, "custom threshold must gate");
+  assert(d.reason === "gated_high_value", `reason was ${d.reason}`);
+});
+
+check("tenant high_risk_score override gates at custom boundary", () => {
+  const d = decideAutoSend({
+    ...AUTOPILOT_SAFE,
+    riskScore: 0.6,
+    highRiskScore: 0.6,
+  });
+  assert(d.autoSend === false, "custom risk score must gate");
+  assert(d.reason === "gated_high_risk", `reason was ${d.reason}`);
+});
+
 console.log(`\napproval-policy: ${passed} checks passed`);

@@ -3,6 +3,7 @@ import type {
   Conversation,
   DailyReport,
   Metrics,
+  NotificationPrefs,
   ReplyDraft,
   ReplyDraftWithConversation,
   WorkspaceSettings,
@@ -102,6 +103,16 @@ export type SettingsPatchInput = {
   tone?: string;
   services?: string[];
   approval_mode?: "approval_queue" | "autopilot";
+  timezone?: string;
+  currency?: string;
+  high_value_threshold?: number;
+  high_risk_score?: number;
+  notification_prefs?: Partial<NotificationPrefs>;
+  channel?: {
+    target: "gmail" | "whatsapp" | "instagram" | "facebook";
+    action: "set_sync" | "disconnect";
+    sync_enabled?: boolean;
+  };
 };
 
 export async function updateSettingsMutation(

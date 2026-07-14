@@ -54,6 +54,9 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {`(function(){try{var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.classList.toggle('dark',r==='dark');}catch(e){document.documentElement.classList.add('dark');}})();`}
         </Script>
+        <Script id="font-scale-init" strategy="beforeInteractive">
+          {`(function(){try{var k='nexus-ui-font-scale',s=localStorage.getItem(k),v=s;if(v!=='compact'&&v!=='default'&&v!=='comfortable')v='default';document.documentElement.setAttribute('data-font-scale',v);}catch(e){document.documentElement.setAttribute('data-font-scale','default');}})();`}
+        </Script>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <QueryProvider>
             <SmoothScrollProvider>

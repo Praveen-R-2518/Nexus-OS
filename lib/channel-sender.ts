@@ -46,6 +46,8 @@ type LeadRow = {
 
 type BusinessProfileRow = {
   approval_mode: string | null;
+  high_value_threshold: number | null;
+  high_risk_score: number | null;
 };
 
 function err(error: string, status: number): SenderResult {
@@ -265,11 +267,12 @@ export async function autopilotSend(
 
   const { data: bpData } = await supabase
     .from("business_profiles")
-    .select("approval_mode")
+    .select("approval_mode, high_value_threshold, high_risk_score")
     .eq("team_id", teamId)
     .limit(1)
     .maybeSingle();
-  const approvalMode = (bpData as BusinessProfileRow | null)?.approval_mode ?? null;
+  const bp = bpData as BusinessProfileRow | null;
+  const approvalMode = bp?.approval_mode ?? null;
 
   const decision = decideAutoSend({
     approvalMode,
@@ -277,6 +280,8 @@ export async function autopilotSend(
     riskType: lead.risk_type,
     riskScore: lead.risk_score,
     confidence: draft.confidence,
+    highValueThreshold: bp?.high_value_threshold,
+    highRiskScore: bp?.high_risk_score,
   });
 
   if (!decision.autoSend) {
