@@ -84,9 +84,9 @@ export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void })
           </button>
         ) : null}
 
-        <div className="relative min-w-0 flex-1">
+        <div className="relative min-w-0 max-w-sm flex-1">
           <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-topbar-search-placeholder)]"
+            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-topbar-search-placeholder)]"
             aria-hidden
           />
           <input
@@ -94,10 +94,12 @@ export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void })
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search inbox & approval…"
-            className="app-topbar-search h-10 w-full min-w-0 py-2 pl-10 pr-4 outline-none transition"
+            className="app-topbar-search h-9 w-full min-w-0 py-1.5 pl-9 pr-3.5 outline-none transition"
             aria-label="Search inbox and approval"
           />
         </div>
+
+        <div className="min-w-0 flex-1" aria-hidden />
 
         <div className="flex shrink-0 items-center gap-2">
           <div ref={languageRef} className="relative">

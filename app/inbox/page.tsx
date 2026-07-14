@@ -606,7 +606,7 @@ function InboxPageContent() {
                 {detailDrafts.length > 0 ? (
                 <Link
                   href={`/approval?conversation_id=${encodeURIComponent(selectedConversation.id)}`}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium tracking-normal text-nexus-approval transition-colors duration-interaction hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval focus-visible:ring-offset-0 focus-visible:ring-offset-white dark:focus-visible:ring-offset-0"
+                  className="btn-primary inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl px-4 py-2 text-[13px] font-medium tracking-normal duration-interaction"
                 >
                   View Draft Reply
                 </Link>
@@ -751,7 +751,7 @@ function InboxPageContent() {
                     window.open(externalInboxUrl, "_blank", "noopener,noreferrer");
                     setOpenInboxConfirm(false);
                   }}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-sm font-medium text-nexus-approval hover:bg-nexus-approval-soft"
+                  className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
                 >
                   <ExternalLink className="h-4 w-4" aria-hidden />
                   Continue
