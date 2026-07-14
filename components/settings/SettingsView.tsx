@@ -18,6 +18,11 @@ import {
   Pause,
   Play,
   Unplug,
+  Wand2,
+  FileText,
+  Trash2,
+  UploadCloud,
+  RotateCcw,
 } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SettingsSection } from "@/components/settings/SettingsSection";
@@ -30,8 +35,16 @@ import {
   PRICING_TIERS,
   type PricingPlanSlug,
 } from "@/lib/pricing/plans";
-import { settingsQuery, updateSettingsMutation } from "@/lib/queries/fetchers";
+import {
+  businessDocsQuery,
+  deleteBusinessDoc,
+  enhancePersona,
+  settingsQuery,
+  updateSettingsMutation,
+  uploadBusinessDoc,
+} from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
+import { DEFAULT_ANALYST_PERSONA } from "@/lib/chat/persona";
 import { workspaceIndustryOptions } from "@/lib/workspace-industries";
 import type { MetaChannelPlatform, NotificationPrefs } from "@/types";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -43,7 +56,7 @@ const PRIMARY_BTN =
   "inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-2 text-[13px] font-medium text-nexus-approval transition-colors hover:bg-nexus-approval-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
 
 const SECONDARY_BTN =
-  "inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-glass-border bg-glass px-3 py-2 text-sm font-medium text-atmospheric-grey transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-border-strong bg-surface-muted px-3 py-2 text-sm font-medium text-atmospheric-grey transition hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
 
 const META_LABELS: Record<MetaChannelPlatform, string> = {
   whatsapp: "WhatsApp",
@@ -175,6 +188,11 @@ export function SettingsView() {
   const [timezone, setTimezone] = useState("");
   const [currency, setCurrency] = useState("");
   const [tone, setTone] = useState("");
+  const [chatPersona, setChatPersona] = useState(DEFAULT_ANALYST_PERSONA);
+  const [enhancing, setEnhancing] = useState(false);
+  const [personaError, setPersonaError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [servicesText, setServicesText] = useState("");
   const [approvalMode, setApprovalMode] = useState<"approval_queue" | "autopilot">(
     "approval_queue",
@@ -205,6 +223,7 @@ export function SettingsView() {
         : settings?.fields.currency_from_pricing_rules ?? "",
     );
     setTone(profile.tone);
+    setChatPersona(profile.chat_persona ?? DEFAULT_ANALYST_PERSONA);
     setServicesText(profile.services.join(", "));
     setApprovalMode(
       profile.approval_mode === "autopilot" ? "autopilot" : "approval_queue",
@@ -228,6 +247,48 @@ export function SettingsView() {
     onError: (err) => {
       setSaveError(err instanceof Error ? err.message : "Could not save settings.");
       setSaveMessage(null);
+    },
+  });
+
+  const aiRulesEditable = !!settings?.editable.ai_rules;
+
+  const { data: businessDocs } = useQuery({
+    queryKey: queryKeys.businessDocs(tenant.teamId),
+    queryFn: businessDocsQuery,
+    enabled: queriesEnabled && aiRulesEditable,
+    staleTime: 15_000,
+    // Poll while any document is still being processed, then stop.
+    refetchInterval: (query) => {
+      const docs = query.state.data;
+      return Array.isArray(docs) && docs.some((d) => d.status === "processing")
+        ? 3000
+        : false;
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: uploadBusinessDoc,
+    onSuccess: () => {
+      setSelectedFile(null);
+      setUploadError(null);
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.businessDocs(tenant.teamId),
+      });
+    },
+    onError: (err) => {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    },
+  });
+
+  const deleteDocMutation = useMutation({
+    mutationFn: deleteBusinessDoc,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.businessDocs(tenant.teamId),
+      });
+    },
+    onError: (err) => {
+      setUploadError(err instanceof Error ? err.message : "Delete failed.");
     },
   });
 
@@ -261,11 +322,26 @@ export function SettingsView() {
       .filter(Boolean);
     saveMutation.mutate({
       tone,
+      chat_persona: chatPersona,
       services,
       approval_mode: approvalMode,
       high_value_threshold: highValueThreshold,
       high_risk_score: highRiskScore,
     });
+  }
+
+  async function handleEnhancePersona() {
+    if (!chatPersona.trim() || enhancing) return;
+    setEnhancing(true);
+    setPersonaError(null);
+    try {
+      const enhanced = await enhancePersona(chatPersona);
+      setChatPersona(enhanced);
+    } catch (err) {
+      setPersonaError(err instanceof Error ? err.message : "Could not enhance the prompt.");
+    } finally {
+      setEnhancing(false);
+    }
   }
 
   function handleNotificationSave(next: NotificationPrefs) {
@@ -646,6 +722,61 @@ export function SettingsView() {
                 />
               </FieldRow>
 
+              {/* Chat personalization — editable system message for the Revenue Analyst. */}
+              <div className="space-y-2">
+                <span className="block text-sm font-medium text-atmospheric-grey">
+                  Chat personalization
+                </span>
+                <span className="block text-xs text-muted">
+                  This is sent to your AI assistant as its system message — shape it into a
+                  specialized business analyst. Your read-only safety rules (never send, never
+                  fabricate numbers) are always kept on top of whatever you write here.
+                </span>
+                <textarea
+                  value={chatPersona}
+                  onChange={(e) => setChatPersona(e.target.value)}
+                  disabled={!settings.editable.ai_rules || saveMutation.isPending}
+                  rows={12}
+                  className={cn(INPUT_CLASS, "resize-y font-mono text-[13px] leading-relaxed")}
+                  placeholder="Describe how the AI should analyze your business and advise you…"
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleEnhancePersona}
+                    disabled={
+                      !settings.editable.ai_rules ||
+                      saveMutation.isPending ||
+                      enhancing ||
+                      !chatPersona.trim()
+                    }
+                    className={SECONDARY_BTN}
+                    title="Rewrite your draft into a structured prompt-engineered system message"
+                  >
+                    {enhancing ? (
+                      <Spinner className="h-4 w-4" label="Enhancing" />
+                    ) : (
+                      <Wand2 className="h-4 w-4" aria-hidden />
+                    )}
+                    <span className="ml-2">{enhancing ? "Enhancing…" : "Enhance with AI"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChatPersona(DEFAULT_ANALYST_PERSONA)}
+                    disabled={!settings.editable.ai_rules || saveMutation.isPending}
+                    className={SECONDARY_BTN}
+                  >
+                    <RotateCcw className="h-4 w-4" aria-hidden />
+                    <span className="ml-2">Reset to default</span>
+                  </button>
+                </div>
+                {personaError ? (
+                  <p className="text-xs text-status-critical" role="alert">
+                    {personaError}
+                  </p>
+                ) : null}
+              </div>
+
               <FieldRow label="Services offered" hint="Comma-separated list.">
                 <textarea
                   value={servicesText}
@@ -656,6 +787,107 @@ export function SettingsView() {
                   placeholder="Leasing, Sales, Support retainers"
                 />
               </FieldRow>
+
+              {/* Business knowledge — uploaded docs are embedded into the vector store (RAG). */}
+              <div className="space-y-3 rounded-xl border border-glass-border px-4 py-4">
+                <div>
+                  <span className="block text-sm font-medium text-atmospheric-grey">
+                    Business knowledge
+                  </span>
+                  <span className="mt-1 block text-xs text-muted">
+                    Upload documents about your business (pricing, policies, FAQs, product
+                    details). Their contents are indexed into your private knowledge base and used
+                    to ground your AI assistant&apos;s answers. PDF, TXT, or Markdown · up to 5&nbsp;MB.
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf"
+                    disabled={!settings.editable.ai_rules || uploadMutation.isPending}
+                    onChange={(e) => {
+                      setUploadError(null);
+                      setSelectedFile(e.target.files?.[0] ?? null);
+                    }}
+                    className="block max-w-full text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-border-strong file:bg-surface-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-atmospheric-grey hover:file:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => selectedFile && uploadMutation.mutate(selectedFile)}
+                    disabled={
+                      !settings.editable.ai_rules ||
+                      !selectedFile ||
+                      uploadMutation.isPending
+                    }
+                    className={SECONDARY_BTN}
+                  >
+                    {uploadMutation.isPending ? (
+                      <Spinner className="h-4 w-4" label="Uploading" />
+                    ) : (
+                      <UploadCloud className="h-4 w-4" aria-hidden />
+                    )}
+                    <span className="ml-2">
+                      {uploadMutation.isPending ? "Processing…" : "Upload"}
+                    </span>
+                  </button>
+                </div>
+
+                {uploadError ? (
+                  <p className="text-xs text-status-critical" role="alert">
+                    {uploadError}
+                  </p>
+                ) : null}
+
+                {businessDocs && businessDocs.length > 0 ? (
+                  <ul className="space-y-1.5">
+                    {businessDocs.map((doc) => (
+                      <li
+                        key={doc.id}
+                        className="flex items-center gap-2 rounded-lg border border-glass-border bg-glass px-3 py-2 text-sm"
+                      >
+                        <FileText className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+                        <span className="min-w-0 flex-1 truncate text-atmospheric-grey">
+                          {doc.file_name}
+                        </span>
+                        <span
+                          className={cn(
+                            "inline-flex min-h-[1.5rem] items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+                            doc.status === "ready"
+                              ? "border-nexus-growth-border bg-nexus-growth-soft text-status-positive"
+                              : doc.status === "failed"
+                                ? "border-status-critical-border bg-status-critical-surface text-status-critical"
+                                : "border-border-strong bg-surface-muted text-muted",
+                          )}
+                          title={doc.error ?? undefined}
+                        >
+                          {doc.status === "ready"
+                            ? `Indexed · ${doc.chunk_count} chunks`
+                            : doc.status === "failed"
+                              ? "Failed"
+                              : "Processing…"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => deleteDocMutation.mutate(doc.id)}
+                          disabled={deleteDocMutation.isPending}
+                          className="inline-flex min-h-8 shrink-0 cursor-pointer items-center justify-center rounded-lg px-2 text-muted transition hover:text-status-critical disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={`Delete ${doc.file_name}`}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                <p className="text-[11px] leading-relaxed text-muted">
+                  <Lock className="mr-1 inline h-3 w-3 align-[-1px]" aria-hidden />
+                  Privacy: your documents are stored privately, encrypted at rest, and scoped to
+                  this workspace only. They are used solely to inform your AI assistant&apos;s
+                  answers — never shared with other tenants and never used to train AI models.
+                </p>
+              </div>
 
               <FieldRow label="Approval mode">
                 <select

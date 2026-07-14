@@ -26,4 +26,7 @@ export const queryKeys = {
 
   settings: (teamId: string | null) =>
     [...queryKeys.root(teamId), "settings"] as const,
+
+  businessDocs: (teamId: string | null) =>
+    [...queryKeys.root(teamId), "businessDocs"] as const,
 } as const;

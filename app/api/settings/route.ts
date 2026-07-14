@@ -42,6 +42,7 @@ type SettingsPatchBody = {
   name?: unknown;
   industry?: unknown;
   tone?: unknown;
+  chat_persona?: unknown;
   services?: unknown;
   approval_mode?: unknown;
   timezone?: unknown;
@@ -272,7 +273,7 @@ export async function GET() {
     supabase
       .from("business_profiles")
       .select(
-        "id, name, industry, tone, services, pricing_rules, approval_mode, workspace_id, timezone, high_value_threshold, high_risk_score, notification_prefs",
+        "id, name, industry, tone, chat_persona, services, pricing_rules, approval_mode, workspace_id, timezone, high_value_threshold, high_risk_score, notification_prefs",
       )
       .eq("team_id", teamId)
       .maybeSingle(),
@@ -364,6 +365,7 @@ export async function GET() {
     name: string;
     industry: string;
     tone: string;
+    chat_persona: string | null;
     services: unknown;
     pricing_rules: unknown;
     approval_mode: string;
@@ -465,6 +467,7 @@ export async function GET() {
           name: businessProfile.name,
           industry: businessProfile.industry,
           tone: businessProfile.tone,
+          chat_persona: businessProfile.chat_persona ?? null,
           services: parseServices(businessProfile.services),
           approval_mode: businessProfile.approval_mode,
           pricing_rules:
@@ -592,6 +595,15 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Invalid tone" }, { status: 400 });
     }
     updates.tone = body.tone.trim();
+  }
+
+  if (body.chat_persona !== undefined) {
+    if (typeof body.chat_persona !== "string") {
+      return NextResponse.json({ error: "Invalid chat_persona" }, { status: 400 });
+    }
+    const trimmed = body.chat_persona.trim().slice(0, 8000);
+    // Empty string resets to the app default (stored as NULL).
+    updates.chat_persona = trimmed.length > 0 ? trimmed : null;
   }
 
   if (body.services !== undefined) {

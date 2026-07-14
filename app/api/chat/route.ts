@@ -5,9 +5,12 @@ import {
   readJsonObjectWithLimit,
   requireApiTenantContext,
 } from "@/lib/api-security";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { buildAnalystContext } from "@/lib/chat/analyst-context";
 import { buildAnalystSystemPrompt } from "@/lib/chat/system-prompt";
-import { streamAnalystReply, type ChatTurn } from "@/lib/chat/openai";
+import { completeText, streamAnalystReply, type ChatTurn } from "@/lib/chat/openai";
+import { upsertSummaryEmbedding } from "@/lib/embeddings/store";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +22,48 @@ type MessageRow = { role?: string | null; content?: string | null };
 function sessionTitle(message: string): string {
   const clean = message.replace(/\s+/g, " ").trim();
   return clean.length <= 60 ? clean : `${clean.slice(0, 60).trimEnd()}…`;
+}
+
+/**
+ * Refresh the single rolling summary embedding for a chat session (best-effort). Generates a
+ * short summary of the recent turns via one cheap completion, then upserts it as kind='summary'.
+ * Any failure (no key, model error, RPC missing) is swallowed — this must never affect the reply.
+ */
+async function summarizeSession(params: {
+  supabase: SupabaseClient;
+  teamId: string;
+  workspaceId: string | null;
+  sessionId: string;
+  history: ChatTurn[];
+  reply: string;
+}): Promise<void> {
+  const { supabase, teamId, workspaceId, sessionId, history, reply } = params;
+  try {
+    const transcript = [...history, { role: "assistant" as const, content: reply }]
+      .map((t) => `${t.role === "user" ? "Founder" : "Analyst"}: ${t.content}`)
+      .join("\n")
+      .slice(0, 6000);
+
+    const summary = await completeText({
+      system:
+        "Summarize this conversation between a founder and their revenue analyst in 1-2 sentences. Capture the topics, entities, and decisions so it can be retrieved later. Output only the summary.",
+      user: transcript,
+      temperature: 0.2,
+      maxTokens: 160,
+    });
+    if (!summary) return;
+
+    await upsertSummaryEmbedding({
+      supabase,
+      teamId,
+      workspaceId,
+      sourceId: sessionId,
+      content: summary,
+      metadata: { session_id: sessionId },
+    });
+  } catch {
+    /* best-effort: swallow */
+  }
 }
 
 /**
@@ -147,7 +192,7 @@ export async function POST(request: Request) {
   // 4. Build the read-only snapshot + system prompt.
   let systemPrompt: string;
   try {
-    const context = await buildAnalystContext({ supabase, teamId });
+    const context = await buildAnalystContext({ supabase, teamId, queryText: message });
     systemPrompt = buildAnalystSystemPrompt(context);
   } catch (err) {
     return jsonError(
@@ -189,6 +234,20 @@ export async function POST(request: Request) {
             .eq("team_id", teamId);
         }
         controller.close();
+
+        // Best-effort rolling summary embedding for this session (kind='summary'), so future
+        // chats can retrieve what was discussed. Runs after close() — never blocks the reply,
+        // and any failure is swallowed by upsertSummaryEmbedding.
+        if (content) {
+          void summarizeSession({
+            supabase,
+            teamId,
+            workspaceId,
+            sessionId,
+            history,
+            reply: content,
+          });
+        }
       }
     },
   });

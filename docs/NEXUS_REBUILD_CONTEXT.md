@@ -139,11 +139,16 @@ with the report-back block from `CLAUDE.md`.
   normalizer canonical fields + customer-number WhatsApp permalink, IG/FB return null (graceful
   "unavailable") instead of wrong links. Tested via sanitized WA/IG/FB fixtures. Real routing-key
   fields to be confirmed against live payloads once Meta App Review clears.
-- **No business documents in beta (confirmed with product owner).** Therefore the **Chat Agent v1
-  does NOT use pgvector / document RAG.** It answers from STRUCTURED tenant data (leads,
-  conversations, reply_drafts, daily_reports, business_profiles) via read-only SQL, plus the
-  onboarding business profile. The `embeddings`/pgvector store is DEFERRED until customers actually
-  upload documents — do not build it speculatively.
+- **Knowledge layer NOW BUILT (2026-07-14).** Business-document upload — the agreed trigger for
+  building the vector store — shipped, so the `embeddings`/pgvector layer is live. Migration
+  `20260715120000_knowledge_layer_pgvector.sql` adds the `vector` extension, a single `embeddings`
+  table tagged by `kind` (`business_doc` | `conversation` | `summary`), a `business_documents`
+  metadata table, the `match_embeddings` cosine-search RPC, and a private `business-docs` storage
+  bucket. The **Chat Agent** now retrieves relevant chunks (`lib/embeddings/store.ts` →
+  `buildAnalystContext` → `buildAnalystSystemPrompt`) in addition to the structured snapshot;
+  founders manage docs + an editable analyst persona in Settings → AI & Approval Rules. Ingestion
+  is via `POST /api/business-docs` (extract → chunk → embed); chat/inbox summaries are embedded
+  best-effort. It still answers ONLY from the snapshot + knowledge base (read-only, no fabrication).
 - **Both Gmail and Meta are domain-blocked for live use** (production domain not finalized; Meta
   also needs App Review). So `conversations`/`leads` may be empty in dev — the Chat Agent task
   includes a demo-seed script so it can be built and demoed before live intake exists.

@@ -117,6 +117,7 @@ export interface WorkspaceSettings {
     name: string;
     industry: string;
     tone: string;
+    chat_persona: string | null;
     services: string[];
     approval_mode: string;
     pricing_rules: Record<string, unknown>;
