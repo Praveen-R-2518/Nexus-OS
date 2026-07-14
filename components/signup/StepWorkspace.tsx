@@ -6,18 +6,8 @@ import FormInput, { FormSelect } from "@/components/signup/FormInput";
 import { authPrimaryButton } from "@/components/signup/authStyles";
 import type { SignupSnapshot, WorkspaceType } from "@/components/signup/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { WORKSPACE_INDUSTRIES } from "@/lib/workspace-industries";
 import { cn } from "@/lib/utils";
-
-const INDUSTRIES = [
-  "Technology",
-  "Finance",
-  "Healthcare",
-  "E-commerce",
-  "Consulting",
-  "Real Estate",
-  "Education",
-  "Other",
-] as const;
 
 const COMPANY_SIZES = [
   "Just me",
@@ -49,7 +39,7 @@ function parseWorkspaceId(data: unknown): string | undefined {
 export default function StepWorkspace({ snapshot, onComplete }: StepWorkspaceProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [companyName, setCompanyName] = useState(snapshot.companyName || "");
-  const [industry, setIndustry] = useState(snapshot.industry || INDUSTRIES[0]);
+  const [industry, setIndustry] = useState(snapshot.industry || WORKSPACE_INDUSTRIES[0]);
   const [companySize, setCompanySize] = useState(
     snapshot.companySize || COMPANY_SIZES[0],
   );
@@ -154,7 +144,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
           onChange={(e) => setIndustry(e.target.value)}
           required
         >
-          {INDUSTRIES.map((opt) => (
+          {WORKSPACE_INDUSTRIES.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
             </option>

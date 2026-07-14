@@ -270,7 +270,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={busy || cooldownRemaining > 0}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-6 py-3 text-sm font-medium text-nexus-approval transition-colors hover:bg-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-primary inline-flex cursor-pointer items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium"
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               {cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : "Sign in"}

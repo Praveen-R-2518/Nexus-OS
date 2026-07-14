@@ -125,6 +125,10 @@
     --app-topbar-icon-bg: rgba(255, 255, 255, 0.88);
     --app-topbar-icon-fg: #334155;
     --app-topbar-accent: #10b981;
+
+    --btn-primary-bg: var(--nexus-approval);
+    --btn-primary-bg-hover: color-mix(in srgb, var(--nexus-approval) 85%, #000);
+    --btn-primary-fg: #eef4ff;
   }
 
   html:not(.dark):not(.aurora-dark) .logo-nexus,
@@ -253,6 +257,10 @@
     --app-topbar-icon-bg: rgba(255, 255, 255, 0.06);
     --app-topbar-icon-fg: #d1d5db;
     --app-topbar-accent: #10b981;
+
+    --btn-primary-bg: var(--nexus-approval);
+    --btn-primary-bg-hover: color-mix(in srgb, var(--nexus-approval) 85%, #000);
+    --btn-primary-fg: #eef4ff;
   }
 
   .aurora-light {
@@ -312,6 +320,10 @@
     --app-topbar-icon-bg: #f3f4f6;
     --app-topbar-icon-fg: #374151;
     --app-topbar-accent: #10b981;
+
+    --btn-primary-bg: var(--nexus-approval);
+    --btn-primary-bg-hover: color-mix(in srgb, var(--nexus-approval) 85%, #000);
+    --btn-primary-fg: #eef4ff;
   }
 
   .aurora-dark {
@@ -376,6 +388,10 @@
     --app-topbar-icon-bg: #111827;
     --app-topbar-icon-fg: #d1d5db;
     --app-topbar-accent: #10b981;
+
+    --btn-primary-bg: var(--nexus-approval);
+    --btn-primary-bg-hover: color-mix(in srgb, var(--nexus-approval) 85%, #000);
+    --btn-primary-fg: #eef4ff;
   }
 
   body {
@@ -593,7 +609,7 @@
     color: var(--app-topbar-search-fg);
     border: 1px solid var(--app-topbar-border);
     border-radius: 9999px;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     line-height: 1.25rem;
   }
   .app-topbar-search::placeholder {
@@ -634,13 +650,13 @@
     color: color-mix(in srgb, var(--app-sidebar-nav-active) 62%, transparent);
   }
   .nexus-app-shell[data-font-scale="compact"] {
-    font-size: 0.9375rem;
+    zoom: 0.94;
   }
   .nexus-app-shell[data-font-scale="default"] {
-    font-size: 1rem;
+    zoom: 1;
   }
   .nexus-app-shell[data-font-scale="comfortable"] {
-    font-size: 1.0625rem;
+    zoom: 1.07;
   }
   .nexus-app-shell .surface-card {
     border-color: var(--glass-border);
@@ -991,12 +1007,35 @@
     color: var(--nexus-approval);
   }
 
+  .btn-primary {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    border: 1px solid color-mix(in srgb, var(--btn-primary-bg) 88%, transparent);
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      opacity 0.15s ease;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--btn-primary-bg-hover);
+    border-color: color-mix(in srgb, var(--btn-primary-bg-hover) 88%, transparent);
+  }
+  .btn-primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-primary-bg) 45%, transparent);
+  }
+  .btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
   .apple-btn-primary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-[17px] font-normal text-white transition-colors duration-200;
-    background-color: var(--apple-accent);
+    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-[17px] font-normal transition-colors duration-200;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
   }
   .apple-btn-primary:hover {
-    background-color: var(--apple-accent-hover);
+    background-color: var(--btn-primary-bg-hover);
   }
 
   .apple-btn-link {

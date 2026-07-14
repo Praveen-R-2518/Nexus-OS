@@ -32,6 +32,7 @@ import {
 } from "@/lib/pricing/plans";
 import { settingsQuery, updateSettingsMutation } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
+import { workspaceIndustryOptions } from "@/lib/workspace-industries";
 import type { MetaChannelPlatform, NotificationPrefs } from "@/types";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -187,6 +188,11 @@ export function SettingsView() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [channelBusy, setChannelBusy] = useState<string | null>(null);
+
+  const industryOptions = useMemo(
+    () => workspaceIndustryOptions(industry),
+    [industry],
+  );
 
   useEffect(() => {
     if (!profile) return;
@@ -369,14 +375,19 @@ export function SettingsView() {
                   />
                 </FieldRow>
                 <FieldRow label="Industry">
-                  <input
-                    type="text"
+                  <select
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     disabled={!settings.editable.workspace_profile || saveMutation.isPending}
                     className={INPUT_CLASS}
                     required
-                  />
+                  >
+                    {industryOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 </FieldRow>
               </div>
 
