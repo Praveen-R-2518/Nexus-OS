@@ -6,7 +6,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = localFont({
@@ -59,9 +58,7 @@ export default function RootLayout({
         </Script>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <QueryProvider>
-            <SmoothScrollProvider>
-              <AppShell>{children}</AppShell>
-            </SmoothScrollProvider>
+            <AppShell>{children}</AppShell>
           </QueryProvider>
         </ThemeProvider>
       </body>

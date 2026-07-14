@@ -577,7 +577,7 @@ function InboxPageContent() {
             />
           )
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5 sm:p-6">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-5 sm:p-6">
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h1 className="nexus-app-title text-foreground">
