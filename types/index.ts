@@ -91,6 +91,11 @@ export interface Metrics {
 
 export type MetaChannelPlatform = "whatsapp" | "instagram" | "facebook";
 
+export interface NotificationPrefs {
+  buy_back_report_email: boolean;
+  high_value_lead_alerts: boolean;
+}
+
 export interface MetaChannelStatus {
   connected: boolean;
   page_name: string | null;
@@ -98,6 +103,7 @@ export interface MetaChannelStatus {
   wa_display_phone: string | null;
   sync_enabled: boolean;
   last_synced_at: string | null;
+  credential_id: string | null;
 }
 
 export interface WorkspaceSettings {
@@ -114,6 +120,8 @@ export interface WorkspaceSettings {
     services: string[];
     approval_mode: string;
     pricing_rules: Record<string, unknown>;
+    timezone: string | null;
+    notification_prefs: NotificationPrefs;
   } | null;
   channels: {
     gmail: {
@@ -122,11 +130,17 @@ export interface WorkspaceSettings {
       last_synced_at: string | null;
       sync_enabled: boolean;
       credential_type: string | null;
+      credential_id: string | null;
     };
     meta: {
       connected: boolean;
       platforms: Record<MetaChannelPlatform, MetaChannelStatus>;
     };
+  };
+  social: {
+    connected: boolean;
+    platforms: string[];
+    platform_count: number;
   };
   billing: {
     plan_tier: string | null;
@@ -154,9 +168,11 @@ export interface WorkspaceSettings {
     timezone_supported: boolean;
     currency_from_pricing_rules: string | null;
     notifications_supported: boolean;
+    common_timezones: string[];
   };
   editable: {
     workspace_profile: boolean;
     ai_rules: boolean;
+    channels: boolean;
   };
 }

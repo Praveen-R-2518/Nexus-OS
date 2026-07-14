@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   JSON_LIMITS,
   rateLimit,
@@ -10,11 +11,32 @@ import {
   HIGH_VALUE_THRESHOLD,
 } from "@/lib/approval-policy";
 import { META_PLATFORMS } from "@/app/api/meta/helpers";
-import type { MetaChannelPlatform, WorkspaceSettings } from "@/types";
+import type {
+  MetaChannelPlatform,
+  NotificationPrefs,
+  WorkspaceSettings,
+} from "@/types";
 
 export const dynamic = "force-dynamic";
 
 const APPROVAL_MODES = new Set(["approval_queue", "autopilot"]);
+const CHANNEL_TARGETS = new Set(["gmail", ...META_PLATFORMS]);
+const CHANNEL_ACTIONS = new Set(["set_sync", "disconnect"]);
+const COMMON_TIMEZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Toronto",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Asia/Dubai",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "UTC",
+] as const;
 
 type SettingsPatchBody = {
   name?: unknown;
@@ -22,6 +44,18 @@ type SettingsPatchBody = {
   tone?: unknown;
   services?: unknown;
   approval_mode?: unknown;
+  timezone?: unknown;
+  currency?: unknown;
+  high_value_threshold?: unknown;
+  high_risk_score?: unknown;
+  notification_prefs?: unknown;
+  channel?: unknown;
+};
+
+type ChannelPatch = {
+  target: string;
+  action: string;
+  sync_enabled?: boolean;
 };
 
 function messageLimitForPlan(planTier: string | null | undefined): number | null {
@@ -71,6 +105,149 @@ function readCurrency(pricingRules: unknown): string | null {
   return typeof currency === "string" && currency.trim() ? currency.trim() : null;
 }
 
+function parseNotificationPrefs(value: unknown): NotificationPrefs {
+  const defaults: NotificationPrefs = {
+    buy_back_report_email: false,
+    high_value_lead_alerts: false,
+  };
+  if (!value || typeof value !== "object" || Array.isArray(value)) return defaults;
+  const raw = value as Record<string, unknown>;
+  return {
+    buy_back_report_email:
+      typeof raw.buy_back_report_email === "boolean"
+        ? raw.buy_back_report_email
+        : defaults.buy_back_report_email,
+    high_value_lead_alerts:
+      typeof raw.high_value_lead_alerts === "boolean"
+        ? raw.high_value_lead_alerts
+        : defaults.high_value_lead_alerts,
+  };
+}
+
+function mergeNotificationPrefs(
+  existing: unknown,
+  patch: unknown,
+): NotificationPrefs | null {
+  if (patch === undefined) return null;
+  if (!patch || typeof patch !== "object" || Array.isArray(patch)) return null;
+  const current = parseNotificationPrefs(existing);
+  const incoming = patch as Record<string, unknown>;
+  return {
+    buy_back_report_email:
+      typeof incoming.buy_back_report_email === "boolean"
+        ? incoming.buy_back_report_email
+        : current.buy_back_report_email,
+    high_value_lead_alerts:
+      typeof incoming.high_value_lead_alerts === "boolean"
+        ? incoming.high_value_lead_alerts
+        : current.high_value_lead_alerts,
+  };
+}
+
+function parseChannelPatch(value: unknown): ChannelPatch | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (typeof raw.target !== "string" || typeof raw.action !== "string") return null;
+  return {
+    target: raw.target,
+    action: raw.action,
+    sync_enabled:
+      typeof raw.sync_enabled === "boolean" ? raw.sync_enabled : undefined,
+  };
+}
+
+function numOrDefault(value: unknown, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return value;
+}
+
+function isValidTimezone(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 64) return false;
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: trimmed });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isValidCurrency(value: string): boolean {
+  return /^[A-Z]{3}$/.test(value.trim());
+}
+
+async function applyChannelPatch(
+  supabase: SupabaseClient,
+  workspaceId: string | null,
+  patch: ChannelPatch,
+): Promise<string | null> {
+  if (!workspaceId) return "Workspace not found";
+  if (!CHANNEL_TARGETS.has(patch.target)) return "Invalid channel target";
+  if (!CHANNEL_ACTIONS.has(patch.action)) return "Invalid channel action";
+
+  if (patch.target === "gmail") {
+    if (patch.action === "set_sync") {
+      if (typeof patch.sync_enabled !== "boolean") return "sync_enabled is required";
+      const { error } = await supabase
+        .from("gmail_credentials")
+        .update({
+          sync_enabled: patch.sync_enabled,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("workspace_id", workspaceId)
+        .eq("status", "connected");
+      return error?.message ?? null;
+    }
+
+    if (patch.action === "disconnect") {
+      const { error } = await supabase
+        .from("gmail_credentials")
+        .update({
+          status: "disconnected",
+          sync_enabled: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("workspace_id", workspaceId)
+        .eq("status", "connected");
+      return error?.message ?? null;
+    }
+  }
+
+  if (!(META_PLATFORMS as readonly string[]).includes(patch.target)) {
+    return "Invalid Meta platform";
+  }
+
+  if (patch.action === "set_sync") {
+    if (typeof patch.sync_enabled !== "boolean") return "sync_enabled is required";
+    const { error } = await supabase
+      .from("meta_credentials")
+      .update({
+        sync_enabled: patch.sync_enabled,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("workspace_id", workspaceId)
+      .eq("platform", patch.target)
+      .eq("status", "connected");
+    return error?.message ?? null;
+  }
+
+  if (patch.action === "disconnect") {
+    const { error } = await supabase
+      .from("meta_credentials")
+      .update({
+        status: "disconnected",
+        sync_enabled: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("workspace_id", workspaceId)
+      .eq("platform", patch.target)
+      .eq("status", "connected");
+    return error?.message ?? null;
+  }
+
+  return "Unsupported channel action";
+}
+
 export async function GET() {
   const tenant = await requireApiTenantContext();
   if (!tenant.ok) return tenant.response;
@@ -83,6 +260,7 @@ export async function GET() {
     subscriptionResult,
     gmailResult,
     metaResult,
+    userProfileResult,
   ] = await Promise.all([
     workspaceId
       ? supabase
@@ -94,7 +272,7 @@ export async function GET() {
     supabase
       .from("business_profiles")
       .select(
-        "id, name, industry, tone, services, pricing_rules, approval_mode, workspace_id",
+        "id, name, industry, tone, services, pricing_rules, approval_mode, workspace_id, timezone, high_value_threshold, high_risk_score, notification_prefs",
       )
       .eq("team_id", teamId)
       .maybeSingle(),
@@ -125,11 +303,16 @@ export async function GET() {
       ? supabase
           .from("meta_credentials")
           .select(
-            "platform, page_name, ig_username, wa_display_phone, sync_enabled, last_synced_at, status",
+            "id, platform, page_name, ig_username, wa_display_phone, sync_enabled, last_synced_at, status",
           )
           .eq("workspace_id", workspaceId)
           .eq("status", "connected")
       : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("user_profiles")
+      .select("organization_id")
+      .eq("id", user.id)
+      .maybeSingle(),
   ]);
 
   const queryError =
@@ -137,10 +320,37 @@ export async function GET() {
     profileResult.error ??
     subscriptionResult.error ??
     gmailResult.error ??
-    metaResult.error;
+    metaResult.error ??
+    userProfileResult.error;
 
   if (queryError) {
     return NextResponse.json({ error: queryError.message }, { status: 500 });
+  }
+
+  const organizationId =
+    userProfileResult.data &&
+    typeof (userProfileResult.data as { organization_id?: unknown }).organization_id ===
+      "string"
+      ? ((userProfileResult.data as { organization_id: string }).organization_id.trim() ||
+          null)
+      : null;
+
+  let socialPlatforms: string[] = [];
+  if (organizationId) {
+    const { data: socialRows, error: socialErr } = await supabase
+      .from("social_credentials")
+      .select("platform")
+      .eq("organization_id", organizationId);
+    if (socialErr) {
+      return NextResponse.json({ error: socialErr.message }, { status: 500 });
+    }
+    socialPlatforms = (socialRows ?? [])
+      .map((row) =>
+        typeof (row as { platform?: unknown }).platform === "string"
+          ? (row as { platform: string }).platform
+          : null,
+      )
+      .filter((platform): platform is string => !!platform);
   }
 
   const workspace = workspaceResult.data as {
@@ -158,6 +368,10 @@ export async function GET() {
     pricing_rules: unknown;
     approval_mode: string;
     workspace_id: string | null;
+    timezone: string | null;
+    high_value_threshold: number | null;
+    high_risk_score: number | null;
+    notification_prefs: unknown;
   } | null;
 
   const subscription = subscriptionResult.data as {
@@ -170,6 +384,7 @@ export async function GET() {
   } | null;
 
   const gmailRow = gmailResult.data as {
+    id: string;
     email_address: string;
     last_synced_at: string | null;
     sync_enabled: boolean;
@@ -177,6 +392,7 @@ export async function GET() {
   } | null;
 
   const metaRows = (metaResult.data ?? []) as Array<{
+    id: string;
     platform: string;
     page_name: string | null;
     ig_username: string | null;
@@ -210,6 +426,7 @@ export async function GET() {
       wa_display_phone: null,
       sync_enabled: false,
       last_synced_at: null,
+      credential_id: null,
     };
   }
 
@@ -223,12 +440,18 @@ export async function GET() {
       wa_display_phone: row.wa_display_phone,
       sync_enabled: row.sync_enabled,
       last_synced_at: row.last_synced_at,
+      credential_id: row.id,
     };
   }
 
   const planTier = subscription?.plan_tier ?? "starter";
   const messageLimit = messageLimitForPlan(planTier);
   const pricingRules = businessProfile?.pricing_rules ?? {};
+  const highValueThreshold = numOrDefault(
+    businessProfile?.high_value_threshold,
+    HIGH_VALUE_THRESHOLD,
+  );
+  const highRiskScore = numOrDefault(businessProfile?.high_risk_score, HIGH_RISK_SCORE);
 
   const settings: WorkspaceSettings = {
     workspace: {
@@ -248,6 +471,8 @@ export async function GET() {
             pricingRules && typeof pricingRules === "object" && !Array.isArray(pricingRules)
               ? (pricingRules as Record<string, unknown>)
               : {},
+          timezone: businessProfile.timezone,
+          notification_prefs: parseNotificationPrefs(businessProfile.notification_prefs),
         }
       : null,
     channels: {
@@ -257,11 +482,17 @@ export async function GET() {
         last_synced_at: gmailRow?.last_synced_at ?? null,
         sync_enabled: gmailRow?.sync_enabled ?? false,
         credential_type: gmailRow?.credential_type ?? null,
+        credential_id: gmailRow?.id ?? null,
       },
       meta: {
         connected: metaRows.length > 0,
         platforms: metaPlatforms,
       },
+    },
+    social: {
+      connected: socialPlatforms.length > 0,
+      platforms: socialPlatforms,
+      platform_count: socialPlatforms.length,
     },
     billing: {
       plan_tier: planTier,
@@ -281,18 +512,20 @@ export async function GET() {
       user_email: user.email ?? null,
     },
     policy: {
-      high_value_threshold: HIGH_VALUE_THRESHOLD,
-      high_risk_score: HIGH_RISK_SCORE,
-      thresholds_editable: false,
+      high_value_threshold: highValueThreshold,
+      high_risk_score: highRiskScore,
+      thresholds_editable: !!businessProfile,
     },
     fields: {
-      timezone_supported: false,
+      timezone_supported: true,
       currency_from_pricing_rules: readCurrency(pricingRules),
-      notifications_supported: false,
+      notifications_supported: true,
+      common_timezones: [...COMMON_TIMEZONES],
     },
     editable: {
       workspace_profile: !!businessProfile,
       ai_rules: !!businessProfile,
+      channels: !!workspaceId,
     },
   };
 
@@ -314,7 +547,9 @@ export async function PATCH(request: Request) {
 
   const { data: existing, error: fetchErr } = await supabase
     .from("business_profiles")
-    .select("id")
+    .select(
+      "id, pricing_rules, notification_prefs, high_value_threshold, high_risk_score",
+    )
     .eq("team_id", teamId)
     .maybeSingle();
 
@@ -330,6 +565,13 @@ export async function PATCH(request: Request) {
   }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  let pricingRulesDirty = false;
+  let nextPricingRules =
+    existing.pricing_rules &&
+    typeof existing.pricing_rules === "object" &&
+    !Array.isArray(existing.pricing_rules)
+      ? { ...(existing.pricing_rules as Record<string, unknown>) }
+      : {};
 
   if (body.name !== undefined) {
     if (typeof body.name !== "string" || !body.name.trim()) {
@@ -356,8 +598,7 @@ export async function PATCH(request: Request) {
     if (!Array.isArray(body.services)) {
       return NextResponse.json({ error: "Invalid services" }, { status: 400 });
     }
-    const services = parseServices(body.services);
-    updates.services = services;
+    updates.services = parseServices(body.services);
   }
 
   if (body.approval_mode !== undefined) {
@@ -370,38 +611,106 @@ export async function PATCH(request: Request) {
     updates.approval_mode = body.approval_mode;
   }
 
-  if (Object.keys(updates).length === 1) {
-    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+  if (body.timezone !== undefined) {
+    if (typeof body.timezone !== "string" || !isValidTimezone(body.timezone)) {
+      return NextResponse.json({ error: "Invalid timezone" }, { status: 400 });
+    }
+    updates.timezone = body.timezone.trim();
   }
 
-  const { error: updateErr } = await supabase
-    .from("business_profiles")
-    .update(updates)
-    .eq("team_id", teamId);
-
-  if (updateErr) {
-    return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (body.currency !== undefined) {
+    if (typeof body.currency !== "string" || !isValidCurrency(body.currency)) {
+      return NextResponse.json({ error: "Invalid currency (use ISO 4217 code)" }, { status: 400 });
+    }
+    nextPricingRules = { ...nextPricingRules, currency: body.currency.trim().toUpperCase() };
+    pricingRulesDirty = true;
   }
 
-  if (workspaceId && typeof updates.name === "string") {
-    const { error: wsNameErr } = await supabase
-      .from("workspaces")
-      .update({ name: updates.name, updated_at: new Date().toISOString() })
-      .eq("id", workspaceId)
-      .eq("team_id", teamId);
-    if (wsNameErr) {
-      return NextResponse.json({ error: wsNameErr.message }, { status: 500 });
+  if (body.high_value_threshold !== undefined) {
+    if (
+      typeof body.high_value_threshold !== "number" ||
+      !Number.isFinite(body.high_value_threshold) ||
+      body.high_value_threshold < 0
+    ) {
+      return NextResponse.json({ error: "Invalid high_value_threshold" }, { status: 400 });
+    }
+    updates.high_value_threshold = body.high_value_threshold;
+  }
+
+  if (body.high_risk_score !== undefined) {
+    if (
+      typeof body.high_risk_score !== "number" ||
+      !Number.isFinite(body.high_risk_score) ||
+      body.high_risk_score < 0 ||
+      body.high_risk_score > 1
+    ) {
+      return NextResponse.json({ error: "Invalid high_risk_score (must be 0..1)" }, { status: 400 });
+    }
+    updates.high_risk_score = body.high_risk_score;
+  }
+
+  const mergedNotificationPrefs = mergeNotificationPrefs(
+    existing.notification_prefs,
+    body.notification_prefs,
+  );
+  if (body.notification_prefs !== undefined && !mergedNotificationPrefs) {
+    return NextResponse.json({ error: "Invalid notification_prefs" }, { status: 400 });
+  }
+  if (mergedNotificationPrefs) {
+    updates.notification_prefs = mergedNotificationPrefs;
+  }
+
+  if (pricingRulesDirty) {
+    updates.pricing_rules = nextPricingRules;
+  }
+
+  const channelPatch = body.channel !== undefined ? parseChannelPatch(body.channel) : null;
+  if (body.channel !== undefined && !channelPatch) {
+    return NextResponse.json({ error: "Invalid channel patch" }, { status: 400 });
+  }
+
+  if (channelPatch) {
+    const channelErr = await applyChannelPatch(supabase, workspaceId, channelPatch);
+    if (channelErr) {
+      return NextResponse.json({ error: channelErr }, { status: 400 });
     }
   }
 
-  if (workspaceId && typeof updates.industry === "string") {
-    const { error: wsIndustryErr } = await supabase
-      .from("workspaces")
-      .update({ industry: updates.industry, updated_at: new Date().toISOString() })
-      .eq("id", workspaceId)
+  const hasProfileUpdates = Object.keys(updates).length > 1;
+  if (!hasProfileUpdates && !channelPatch) {
+    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+  }
+
+  if (hasProfileUpdates) {
+    const { error: updateErr } = await supabase
+      .from("business_profiles")
+      .update(updates)
       .eq("team_id", teamId);
-    if (wsIndustryErr) {
-      return NextResponse.json({ error: wsIndustryErr.message }, { status: 500 });
+
+    if (updateErr) {
+      return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    }
+
+    if (workspaceId && typeof updates.name === "string") {
+      const { error: wsNameErr } = await supabase
+        .from("workspaces")
+        .update({ name: updates.name, updated_at: new Date().toISOString() })
+        .eq("id", workspaceId)
+        .eq("team_id", teamId);
+      if (wsNameErr) {
+        return NextResponse.json({ error: wsNameErr.message }, { status: 500 });
+      }
+    }
+
+    if (workspaceId && typeof updates.industry === "string") {
+      const { error: wsIndustryErr } = await supabase
+        .from("workspaces")
+        .update({ industry: updates.industry, updated_at: new Date().toISOString() })
+        .eq("id", workspaceId)
+        .eq("team_id", teamId);
+      if (wsIndustryErr) {
+        return NextResponse.json({ error: wsIndustryErr.message }, { status: 500 });
+      }
     }
   }
 

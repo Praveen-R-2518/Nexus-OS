@@ -9,6 +9,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import AppSidebar from "@/components/layout/AppSidebar";
 import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
+import { useAppearancePrefs } from "@/lib/use-appearance-prefs";
 import { cn } from "@/lib/utils";
 
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
@@ -43,6 +44,7 @@ export function isAuthShellRoute(pathname: string): boolean {
 }
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  const { fontScale, mounted: appearanceMounted } = useAppearancePrefs();
   const pathname = usePathname();
   const auth = isAuthShellRoute(pathname);
   const marketing = !auth && isMarketingShellRoute(pathname);
@@ -100,7 +102,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
           >
             <AuthGuard>
               <TenantScopeGate>
-                <div className="nexus-app-shell app-shell-bg relative flex min-h-screen">
+                <div
+                  className="nexus-app-shell app-shell-bg relative flex min-h-screen"
+                  data-font-scale={appearanceMounted ? fontScale : "default"}
+                >
                   <AppSidebar />
                   <div className="flex min-w-0 flex-1 flex-col">
                     <main

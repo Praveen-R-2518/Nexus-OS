@@ -13,7 +13,13 @@ import {
   Camera,
   Shield,
   Sparkles,
+  Users,
+  Share2,
+  Pause,
+  Play,
+  Unplug,
 } from "lucide-react";
+import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
@@ -26,7 +32,7 @@ import {
 } from "@/lib/pricing/plans";
 import { settingsQuery, updateSettingsMutation } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
-import type { MetaChannelPlatform } from "@/types";
+import type { MetaChannelPlatform, NotificationPrefs } from "@/types";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
 const INPUT_CLASS =
@@ -100,29 +106,37 @@ function FieldRow({
   );
 }
 
-function PlaceholderToggle({
+function Toggle({
+  checked,
+  disabled,
+  onChange,
   label,
-  description,
 }: {
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (next: boolean) => void;
   label: string;
-  description: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-dashed border-glass-border px-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-atmospheric-grey">{label}</p>
-        <p className="mt-1 text-xs leading-relaxed text-muted">{description}</p>
-      </div>
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        className="relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-surface-muted opacity-60"
-        title="Coming soon"
-      >
-        <span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow" />
-      </button>
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-nexus-approval" : "bg-surface-muted",
+      )}
+    >
+      <span
+        className={cn(
+          "absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform",
+          checked ? "left-6" : "left-1",
+        )}
+      />
+    </button>
   );
 }
 
@@ -157,24 +171,46 @@ export function SettingsView() {
 
   const [name, setName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [currency, setCurrency] = useState("");
   const [tone, setTone] = useState("");
   const [servicesText, setServicesText] = useState("");
   const [approvalMode, setApprovalMode] = useState<"approval_queue" | "autopilot">(
     "approval_queue",
   );
+  const [highValueThreshold, setHighValueThreshold] = useState(500);
+  const [highRiskScore, setHighRiskScore] = useState(0.8);
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>({
+    buy_back_report_email: false,
+    high_value_lead_alerts: false,
+  });
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [channelBusy, setChannelBusy] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
     setName(profile.name);
     setIndustry(profile.industry);
+    setTimezone(profile.timezone ?? "");
+    setCurrency(
+      typeof profile.pricing_rules.currency === "string"
+        ? profile.pricing_rules.currency
+        : settings?.fields.currency_from_pricing_rules ?? "",
+    );
     setTone(profile.tone);
     setServicesText(profile.services.join(", "));
     setApprovalMode(
       profile.approval_mode === "autopilot" ? "autopilot" : "approval_queue",
     );
-  }, [profile]);
+    setNotificationPrefs(profile.notification_prefs);
+  }, [profile, settings?.fields.currency_from_pricing_rules]);
+
+  useEffect(() => {
+    if (!settings) return;
+    setHighValueThreshold(settings.policy.high_value_threshold);
+    setHighRiskScore(settings.policy.high_risk_score);
+  }, [settings]);
 
   const saveMutation = useMutation({
     mutationFn: updateSettingsMutation,
@@ -202,11 +238,67 @@ export function SettingsView() {
   function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
     if (!settings?.editable.workspace_profile) return;
+    saveMutation.mutate({
+      name,
+      industry,
+      timezone: timezone.trim() || undefined,
+      currency: currency.trim().toUpperCase() || undefined,
+    });
+  }
+
+  function handleAiRulesSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!settings?.editable.ai_rules) return;
     const services = servicesText
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean);
-    saveMutation.mutate({ name, industry, tone, services, approval_mode: approvalMode });
+    saveMutation.mutate({
+      tone,
+      services,
+      approval_mode: approvalMode,
+      high_value_threshold: highValueThreshold,
+      high_risk_score: highRiskScore,
+    });
+  }
+
+  function handleNotificationSave(next: NotificationPrefs) {
+    if (!settings?.editable.workspace_profile) return;
+    setNotificationPrefs(next);
+    saveMutation.mutate({ notification_prefs: next });
+  }
+
+  async function handleChannelAction(
+    target: "gmail" | MetaChannelPlatform,
+    action: "set_sync" | "disconnect",
+    syncEnabled?: boolean,
+  ) {
+    if (!settings?.editable.channels) return;
+    const key = `${target}:${action}`;
+    setChannelBusy(key);
+    setSaveError(null);
+    try {
+      const next = await updateSettingsMutation({
+        channel: {
+          target,
+          action,
+          ...(action === "set_sync" ? { sync_enabled: syncEnabled } : {}),
+        },
+      });
+      queryClient.setQueryData(queryKeys.settings(tenant.teamId), next);
+      setSaveMessage(
+        action === "disconnect"
+          ? "Channel disconnected."
+          : syncEnabled
+            ? "Sync resumed."
+            : "Sync paused.",
+      );
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Channel update failed.");
+      setSaveMessage(null);
+    } finally {
+      setChannelBusy(null);
+    }
   }
 
   if (!tenant.ready || tenant.loading) {
@@ -289,30 +381,31 @@ export function SettingsView() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FieldRow
-                  label="Timezone"
-                  hint="Coming soon — not stored in the database yet."
-                >
+                <FieldRow label="Timezone" hint="IANA timezone for reports and scheduling.">
                   <input
                     type="text"
-                    value="Not configured"
-                    disabled
+                    list="settings-timezones"
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    disabled={!settings.editable.workspace_profile || saveMutation.isPending}
                     className={INPUT_CLASS}
+                    placeholder="America/New_York"
                   />
+                  <datalist id="settings-timezones">
+                    {(settings.fields.common_timezones ?? []).map((tz) => (
+                      <option key={tz} value={tz} />
+                    ))}
+                  </datalist>
                 </FieldRow>
-                <FieldRow
-                  label="Default currency"
-                  hint={
-                    settings.fields.currency_from_pricing_rules
-                      ? "Read from pricing rules."
-                      : "Coming soon — no currency column yet."
-                  }
-                >
+                <FieldRow label="Default currency" hint="ISO 4217 code stored in pricing rules.">
                   <input
                     type="text"
-                    value={settings.fields.currency_from_pricing_rules ?? "Not configured"}
-                    disabled
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                    disabled={!settings.editable.workspace_profile || saveMutation.isPending}
                     className={INPUT_CLASS}
+                    placeholder="USD"
+                    maxLength={3}
                   />
                 </FieldRow>
               </div>
@@ -338,6 +431,14 @@ export function SettingsView() {
                 {saveMutation.isPending ? "Saving…" : "Save profile"}
               </button>
             </form>
+          </SettingsSection>
+
+          <SettingsSection
+            id="appearance"
+            title="Appearance"
+            description="Theme and dashboard text size. Saved on this device."
+          >
+            <AppearanceSettings />
           </SettingsSection>
 
           <SettingsSection
@@ -369,6 +470,51 @@ export function SettingsView() {
                     connected={settings.channels.gmail.connected}
                     label={settings.channels.gmail.connected ? "Connected" : "Not connected"}
                   />
+                  {settings.channels.gmail.connected ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={!settings.editable.channels || !!channelBusy}
+                        onClick={() =>
+                          void handleChannelAction(
+                            "gmail",
+                            "set_sync",
+                            !settings.channels.gmail.sync_enabled,
+                          )
+                        }
+                        className={SECONDARY_BTN}
+                      >
+                        {settings.channels.gmail.sync_enabled ? (
+                          <>
+                            <Pause className="h-4 w-4" aria-hidden />
+                            Pause sync
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4" aria-hidden />
+                            Resume sync
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!settings.editable.channels || !!channelBusy}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Disconnect Gmail? Nexus OS will stop ingesting new mail until you reconnect.",
+                            )
+                          ) {
+                            void handleChannelAction("gmail", "disconnect");
+                          }
+                        }}
+                        className={SECONDARY_BTN}
+                      >
+                        <Unplug className="h-4 w-4" aria-hidden />
+                        Disconnect
+                      </button>
+                    </>
+                  ) : null}
                   <a href="/api/gmail/connect" className={SECONDARY_BTN}>
                     {settings.channels.gmail.connected ? "Reconnect" : "Connect Gmail"}
                   </a>
@@ -414,6 +560,51 @@ export function SettingsView() {
                         connected={channel.connected}
                         label={channel.connected ? "Connected" : "Not connected"}
                       />
+                      {channel.connected ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={!settings.editable.channels || !!channelBusy}
+                            onClick={() =>
+                              void handleChannelAction(
+                                platform,
+                                "set_sync",
+                                !channel.sync_enabled,
+                              )
+                            }
+                            className={SECONDARY_BTN}
+                          >
+                            {channel.sync_enabled ? (
+                              <>
+                                <Pause className="h-4 w-4" aria-hidden />
+                                Pause sync
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-4 w-4" aria-hidden />
+                                Resume sync
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!settings.editable.channels || !!channelBusy}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Disconnect ${META_LABELS[platform]}? Ingest will stop until you reconnect.`,
+                                )
+                              ) {
+                                void handleChannelAction(platform, "disconnect");
+                              }
+                            }}
+                            className={SECONDARY_BTN}
+                          >
+                            <Unplug className="h-4 w-4" aria-hidden />
+                            Disconnect
+                          </button>
+                        </>
+                      ) : null}
                       <a
                         href={`/api/meta/connect?platform=${platform}`}
                         className={SECONDARY_BTN}
@@ -432,7 +623,7 @@ export function SettingsView() {
             title="AI & Approval Rules"
             description="Tone and services feed reply drafting. Approval mode controls auto-send vs founder queue."
           >
-            <form onSubmit={handleProfileSave} className="space-y-4">
+            <form onSubmit={handleAiRulesSave} className="space-y-4">
               <FieldRow label="Reply tone">
                 <input
                   type="text"
@@ -476,23 +667,30 @@ export function SettingsView() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <FieldRow
                   label="High-value threshold"
-                  hint="Hard-coded in approval policy (not editable yet)."
+                  hint="Estimated value at or above this amount is always hard-gated."
                 >
                   <input
-                    type="text"
-                    value={`$${settings.policy.high_value_threshold.toLocaleString()} estimated value`}
-                    disabled
+                    type="number"
+                    min={0}
+                    step={50}
+                    value={highValueThreshold}
+                    onChange={(e) => setHighValueThreshold(Number(e.target.value))}
+                    disabled={!settings.editable.ai_rules || saveMutation.isPending}
                     className={INPUT_CLASS}
                   />
                 </FieldRow>
                 <FieldRow
                   label="Churn-risk threshold"
-                  hint="Risk score ≥ this value is always hard-gated."
+                  hint="Risk score ≥ this value (0–1) is always hard-gated."
                 >
                   <input
-                    type="text"
-                    value={`${Math.round(settings.policy.high_risk_score * 100)}% risk score`}
-                    disabled
+                    type="number"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={highRiskScore}
+                    onChange={(e) => setHighRiskScore(Number(e.target.value))}
+                    disabled={!settings.editable.ai_rules || saveMutation.isPending}
                     className={INPUT_CLASS}
                   />
                 </FieldRow>
@@ -638,24 +836,106 @@ export function SettingsView() {
           </SettingsSection>
 
           <SettingsSection
+            id="team"
+            title="Team"
+            description="Invite teammates and manage workspace access."
+          >
+            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">Team members</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Send invites and manage roles from the Team page.
+                  </p>
+                </div>
+              </div>
+              <Link href="/team" className={SECONDARY_BTN}>
+                Open Team
+              </Link>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            id="social-posting"
+            title="Social Posting"
+            description="Linked publishing accounts for the Posts workspace."
+          >
+            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Share2 className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">
+                    {settings.social.connected
+                      ? `${settings.social.platform_count} platform${settings.social.platform_count === 1 ? "" : "s"} connected`
+                      : "No social accounts connected"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    {settings.social.connected
+                      ? settings.social.platforms.join(", ")
+                      : "Connect platforms from Posts when you are ready to publish."}
+                  </p>
+                </div>
+              </div>
+              <Link href="/posts" className={SECONDARY_BTN}>
+                Open Posts
+              </Link>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
             id="notifications"
             title="Notifications"
-            description="Alert preferences — persistence is not implemented yet."
+            description="Alert preferences are saved to your workspace. Delivery hooks are wired when email alerts ship."
           >
             <div className="space-y-3">
-              <PlaceholderToggle
-                label="Daily Buy-Back Report email"
-                description="Receive the daily revenue rescue summary by email. Coming soon."
-              />
-              <PlaceholderToggle
-                label="High-value lead alerts"
-                description="Get notified when a classified lead exceeds your value threshold. Coming soon."
-              />
-              <div className="flex items-start gap-2 rounded-xl border border-dashed border-glass-border px-4 py-3 text-xs text-muted">
+              <div className="flex items-start justify-between gap-4 rounded-xl border border-glass-border px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">
+                    Daily Buy-Back Report email
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">
+                    Receive the daily revenue rescue summary by email when delivery is enabled.
+                  </p>
+                </div>
+                <Toggle
+                  label="Daily Buy-Back Report email"
+                  checked={notificationPrefs.buy_back_report_email}
+                  disabled={!settings.editable.workspace_profile || saveMutation.isPending}
+                  onChange={(next) =>
+                    handleNotificationSave({
+                      ...notificationPrefs,
+                      buy_back_report_email: next,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4 rounded-xl border border-glass-border px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">
+                    High-value lead alerts
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">
+                    Get notified when a classified lead exceeds your value threshold.
+                  </p>
+                </div>
+                <Toggle
+                  label="High-value lead alerts"
+                  checked={notificationPrefs.high_value_lead_alerts}
+                  disabled={!settings.editable.workspace_profile || saveMutation.isPending}
+                  onChange={(next) =>
+                    handleNotificationSave({
+                      ...notificationPrefs,
+                      high_value_lead_alerts: next,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-start gap-2 rounded-xl border border-glass-border px-4 py-3 text-xs text-muted">
                 <Bell className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 <span>
-                  Notification toggles are UI placeholders only. No database columns or
-                  send hooks exist yet.
+                  Preferences are stored on your business profile. Email delivery will honor these
+                  settings when the notification pipeline is enabled.
                 </span>
               </div>
             </div>
