@@ -243,6 +243,14 @@
     background-color: var(--surface-page, var(--background));
   }
 
+  /* Native-feeling scroll: rely on the browser's momentum scroll (no JS smooth-scroll
+     library). Smooth only eases in-page anchor jumps; reduced-motion override is below.
+     scrollbar-gutter avoids horizontal layout shift when content grows past the viewport. */
+  html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
   /* Source Sans 3 for main app content only (nav/footer use Geist / mono via components) */
   main[data-app-body] {
     font-family: var(--font-source-sans-3), "Source Sans 3", system-ui, sans-serif;
