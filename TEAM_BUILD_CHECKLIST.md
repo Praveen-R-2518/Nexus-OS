@@ -100,8 +100,8 @@ implemented in code and merged; see per-member sections for exact files/migratio
 | n8n workflows | WF0a `bhGCrTSHrj91ojby` · WF0d `lr4HzWo2QeghXxhH` · WF0e `Y54F1bZLJkRyexTH` · WF1 `zU8cDHJeoUGWbUgC` · WF2 `MmA7EKsOYAZgx3ep` · WF3 `OjFlX2W2xYbl5roY` · WF4 `qWHvc2AmqX10jEjk` · WF5 `QoJIseLTX2jwDYEy` · WF8a(OpenAI) `dTunsN6JW5P1nymB` · WF8b `VZ9ZaA1S2JxSAeGQ` · WF8c `RfmuS0guiaq64Lrx` · WF8a(Claude, orphan) `YjEXyYnAHhoSSc2W` |
 | Dropped table | `workflow_logs` (migration `20260709140000_drop_workflow_logs.sql`) — but WF0a/WF1/WF3/WF4/WF5 still POST to it |
 | Two tenant models | `teams`/`workspaces` (pipeline tables, `team_id` NOT NULL) vs `organizations`/`user_profiles` (social tables, `organization_id`) — WF2 currently conflates them |
-| Extensions NOT installed | `vector` (pgvector — intentionally deferred, do NOT install), `pg_cron` |
-| pgvector / embeddings | **DEFERRED by product decision** — do not build it (see NEXUS_REBUILD_CONTEXT §5) |
+| Extensions NOT installed | `pg_cron` |
+| pgvector / embeddings | **BUILT 2026-07-14** — `vector` extension + `embeddings`/`business_documents` + `match_embeddings` RPC + `business-docs` bucket (migration `20260715120000_knowledge_layer_pgvector.sql`). Chat Agent retrieves from it; docs uploaded in Settings → AI & Approval Rules. (Trigger was business-doc upload; see NEXUS_REBUILD_CONTEXT §5.) |
 | Domain blocks | Gmail live intake blocked on production-domain Google auth; Meta blocked on App Review — build and test with fixtures/seeds |
 
 **Coordination rule:** WF3 is owned by Member 1. WF0a/WF1/WF2/WF4 are owned by Member 2. WF5 is

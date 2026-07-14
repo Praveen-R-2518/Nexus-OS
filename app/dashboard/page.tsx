@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 subtitle="in unresolved conversations"
                 icon={<TrendingDown />}
                 variant="critical"
-                accent="text-nexus-rescue"
+                accent="text-status-critical"
                 className="animate-fade-up [animation-delay:0ms]"
               />
               <Card

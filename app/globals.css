@@ -52,26 +52,28 @@
     --text-secondary: #334155;
     --text-tertiary: #475569;
 
-    --status-positive-fg: #c45f66;
-    --status-positive-surface: rgba(253, 159, 159, 0.14);
-    --status-positive-border: rgba(253, 159, 159, 0.34);
+    /* Severity ramp (shared across all 4 themes): green -> amber -> orange -> red.
+       Purple/blue (neutral) is reserved for non-risk info (e.g. AI confidence %). */
+    --status-positive-fg: #047857;
+    --status-positive-surface: #ecfdf5;
+    --status-positive-border: #a7f3d0;
     --status-positive-glow: transparent;
 
     --status-neutral-fg: #4f3ee0;
     --status-neutral-surface: rgba(93, 62, 251, 0.07);
     --status-neutral-border: rgba(93, 62, 251, 0.15);
 
-    --status-warning-fg: #a84d00;
-    --status-warning-surface: rgba(253, 114, 1, 0.1);
-    --status-warning-border: rgba(253, 114, 1, 0.22);
+    --status-warning-fg: #c2410c;
+    --status-warning-surface: #fff7ed;
+    --status-warning-border: #fed7aa;
 
-    --status-caution-fg: #6e42db;
-    --status-caution-surface: rgba(139, 80, 251, 0.09);
-    --status-caution-border: rgba(139, 80, 251, 0.2);
+    --status-caution-fg: #b45309;
+    --status-caution-surface: #fffbeb;
+    --status-caution-border: #fde68a;
 
-    --status-critical-fg: #7a2834;
-    --status-critical-surface: rgba(139, 31, 45, 0.06);
-    --status-critical-border: rgba(139, 31, 45, 0.14);
+    --status-critical-fg: #dc2626;
+    --status-critical-surface: #fef2f2;
+    --status-critical-border: #fecaca;
     --status-critical-glow: transparent;
 
     --bg-card: var(--surface-card);
@@ -192,26 +194,26 @@
     --text-tertiary: #94a3b8;
     --text-accent: #e2e8f0;
 
-    --status-positive-fg: #ffb3b3;
-    --status-positive-surface: rgba(253, 159, 159, 0.1);
-    --status-positive-border: rgba(253, 159, 159, 0.22);
+    --status-positive-fg: #34d399;
+    --status-positive-surface: rgba(52, 211, 153, 0.12);
+    --status-positive-border: rgba(52, 211, 153, 0.28);
     --status-positive-glow: transparent;
 
     --status-neutral-fg: #a898ff;
     --status-neutral-surface: rgba(93, 62, 251, 0.12);
     --status-neutral-border: rgba(93, 62, 251, 0.24);
 
-    --status-warning-fg: #ffb36b;
-    --status-warning-surface: rgba(253, 114, 1, 0.11);
-    --status-warning-border: rgba(253, 114, 1, 0.22);
+    --status-warning-fg: #fb923c;
+    --status-warning-surface: rgba(251, 146, 60, 0.12);
+    --status-warning-border: rgba(251, 146, 60, 0.28);
 
-    --status-caution-fg: #ba9cff;
-    --status-caution-surface: rgba(139, 80, 251, 0.12);
-    --status-caution-border: rgba(139, 80, 251, 0.24);
+    --status-caution-fg: #fbbf24;
+    --status-caution-surface: rgba(251, 191, 36, 0.12);
+    --status-caution-border: rgba(251, 191, 36, 0.28);
 
-    --status-critical-fg: #e08b8b;
-    --status-critical-surface: rgba(224, 139, 139, 0.08);
-    --status-critical-border: rgba(224, 139, 139, 0.16);
+    --status-critical-fg: #f87171;
+    --status-critical-surface: rgba(248, 113, 113, 0.12);
+    --status-critical-border: rgba(248, 113, 113, 0.28);
     --status-critical-glow: transparent;
 
     --bg-card: var(--surface-card);
@@ -288,9 +290,25 @@
     --text-secondary: #6b7280;
     --text-tertiary: #9ca3af;
 
-    --status-positive-fg: #059669;
+    --status-positive-fg: #047857;
     --status-positive-surface: #ecfdf5;
     --status-positive-border: #a7f3d0;
+
+    --status-neutral-fg: #2563eb;
+    --status-neutral-surface: #eff6ff;
+    --status-neutral-border: #bfdbfe;
+
+    --status-warning-fg: #c2410c;
+    --status-warning-surface: #fff7ed;
+    --status-warning-border: #fed7aa;
+
+    --status-caution-fg: #b45309;
+    --status-caution-surface: #fffbeb;
+    --status-caution-border: #fde68a;
+
+    --status-critical-fg: #dc2626;
+    --status-critical-surface: #fef2f2;
+    --status-critical-border: #fecaca;
 
     --selectable-card-border: #e5e7eb;
     --selectable-card-border-selected: #1f2937;
@@ -359,6 +377,18 @@
     --status-neutral-fg: #93c5fd;
     --status-neutral-surface: #1e3a5f;
     --status-neutral-border: #2563eb;
+
+    --status-warning-fg: #fb923c;
+    --status-warning-surface: rgba(251, 146, 60, 0.12);
+    --status-warning-border: rgba(251, 146, 60, 0.28);
+
+    --status-caution-fg: #fbbf24;
+    --status-caution-surface: rgba(251, 191, 36, 0.12);
+    --status-caution-border: rgba(251, 191, 36, 0.28);
+
+    --status-critical-fg: #f87171;
+    --status-critical-surface: rgba(248, 113, 113, 0.12);
+    --status-critical-border: rgba(248, 113, 113, 0.28);
 
     --selectable-card-border: #374151;
     --selectable-card-border-selected: #f3f4f6;

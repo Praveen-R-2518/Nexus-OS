@@ -2,13 +2,15 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { matchKnowledge, type KnowledgeChunk } from "@/lib/embeddings/store";
+
 /**
  * Read-only, tenant-scoped "inbox snapshot" for the Revenue Analyst chat agent.
  *
- * The agent answers ONLY from this structured data (no pgvector / document RAG — see
- * docs/NEXUS_REBUILD_CONTEXT.md §5). This module NEVER writes business data; it issues
- * SELECTs scoped by `team_id` and aggregates in JS so the caller can inject a compact
- * object into the system prompt in a single model call.
+ * The agent answers from this structured data AND, when a query is provided, from the tenant's
+ * knowledge base (uploaded business docs + chat/inbox summaries) retrieved via pgvector. This
+ * module NEVER writes business data; it issues SELECTs scoped by `team_id` and aggregates in JS
+ * so the caller can inject a compact object into the system prompt in a single model call.
  *
  * Metric definitions intentionally mirror app/api/metrics/route.ts:
  *   - revenue at risk = Σ estimated_value over non-terminal conversations
@@ -72,11 +74,15 @@ export interface BusinessContext {
   tone: string;
   services: string[];
   approvalMode: string;
+  /** Founder-editable system-message persona; null = use DEFAULT_ANALYST_PERSONA. */
+  persona: string | null;
 }
 
 export interface AnalystContext {
   snapshot: AnalystSnapshot;
   business: BusinessContext | null;
+  /** Knowledge-base chunks retrieved for the current query (empty when no query / no matches). */
+  knowledge: KnowledgeChunk[];
 }
 
 type ConversationRow = {
@@ -97,6 +103,7 @@ type BusinessRow = {
   name?: string | null;
   industry?: string | null;
   tone?: string | null;
+  chat_persona?: string | null;
   services?: unknown;
   approval_mode?: string | null;
 };
@@ -291,8 +298,10 @@ function parseServices(value: unknown): string[] {
 export async function buildAnalystContext(params: {
   supabase: SupabaseClient;
   teamId: string;
+  /** The founder's current message — embedded to retrieve relevant knowledge-base chunks. */
+  queryText?: string;
 }): Promise<AnalystContext> {
-  const { supabase, teamId } = params;
+  const { supabase, teamId, queryText } = params;
   const generatedAt = new Date().toISOString();
 
   const [conversationsResult, draftsResult, businessResult] = await Promise.all([
@@ -311,7 +320,7 @@ export async function buildAnalystContext(params: {
       .limit(CONVERSATION_SCAN_LIMIT),
     supabase
       .from("business_profiles")
-      .select("name, industry, tone, services, approval_mode")
+      .select("name, industry, tone, chat_persona, services, approval_mode")
       .eq("team_id", teamId)
       .order("created_at", { ascending: true })
       .limit(1)
@@ -335,8 +344,15 @@ export async function buildAnalystContext(params: {
       tone: (bizRow.tone ?? "").trim() || "warm, concise, founder-led",
       services: parseServices(bizRow.services),
       approvalMode: (bizRow.approval_mode ?? "").trim() || "approval_queue",
+      persona: (bizRow.chat_persona ?? "").trim() || null,
     };
   }
 
-  return { snapshot, business };
+  // Retrieve knowledge-base chunks relevant to the query. Best-effort: matchKnowledge swallows
+  // its own errors and returns [] (missing RPC, no OPENAI key, fake test client, etc.).
+  const knowledge = queryText
+    ? await matchKnowledge({ supabase, teamId, queryText })
+    : [];
+
+  return { snapshot, business, knowledge };
 }

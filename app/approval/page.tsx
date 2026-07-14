@@ -12,8 +12,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
+import { FilterChip } from "@/components/ui/FilterChip";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
@@ -439,16 +441,11 @@ export default function ApprovalPage() {
               {FILTERS.map((filter) => {
                 const active = activeFilter === filter.value;
                 return (
-                  <button
+                  <FilterChip
                     key={filter.value}
-                    type="button"
+                    active={active}
                     onClick={() => setActiveFilter(filter.value)}
-                    className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors duration-interaction",
-                      active
-                        ? "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval"
-                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
-                    )}
+                    className="text-sm"
                   >
                     {filter.label}
                     <span
@@ -456,12 +453,12 @@ export default function ApprovalPage() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-approval-border bg-nexus-approval-soft font-semibold text-nexus-approval"
-                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
+                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
                       )}
                     >
                       {counts[filter.value]}
                     </span>
-                  </button>
+                  </FilterChip>
                 );
               })}
             </div>
@@ -701,8 +698,8 @@ export default function ApprovalPage() {
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
+                  <Button
+                    variant="destructive"
                     onClick={() => {
                       setRejectingDraft(selectedDraft);
                       setRejectionReason("");
@@ -711,19 +708,18 @@ export default function ApprovalPage() {
                       actionDraftId === selectedDraft.id ||
                       selectedDraft.approval_status === "rejected"
                     }
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-status-critical-border bg-transparent px-5 py-2.5 text-sm font-medium text-status-critical transition-colors duration-interaction hover:bg-status-critical-surface disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <XCircle className="h-5 w-5 shrink-0" aria-hidden />
                     Reject
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="px-6"
                     onClick={() => void handleApprove(selectedDraft)}
                     disabled={
                       actionDraftId === selectedDraft.id ||
                       selectedDraft.approval_status === "approved"
                     }
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-6 py-2.5 text-sm font-medium text-white transition-opacity duration-interaction hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:border-nexus-approval dark:bg-nexus-approval"
                   >
                     {actionDraftId === selectedDraft.id ? (
                       <Spinner className="h-5 w-5" label="Approving draft" />
@@ -731,7 +727,7 @@ export default function ApprovalPage() {
                       <Send className="h-5 w-5 shrink-0" aria-hidden />
                     )}
                     Approve & Send
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -771,27 +767,22 @@ export default function ApprovalPage() {
               />
             </label>
             <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setRejectingDraft(null)}
-                className="glass-pill inline-flex min-h-11 cursor-pointer items-center rounded-full px-5 py-2.5 text-sm font-medium text-muted transition-colors hover:border-nexus-approval hover:bg-glass"
-              >
+              <Button variant="ghost" onClick={() => setRejectingDraft(null)}>
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={() => void handleReject()}
                 disabled={
                   rejectionReason.trim() === "" ||
                   actionDraftId === rejectingDraft.id
                 }
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-status-critical-border bg-status-critical-surface px-5 py-2.5 text-sm font-medium text-status-critical transition-colors hover:bg-status-critical-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {actionDraftId === rejectingDraft.id ? (
                   <Spinner className="h-5 w-5" label="Rejecting draft" />
                 ) : null}
                 Submit Rejection
-              </button>
+              </Button>
             </div>
           </div>
         </div>

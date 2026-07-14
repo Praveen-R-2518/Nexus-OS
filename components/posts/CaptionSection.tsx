@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
+import { FilterChip } from "@/components/ui/FilterChip";
 import { Spinner } from "@/components/ui/Spinner";
 import {
   enhanceCaptionStub,
@@ -153,21 +154,14 @@ export function CaptionSection({
           {POST_PLATFORMS.map((p) => {
             const selected = platforms.includes(p);
             return (
-              <button
+              <FilterChip
                 key={p}
-                type="button"
+                active={selected}
                 onClick={() => togglePlatform(p)}
-                aria-pressed={selected}
-                className={cn(
-                  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
-                  selected
-                    ? "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval"
-                    : "glass-pill text-muted hover:bg-glass",
-                )}
               >
                 <PlatformIcon platform={p} />
                 {PLATFORM_LABELS[p]}
-              </button>
+              </FilterChip>
             );
           })}
         </div>

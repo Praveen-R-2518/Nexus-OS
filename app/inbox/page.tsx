@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterChip } from "@/components/ui/FilterChip";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
@@ -366,7 +367,7 @@ function InboxPageContent() {
             <p className="nexus-meta text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 font-sans text-3xl font-semibold tabular-nums tracking-normal text-nexus-rescue sm:text-4xl">
+            <p className="mt-2 font-sans text-3xl font-bold tabular-nums tracking-normal text-status-critical sm:text-4xl">
               {formatCurrency(revenueAtRisk)}
             </p>
             <p className="mt-1.5 text-sm text-muted">
@@ -385,16 +386,11 @@ function InboxPageContent() {
                 const active = activeUrgencyFilter === opt.value;
                 const count = urgencyCounts[opt.value] ?? 0;
                 return (
-                  <button
+                  <FilterChip
                     key={opt.label + opt.value}
-                    type="button"
+                    active={active}
+                    accent="intake"
                     onClick={() => setActiveUrgencyFilter(opt.value)}
-                    className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
-                      active
-                        ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
-                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
-                    )}
                   >
                     {opt.label}
                     <span
@@ -402,12 +398,12 @@ function InboxPageContent() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
+                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
                       )}
                     >
                       {count}
                     </span>
-                  </button>
+                  </FilterChip>
                 );
               })}
             </div>
@@ -421,16 +417,11 @@ function InboxPageContent() {
                 const active = activeIntentFilter === opt.value;
                 const pillCount = intentCounts[opt.value] ?? 0;
                 return (
-                  <button
+                  <FilterChip
                     key={opt.label}
-                    type="button"
+                    active={active}
+                    accent="intake"
                     onClick={() => setActiveIntentFilter(opt.value)}
-                    className={cn(
-                      "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-medium tracking-normal transition-colors duration-interaction",
-                      active
-                        ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
-                        : "glass-pill border-glass-border text-slate-600 hover:border-glass-border hover:bg-glass/60 dark:text-slate-300",
-                    )}
                   >
                     {opt.label}
                     <span
@@ -438,12 +429,12 @@ function InboxPageContent() {
                         "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
                         active
                           ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "glass-pill border-glass-border font-medium text-slate-700 dark:text-slate-200",
+                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
                       )}
                     >
                       {pillCount}
                     </span>
-                  </button>
+                  </FilterChip>
                 );
               })}
             </div>

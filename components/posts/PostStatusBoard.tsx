@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ImageIcon, Plus } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterChip } from "@/components/ui/FilterChip";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { listPosts } from "@/lib/posts/data";
 import { POST_STATUSES, STATUS_LABELS } from "@/lib/posts/types";
 import type { PostStatus, SocialPost } from "@/lib/posts/types";
-import { cn } from "@/lib/utils";
 import { PostCard } from "./PostCard";
 import { PRIMARY_BTN } from "./shared";
 
@@ -72,21 +72,15 @@ export function PostStatusBoard({ orgId, onNewPost, onOpenPost }: PostStatusBoar
 
       <div className="flex flex-wrap gap-2">
         {filters.map((f) => (
-          <button
+          <FilterChip
             key={f}
-            type="button"
+            active={filter === f}
             onClick={() => setFilter(f)}
-            aria-pressed={filter === f}
-            className={cn(
-              "inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-              filter === f
-                ? "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval"
-                : "glass-pill text-muted hover:bg-glass",
-            )}
+            className="min-h-9 rounded-full py-1.5"
           >
             {f === "all" ? "All" : STATUS_LABELS[f]}
             <span className="tabular-nums opacity-70">{counts[f] ?? 0}</span>
-          </button>
+          </FilterChip>
         ))}
       </div>
 
