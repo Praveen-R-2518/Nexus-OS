@@ -1,12 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { SessionGate } from "@/components/auth/SessionGate";
+import { AppChromeSearchProvider } from "@/components/layout/AppChromeSearch";
 import SiteFooter from "@/components/layout/SiteFooter";
 import AppSidebar from "@/components/layout/AppSidebar";
+import { AppTopBar } from "@/components/layout/AppTopBar";
 import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
 import { useAppearancePrefs } from "@/lib/use-appearance-prefs";
@@ -46,6 +48,7 @@ export function isAuthShellRoute(pathname: string): boolean {
 export default function AppShell({ children }: { children: ReactNode }) {
   const { fontScale, mounted: appearanceMounted } = useAppearancePrefs();
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const auth = isAuthShellRoute(pathname);
   const marketing = !auth && isMarketingShellRoute(pathname);
   const isLanding = pathname === "/";
@@ -102,20 +105,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
           >
             <AuthGuard>
               <TenantScopeGate>
-                <div
-                  className="nexus-app-shell app-shell-bg relative flex min-h-screen"
-                  data-font-scale={appearanceMounted ? fontScale : "default"}
-                >
-                  <AppSidebar />
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <main
-                      data-app-body
-                      className="nexus-app-main flex-1 px-4 pb-8 pt-16 md:px-8 md:pt-8 lg:px-10"
-                    >
-                      {children}
-                    </main>
+                <AppChromeSearchProvider>
+                  <div
+                    className="nexus-app-shell app-shell-bg relative flex min-h-screen"
+                    data-font-scale={appearanceMounted ? fontScale : "default"}
+                  >
+                    <AppSidebar
+                      mobileOpen={mobileNavOpen}
+                      onMobileOpenChange={setMobileNavOpen}
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <AppTopBar onOpenMobileNav={() => setMobileNavOpen(true)} />
+                      <main
+                        data-app-body
+                        className="nexus-app-main flex-1 px-4 pb-8 pt-4 md:px-8 md:pt-6 lg:px-10"
+                      >
+                        {children}
+                      </main>
+                    </div>
                   </div>
-                </div>
+                </AppChromeSearchProvider>
               </TenantScopeGate>
             </AuthGuard>
           </Suspense>

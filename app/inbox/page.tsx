@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
+import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
 import { conversationDraftsQuery, conversationsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 import type { Conversation } from "@/types";
@@ -184,7 +185,7 @@ function InboxPageContent() {
     useState<UrgencyFilter>("");
   const [activeIntentFilter, setActiveIntentFilter] =
     useState<IntentFilter>("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { query: searchQuery } = useAppChromeSearch();
   const [openInboxConfirm, setOpenInboxConfirm] = useState(false);
 
   const {
@@ -446,18 +447,6 @@ function InboxPageContent() {
                 );
               })}
             </div>
-          </div>
-          <div>
-            <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-widest text-muted">
-              Search
-            </label>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Name or message…"
-              className="glass-input h-11 w-full px-3 font-mono text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
-            />
           </div>
         </div>
 

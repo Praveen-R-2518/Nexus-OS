@@ -2,19 +2,22 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sparkles, Sun } from "lucide-react";
 import {
   FONT_SCALE_OPTIONS,
+  isThemeId,
   THEME_OPTIONS,
   type FontScale,
+  type ThemeId,
   readFontScale,
   writeFontScale,
 } from "@/lib/appearance-prefs";
 import { cn } from "@/lib/utils";
 
-function ThemeIcon({ id }: { id: "dark" | "light" }) {
+function ThemeIcon({ id }: { id: ThemeId }) {
   if (id === "dark") return <Moon className="h-4 w-4 shrink-0" aria-hidden />;
-  return <Sun className="h-4 w-4 shrink-0" aria-hidden />;
+  if (id === "light") return <Sun className="h-4 w-4 shrink-0" aria-hidden />;
+  return <Sparkles className="h-4 w-4 shrink-0" aria-hidden />;
 }
 
 export function AppearanceSettings() {
@@ -36,7 +39,11 @@ export function AppearanceSettings() {
     );
   }
 
-  const activeTheme = theme === "system" ? resolvedTheme ?? "dark" : theme ?? "dark";
+  const activeTheme = isThemeId(theme)
+    ? theme
+    : isThemeId(resolvedTheme)
+      ? resolvedTheme
+      : "dark";
 
   function handleFontScaleChange(scale: FontScale) {
     setFontScale(scale);

@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
+import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
 import {
   approveReply,
   rejectReply,
@@ -171,6 +172,7 @@ export default function ApprovalPage() {
   const [rejectingDraft, setRejectingDraft] = useState<DraftItem | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
+  const { query: searchQuery } = useAppChromeSearch();
 
   const {
     data: draftRows = [],
@@ -219,8 +221,19 @@ export default function ApprovalPage() {
       activeFilter === "all"
         ? drafts
         : drafts.filter((d) => d.approval_status === activeFilter);
-    return sortDrafts(visible);
-  }, [activeFilter, drafts]);
+    const q = searchQuery.trim().toLowerCase();
+    const searched = q
+      ? visible.filter((draft) => {
+          const name = draft.conversation.customer_name.toLowerCase();
+          const message = conversationMessageText(draft.conversation).toLowerCase();
+          const draftText = String(draft.draft_text ?? "").toLowerCase();
+          return (
+            name.includes(q) || message.includes(q) || draftText.includes(q)
+          );
+        })
+      : visible;
+    return sortDrafts(searched);
+  }, [activeFilter, drafts, searchQuery]);
 
   useEffect(() => {
     if (loading) return;
