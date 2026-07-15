@@ -1,5 +1,6 @@
 import "server-only";
 
+import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
@@ -121,6 +122,32 @@ export async function requireApiTenantContext(): Promise<ApiTenantContextResult>
   return { ok: true, user, supabase, teamId, workspaceId };
 }
 
+/**
+ * Constant-time comparison for secret/token strings. Returns false on length
+ * mismatch (the length of these tokens is not itself sensitive). Prevents the
+ * early-exit timing side-channel of `===` / `!==` when comparing secrets.
+ */
+export function constantTimeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a, "utf8");
+  const bBuf = Buffer.from(b, "utf8");
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
+}
+
+/**
+ * Sensitive namespaces (internal n8n ingest + pre-auth endpoints) stay
+ * rate-limited even when no client IP is derivable, so a caller cannot bypass
+ * the limiter — and brute-force a shared secret — simply by stripping the
+ * `x-forwarded-for` / `x-real-ip` headers. Such callers share one `__noip__`
+ * bucket, which is acceptable because production traffic arrives through a
+ * proxy that always sets a forwarding header.
+ */
+function isSensitiveNamespace(namespace: string): boolean {
+  return (
+    namespace.startsWith("api:internal:") || namespace.startsWith("api:auth:")
+  );
+}
+
 function clientKey(request: Request): string | null {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const firstForwarded = forwardedFor?.split(",")[0]?.trim();
@@ -137,11 +164,14 @@ export function rateLimit(
   namespace: string,
   limit: number,
   windowMs: number,
+  options?: { fallbackWhenNoIp?: boolean },
 ): NextResponse | null {
-  const client = clientKey(request);
+  const fallbackWhenNoIp =
+    options?.fallbackWhenNoIp ?? isSensitiveNamespace(namespace);
+  const client = clientKey(request) ?? (fallbackWhenNoIp ? "__noip__" : null);
   if (!client) {
-    // Cannot identify the caller; skip limiting rather than share one global
-    // bucket across all clients.
+    // Cannot identify the caller and this namespace opted out of the shared
+    // fallback bucket; skip limiting rather than bucket every visitor together.
     return null;
   }
   const now = Date.now();
@@ -212,7 +242,7 @@ export function requireN8nToken(request: Request): NextResponse | null {
 
   const header = request.headers.get("authorization") ?? "";
   const token = header.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? "";
-  if (token !== expected) {
+  if (!token || !constantTimeEqual(token, expected)) {
     return jsonError("Unauthorized", 401);
   }
 

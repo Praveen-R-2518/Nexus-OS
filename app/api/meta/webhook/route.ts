@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rateLimit } from "@/lib/api-security";
+import { constantTimeEqual, rateLimit } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import {
   markInboundEventsStatus,
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     );
   }
 
-  if (mode === "subscribe" && token === verifyToken && challenge) {
+  if (mode === "subscribe" && token && constantTimeEqual(token, verifyToken) && challenge) {
     return new NextResponse(challenge, {
       status: 200,
       headers: { "Content-Type": "text/plain" },
