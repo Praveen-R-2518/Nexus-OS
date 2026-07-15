@@ -110,7 +110,10 @@ export async function GET(request: Request) {
     );
   }
 
-  const platformFilter = new URL(request.url).searchParams.get("platform")?.trim();
+  const url = new URL(request.url);
+  const platformFilter = url.searchParams.get("platform")?.trim();
+  // Optional least-privilege scoping (see gmail-credentials): bulk stays default.
+  const workspaceFilter = parseWorkspaceId(url.searchParams.get("workspace_id"));
 
   let query = supabase
     .from("meta_credentials")
@@ -122,6 +125,9 @@ export async function GET(request: Request) {
 
   if (platformFilter) {
     query = query.eq("platform", platformFilter);
+  }
+  if (workspaceFilter) {
+    query = query.eq("workspace_id", workspaceFilter);
   }
 
   const { data: rows, error } = await query;

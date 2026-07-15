@@ -107,7 +107,14 @@ export async function GET(request: Request) {
     );
   }
 
-  const { data: rows, error } = await supabase
+  // Optional least-privilege scoping: n8n MAY pass ?workspace_id=<uuid> to fetch
+  // a single tenant's credential instead of the full connected set. Bulk remains
+  // the default so the existing scheduled poll keeps working unchanged.
+  const workspaceFilter = parseWorkspaceId(
+    new URL(request.url).searchParams.get("workspace_id"),
+  );
+
+  let query = supabase
     .from("gmail_credentials")
     .select(
       "id, workspace_id, team_id, email_address, access_token_encrypted, refresh_token_encrypted, token_expiry",
@@ -115,6 +122,12 @@ export async function GET(request: Request) {
     .eq("credential_type", "oauth")
     .eq("status", "connected")
     .eq("sync_enabled", true);
+
+  if (workspaceFilter) {
+    query = query.eq("workspace_id", workspaceFilter);
+  }
+
+  const { data: rows, error } = await query;
 
   if (error) {
     console.error("[internal n8n gmail-credentials] Supabase error:", error);
