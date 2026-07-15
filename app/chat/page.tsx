@@ -1,15 +1,97 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Send, MessageSquare } from "lucide-react";
+import { Sparkles, Send, MessageSquare, BookOpen } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
+import { ChartBlock } from "@/components/chat/ChartBlock";
+import { parseAssistantContent } from "@/lib/chat/visuals";
 import { cn } from "@/lib/utils";
 
 type ChatRole = "user" | "assistant";
-type ChatMessage = { role: ChatRole; content: string };
+
+/** Knowledge chunk metadata from the x-knowledge-sources response header. */
+type KnowledgeSource = { n: number; kind: string; label: string; similarity?: number };
+
+type ChatMessage = { role: ChatRole; content: string; sources?: KnowledgeSource[] };
+
+const SOURCE_KIND_LABEL: Record<string, string> = {
+  business_doc: "Document",
+  summary: "Summary",
+  conversation: "Inbox",
+};
+
+function decodeSourcesHeader(value: string | null): KnowledgeSource[] {
+  if (!value) return [];
+  try {
+    const b64 = value.replace(/-/g, "+").replace(/_/g, "/");
+    const parsed = JSON.parse(atob(b64)) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (s): s is KnowledgeSource =>
+        !!s &&
+        typeof s === "object" &&
+        typeof (s as KnowledgeSource).n === "number" &&
+        typeof (s as KnowledgeSource).label === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** Assistant message body: text + streamed nexuschart blocks + citation chips. */
+function AssistantBody({ message }: { message: ChatMessage }) {
+  const segments = parseAssistantContent(message.content);
+  return (
+    <div>
+      {segments.map((seg, i) => {
+        if (seg.kind === "text") {
+          return (
+            <span key={i} className="whitespace-pre-wrap">
+              {seg.text}
+            </span>
+          );
+        }
+        if (seg.kind === "chart") return <ChartBlock key={i} spec={seg.spec} />;
+        if (seg.kind === "chart-pending") {
+          return (
+            <span key={i} className="my-2 flex items-center gap-2 text-xs text-muted">
+              <Spinner className="h-3.5 w-3.5" label="Building chart" />
+              Building chart…
+            </span>
+          );
+        }
+        return (
+          <pre
+            key={i}
+            className="my-2 overflow-x-auto rounded-lg bg-glass/60 p-2 font-mono text-xs text-muted"
+          >
+            {seg.raw}
+          </pre>
+        );
+      })}
+      {message.sources && message.sources.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-glass-border/60 pt-2">
+          <BookOpen className="h-3.5 w-3.5 text-muted" aria-hidden />
+          {message.sources.map((s) => (
+            <span
+              key={s.n}
+              title={s.label}
+              className="glass-pill inline-flex max-w-[220px] items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-muted"
+            >
+              <span className="font-semibold text-atmospheric-grey">[{s.n}]</span>
+              <span className="truncate">
+                {SOURCE_KIND_LABEL[s.kind] ?? "Source"} · {s.label}
+              </span>
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 const SUGGESTIONS = [
   "What's at risk today?",
@@ -121,6 +203,18 @@ export default function ChatPage() {
         const sid = res.headers.get("x-session-id");
         if (sid) sessionIdRef.current = sid;
 
+        const sources = decodeSourcesHeader(res.headers.get("x-knowledge-sources"));
+        if (sources.length > 0) {
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last && last.role === "assistant") {
+              next[next.length - 1] = { ...last, sources };
+            }
+            return next;
+          });
+        }
+
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         // eslint-disable-next-line no-constant-condition
@@ -230,19 +324,24 @@ export default function ChatPage() {
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] whitespace-pre-wrap rounded-xl px-4 py-3 text-sm leading-relaxed",
+                      "max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed",
                       m.role === "user"
-                        ? "glass-pill border-glass-border bg-glass text-atmospheric-grey"
-                        : "glass-pill border-glass-border bg-glass/70 text-atmospheric-grey",
+                        ? "glass-pill whitespace-pre-wrap border-glass-border bg-glass text-atmospheric-grey"
+                        : "glass-pill w-full border-glass-border bg-glass/70 text-atmospheric-grey sm:w-auto sm:min-w-[280px]",
                     )}
                   >
-                    {m.content ||
-                      (m.role === "assistant" && sending ? (
-                        <span className="inline-flex items-center gap-2 text-muted">
-                          <Spinner className="h-4 w-4" label="Thinking" />
-                          Analyzing your inbox…
-                        </span>
-                      ) : null)}
+                    {m.content ? (
+                      m.role === "assistant" ? (
+                        <AssistantBody message={m} />
+                      ) : (
+                        m.content
+                      )
+                    ) : m.role === "assistant" && sending ? (
+                      <span className="inline-flex items-center gap-2 text-muted">
+                        <Spinner className="h-4 w-4" label="Thinking" />
+                        Analyzing your inbox…
+                      </span>
+                    ) : null}
                   </div>
                 </li>
               ))}

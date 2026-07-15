@@ -24,6 +24,29 @@ export type KnowledgeChunk = {
 const DEFAULT_CHUNK_CHARS = 1500;
 const DEFAULT_CHUNK_OVERLAP = 200;
 
+/**
+ * Retrieval quality floor: cosine similarity below this is noise, not knowledge.
+ * Without it, sparse tenants get whatever weak matches exist injected into the
+ * prompt. Tunable via RAG_MIN_SIMILARITY (0..1).
+ */
+const DEFAULT_MIN_SIMILARITY = 0.25;
+
+/**
+ * Per-kind re-rank weights: the founder's own documents are the most authoritative
+ * grounding, prior summaries next, individual inbox messages last. Applied as a
+ * multiplier on cosine similarity when ordering the overfetched candidate set.
+ */
+const KIND_WEIGHTS: Record<EmbeddingKind, number> = {
+  business_doc: 1.0,
+  summary: 0.95,
+  conversation: 0.9,
+};
+
+function minSimilarity(): number {
+  const raw = Number.parseFloat(process.env.RAG_MIN_SIMILARITY ?? "");
+  return Number.isFinite(raw) && raw >= 0 && raw <= 1 ? raw : DEFAULT_MIN_SIMILARITY;
+}
+
 /** pgvector text format is `[a,b,c]`, which JSON.stringify already produces for a number[]. */
 function toVectorLiteral(vector: number[]): string {
   return JSON.stringify(vector);
@@ -134,18 +157,28 @@ export async function matchKnowledge(params: {
 
   try {
     const queryEmbedding = await embedText(trimmed);
+    // Overfetch 2× so the threshold + kind re-rank still have `limit` good rows to pick from.
     const { data, error } = await supabase.rpc("match_embeddings", {
       p_team_id: teamId,
       p_kinds: kinds,
       p_query: toVectorLiteral(queryEmbedding),
-      p_match_count: limit,
+      p_match_count: limit * 2,
     });
     if (error || !Array.isArray(data)) return [];
-    return (data as { content: string; kind: EmbeddingKind; similarity: number }[]).map((r) => ({
-      content: r.content,
-      kind: r.kind,
-      similarity: typeof r.similarity === "number" ? r.similarity : 0,
-    }));
+    const floor = minSimilarity();
+    return (data as { content: string; kind: EmbeddingKind; similarity: number }[])
+      .map((r) => ({
+        content: r.content,
+        kind: r.kind,
+        similarity: typeof r.similarity === "number" ? r.similarity : 0,
+      }))
+      .filter((r) => r.similarity >= floor)
+      .sort(
+        (a, b) =>
+          b.similarity * (KIND_WEIGHTS[b.kind] ?? 1) -
+          a.similarity * (KIND_WEIGHTS[a.kind] ?? 1),
+      )
+      .slice(0, limit);
   } catch {
     return [];
   }

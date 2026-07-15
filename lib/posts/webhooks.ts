@@ -1,22 +1,20 @@
 "use client";
 
+import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import type { Platform, SocialPost } from "./types";
 
 /**
- * Live n8n webhooks for the Post unit.
+ * AI helpers for the Post unit.
  *
- * These are the ONLY two backend contracts that exist today. The three
- * AI helpers below (vision caption, caption enhance, image edit) are NOT
- * built yet — they throw {@link PostFeatureUnavailableError} so the UI can
+ * These call server-side proxy routes (`app/api/posts/*`) which resolve the
+ * caller's organization_id from their own `user_profiles` row and forward to
+ * n8n using server-only env vars. The browser never supplies an org id and
+ * never sees an n8n URL (2026-07-15 security review, item 3).
+ *
+ * The three AI helpers below (vision caption, caption enhance, image edit) are
+ * NOT built yet — they throw {@link PostFeatureUnavailableError} so the UI can
  * surface a "Not available yet" affordance instead of hitting a guessed URL.
  */
-const CAPTION_WEBHOOK =
-  process.env.NEXT_PUBLIC_SOCIAL_POST_INPUT_WEBHOOK ??
-  "https://knurdz3o.app.n8n.cloud/webhook/social-post-input";
-
-const IMAGE_WEBHOOK =
-  process.env.NEXT_PUBLIC_GENERATE_POST_IMAGE_WEBHOOK ??
-  "https://knurdz3o.app.n8n.cloud/webhook/generate-post-image";
 
 /** Thrown by the not-yet-built AI helpers so callers can show a clear toast. */
 export class PostFeatureUnavailableError extends Error {
@@ -27,7 +25,7 @@ export class PostFeatureUnavailableError extends Error {
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
+  const res = await authenticatedFetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
@@ -35,7 +33,8 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   if (!res.ok) {
     let detail = "";
     try {
-      detail = await res.text();
+      const j = (await res.json()) as { error?: string };
+      detail = j.error ?? "";
     } catch {
       /* ignore */
     }
@@ -49,17 +48,15 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 /**
  * Multi-platform caption generation.
  *
- * This webhook ALSO writes the `social_posts` draft row itself, so the caller
+ * The backend ALSO writes the `social_posts` draft row itself, so the caller
  * does not insert separately — it returns the created row (status `draft`).
  */
 export async function generateCaptions(input: {
-  orgId: string;
   mediaUrl: string;
   userDescription: string;
   platforms: Platform[];
 }): Promise<SocialPost> {
-  return postJson<SocialPost>(CAPTION_WEBHOOK, {
-    orgId: input.orgId,
+  return postJson<SocialPost>("/api/posts/generate-captions", {
     mediaUrl: input.mediaUrl,
     userDescription: input.userDescription,
     platforms: input.platforms,
@@ -77,17 +74,16 @@ export interface GenerateImageResult {
 
 /**
  * AI image generation (~$0.04/call — only invoke on explicit user action).
+ * Server-side caps: 5/min per caller and a per-organization daily quota.
  *
  * Pass the current generation's id as `parentGenerationId` to regenerate a
  * variant (this builds the undo chain server-side); pass null for a fresh one.
  */
 export async function generatePostImage(input: {
-  orgId: string;
   prompt: string;
   parentGenerationId: string | null;
 }): Promise<GenerateImageResult> {
-  return postJson<GenerateImageResult>(IMAGE_WEBHOOK, {
-    orgId: input.orgId,
+  return postJson<GenerateImageResult>("/api/posts/generate-image", {
     prompt: input.prompt,
     parentGenerationId: input.parentGenerationId,
   });
@@ -99,11 +95,10 @@ export async function generatePostImage(input: {
 
 /**
  * Build a caption from the uploaded image.
- * TODO(backend): vision-caption-post — POST /webhook/vision-caption-post
- *   body: { orgId, mediaUrl } -> { caption: string }
+ * TODO(backend): vision-caption-post — server proxy route + n8n workflow
+ *   body: { mediaUrl } -> { caption: string }
  */
 export async function visionCaptionStub(_input: {
-  orgId: string;
   mediaUrl: string;
 }): Promise<{ caption: string }> {
   void _input;
@@ -112,11 +107,10 @@ export async function visionCaptionStub(_input: {
 
 /**
  * Enhance an existing caption.
- * TODO(backend): enhance-caption — POST /webhook/enhance-caption
- *   body: { orgId, existingCaption } -> { enhancedCaption: string }
+ * TODO(backend): enhance-caption — server proxy route + n8n workflow
+ *   body: { existingCaption } -> { enhancedCaption: string }
  */
 export async function enhanceCaptionStub(_input: {
-  orgId: string;
   existingCaption: string;
 }): Promise<{ enhancedCaption: string }> {
   void _input;
@@ -129,7 +123,6 @@ export async function enhanceCaptionStub(_input: {
  *   `editInstruction`; today the webhook only does fresh text-to-image.
  */
 export async function editImageStub(_input: {
-  orgId: string;
   editOf: string;
   editInstruction: string;
 }): Promise<GenerateImageResult> {

@@ -1,15 +1,13 @@
 /**
- * Meta outbound sender — GROUNDWORK ONLY (checklist 1.7). Live sending is intentionally DISABLED.
+ * Meta outbound sender — implemented but gated OFF by default.
  *
- * This mirrors the shape of lib/gmail/send.ts so a future task can wire Meta into the same
- * approval-gated channel-sender path (lib/channel-sender.ts). It builds the exact Graph API
- * request we intend to make per platform + window strategy, but `sendMetaMessage` throws instead
- * of calling Graph — nothing is ever delivered from here yet.
- *
- * When we DO enable it (separate task): (1) load the workspace's `meta_credentials` row, decrypt
- * `access_token_encrypted` server-side (never in n8n), (2) call `chooseSendStrategy` from
- * lib/meta/window.ts, (3) POST `buildMetaSendRequest(...)`, (4) map the returned message id back
- * to `reply_drafts` and advance statuses exactly like the Gmail path. See docs/meta_outbound.md.
+ * `sendMetaMessage` performs the real Graph API POST ONLY when the
+ * `META_SEND_ENABLED=true` env kill-switch is set (it is NOT set anywhere by
+ * default); otherwise it throws 501 exactly like the original groundwork so no
+ * code path can deliver a Meta message before Meta App Review grants the
+ * messaging permissions. The full path (credential decrypt → window strategy →
+ * request build → POST → provider message id) is wired through
+ * lib/channel-sender.ts; see docs/meta_outbound.md §6 for the enable checklist.
  */
 
 import type { MetaPlatform, SendStrategy } from "@/lib/meta/window";
@@ -121,15 +119,79 @@ export function buildMetaSendRequest(params: MetaSendParams): MetaSendRequest {
   throw new MetaSendError(`${platform} cannot use strategy '${strategy.kind}'`, 409);
 }
 
+/** Kill-switch: live Graph sends happen ONLY when this env var is exactly "true". */
+export function isMetaSendEnabled(): boolean {
+  return process.env.META_SEND_ENABLED?.trim() === "true";
+}
+
+type GraphSendResponse = {
+  // WhatsApp Cloud API shape
+  messages?: Array<{ id?: string }>;
+  // Messenger / Instagram Send API shape
+  message_id?: string;
+  error?: { message?: string; code?: number };
+};
+
+/** Access token param for the send call. Never log or persist the token. */
+export interface MetaSendAuth {
+  accessToken: string;
+}
+
 /**
- * DISABLED. Live Meta sending is not implemented (checklist 1.7 is groundwork only). This throws
- * so no code path can silently deliver a Meta message before the real, reviewed implementation +
- * approval-gating + credential handling land. The request the live version will POST is available
- * via `buildMetaSendRequest` for tests and review.
+ * Send one approved reply via the Graph API. Gated by META_SEND_ENABLED: when the
+ * kill-switch is off this throws the same 501 the groundwork version threw, so
+ * flipping one env var (after Meta App Review) is the only enable step.
+ * Throws MetaSendError on any Graph failure — the channel sender maps that to a
+ * 502 with NO draft state change, so a replay can retry safely.
  */
-export async function sendMetaMessage(params: MetaSendParams): Promise<{ messageId: string }> {
-  throw new MetaSendError(
-    `Meta outbound is not enabled for '${params.platform}' (checklist 1.7 groundwork only — see docs/meta_outbound.md)`,
-    501,
-  );
+export async function sendMetaMessage(
+  params: MetaSendParams,
+  auth?: MetaSendAuth,
+): Promise<{ messageId: string }> {
+  if (!isMetaSendEnabled() || !auth?.accessToken) {
+    throw new MetaSendError(
+      `Meta outbound is not enabled for '${params.platform}' (set META_SEND_ENABLED=true after Meta App Review — see docs/meta_outbound.md §6)`,
+      501,
+    );
+  }
+
+  const request = buildMetaSendRequest(params);
+
+  let res: Response;
+  let raw: string;
+  try {
+    res = await fetch(request.url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${auth.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request.body),
+    });
+    raw = await res.text();
+  } catch (e) {
+    throw new MetaSendError(
+      `Graph API request failed: ${e instanceof Error ? e.message : "network error"}`,
+      502,
+    );
+  }
+
+  let data: GraphSendResponse = {};
+  try {
+    data = raw ? (JSON.parse(raw) as GraphSendResponse) : {};
+  } catch {
+    /* non-JSON error body — handled below */
+  }
+
+  if (!res.ok) {
+    const detail = data.error?.message ?? raw.slice(0, 300);
+    throw new MetaSendError(`Graph API error ${res.status}: ${detail}`, res.status);
+  }
+
+  // WhatsApp returns messages[0].id (wamid); Messenger/Instagram return message_id.
+  const messageId = data.messages?.[0]?.id ?? data.message_id ?? "";
+  if (!messageId) {
+    throw new MetaSendError("Graph API response did not include a message id", 502);
+  }
+  return { messageId };
 }

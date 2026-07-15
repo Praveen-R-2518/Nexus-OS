@@ -29,4 +29,7 @@ export const queryKeys = {
 
   businessDocs: (teamId: string | null) =>
     [...queryKeys.root(teamId), "businessDocs"] as const,
+
+  aiUsage: (teamId: string | null) =>
+    [...queryKeys.root(teamId), "aiUsage"] as const,
 } as const;

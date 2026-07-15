@@ -59,7 +59,7 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
     setError(null);
     setGenerating(true);
     try {
-      const result = await generatePostImage({ orgId, prompt: text, parentGenerationId });
+      const result = await generatePostImage({ prompt: text, parentGenerationId });
       setGen({
         id: result.generation_id,
         imagePath: result.image_path,
@@ -104,7 +104,7 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
     if (!gen) return;
     setEditBusy(true);
     try {
-      await editImageStub({ orgId, editOf: gen.id, editInstruction: "" });
+      await editImageStub({ editOf: gen.id, editInstruction: "" });
     } catch {
       notify("Not available yet.");
     } finally {
@@ -152,7 +152,6 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
             Write your caption
           </h3>
           <CaptionSection
-            orgId={orgId}
             mediaUrl={gen.imagePath}
             notify={notify}
             onCreated={handleCreated}

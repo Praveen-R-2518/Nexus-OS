@@ -13,6 +13,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getWorkspaceGmailCredential } from "@/lib/gmail/credentials";
 import { GmailSendError, sendGmailMessage } from "@/lib/gmail/send";
+import { getWorkspaceMetaCredential } from "@/lib/meta/credentials";
+import { MetaSendError, sendMetaMessage } from "@/lib/meta/send";
+import { chooseSendStrategy, type MetaPlatform } from "@/lib/meta/window";
 import { decideAutoSend } from "@/lib/approval-policy";
 
 export interface SenderResult {
@@ -34,9 +37,22 @@ type DraftRow = {
 
 type ConversationRow = {
   customer_email: string | null;
+  customer_phone: string | null;
+  source: string | null;
   workspace_id: string | null;
   raw_payload: unknown;
+  received_at: string | null;
 };
+
+const META_PLATFORMS: readonly MetaPlatform[] = ["whatsapp", "instagram", "facebook"];
+
+/** Meta conversations dispatch to the Graph sender; everything else stays on Gmail. */
+function metaPlatformOf(conversation: ConversationRow): MetaPlatform | null {
+  const source = (conversation.source ?? "").trim().toLowerCase();
+  return (META_PLATFORMS as readonly string[]).includes(source)
+    ? (source as MetaPlatform)
+    : null;
+}
 
 type LeadRow = {
   estimated_value: number | null;
@@ -134,7 +150,7 @@ export async function executeSendReply(
 
   const { data: convData, error: convErr } = await supabase
     .from("conversations")
-    .select("customer_email, workspace_id, raw_payload")
+    .select("customer_email, customer_phone, source, workspace_id, raw_payload, received_at")
     .eq("id", conversationId)
     .eq("team_id", teamId)
     .maybeSingle();
@@ -145,53 +161,137 @@ export async function executeSendReply(
   if (!convData) return err("Conversation not found", 404);
   const conversation = convData as ConversationRow;
 
-  const recipient = (conversation.customer_email ?? "").trim();
-  if (!recipient) return err("Conversation has no customer_email to send to", 409);
-
-  // Resolve the workspace + its Gmail credential (decrypt + refresh server-side).
+  // Resolve the workspace before dispatching to a channel transport.
   const workspaceId =
     (input.workspaceId ? String(input.workspaceId) : null) ??
     (conversation.workspace_id ? String(conversation.workspace_id) : null) ??
     (draft.workspace_id ? String(draft.workspace_id) : null);
   if (!workspaceId) return err("Could not resolve workspace_id for send", 409);
 
-  const credResult = await getWorkspaceGmailCredential(supabase, workspaceId);
-  if (!credResult.ok || !credResult.credential) {
-    if (credResult.error === "encryption_not_configured") {
-      return err("Server configuration error", 503);
-    }
-    if (credResult.error === "refresh_failed" || credResult.error === "decrypt_failed") {
-      return err("Gmail credential could not be used to send", 502);
-    }
-    return err("No connected Gmail account for this workspace", 409);
-  }
-  const credential = credResult.credential;
-
-  // Send via the injectable transport (no state change on failure).
+  // Channel dispatch (docs/meta_outbound.md §2): Meta sources go to the Graph
+  // sender (kill-switch gated), everything else keeps the live Gmail path.
+  const metaPlatform = metaPlatformOf(conversation);
   let messageId = "";
-  try {
-    const result = await sendGmailMessage({
-      accessToken: credential.accessToken,
-      from: credential.emailAddress,
-      to: recipient,
-      subject: deriveSubject(conversation.raw_payload),
-      body: draft.draft_text,
+
+  if (metaPlatform) {
+    // Recipient is the customer's Meta identity: WhatsApp E.164 number, or
+    // Messenger PSID / Instagram IGSID — the normalizer stores it on the
+    // conversation (customer_phone for WA when present, else customer_email).
+    const recipient =
+      (metaPlatform === "whatsapp"
+        ? (conversation.customer_phone ?? "").trim() ||
+          (conversation.customer_email ?? "").trim()
+        : (conversation.customer_email ?? "").trim());
+    if (!recipient) return err("Conversation has no Meta recipient id to send to", 409);
+
+    const credResult = await getWorkspaceMetaCredential(supabase, workspaceId, metaPlatform);
+    if (!credResult.ok || !credResult.credential) {
+      if (credResult.error === "encryption_not_configured") {
+        return err("Server configuration error", 503);
+      }
+      if (credResult.error === "decrypt_failed") {
+        return err("Meta credential could not be used to send", 502);
+      }
+      if (credResult.error === "token_expired") {
+        return err("Meta connection expired — reconnect the account in Settings", 409);
+      }
+      return err(`No connected ${metaPlatform} account for this workspace`, 409);
+    }
+
+    // Compliance window (lib/meta/window.ts is the single source of truth).
+    const strategy = chooseSendStrategy({
+      platform: metaPlatform,
+      lastInboundAt: conversation.received_at,
+      humanAgentEnabled: process.env.META_HUMAN_AGENT_ENABLED?.trim() === "true",
     });
-    messageId = result.messageId;
-  } catch (e) {
-    const upstream = e instanceof GmailSendError ? e.status : "n/a";
-    console.error(
-      `[channel-sender] transport error (upstream=${upstream}):`,
-      e instanceof Error ? e.message : e,
-    );
-    return err("Failed to send reply", 502);
+    if (strategy.kind === "blocked") {
+      return err(`Cannot send on ${metaPlatform}: ${strategy.reason}`, 409);
+    }
+
+    // Out-of-window WhatsApp requires a pre-approved template (HSM).
+    const templateName = process.env.META_WA_TEMPLATE_NAME?.trim();
+    const templateLang = process.env.META_WA_TEMPLATE_LANG?.trim() || "en";
+    if (strategy.kind === "template" && !templateName) {
+      return err(
+        "Outside the 24h WhatsApp window and no approved template is configured (META_WA_TEMPLATE_NAME)",
+        409,
+      );
+    }
+
+    try {
+      const result = await sendMetaMessage(
+        {
+          platform: metaPlatform,
+          senderId: credResult.credential.senderId,
+          recipientId: recipient,
+          text: draft.draft_text,
+          strategy,
+          ...(strategy.kind === "template" && templateName
+            ? { template: { name: templateName, languageCode: templateLang } }
+            : {}),
+        },
+        { accessToken: credResult.credential.accessToken },
+      );
+      messageId = result.messageId;
+    } catch (e) {
+      const status = e instanceof MetaSendError ? e.status : 502;
+      console.error(
+        `[channel-sender] meta transport error (upstream=${status}):`,
+        e instanceof Error ? e.message : e,
+      );
+      // 501 = kill-switch off (META_SEND_ENABLED unset) — surface that clearly.
+      if (status === 501) {
+        return err("Meta outbound sending is not enabled yet", 501);
+      }
+      return err("Failed to send reply", 502);
+    }
+  } else {
+    const recipient = (conversation.customer_email ?? "").trim();
+    if (!recipient) return err("Conversation has no customer_email to send to", 409);
+
+    // Resolve the workspace's Gmail credential (decrypt + refresh server-side).
+    const credResult = await getWorkspaceGmailCredential(supabase, workspaceId);
+    if (!credResult.ok || !credResult.credential) {
+      if (credResult.error === "encryption_not_configured") {
+        return err("Server configuration error", 503);
+      }
+      if (credResult.error === "refresh_failed" || credResult.error === "decrypt_failed") {
+        return err("Gmail credential could not be used to send", 502);
+      }
+      return err("No connected Gmail account for this workspace", 409);
+    }
+    const credential = credResult.credential;
+
+    // Send via the injectable transport (no state change on failure).
+    try {
+      const result = await sendGmailMessage({
+        accessToken: credential.accessToken,
+        from: credential.emailAddress,
+        to: recipient,
+        subject: deriveSubject(conversation.raw_payload),
+        body: draft.draft_text,
+      });
+      messageId = result.messageId;
+    } catch (e) {
+      const upstream = e instanceof GmailSendError ? e.status : "n/a";
+      console.error(
+        `[channel-sender] transport error (upstream=${upstream}):`,
+        e instanceof Error ? e.message : e,
+      );
+      return err("Failed to send reply", 502);
+    }
   }
 
   // Mark sent (draft) + replied (conversation). Tenant-scoped writes.
   const nowIso = new Date().toISOString();
   const { error: draftUpdErr } = await supabase
     .from("reply_drafts")
-    .update({ approval_status: "sent", sent_at: nowIso, updated_at: nowIso })
+    .update({
+      approval_status: "sent",
+      sent_at: nowIso,
+      updated_at: nowIso,
+      provider_message_id: messageId || null,
+    })
     .eq("id", draftId)
     .eq("team_id", teamId);
   if (draftUpdErr) {

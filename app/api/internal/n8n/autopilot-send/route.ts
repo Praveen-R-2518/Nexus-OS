@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   JSON_LIMITS,
-  rateLimit,
+  rateLimitDurable,
   readJsonObjectWithLimit,
   requireN8nToken,
 } from "@/lib/api-security";
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  * N8N_INGEST_TOKEN. All logic lives in `lib/channel-sender.ts`; this route only auth/parses.
  */
 export async function POST(request: Request) {
-  const limited = rateLimit(request, "api:internal:n8n:autopilot-send", 60, 60_000);
+  const limited = await rateLimitDurable(request, "api:internal:n8n:autopilot-send", 60, 60_000);
   if (limited) return limited;
 
   const unauthorized = requireN8nToken(request);

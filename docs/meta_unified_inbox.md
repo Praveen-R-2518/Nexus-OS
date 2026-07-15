@@ -6,9 +6,9 @@ WhatsApp Business, Instagram DMs, and Facebook Messenger ingest through the same
 
 1. **Meta** POSTs webhook events to `GET/POST /api/meta/webhook` (Next.js).
 2. Next.js verifies `hub.verify_token` (GET) and `X-Hub-Signature-256` (POST, HMAC-SHA256 of raw body).
-3. Duplicate message ids are dropped in-memory (24h TTL).
-4. Verified payload is forwarded to `{N8N_WEBHOOK_BASE_URL}/webhook/gmail-inbound`.
-5. n8n **Tenant Route Extract** resolves `business_profiles` by `ig_account_id`, `fb_page_id`, `wa_phone_number_id`, `whatsapp_routing_number`, or `webhook_route_token`.
+3. Duplicate message ids are dropped **durably**: every event is upserted into the `inbound_events` ledger with a unique `(platform, external_message_id)` index before it is acked (`lib/inbound-events.ts`) — a non-insert marks the event `duplicate`, and a failed persist refuses the ack so Meta redelivers.
+4. **Tenant routing happens at the edge**, not in n8n: `lib/meta-tenant.ts` resolves the platform routing key (WA `phone_number_id`, IG account id, FB page id) against `business_profiles` and fails closed on no-match or ambiguous match. Unresolved events are stored `failed=tenant_unresolved` and never forwarded.
+5. The verified payload — with the pre-resolved `_tenant` attached — is forwarded to `{N8N_WEBHOOK_BASE_URL}/webhook/gmail-inbound`. (`n8n_logic/tenant_route_resolver.js` remains only for the Gmail/IMAP path.)
 6. **Multi-Channel Normalizer** emits `source` = `whatsapp` | `instagram` | `facebook` plus `external_thread_id` / `external_permalink`.
 7. Conversations land in Supabase with platform indicators in `/inbox` and optional **Open in native inbox** deep links.
 
