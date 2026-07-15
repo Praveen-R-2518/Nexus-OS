@@ -93,6 +93,26 @@ Nexus OS is the **Revenue Command Center** between your inbox and your team: it 
 | 🧹 | **Zero-Cost Spam Filtering** | String-based `noise_filter.js` pre-filter (no OpenAI) | Eliminates wasted API calls on newsletters and auto-replies |
 | 🔄 | **n8n Orchestration** | 5 workflows, 50+ nodes on n8n Cloud | Visual ops layer your team can audit and extend |
 | 🏢 | **Multi-Tenant Architecture** | `teams` → `workspaces` → RLS via `team_id` / `workspace_id` | SaaS-ready isolation without rewriting the app |
+| 🚦 | **Durable Rate Limiting** | Postgres-backed `rate_limit_hit` counter on credential/send/internal endpoints | Limits survive redeploys and serverless instance churn |
+
+### 🧠 Knowledge Layer & Revenue Analyst *(new)*
+
+| | Feature | What it does | Business outcome |
+|---|---------|--------------|------------------|
+| 📚 | **Business Knowledge Base** | Upload PDF/TXT/MD docs (Settings) → chunked + embedded (`text-embedding-3-small`) into a pgvector `embeddings` table, team-scoped by RLS | The AI answers from *your* pricing, policies, and FAQs |
+| 🤖 | **Revenue Analyst Chat** (`/chat`) | Read-only GPT-4o agent grounded in a live tenant snapshot + retrieved knowledge (similarity floor + per-kind weighting) | Ask "what's at risk today?" and get answers from real inbox data — it can never send or edit anything |
+| 🔖 | **Inline Citations** | Answers cite `[n]` sources; the chat shows which document/summary/message grounded each claim | Trust and verify every AI statement |
+| 📊 | **Visual Answers** | The analyst renders bar/line/donut charts and tables in chat when they explain the data better (Settings toggle, default on) | Trends and breakdowns at a glance |
+| 🧾 | **AI Usage & Budgets** | Per-workflow token tracking (`ai_usage`) + soft monthly budget with 80%/over-budget alerts on the Report page | Cost visibility per tenant, no surprise bills |
+| 🔁 | **Retrieval-Grounded Drafting** | WF3 pulls "similar past context" from the knowledge base via a token-auth internal API before drafting | Replies consistent with past answers and policy |
+
+### 📣 Social & Channels
+
+| | Feature | Status |
+|---|---------|--------|
+| 📥 | **Meta Unified Inbox** (WhatsApp / Instagram / Facebook) | Inbound live: signed webhook, edge tenant routing (fail-closed), durable dedup ledger, native-inbox deep links |
+| 📤 | **Meta Outbound Send** | Built end-to-end (window policy, templates, Graph API, `provider_message_id`) but **disabled behind `META_SEND_ENABLED`** until Meta App Review passes |
+| 🖼️ | **Social Publishing Studio** (`/posts`) | Multi-platform captions + AI image generation (`gpt-image-1` via n8n), served through authenticated server proxies with per-org daily cost caps |
 
 > **Screenshots:** Add dashboard, inbox, and approval queue captures under `docs/screenshots/` when available.
 
@@ -531,9 +551,13 @@ Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating (add 
 
 | Horizon | Items |
 |---------|-------|
-| **Near-term** | Multi-tenant SaaS billing (Dodo Payments hooks in `.env.example`), WhatsApp channel, custom model fine-tuning |
-| **Medium-term** | Slack integration, advanced analytics, team collaboration / roles |
-| **Long-term** | On-premise deployment bundle, custom AI training per tenant, integration marketplace |
+| **Shipped (2026-07)** | Knowledge layer + RAG Revenue Analyst with citations & chart answers, social publishing studio + AI image generation, Meta unified inbox (inbound), Meta/WhatsApp outbound behind `META_SEND_ENABLED` kill-switch, per-tenant AI usage tracking + budgets, durable rate limiting |
+| **Near-term** | Flip Meta outbound live after App Review, delivery-status webhooks, tenancy unification (teams ↔ organizations bridge — ADR in `docs/tenant_model_unification.md`), multi-tenant SaaS billing |
+| **Medium-term** | Slack integration, advanced analytics, team collaboration / roles, hiring/ATS module |
+| **Long-term** | On-premise deployment bundle, integration marketplace |
+
+> Live operational to-dos (env vars, n8n imports, Meta App Review) live in
+> [`docs/MANUAL_ACTIONS.md`](docs/MANUAL_ACTIONS.md).
 
 ---
 
@@ -556,8 +580,9 @@ Benchmarks from MVP / test harness (your production numbers will vary with inbox
 |---------|----------------|
 | **Tenant isolation** | Supabase RLS on `team_id`; API `requireApiTenantContext()` |
 | **Secrets** | Service role + `ENCRYPTION_KEY` server-only; never in `NEXT_PUBLIC_*` |
-| **n8n ingest** | `N8N_INGEST_TOKEN` bearer on `/api/internal/n8n/*` |
-| **Encryption at rest** | Supabase platform defaults (AES-256) |
+| **n8n ingest** | `N8N_INGEST_TOKEN` bearer on `/api/internal/n8n/*` (constant-time compare, durable rate limits) |
+| **Client → n8n** | Browser never calls n8n directly — posts caption/image generation goes through authenticated `/api/posts/*` proxies with server-derived org ids |
+| **Encryption at rest** | Supabase platform defaults (AES-256); third-party tokens AES-256-GCM app-encrypted |
 | **Gmail credentials** | Encrypted at application layer before storage |
 | **GDPR** | Data processor agreements with Supabase, OpenAI, n8n; implement retention policies per tenant contract |
 

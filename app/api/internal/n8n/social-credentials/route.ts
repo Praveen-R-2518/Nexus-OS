@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rateLimit, requireN8nToken } from "@/lib/api-security";
+import { rateLimitDurable, requireN8nToken } from "@/lib/api-security";
 import {
   decryptSecret,
   isEncryptionConfigured,
@@ -19,7 +19,7 @@ type CredentialRow = {
 };
 
 export async function GET(request: Request) {
-  const limited = rateLimit(
+  const limited = await rateLimitDurable(
     request,
     "api:internal:n8n:social-credentials",
     60,

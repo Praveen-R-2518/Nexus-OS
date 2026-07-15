@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { ComingSoonTag, PlatformIcon, PRIMARY_BTN, SECONDARY_BTN } from "./shared";
 
 interface CaptionSectionProps {
-  orgId: string;
   /** Storage path of the media this post is about (upload path or AI image). */
   mediaUrl: string;
   notify: (msg: string) => void;
@@ -28,7 +27,6 @@ interface CaptionSectionProps {
 }
 
 export function CaptionSection({
-  orgId,
   mediaUrl,
   notify,
   onCreated,
@@ -53,9 +51,9 @@ export function CaptionSection({
     setStubBusy(kind);
     try {
       if (kind === "vision") {
-        await visionCaptionStub({ orgId, mediaUrl });
+        await visionCaptionStub({ mediaUrl });
       } else {
-        await enhanceCaptionStub({ orgId, existingCaption: description });
+        await enhanceCaptionStub({ existingCaption: description });
       }
     } catch {
       notify("Not available yet.");
@@ -78,7 +76,6 @@ export function CaptionSection({
     setGenerating(true);
     try {
       const created = await generateCaptions({
-        orgId,
         mediaUrl,
         userDescription: text,
         platforms,

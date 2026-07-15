@@ -76,6 +76,8 @@ export interface BusinessContext {
   approvalMode: string;
   /** Founder-editable system-message persona; null = use DEFAULT_ANALYST_PERSONA. */
   persona: string | null;
+  /** Whether the analyst may render charts/visuals in answers (settings toggle, default on). */
+  chatVisualsEnabled: boolean;
 }
 
 export interface AnalystContext {
@@ -106,6 +108,7 @@ type BusinessRow = {
   chat_persona?: string | null;
   services?: unknown;
   approval_mode?: string | null;
+  chat_visuals_enabled?: boolean | null;
 };
 
 function num(value: unknown): number {
@@ -320,7 +323,9 @@ export async function buildAnalystContext(params: {
       .limit(CONVERSATION_SCAN_LIMIT),
     supabase
       .from("business_profiles")
-      .select("name, industry, tone, chat_persona, services, approval_mode")
+      .select(
+        "name, industry, tone, chat_persona, services, approval_mode, chat_visuals_enabled",
+      )
       .eq("team_id", teamId)
       .order("created_at", { ascending: true })
       .limit(1)
@@ -345,6 +350,7 @@ export async function buildAnalystContext(params: {
       services: parseServices(bizRow.services),
       approvalMode: (bizRow.approval_mode ?? "").trim() || "approval_queue",
       persona: (bizRow.chat_persona ?? "").trim() || null,
+      chatVisualsEnabled: bizRow.chat_visuals_enabled !== false,
     };
   }
 

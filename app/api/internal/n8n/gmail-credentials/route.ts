@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   JSON_LIMITS,
-  rateLimit,
+  rateLimitDurable,
   readJsonObjectWithLimit,
   requireN8nToken,
 } from "@/lib/api-security";
@@ -79,7 +79,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{
 }
 
 export async function GET(request: Request) {
-  const limited = rateLimit(
+  const limited = await rateLimitDurable(
     request,
     "api:internal:n8n:gmail-credentials",
     60,
@@ -226,7 +226,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const limited = rateLimit(
+  const limited = await rateLimitDurable(
     request,
     "api:internal:n8n:gmail-credentials",
     60,

@@ -1,5 +1,6 @@
 import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import type {
+  AiUsageSummary,
   Conversation,
   DailyReport,
   Metrics,
@@ -78,6 +79,16 @@ export async function dailyReportQuery(): Promise<DailyReport | null> {
   return json.report;
 }
 
+export async function aiUsageQuery(): Promise<AiUsageSummary> {
+  const res = await authenticatedFetch("/api/ai-usage");
+  const json = await readJson<{ usage?: AiUsageSummary; error?: string }>(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!json.usage || typeof json.usage !== "object") {
+    throw new Error("Invalid AI usage response");
+  }
+  return json.usage;
+}
+
 export async function conversationDraftsQuery(id: string): Promise<ReplyDraft[]> {
   const res = await authenticatedFetch(
     `/api/conversations/${encodeURIComponent(id)}`,
@@ -108,6 +119,8 @@ export type SettingsPatchInput = {
   currency?: string;
   high_value_threshold?: number;
   high_risk_score?: number;
+  chat_visuals_enabled?: boolean;
+  ai_monthly_token_budget?: number | null;
   notification_prefs?: Partial<NotificationPrefs>;
   channel?: {
     target: "gmail" | "whatsapp" | "instagram" | "facebook";

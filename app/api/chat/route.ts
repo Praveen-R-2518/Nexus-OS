@@ -191,9 +191,24 @@ export async function POST(request: Request) {
 
   // 4. Build the read-only snapshot + system prompt.
   let systemPrompt: string;
+  let sourcesHeader = "";
   try {
     const context = await buildAnalystContext({ supabase, teamId, queryText: message });
     systemPrompt = buildAnalystSystemPrompt(context);
+    // Citation metadata for the UI: retrieval happens before streaming, so the
+    // sources ride along as a base64url JSON response header the client can
+    // pair with the model's inline [n] citations.
+    if (context.knowledge.length > 0) {
+      const sources = context.knowledge.map((k, i) => ({
+        n: i + 1,
+        kind: k.kind,
+        label: k.content.trim().replace(/\s+/g, " ").slice(0, 120),
+        similarity: Math.round(k.similarity * 100) / 100,
+      }));
+      sourcesHeader = Buffer.from(JSON.stringify(sources), "utf8").toString(
+        "base64url",
+      );
+    }
   } catch (err) {
     return jsonError(
       err instanceof Error ? err.message : "Could not build analyst context",
@@ -258,6 +273,7 @@ export async function POST(request: Request) {
       "content-type": "text/plain; charset=utf-8",
       "cache-control": "no-store",
       "x-session-id": sessionId,
+      ...(sourcesHeader ? { "x-knowledge-sources": sourcesHeader } : {}),
     },
   });
 }

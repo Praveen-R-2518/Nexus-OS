@@ -203,6 +203,8 @@ export function SettingsView() {
     buy_back_report_email: false,
     high_value_lead_alerts: false,
   });
+  const [chatVisualsEnabled, setChatVisualsEnabled] = useState(true);
+  const [aiBudgetText, setAiBudgetText] = useState("");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [channelBusy, setChannelBusy] = useState<string | null>(null);
@@ -229,6 +231,10 @@ export function SettingsView() {
       profile.approval_mode === "autopilot" ? "autopilot" : "approval_queue",
     );
     setNotificationPrefs(profile.notification_prefs);
+    setChatVisualsEnabled(profile.chat_visuals_enabled);
+    setAiBudgetText(
+      profile.ai_monthly_token_budget != null ? String(profile.ai_monthly_token_budget) : "",
+    );
   }, [profile, settings?.fields.currency_from_pricing_rules]);
 
   useEffect(() => {
@@ -320,6 +326,8 @@ export function SettingsView() {
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean);
+    const budgetTrimmed = aiBudgetText.trim();
+    const budgetNumber = budgetTrimmed ? Number(budgetTrimmed) : null;
     saveMutation.mutate({
       tone,
       chat_persona: chatPersona,
@@ -327,6 +335,11 @@ export function SettingsView() {
       approval_mode: approvalMode,
       high_value_threshold: highValueThreshold,
       high_risk_score: highRiskScore,
+      chat_visuals_enabled: chatVisualsEnabled,
+      ai_monthly_token_budget:
+        budgetNumber !== null && Number.isFinite(budgetNumber) && budgetNumber >= 0
+          ? Math.floor(budgetNumber)
+          : null,
     });
   }
 
@@ -777,6 +790,24 @@ export function SettingsView() {
                 ) : null}
               </div>
 
+              {/* Chat visuals — lets the analyst render charts inside answers. */}
+              <div className="flex items-start justify-between gap-4 rounded-xl border border-glass-border px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">Visual answers</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">
+                    Let the Revenue Analyst build charts and tables inside chat answers when
+                    they explain the data better than text. Note: visual answers use more AI
+                    usage per reply.
+                  </p>
+                </div>
+                <Toggle
+                  label="Visual answers in chat"
+                  checked={chatVisualsEnabled}
+                  disabled={!settings.editable.ai_rules || saveMutation.isPending}
+                  onChange={(next) => setChatVisualsEnabled(next)}
+                />
+              </div>
+
               <FieldRow label="Services offered" hint="Comma-separated list.">
                 <textarea
                   value={servicesText}
@@ -935,6 +966,21 @@ export function SettingsView() {
                     onChange={(e) => setHighRiskScore(Number(e.target.value))}
                     disabled={!settings.editable.ai_rules || saveMutation.isPending}
                     className={INPUT_CLASS}
+                  />
+                </FieldRow>
+                <FieldRow
+                  label="Monthly AI budget (tokens)"
+                  hint="Soft alert threshold against tracked AI usage — never blocks sends. Leave empty for no budget."
+                >
+                  <input
+                    type="number"
+                    min={0}
+                    step={100000}
+                    value={aiBudgetText}
+                    onChange={(e) => setAiBudgetText(e.target.value)}
+                    disabled={!settings.editable.ai_rules || saveMutation.isPending}
+                    className={INPUT_CLASS}
+                    placeholder="e.g. 2000000"
                   />
                 </FieldRow>
               </div>

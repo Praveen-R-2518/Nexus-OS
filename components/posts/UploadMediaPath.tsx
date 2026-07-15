@@ -125,7 +125,6 @@ export function UploadMediaPath({ orgId, notify, onComplete }: UploadMediaPathPr
             Write your caption
           </h3>
           <CaptionSection
-            orgId={orgId}
             mediaUrl={mediaPath}
             notify={notify}
             onComplete={onComplete}
