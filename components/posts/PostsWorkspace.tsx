@@ -105,15 +105,14 @@ export function PostsWorkspace() {
               <ArrowLeft className="h-4 w-4" aria-hidden />
               Back to posts
             </button>
-            <p className="nexus-meta text-nexus-approval">Review</p>
-            <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Review &amp; submit</h1>
+            <p className="nexus-meta text-nexus-approval">Post</p>
+            <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Post detail</h1>
           </header>
           <ReviewSubmit
             orgId={organizationId}
             post={view.post}
             notify={notify}
-            onSubmitted={() => {
-              notify("Post submitted for approval.");
+            onDone={() => {
               refreshBoard();
               setView({ name: "board" });
             }}

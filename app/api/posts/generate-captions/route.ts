@@ -6,24 +6,18 @@ import {
   readJsonObjectWithLimit,
   requireApiOrgContext,
 } from "@/lib/api-security";
+import { generatePlatformCaptions, OpenAINotConfiguredError } from "@/lib/posts/ai";
 import { POST_PLATFORMS, type Platform } from "@/lib/posts/types";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-function captionWebhookUrl(): string | null {
-  const direct = process.env.N8N_SOCIAL_POST_INPUT_WEBHOOK_URL?.trim();
-  if (direct) return direct;
-  const base = process.env.N8N_WEBHOOK_BASE_URL?.trim();
-  if (!base) return null;
-  return `${base.replace(/\/+$/, "")}/webhook/social-post-input`;
-}
+const POST_MEDIA_BUCKET = "post-media";
 
 /**
- * Server-side proxy for the n8n caption-generation webhook. The browser used to
- * POST a client-supplied orgId straight to n8n (spoofable, hard-coded URL); the
- * org id is now derived server-side from the caller's user_profiles row and the
- * n8n URL stays server-only.
+ * Generate per-platform captions with OpenAI (GPT-4o, vision when media is present).
+ * Returns `{ captions }` ONLY — the social_posts row is created later by the
+ * Save/Schedule/Upload actions, so manual posts never depend on this route.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:posts:captions", 20, 60_000);
@@ -47,37 +41,30 @@ export async function POST(request: Request) {
       )
     : [];
 
-  if (!mediaUrl || platforms.length === 0) {
-    return jsonError("mediaUrl and at least one platform are required", 400);
+  if (!userDescription || platforms.length === 0) {
+    return jsonError("A description and at least one platform are required", 400);
   }
 
-  const webhookUrl = captionWebhookUrl();
-  if (!webhookUrl) {
-    return jsonError("Caption generation is not configured", 503);
+  // Sign the private media path so the vision model can see it. Best-effort:
+  // captioning still works from the description alone if signing fails.
+  let imageUrl: string | null = null;
+  if (mediaUrl) {
+    const { data } = await org.supabase.storage
+      .from(POST_MEDIA_BUCKET)
+      .createSignedUrl(mediaUrl, 600);
+    imageUrl = data?.signedUrl ?? null;
   }
 
   try {
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        orgId: org.organizationId,
-        mediaUrl,
-        userDescription,
-        platforms,
-      }),
+    const captions = await generatePlatformCaptions({
+      userDescription,
+      platforms,
+      imageDataUrl: imageUrl,
     });
-    if (!res.ok) {
-      console.error(`[posts/generate-captions] n8n responded ${res.status}`);
-      return jsonError("Caption generation failed", 502);
-    }
-    const json = (await res.json()) as unknown;
-    return NextResponse.json(json);
+    return NextResponse.json({ captions });
   } catch (e) {
-    console.error(
-      "[posts/generate-captions] webhook error:",
-      e instanceof Error ? e.message : e,
-    );
+    if (e instanceof OpenAINotConfiguredError) return jsonError(e.message, 503);
+    console.error("[posts/generate-captions]", e instanceof Error ? e.message : e);
     return jsonError("Caption generation failed", 502);
   }
 }

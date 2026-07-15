@@ -12,7 +12,41 @@ Importable snapshots of the Nexus OS n8n workflows (instance `knurdz3o.app.n8n.c
 | `wf4_followup_scheduler.json` | WF4 Follow-up Scheduler | `qWHvc2AmqX10jEjk` | **exported from live** (2026-07-12) |
 | `wf0d_ledger_drain.json` | WF0d Ledger Drain | `lr4HzWo2QeghXxhH` | metadata stub (2026-07-13) — **active** |
 | `wf0e_gmail_backfill.json` | WF0e Gmail Backfill | `Y54F1bZLJkRyexTH` | metadata stub (2026-07-13) — **active** |
-| `wf8b_social_publish.json` | WF8b Social Post Publishing | `VZ9ZaA1S2JxSAeGQ` | metadata stub (2026-07-13, task 4.3) — **active** |
+| `wf8b_social_publish.json` | WF8b Social Post Publishing | `VZ9ZaA1S2JxSAeGQ` | **live, 9 nodes** — webhook `publish-social-post` → fetch tokens → per-platform publish → mark published |
+| _WF8d Social Post Scheduler_ | Social Post Scheduler | `47BO0agxAJGizttR` | **created 2026-07-15 via MCP** (inactive) — Schedule Trigger → claim due posts → trigger WF8b |
+
+## Social posting: publish + schedule contract (2026-07-15)
+
+The app now drives publishing directly (no approval queue). Two n8n workflows complete the loop:
+
+**WF8b — Social Post Publishing** (webhook `POST /webhook/publish-social-post`, id `VZ9ZaA1S2JxSAeGQ`)
+- Already implemented live (9 nodes). Trigger payload from the app
+  (`app/api/posts/publish/route.ts`): `{ orgId, postId, platforms[] }`. The app flips the post to
+  `publishing` before calling; WF8b reads the row from Supabase by `postId`.
+- Steps: `GET {NEXUS_APP_URL}/api/internal/n8n/social-credentials?organization_id={orgId}`
+  (Bearer token) → build per-platform items → `Post to Platform` (IG/FB Graph API, X API v2) →
+  `Mark Post Published` (PATCH `social_posts.status='published'`).
+- Set the app env `N8N_SOCIAL_PUBLISH_WEBHOOK_URL` to
+  `https://knurdz3o.app.n8n.cloud/webhook/publish-social-post`.
+- Remaining to make it fully live: bind each platform's publishing credential (Meta/X/LinkedIn app
+  review pending). Optional hardening: on failure, POST to `/api/internal/n8n/post-result` with
+  `{ postId, status: 'failed', error }` so the post leaves `publishing` instead of hanging.
+
+**WF8d — Social Post Scheduler** (Schedule Trigger every 5 min, id `47BO0agxAJGizttR`)
+- `GET {NEXUS_APP_URL}/api/internal/n8n/scheduled-posts` (Bearer `N8N_INGEST_TOKEN`) — this endpoint
+  **atomically claims** due posts (`status=scheduled AND scheduled_at<=now` → flipped to `publishing`)
+  and returns them, so overlapping polls never double-publish.
+- `Expand Posts` (one item per post) → `Trigger Publish` (POST `{{$env.N8N_SOCIAL_PUBLISH_WEBHOOK_URL}}`
+  with `{ orgId, postId, platforms }`) → WF8b publishes each.
+- **Activate it** in the n8n UI once WF8b's platform credentials are bound.
+
+**Internal endpoints added (app):** `GET /api/internal/n8n/scheduled-posts` (claim due posts) and
+`POST /api/internal/n8n/post-result` (terminal `published`/`failed` writeback — the browser can't
+write these). Both Bearer `N8N_INGEST_TOKEN`.
+
+App env required: `N8N_SOCIAL_PUBLISH_WEBHOOK_URL` (app → WF8b). n8n env required:
+`NEXUS_APP_URL` + `N8N_INGEST_TOKEN` + `N8N_SOCIAL_PUBLISH_WEBHOOK_URL`, plus each platform's
+publishing credential on WF8b.
 
 ## Notes
 

@@ -8,13 +8,9 @@ import {
   Bell,
   Lock,
   Mail,
-  MessageCircle,
-  MessagesSquare,
-  Camera,
   Shield,
   Sparkles,
   Users,
-  Share2,
   Pause,
   Play,
   Unplug,
@@ -24,6 +20,17 @@ import {
   UploadCloud,
   RotateCcw,
 } from "lucide-react";
+import {
+  FaFacebookF,
+  FaFacebookMessenger,
+  FaInstagram,
+  FaLinkedinIn,
+  FaWhatsapp,
+  FaXTwitter,
+} from "react-icons/fa6";
+import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
+import { POST_PLATFORMS, PLATFORM_LABELS } from "@/lib/posts/types";
+import type { Platform } from "@/lib/posts/types";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -57,6 +64,13 @@ const PRIMARY_BTN =
 
 const SECONDARY_BTN =
   "inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-border-strong bg-surface-muted px-3 py-2 text-sm font-medium text-atmospheric-grey transition hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
+
+const SOCIAL_ICONS: Record<Platform, typeof FaInstagram> = {
+  instagram: FaInstagram,
+  facebook: FaFacebookF,
+  x: FaXTwitter,
+  linkedin: FaLinkedinIn,
+};
 
 const META_LABELS: Record<MetaChannelPlatform, string> = {
   whatsapp: "WhatsApp",
@@ -168,6 +182,7 @@ export function SettingsView() {
   const tenant = useTenantScope();
   const queryClient = useQueryClient();
   const queriesEnabled = tenant.ready && !!tenant.teamId;
+  const [socialBusy, setSocialBusy] = useState<Platform | null>(null);
 
   const {
     data: settings,
@@ -379,6 +394,24 @@ export function SettingsView() {
     saveMutation.mutate({ notification_prefs: next });
   }
 
+  async function handleSocialDisconnect(platform: Platform) {
+    if (!window.confirm(`Disconnect ${PLATFORM_LABELS[platform]} publishing?`)) return;
+    setSocialBusy(platform);
+    try {
+      const res = await authenticatedFetch("/api/social/disconnect", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ platform }),
+      });
+      if (!res.ok) throw new Error("Disconnect failed");
+      await refetch();
+    } catch {
+      /* surfaced by the row state on next refetch */
+    } finally {
+      setSocialBusy(null);
+    }
+  }
+
   async function handleChannelAction(
     target: "gmail" | MetaChannelPlatform,
     action: "set_sync" | "disconnect",
@@ -438,7 +471,7 @@ export function SettingsView() {
     <div className="min-h-0 space-y-10">
       <header className="hairline-b pb-8">
         <p className="nexus-meta text-nexus-approval">Account</p>
-        <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Profile</h1>
+        <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Settings</h1>
         <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
           Manage your account, workspace profile, connected channels, AI approval rules,
           billing, and security preferences.
@@ -464,7 +497,7 @@ export function SettingsView() {
         <div className="space-y-6">
           <SettingsSection
             id="account"
-            title="Account"
+            title="Profile Settings"
             description="Your personal identity in Nexus OS."
           >
             <form onSubmit={handleAccountSave} className="space-y-4">
@@ -498,6 +531,27 @@ export function SettingsView() {
                 {saveMutation.isPending ? "Saving…" : "Save account"}
               </button>
             </form>
+          </SettingsSection>
+
+          <SettingsSection
+            id="team"
+            title="Team"
+            description="Invite teammates and manage workspace access."
+          >
+            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">Team members</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Send invites and manage roles from the Team page.
+                  </p>
+                </div>
+              </div>
+              <Link href="/team" className={SECONDARY_BTN}>
+                Open Team
+              </Link>
+            </div>
           </SettingsSection>
 
           <SettingsSection
@@ -693,10 +747,10 @@ export function SettingsView() {
                 const channel = settings.channels.meta.platforms[platform];
                 const Icon =
                   platform === "whatsapp"
-                    ? MessagesSquare
+                    ? FaWhatsapp
                     : platform === "instagram"
-                      ? Camera
-                      : MessageCircle;
+                      ? FaInstagram
+                      : FaFacebookMessenger;
                 return (
                   <div
                     key={platform}
@@ -863,7 +917,7 @@ export function SettingsView() {
                 <div>
                   <p className="text-sm font-medium text-atmospheric-grey">Visual answers</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted">
-                    Let the Revenue Analyst build charts and tables inside chat answers when
+                    Let Chat build charts and tables inside chat answers when
                     they explain the data better than text. Note: visual answers use more AI
                     usage per reply.
                   </p>
@@ -1193,50 +1247,59 @@ export function SettingsView() {
           </SettingsSection>
 
           <SettingsSection
-            id="team"
-            title="Team"
-            description="Invite teammates and manage workspace access."
-          >
-            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium text-atmospheric-grey">Team members</p>
-                  <p className="mt-1 text-xs text-muted">
-                    Send invites and manage roles from the Team page.
-                  </p>
-                </div>
-              </div>
-              <Link href="/team" className={SECONDARY_BTN}>
-                Open Team
-              </Link>
-            </div>
-          </SettingsSection>
-
-          <SettingsSection
             id="social-posting"
             title="Social Posting"
-            description="Linked publishing accounts for the Posts workspace."
+            description="Connect the accounts Nexus OS publishes posts to."
           >
-            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <Share2 className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium text-atmospheric-grey">
-                    {settings.social.connected
-                      ? `${settings.social.platform_count} platform${settings.social.platform_count === 1 ? "" : "s"} connected`
-                      : "No social accounts connected"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    {settings.social.connected
-                      ? settings.social.platforms.join(", ")
-                      : "Connect platforms from Posts when you are ready to publish."}
-                  </p>
-                </div>
-              </div>
-              <Link href="/posts" className={SECONDARY_BTN}>
-                Open Posts
-              </Link>
+            <div className="space-y-3">
+              {POST_PLATFORMS.map((platform) => {
+                const connected = settings.social.platforms.includes(platform);
+                const Icon = SOCIAL_ICONS[platform];
+                return (
+                  <div
+                    key={platform}
+                    className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+                      <div>
+                        <p className="text-sm font-medium text-atmospheric-grey">
+                          {PLATFORM_LABELS[platform]}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          {connected
+                            ? "Connected for publishing."
+                            : "Not connected — you can't publish here yet."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill
+                        connected={connected}
+                        label={connected ? "Connected" : "Not connected"}
+                      />
+                      {connected ? (
+                        <button
+                          type="button"
+                          disabled={socialBusy === platform}
+                          onClick={() => void handleSocialDisconnect(platform)}
+                          className={SECONDARY_BTN}
+                        >
+                          {socialBusy === platform ? (
+                            <Spinner className="h-4 w-4" label="Working" />
+                          ) : (
+                            <Unplug className="h-4 w-4" aria-hidden />
+                          )}
+                          Disconnect
+                        </button>
+                      ) : null}
+                      <a href={`/api/social/connect?platform=${platform}`} className={SECONDARY_BTN}>
+                        {connected ? "Reconnect" : "Connect"}
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </SettingsSection>
 

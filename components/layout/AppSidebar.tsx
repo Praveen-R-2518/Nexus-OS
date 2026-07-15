@@ -12,10 +12,10 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -32,12 +32,12 @@ const SIDEBAR_COLLAPSED_WIDTH = "4.75rem";
 const appNav = [
   { href: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { href: "/inbox", label: "Inbox", icon: Inbox },
-  { href: "/chat", label: "Revenue Analyst", icon: Sparkles },
-  { href: "/posts", label: "Posts", icon: ImageIcon },
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
+  { href: "/posts", label: "Posts", icon: ImageIcon },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/team", label: "Team", icon: Users },
-  { href: "/profile", label: "Profile", icon: Settings },
+  { href: "/profile", label: "Settings", icon: Settings },
 ] as const;
 
 function isNavActive(pathname: string, href: string): boolean {
