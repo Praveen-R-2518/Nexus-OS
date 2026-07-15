@@ -177,7 +177,7 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={3}
-          placeholder="Describe the image you want — the prompt is AI-enhanced before generation."
+          placeholder="Describe the image you want. The prompt is AI-enhanced before generation."
           className="glass-input min-h-[6rem] w-full resize-y px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
         />
       </div>

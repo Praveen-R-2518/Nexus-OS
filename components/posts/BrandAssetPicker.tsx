@@ -150,7 +150,7 @@ export function BrandAssetPicker({
 
       {selectedId ? (
         <p className="mt-3 border border-status-caution-border bg-status-caution-surface px-3 py-2 text-xs text-status-caution">
-          Reference-guided generation isn&apos;t live yet — the selected asset is
+          Reference-guided generation isn&apos;t live yet. The selected asset is
           saved to your library, but the image below is generated from your prompt
           only.
         </p>

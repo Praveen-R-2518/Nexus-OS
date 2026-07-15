@@ -22,7 +22,7 @@ export default function PricingPage() {
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted dark:text-slate-300">
           Start with a free trial on Starter, scale to Professional as your team grows,
-          or talk to us for Enterprise. No hidden fees — just clear plans built for
+          or talk to us for Enterprise. No hidden fees, just clear plans built for
           revenue teams.
         </p>
       </ScrollReveal>

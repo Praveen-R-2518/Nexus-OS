@@ -19,9 +19,9 @@ const metrics = [
 ] as const;
 
 const feed = [
-  { name: "Sarah Chen", initials: "SC", gradient: "linear-gradient(135deg, hsl(214,72%,56%), hsl(262,64%,46%))", preview: "We need to upgrade before Q3 — can you send pricing?", urgency: "Critical", value: "$24,000" },
+  { name: "Sarah Chen", initials: "SC", gradient: "linear-gradient(135deg, hsl(214,72%,56%), hsl(262,64%,46%))", preview: "We need to upgrade before Q3. Can you send pricing?", urgency: "Critical", value: "$24,000" },
   { name: "Marcus Webb", initials: "MW", gradient: "linear-gradient(135deg, hsl(24,72%,56%), hsl(4,64%,46%))", preview: "Invoice discrepancy on last month's subscription", urgency: "High", value: "$8,400" },
-  { name: "Priya Nair", initials: "PN", gradient: "linear-gradient(135deg, hsl(158,72%,46%), hsl(190,64%,42%))", preview: "Love the onboarding — team wants to expand seats", urgency: "High", value: "$12,500" },
+  { name: "Priya Nair", initials: "PN", gradient: "linear-gradient(135deg, hsl(158,72%,46%), hsl(190,64%,42%))", preview: "Love the onboarding. Team wants to expand seats", urgency: "High", value: "$12,500" },
   { name: "Emma Rodriguez", initials: "ER", gradient: "linear-gradient(135deg, hsl(286,60%,56%), hsl(320,64%,50%))", preview: "Customer left a five-star WhatsApp review", urgency: "Positive", value: "$4,900" },
 ] as const;
 
@@ -111,7 +111,7 @@ export function DashboardPreview() {
           <span className="h-2 w-2 rounded-full bg-[#28c840]" />
         </div>
         <p className="ml-3 text-[10px] font-medium text-white/55">
-          Nexus OS — Command Center
+          Nexus OS Command Center
         </p>
         <div className="relative ml-auto hidden items-center gap-1 rounded-full bg-white/[0.06] px-2 py-0.5 text-[9px] text-white/30 sm:flex">
           <Search className="h-2.5 w-2.5" aria-hidden />

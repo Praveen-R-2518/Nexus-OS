@@ -140,7 +140,7 @@ export function InviteManager() {
         <p className="nexus-meta text-nexus-approval">Settings</p>
         <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Team</h1>
         <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
-          Invite teammates to your organization. Share the generated link — anyone
+          Invite teammates to your organization. Share the generated link. Anyone
           who signs up with it joins this organization automatically.
         </p>
       </header>
@@ -254,7 +254,7 @@ export function InviteManager() {
                       {inv.status === "pending" ? (
                         <CopyLinkButton token={inv.token} />
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">n/a</span>
                       )}
                     </td>
                   </tr>

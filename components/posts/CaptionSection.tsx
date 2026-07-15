@@ -108,7 +108,7 @@ export function CaptionSection({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
-          placeholder="Describe what this post is about — the AI writes per-platform variants from this."
+          placeholder="Describe what this post is about. The AI writes per-platform variants from this."
           className="glass-input min-h-[7rem] w-full resize-y px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">

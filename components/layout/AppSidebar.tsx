@@ -37,7 +37,7 @@ const appNav = [
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
   { href: "/team", label: "Team", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/profile", label: "Profile", icon: Settings },
 ] as const;
 
 function isNavActive(pathname: string, href: string): boolean {

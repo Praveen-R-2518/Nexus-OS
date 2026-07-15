@@ -22,9 +22,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
-import { conversationsQuery, metricsQuery } from "@/lib/queries/fetchers";
+import { FilterChip } from "@/components/ui/FilterChip";
+import {
+  MetricsTrendChart,
+  MetricsTrendChartSkeleton,
+} from "@/components/dashboard/MetricsTrendChart";
+import { conversationsQuery, metricsQuery, metricsTimeseriesQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
-import type { Conversation, Metrics } from "@/types";
+import type { Conversation, Metrics, MetricsTimeseriesRange } from "@/types";
 import {
   cn,
   conversationMessagePreview,
@@ -39,6 +44,14 @@ const INBOX_REFRESH_MS = 15_000;
 const CONVERSATIONS_LIMIT = 100;
 const FEED_PREVIEW = 10;
 
+const TIMESERIES_RANGES: { value: MetricsTimeseriesRange; label: string }[] = [
+  { value: "week", label: "Week" },
+  { value: "month", label: "Month" },
+  { value: "6m", label: "6 months" },
+  { value: "year", label: "Year" },
+  { value: "all", label: "All data" },
+];
+
 const ZERO_METRICS: Metrics = {
   revenue_at_risk: 0,
   hot_leads: 0,
@@ -47,7 +60,7 @@ const ZERO_METRICS: Metrics = {
 };
 
 function urgencyBadgeLabel(urgency: Conversation["urgency"] | null | undefined): string {
-  if (urgency == null) return "—";
+  if (urgency == null) return "n/a";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 
@@ -127,6 +140,8 @@ export default function DashboardPage() {
   const queriesEnabled = tenant.ready && teamId !== null;
 
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+  const [timeseriesRange, setTimeseriesRange] =
+    useState<MetricsTimeseriesRange>("month");
 
   const prevConvIdsRef = useRef<Set<string>>(new Set());
   const firstConvFetchRef = useRef(true);
@@ -174,6 +189,19 @@ export default function DashboardPage() {
   });
 
   const {
+    data: timeseries,
+    isPending: timeseriesPending,
+    error: timeseriesError,
+    refetch: refetchTimeseries,
+  } = useQuery({
+    queryKey: queryKeys.metricsTimeseries(teamId, timeseriesRange),
+    queryFn: () => metricsTimeseriesQuery(timeseriesRange),
+    enabled: queriesEnabled,
+    staleTime: 30_000,
+    refetchInterval: queriesEnabled ? GLOBAL_REFRESH_MS : false,
+  });
+
+  const {
     data: conversations = [],
     isPending: conversationsPending,
     error: conversationsError,
@@ -200,6 +228,8 @@ export default function DashboardPage() {
 
   const metricsErrorMsg =
     metricsError instanceof Error ? metricsError.message : null;
+  const timeseriesErrorMsg =
+    timeseriesError instanceof Error ? timeseriesError.message : null;
   const conversationsErrorMsg =
     conversationsError instanceof Error
       ? conversationsError.message
@@ -236,7 +266,7 @@ export default function DashboardPage() {
             </h1>
           </div>
           <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
-            Live revenue rescue ops — prioritize revenue at risk, route hot
+            Live revenue rescue ops. Prioritize revenue at risk, route hot
             leads, and intercept churn before it lands.
           </p>
         </header>
@@ -325,6 +355,53 @@ export default function DashboardPage() {
           ) : (
             <MetricsSkeletonRow />
           )}
+        </section>
+
+        <section aria-label="Metrics trends" className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-atmospheric-grey">
+                Daily trends
+              </h2>
+              <p className="mt-1 text-xs text-muted">
+                Revenue at risk, hot leads, and churn risks over time.
+              </p>
+            </div>
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Chart time range"
+            >
+              {TIMESERIES_RANGES.map(({ value, label }) => (
+                <FilterChip
+                  key={value}
+                  active={timeseriesRange === value}
+                  onClick={() => setTimeseriesRange(value)}
+                >
+                  {label}
+                </FilterChip>
+              ))}
+            </div>
+          </div>
+
+          {timeseriesErrorMsg ? (
+            <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
+              <span>Trends: {timeseriesErrorMsg}</span>{" "}
+              <button
+                type="button"
+                onClick={() => void refetchTimeseries()}
+                className="ml-2 inline-flex min-h-11 cursor-pointer items-center px-2 font-semibold uppercase tracking-wide text-status-positive underline-offset-4 hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          ) : null}
+
+          {timeseriesPending && queriesEnabled && !timeseries ? (
+            <MetricsTrendChartSkeleton />
+          ) : queriesEnabled ? (
+            <MetricsTrendChart points={timeseries?.points ?? []} />
+          ) : null}
         </section>
 
         {/* Two columns */}

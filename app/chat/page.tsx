@@ -7,6 +7,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import { ChartBlock } from "@/components/chat/ChartBlock";
+import { ChatUsageToolbar } from "@/components/chat/ChatUsageToolbar";
 import { parseAssistantContent } from "@/lib/chat/visuals";
 import { cn } from "@/lib/utils";
 
@@ -281,9 +282,11 @@ export default function ChatPage() {
         <h1 className="nexus-app-title text-foreground">Revenue Analyst</h1>
         <p className="mt-2 flex items-center gap-2 text-base text-muted">
           <Sparkles className="h-5 w-5 shrink-0 text-nexus-discovery" aria-hidden />
-          Read-only. Answers only from your real inbox data — it never sends or edits anything.
+          Read-only. Answers only from your real inbox data. It never sends or edits anything.
         </p>
       </div>
+
+      <ChatUsageToolbar teamId={tenant.teamId} enabled={tenant.ready && tenant.teamId !== null} />
 
       <div className="app-glass-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-6">
@@ -296,7 +299,7 @@ export default function ChatPage() {
                 Ask about your revenue command center
               </h2>
               <p className="mt-2 max-w-md text-sm text-muted">
-                I read your conversations, leads, and pending drafts — then tell you what needs
+                I read your conversations, leads, and pending drafts, then tell you what needs
                 attention. I can suggest what to do, but you take action in the Approval Queue.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">

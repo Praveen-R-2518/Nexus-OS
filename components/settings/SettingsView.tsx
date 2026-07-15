@@ -184,9 +184,11 @@ export function SettingsView() {
   const profile = settings?.business_profile;
 
   const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [industry, setIndustry] = useState("");
   const [timezone, setTimezone] = useState("");
   const [currency, setCurrency] = useState("");
+  const [pricingNotes, setPricingNotes] = useState("");
   const [tone, setTone] = useState("");
   const [chatPersona, setChatPersona] = useState(DEFAULT_ANALYST_PERSONA);
   const [enhancing, setEnhancing] = useState(false);
@@ -215,6 +217,11 @@ export function SettingsView() {
   );
 
   useEffect(() => {
+    if (!settings) return;
+    setFullName(settings.account.full_name ?? "");
+  }, [settings]);
+
+  useEffect(() => {
     if (!profile) return;
     setName(profile.name);
     setIndustry(profile.industry);
@@ -223,6 +230,9 @@ export function SettingsView() {
       typeof profile.pricing_rules.currency === "string"
         ? profile.pricing_rules.currency
         : settings?.fields.currency_from_pricing_rules ?? "",
+    );
+    setPricingNotes(
+      typeof profile.pricing_rules.notes === "string" ? profile.pricing_rules.notes : "",
     );
     setTone(profile.tone);
     setChatPersona(profile.chat_persona ?? DEFAULT_ANALYST_PERSONA);
@@ -247,7 +257,7 @@ export function SettingsView() {
     mutationFn: updateSettingsMutation,
     onSuccess: (next) => {
       queryClient.setQueryData(queryKeys.settings(tenant.teamId), next);
-      setSaveMessage("Settings saved.");
+      setSaveMessage("Profile saved.");
       setSaveError(null);
     },
     onError: (err) => {
@@ -308,6 +318,11 @@ export function SettingsView() {
     );
   }, [settings]);
 
+  function handleAccountSave(e: React.FormEvent) {
+    e.preventDefault();
+    saveMutation.mutate({ full_name: fullName.trim() });
+  }
+
   function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
     if (!settings?.editable.workspace_profile) return;
@@ -316,6 +331,7 @@ export function SettingsView() {
       industry,
       timezone: timezone.trim() || undefined,
       currency: currency.trim().toUpperCase() || undefined,
+      pricing_notes: pricingNotes,
     });
   }
 
@@ -399,8 +415,8 @@ export function SettingsView() {
   if (!tenant.ready || tenant.loading) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-muted">
-        <Spinner className="h-8 w-8" label="Loading settings" />
-        <p className="text-sm">Loading settings…</p>
+        <Spinner className="h-8 w-8" label="Loading profile" />
+        <p className="text-sm">Loading profile…</p>
       </div>
     );
   }
@@ -409,7 +425,7 @@ export function SettingsView() {
     return (
       <ExecutiveEmptyState
         title="Workspace setup required"
-        description="Complete onboarding to bind your team before managing workspace settings."
+        description="Complete onboarding to bind your team before managing your profile."
         icon={<Sparkles className="shrink-0" aria-hidden />}
         className="min-h-[50vh] app-glass-card"
       />
@@ -421,11 +437,11 @@ export function SettingsView() {
   return (
     <div className="min-h-0 space-y-10">
       <header className="hairline-b pb-8">
-        <p className="nexus-meta text-nexus-approval">Workspace</p>
-        <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Settings</h1>
+        <p className="nexus-meta text-nexus-approval">Account</p>
+        <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Profile</h1>
         <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
-          Manage your workspace profile, connected channels, AI approval rules, billing,
-          and security preferences.
+          Manage your account, workspace profile, connected channels, AI approval rules,
+          billing, and security preferences.
         </p>
       </header>
 
@@ -446,6 +462,44 @@ export function SettingsView() {
         <SettingsSkeleton />
       ) : settings ? (
         <div className="space-y-6">
+          <SettingsSection
+            id="account"
+            title="Account"
+            description="Your personal identity in Nexus OS."
+          >
+            <form onSubmit={handleAccountSave} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FieldRow label="Display name">
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    disabled={saveMutation.isPending}
+                    className={INPUT_CLASS}
+                    placeholder="Your name"
+                    autoComplete="name"
+                  />
+                </FieldRow>
+                <FieldRow label="Email">
+                  <input
+                    type="email"
+                    value={settings.account.email ?? ""}
+                    readOnly
+                    disabled
+                    className={cn(INPUT_CLASS, "opacity-70")}
+                  />
+                </FieldRow>
+              </div>
+              <button
+                type="submit"
+                disabled={saveMutation.isPending}
+                className={PRIMARY_BTN}
+              >
+                {saveMutation.isPending ? "Saving…" : "Save account"}
+              </button>
+            </form>
+          </SettingsSection>
+
           <SettingsSection
             id="workspace-profile"
             title="Workspace Profile"
@@ -509,6 +563,20 @@ export function SettingsView() {
                   />
                 </FieldRow>
               </div>
+
+              <FieldRow
+                label="Pricing rules"
+                hint="Services, packages, and rate notes used when drafting replies."
+              >
+                <textarea
+                  value={pricingNotes}
+                  onChange={(e) => setPricingNotes(e.target.value)}
+                  disabled={!settings.editable.workspace_profile || saveMutation.isPending}
+                  rows={5}
+                  className={cn(INPUT_CLASS, "resize-y")}
+                  placeholder="Example: Strategy calls $500. Monthly retainer from $2k. Rush support +20%."
+                />
+              </FieldRow>
 
               {saveMessage ? (
                 <p className="text-sm text-status-positive" role="status">
@@ -741,7 +809,7 @@ export function SettingsView() {
                   Chat personalization
                 </span>
                 <span className="block text-xs text-muted">
-                  This is sent to your AI assistant as its system message — shape it into a
+                  This is sent to your AI assistant as its system message. Shape it into a
                   specialized business analyst. Your read-only safety rules (never send, never
                   fabricate numbers) are always kept on top of whatever you write here.
                 </span>
@@ -916,7 +984,7 @@ export function SettingsView() {
                   <Lock className="mr-1 inline h-3 w-3 align-[-1px]" aria-hidden />
                   Privacy: your documents are stored privately, encrypted at rest, and scoped to
                   this workspace only. They are used solely to inform your AI assistant&apos;s
-                  answers — never shared with other tenants and never used to train AI models.
+                  answers. Never shared with other tenants and never used to train AI models.
                 </p>
               </div>
 
@@ -931,9 +999,9 @@ export function SettingsView() {
                   disabled={!settings.editable.ai_rules || saveMutation.isPending}
                   className={INPUT_CLASS}
                 >
-                  <option value="approval_queue">Approval queue — gate all replies</option>
+                  <option value="approval_queue">Approval queue: gate all replies</option>
                   <option value="autopilot">
-                    Autopilot — auto-send low-risk, low-value replies
+                    Autopilot: auto-send low-risk, low-value replies
                   </option>
                 </select>
               </FieldRow>
@@ -970,7 +1038,7 @@ export function SettingsView() {
                 </FieldRow>
                 <FieldRow
                   label="Monthly AI budget (tokens)"
-                  hint="Soft alert threshold against tracked AI usage — never blocks sends. Leave empty for no budget."
+                  hint="Soft alert threshold against tracked AI usage. Never blocks sends. Leave empty for no budget."
                 >
                   <input
                     type="number"
@@ -1232,7 +1300,7 @@ export function SettingsView() {
         </div>
       ) : errorMsg ? (
         <EmptyState
-          title="Settings unavailable"
+          title="Profile unavailable"
           description={errorMsg}
           icon={<AlertTriangle />}
           className="app-glass-card min-h-[40vh]"
