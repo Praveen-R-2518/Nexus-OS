@@ -11,12 +11,23 @@ export type Platform = (typeof POST_PLATFORMS)[number];
 
 export const POST_STATUSES = [
   "draft",
-  "pending_approval",
-  "approved",
+  "scheduled",
+  "publishing",
   "published",
   "failed",
 ] as const;
 export type PostStatus = (typeof POST_STATUSES)[number];
+
+/**
+ * Statuses shown as board filter chips. `publishing` is a transient state (a post
+ * is only in it while WF8b talks to the platform APIs), so it is not a filter.
+ */
+export const BOARD_FILTER_STATUSES = [
+  "draft",
+  "scheduled",
+  "published",
+  "failed",
+] as const satisfies readonly PostStatus[];
 
 export type PostSource = "upload" | "ai_generated";
 
@@ -38,6 +49,10 @@ export interface SocialPost {
   status: PostStatus;
   source: PostSource;
   generation_id: string | null;
+  /** Set when the post is scheduled for a future publish; null otherwise. */
+  scheduled_at: string | null;
+  /** Reason the last publish attempt failed (shown on Failed cards). */
+  publish_error: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -76,8 +91,8 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
 
 export const STATUS_LABELS: Record<PostStatus, string> = {
   draft: "Draft",
-  pending_approval: "Pending Approval",
-  approved: "Approved",
+  scheduled: "Scheduled",
+  publishing: "Publishing",
   published: "Published",
   failed: "Failed",
 };

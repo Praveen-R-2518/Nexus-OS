@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { ArrowLeft, Sparkles, Upload } from "lucide-react";
-import type { SocialPost } from "@/lib/posts/types";
 import { CreateWithAiPath } from "./CreateWithAiPath";
-import { ReviewSubmit } from "./ReviewSubmit";
 import { UploadMediaPath } from "./UploadMediaPath";
 
-type Step = "choice" | "upload" | "ai" | "review";
+type Step = "choice" | "upload" | "ai";
 
 interface ComposerProps {
   orgId: string;
@@ -44,19 +42,8 @@ function EntryCard({
 
 export function Composer({ orgId, notify, onExit, onSubmitted }: ComposerProps) {
   const [step, setStep] = useState<Step>("choice");
-  const [post, setPost] = useState<SocialPost | null>(null);
 
-  function handleComplete(created: SocialPost) {
-    setPost(created);
-    setStep("review");
-  }
-
-  const back =
-    step === "choice"
-      ? onExit
-      : step === "review"
-        ? () => setStep(post?.source === "ai_generated" ? "ai" : "upload")
-        : () => setStep("choice");
+  const back = step === "choice" ? onExit : () => setStep("choice");
 
   return (
     <div className="space-y-8">
@@ -75,9 +62,7 @@ export function Composer({ orgId, notify, onExit, onSubmitted }: ComposerProps) 
             ? "How do you want to start?"
             : step === "upload"
               ? "Upload media"
-              : step === "ai"
-                ? "Create with AI"
-                : "Review & submit"}
+              : "Create with AI"}
         </h1>
       </header>
 
@@ -99,23 +84,11 @@ export function Composer({ orgId, notify, onExit, onSubmitted }: ComposerProps) 
       ) : null}
 
       {step === "upload" ? (
-        <UploadMediaPath orgId={orgId} notify={notify} onComplete={handleComplete} />
+        <UploadMediaPath orgId={orgId} notify={notify} onDone={onSubmitted} />
       ) : null}
 
       {step === "ai" ? (
-        <CreateWithAiPath orgId={orgId} notify={notify} onComplete={handleComplete} />
-      ) : null}
-
-      {step === "review" && post ? (
-        <ReviewSubmit
-          orgId={orgId}
-          post={post}
-          notify={notify}
-          onSubmitted={() => {
-            notify("Post submitted for approval.");
-            onSubmitted();
-          }}
-        />
+        <CreateWithAiPath orgId={orgId} notify={notify} onDone={onSubmitted} />
       ) : null}
     </div>
   );

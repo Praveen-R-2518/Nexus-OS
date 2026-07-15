@@ -258,7 +258,7 @@ export default function ChatPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-muted">
         <Spinner className="h-8 w-8" label="Loading analyst" />
-        <p className="text-sm">Loading Revenue Analyst…</p>
+        <p className="text-sm">Loading Chat…</p>
       </div>
     );
   }
@@ -267,7 +267,7 @@ export default function ChatPage() {
     return (
       <EmptyState
         title="Workspace setup required"
-        description="Complete onboarding to use the Revenue Analyst."
+        description="Complete onboarding to use Chat."
         icon={<Sparkles />}
         className="min-h-[50vh]"
       />
@@ -279,7 +279,7 @@ export default function ChatPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-4 shrink-0">
-        <h1 className="nexus-app-title text-foreground">Revenue Analyst</h1>
+        <h1 className="nexus-app-title text-foreground">Chat</h1>
         <p className="mt-2 flex items-center gap-2 text-base text-muted">
           <Sparkles className="h-5 w-5 shrink-0 text-nexus-discovery" aria-hidden />
           Read-only. Answers only from your real inbox data. It never sends or edits anything.

@@ -14,17 +14,13 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 const POST_MEDIA_BUCKET = "post-media";
-const BRAND_ASSETS_BUCKET = "brand-assets";
-
-/** Per-organization image generations per day (cost guardrail). */
 const DAILY_ORG_IMAGE_LIMIT = 25;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Text-to-image (or reference-guided image edit) via OpenAI. Uploads the result
- * to `post-media`, records a `post_generations` row for the undo chain, and
- * returns a signed URL. Org id is derived server-side; the paid call is capped
- * per-IP per-minute and per-org per-day.
+ * Edit an existing AI generation with a text instruction (image-to-image). Reads
+ * the source generation, runs an OpenAI image edit, records a new
+ * `post_generations` row whose parent is the edited generation (undo chain).
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:posts:image", 5, 60_000);
@@ -46,32 +42,34 @@ export async function POST(request: Request) {
   if (!parsed.ok) return parsed.response;
   const body = parsed.body;
 
-  const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
-  const parentGenerationId =
-    typeof body.parentGenerationId === "string" && body.parentGenerationId.trim()
-      ? body.parentGenerationId.trim()
-      : null;
-  const referenceAssetPath =
-    typeof body.referenceAssetPath === "string" && body.referenceAssetPath.trim()
-      ? body.referenceAssetPath.trim()
-      : null;
-
-  if (!prompt) return jsonError("prompt is required", 400);
+  const editOf = typeof body.editOf === "string" ? body.editOf.trim() : "";
+  const editInstruction =
+    typeof body.editInstruction === "string" ? body.editInstruction.trim() : "";
+  if (!editOf || !editInstruction) {
+    return jsonError("editOf and editInstruction are required", 400);
+  }
 
   try {
-    // Reference-guided: pull the brand asset bytes to steer the generation.
-    let reference: { bytes: Buffer; filename: string } | null = null;
-    if (referenceAssetPath) {
-      const { data: blob } = await org.supabase.storage
-        .from(BRAND_ASSETS_BUCKET)
-        .download(referenceAssetPath);
-      if (blob) {
-        const bytes = Buffer.from(await blob.arrayBuffer());
-        reference = { bytes, filename: "reference.png" };
-      }
-    }
+    const { data: gen, error: genErr } = await org.supabase
+      .from("post_generations")
+      .select("id, image_url, prompt")
+      .eq("id", editOf)
+      .eq("organization_id", org.organizationId)
+      .maybeSingle();
+    if (genErr) throw genErr;
+    if (!gen) return jsonError("Source image not found", 404);
 
-    const image = await generateImage({ prompt, reference });
+    const sourcePath = (gen as { image_url: string }).image_url;
+    const { data: blob } = await org.supabase.storage
+      .from(POST_MEDIA_BUCKET)
+      .download(sourcePath);
+    if (!blob) return jsonError("Source image is unavailable", 404);
+
+    const bytes = Buffer.from(await blob.arrayBuffer());
+    const image = await generateImage({
+      prompt: editInstruction,
+      reference: { bytes, filename: "source.png" },
+    });
 
     const imagePath = `${org.organizationId}/${randomUUID()}.png`;
     const { error: uploadErr } = await org.supabase.storage
@@ -79,33 +77,33 @@ export async function POST(request: Request) {
       .upload(imagePath, image.buffer, { contentType: "image/png", upsert: false });
     if (uploadErr) throw uploadErr;
 
-    const { data: genRow, error: genErr } = await org.supabase
+    const { data: newGen, error: insErr } = await org.supabase
       .from("post_generations")
       .insert({
         organization_id: org.organizationId,
-        prompt: image.prompt,
+        prompt: editInstruction,
         image_url: imagePath,
-        parent_generation_id: parentGenerationId,
+        parent_generation_id: editOf,
         model: image.model,
         created_by: org.user.id,
       })
       .select("id")
       .single();
-    if (genErr) throw genErr;
+    if (insErr) throw insErr;
 
     const { data: signed } = await org.supabase.storage
       .from(POST_MEDIA_BUCKET)
       .createSignedUrl(imagePath, 24 * 60 * 60);
 
     return NextResponse.json({
-      generation_id: (genRow as { id: string }).id,
+      generation_id: (newGen as { id: string }).id,
       image_path: imagePath,
       signed_url: signed?.signedUrl ?? null,
-      enhanced_prompt: image.prompt,
+      enhanced_prompt: editInstruction,
     });
   } catch (e) {
     if (e instanceof OpenAINotConfiguredError) return jsonError(e.message, 503);
-    console.error("[posts/generate-image]", e instanceof Error ? e.message : e);
-    return jsonError("Image generation failed", 502);
+    console.error("[posts/edit-image]", e instanceof Error ? e.message : e);
+    return jsonError("Image edit failed", 502);
   }
 }

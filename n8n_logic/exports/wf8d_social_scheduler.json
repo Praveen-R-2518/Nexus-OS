@@ -1,0 +1,6 @@
+{
+  "id": "47BO0agxAJGizttR",
+  "name": "WF8d - Social Post Scheduler",
+  "active": false,
+  "note": "Created 2026-07-15 via n8n MCP. Schedule Trigger (every 5 min) -> 'Claim Due Posts' (GET {NEXUS_APP_URL}/api/internal/n8n/scheduled-posts, Bearer N8N_INGEST_TOKEN; the endpoint atomically claims due scheduled posts by flipping them to 'publishing' and returns them) -> 'Expand Posts' (Code: one item per post) -> 'Trigger Publish' (POST {N8N_SOCIAL_PUBLISH_WEBHOOK_URL} with {orgId, postId, platforms} -> WF8b VZ9ZaA1S2JxSAeGQ). Uses inline env-based header auth (NEXUS_APP_URL, N8N_INGEST_TOKEN, N8N_SOCIAL_PUBLISH_WEBHOOK_URL). Activate in the n8n UI once WF8b platform credentials are bound. Re-export the full snapshot with the n8n MCP get_workflow_details or the UI export to keep this file in sync."
+}
