@@ -71,7 +71,7 @@ function GmailCard() {
           <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[#1a73e8]" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[10px] font-semibold text-[#1d1d1f]">
-              Billing dispute — need resolution today
+              Billing dispute. Need resolution today
             </p>
             <p className="truncate text-[9px] text-[#5f6368]">
               james.hart@acmecorp.com
@@ -100,7 +100,7 @@ function InstagramCard() {
           Hi! Do you offer API access for agencies?
         </div>
         <div className="ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-[#0095f6] px-2.5 py-1.5 text-[9px] text-white">
-          We integrate with 40+ channels — happy to walk you through.
+          We integrate with 40+ channels. Happy to walk you through.
         </div>
         <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-[#efefef] px-2.5 py-1.5 text-[9px] text-[#111]">
           Perfect. Can we book a demo this week?
@@ -152,7 +152,7 @@ function LinkedInMessageCard() {
       </div>
       <div className="space-y-2 p-3">
         <div className="max-w-[85%] rounded-xl bg-[#f3f2ef] px-2.5 py-1.5 text-[9px] text-[#1d1d1f]">
-          Saw your post on AI ops — we should partner on enterprise rollout.
+          Saw your post on AI ops. We should partner on enterprise rollout.
         </div>
         <div className="ml-auto max-w-[85%] rounded-xl bg-[#d2e9ff] px-2.5 py-1.5 text-[9px] text-[#1d1d1f]">
           Absolutely. Sending our integration deck now.

@@ -4,6 +4,8 @@ import type {
   Conversation,
   DailyReport,
   Metrics,
+  MetricsTimeseries,
+  MetricsTimeseriesRange,
   NotificationPrefs,
   ReplyDraft,
   ReplyDraftWithConversation,
@@ -46,6 +48,20 @@ export async function metricsQuery(): Promise<Metrics> {
     throw new Error("Invalid metrics response");
   }
   return json.metrics;
+}
+
+export async function metricsTimeseriesQuery(
+  range: MetricsTimeseriesRange,
+): Promise<MetricsTimeseries> {
+  const res = await authenticatedFetch(
+    `/api/metrics/timeseries?range=${encodeURIComponent(range)}`,
+  );
+  const json = await readJson<MetricsTimeseries & { error?: string }>(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!Array.isArray(json.points) || typeof json.range !== "string") {
+    throw new Error("Invalid metrics timeseries response");
+  }
+  return { range: json.range as MetricsTimeseriesRange, points: json.points };
 }
 
 export async function replyDraftsQuery(
@@ -109,6 +125,7 @@ export async function settingsQuery(): Promise<WorkspaceSettings> {
 }
 
 export type SettingsPatchInput = {
+  full_name?: string;
   name?: string;
   industry?: string;
   tone?: string;
@@ -117,6 +134,7 @@ export type SettingsPatchInput = {
   approval_mode?: "approval_queue" | "autopilot";
   timezone?: string;
   currency?: string;
+  pricing_notes?: string;
   high_value_threshold?: number;
   high_risk_score?: number;
   chat_visuals_enabled?: boolean;

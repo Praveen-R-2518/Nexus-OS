@@ -10,6 +10,9 @@ export const queryKeys = {
 
   metrics: (teamId: string | null) => [...queryKeys.root(teamId), "metrics"] as const,
 
+  metricsTimeseries: (teamId: string | null, range: string) =>
+    [...queryKeys.root(teamId), "metricsTimeseries", range] as const,
+
   replyDrafts: (teamId: string | null, status?: string, conversationId?: string) =>
     [
       ...queryKeys.root(teamId),

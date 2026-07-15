@@ -182,13 +182,13 @@ export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void })
                 </div>
                 <div className="py-1">
                   <Link
-                    href="/settings"
+                    href="/profile"
                     onClick={() => setProfileOpen(false)}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-atmospheric-grey transition hover:bg-surface-muted"
                     role="menuitem"
                   >
                     <Settings className="h-4 w-4 shrink-0" aria-hidden />
-                    Settings
+                    Profile
                   </Link>
                   <button
                     type="button"

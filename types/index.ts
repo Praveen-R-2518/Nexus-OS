@@ -89,6 +89,20 @@ export interface Metrics {
   hours_saved: number;
 }
 
+export type MetricsTimeseriesRange = "week" | "month" | "6m" | "year" | "all";
+
+export interface MetricsTimeseriesPoint {
+  date: string;
+  revenue_at_risk: number;
+  hot_leads: number;
+  churn_risks: number;
+}
+
+export interface MetricsTimeseries {
+  range: MetricsTimeseriesRange;
+  points: MetricsTimeseriesPoint[];
+}
+
 export type MetaChannelPlatform = "whatsapp" | "instagram" | "facebook";
 
 export interface NotificationPrefs {
@@ -122,6 +136,10 @@ export interface AiUsageSummary {
 }
 
 export interface WorkspaceSettings {
+  account: {
+    full_name: string | null;
+    email: string | null;
+  };
   workspace: {
     id: string | null;
     name: string | null;

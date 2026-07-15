@@ -53,7 +53,7 @@ const CONFIRMED_EMAIL_REDIRECT_MSG =
   "This email already has an account. Sign in to continue.";
 
 const PENDING_VERIFICATION_INFO =
-  "You already started signing up with this email — we’ve re-sent your confirmation link. Confirm it to pick up where you left off.";
+  "You already started signing up with this email. We've re-sent your confirmation link. Confirm it to pick up where you left off.";
 
 const SIGNUP_RESUME_PATH = "/signup?step=workspace";
 type SupabaseAuthError = {
@@ -531,7 +531,7 @@ export default function StepAccount({
           <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
             We sent a confirmation link to{" "}
             <span className="font-medium text-foreground">{lockedEmail}</span>. Clicking it
-            signs you in automatically and continues your workspace setup — no separate
+            signs you in automatically and continues your workspace setup. No separate
             login needed.
           </p>
         </div>
@@ -545,7 +545,7 @@ export default function StepAccount({
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
             <li>Open the email and click the confirmation link.</li>
             <li>
-              Open it in this same browser — this page continues automatically once
+              Open it in this same browser. This page continues automatically once
               your email is confirmed.
             </li>
           </ol>
@@ -646,7 +646,7 @@ export default function StepAccount({
       {inviteToken ? (
         <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-nexus-approval">
           You&apos;re joining{" "}
-          <span className="font-semibold">{inviteOrgName ?? "your team"}</span> — no
+          <span className="font-semibold">{inviteOrgName ?? "your team"}</span>. No
           need to name an organization.
         </div>
       ) : (
@@ -656,7 +656,7 @@ export default function StepAccount({
           icon={Building2}
           value={orgName}
           onChange={(e) => setOrgName(e.target.value)}
-          hint="Optional — defaults to your name if left blank."
+          hint="Optional. Defaults to your name if left blank."
         />
       )}
       <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">

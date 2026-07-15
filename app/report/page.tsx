@@ -200,7 +200,7 @@ function AiUsageCard({
           </span>
         ) : (
           <span className="text-xs text-muted">
-            No budget set — add one in Settings → AI &amp; Approval Rules.
+            No budget set. Add one in Profile → AI &amp; Approval Rules.
           </span>
         )}
       </div>
@@ -229,7 +229,7 @@ function AiUsageCard({
       ) : null}
       {overBudget ? (
         <p className="mt-2 text-xs text-status-critical">
-          Over the soft monthly budget. Sends are never blocked — review usage below or raise
+          Over the soft monthly budget. Sends are never blocked. Review usage below or raise
           the budget in Settings.
         </p>
       ) : nearBudget ? (

@@ -136,7 +136,7 @@ export function ReviewSubmit({ orgId, post, notify, onSubmitted }: ReviewSubmitP
         ) : null}
       </div>
       <p className="text-xs text-muted">
-        Publishing runs through a separate approval workflow — you can&apos;t publish
+        Publishing runs through a separate approval workflow. You can&apos;t publish
         directly from here.
       </p>
     </div>

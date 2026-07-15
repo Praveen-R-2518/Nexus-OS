@@ -73,7 +73,7 @@ export function prefetchNavRoute(
     return;
   }
 
-  if (href === "/settings" || href.startsWith("/settings")) {
+  if (href === "/profile" || href.startsWith("/profile") || href === "/settings" || href.startsWith("/settings")) {
     void queryClient.prefetchQuery({
       queryKey: queryKeys.settings(teamId),
       queryFn: settingsQuery,
