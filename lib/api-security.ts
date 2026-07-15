@@ -1,8 +1,10 @@
 import "server-only";
 
+import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
+import { createServerClient } from "@/lib/supabase";
 
 type ApiAuthResult =
   | { ok: true; user: User }
@@ -121,6 +123,91 @@ export async function requireApiTenantContext(): Promise<ApiTenantContextResult>
   return { ok: true, user, supabase, teamId, workspaceId };
 }
 
+export type ApiOrgContextResult =
+  | {
+      ok: true;
+      user: User;
+      supabase: SupabaseClient;
+      organizationId: string;
+    }
+  | { ok: false; response: NextResponse };
+
+/**
+ * Authenticated user + organization scope for the social/posts layer, which is
+ * isolated by `organization_id` (user_profiles) rather than `team_id`. The org id
+ * is resolved SERVER-SIDE from the caller's own `user_profiles` row — never trust
+ * an org id supplied by the browser.
+ */
+export async function requireApiOrgContext(): Promise<ApiOrgContextResult> {
+  let supabase: SupabaseClient;
+  try {
+    supabase = createSupabaseRouteHandlerClient();
+  } catch {
+    return { ok: false, response: jsonError("Unauthorized", 401) };
+  }
+
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser();
+
+  if (authErr || !user) {
+    return { ok: false, response: jsonError("Unauthorized", 401) };
+  }
+
+  const { data: profile, error: profileErr } = await supabase
+    .from("user_profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileErr) {
+    return { ok: false, response: jsonError(profileErr.message, 500) };
+  }
+
+  const orgIdRaw =
+    profile && (profile as { organization_id?: unknown }).organization_id;
+  const organizationId =
+    typeof orgIdRaw === "string" && orgIdRaw.trim() ? orgIdRaw.trim() : "";
+
+  if (!organizationId) {
+    return {
+      ok: false,
+      response: jsonError("Complete workspace setup", 403),
+    };
+  }
+
+  return { ok: true, user, supabase, organizationId };
+}
+
+/**
+ * Constant-time comparison for secret/token strings. Returns false on length
+ * mismatch (the length of these tokens is not itself sensitive). Prevents the
+ * early-exit timing side-channel of `===` / `!==` when comparing secrets.
+ */
+export function constantTimeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a, "utf8");
+  const bBuf = Buffer.from(b, "utf8");
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
+}
+
+/**
+ * Sensitive namespaces (internal n8n ingest + pre-auth endpoints) stay
+ * rate-limited even when no client IP is derivable, so a caller cannot bypass
+ * the limiter — and brute-force a shared secret — simply by stripping the
+ * `x-forwarded-for` / `x-real-ip` headers. Such callers share one `__noip__`
+ * bucket, which is acceptable because production traffic arrives through a
+ * proxy that always sets a forwarding header.
+ */
+function isSensitiveNamespace(namespace: string): boolean {
+  return (
+    namespace.startsWith("api:internal:") ||
+    namespace.startsWith("api:auth:") ||
+    namespace.startsWith("api:posts:")
+  );
+}
+
 function clientKey(request: Request): string | null {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const firstForwarded = forwardedFor?.split(",")[0]?.trim();
@@ -137,11 +224,14 @@ export function rateLimit(
   namespace: string,
   limit: number,
   windowMs: number,
+  options?: { fallbackWhenNoIp?: boolean },
 ): NextResponse | null {
-  const client = clientKey(request);
+  const fallbackWhenNoIp =
+    options?.fallbackWhenNoIp ?? isSensitiveNamespace(namespace);
+  const client = clientKey(request) ?? (fallbackWhenNoIp ? "__noip__" : null);
   if (!client) {
-    // Cannot identify the caller; skip limiting rather than share one global
-    // bucket across all clients.
+    // Cannot identify the caller and this namespace opted out of the shared
+    // fallback bucket; skip limiting rather than bucket every visitor together.
     return null;
   }
   const now = Date.now();
@@ -162,6 +252,59 @@ export function rateLimit(
 
   current.count += 1;
   return null;
+}
+
+type RateLimitHitResult = {
+  allowed?: boolean;
+  remaining?: number;
+  reset_at?: string;
+};
+
+/**
+ * Durable, cross-instance rate limit backed by the `rate_limit_hit` Postgres RPC
+ * (migration 20260715140000). The in-memory `rateLimit()` resets on redeploy and is
+ * per-serverless-instance, so sensitive/costly namespaces consult this counter too.
+ * On any RPC failure it falls back to the in-memory limiter (with the shared no-IP
+ * bucket) rather than failing open with no limit at all.
+ *
+ * `options.key` replaces the client-IP key for tenant-scoped quotas
+ * (e.g. a per-organization daily image-generation cap).
+ */
+export async function rateLimitDurable(
+  request: Request,
+  namespace: string,
+  limit: number,
+  windowMs: number,
+  options?: { key?: string },
+): Promise<NextResponse | null> {
+  const client = options?.key ?? clientKey(request) ?? "__noip__";
+  const key = `${namespace}:${client}`;
+
+  try {
+    const supabase = createServerClient();
+    const { data, error } = await supabase.rpc("rate_limit_hit", {
+      p_key: key,
+      p_max: limit,
+      p_window_ms: windowMs,
+    });
+    if (error) throw error;
+
+    const result = (data ?? null) as RateLimitHitResult | null;
+    if (result && result.allowed === false) {
+      const resetMs = result.reset_at
+        ? new Date(result.reset_at).getTime() - Date.now()
+        : windowMs;
+      const retryAfter = Math.max(1, Math.ceil(resetMs / 1000));
+      return jsonError("Too many requests", 429, {
+        "Retry-After": String(retryAfter),
+      });
+    }
+    return null;
+  } catch {
+    return rateLimit(request, namespace, limit, windowMs, {
+      fallbackWhenNoIp: true,
+    });
+  }
 }
 
 export async function readJsonObjectWithLimit(
@@ -212,7 +355,7 @@ export function requireN8nToken(request: Request): NextResponse | null {
 
   const header = request.headers.get("authorization") ?? "";
   const token = header.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? "";
-  if (token !== expected) {
+  if (!token || !constantTimeEqual(token, expected)) {
     return jsonError("Unauthorized", 401);
   }
 

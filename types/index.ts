@@ -106,6 +106,21 @@ export interface MetaChannelStatus {
   credential_id: string | null;
 }
 
+/** Current-month AI token usage summary (GET /api/ai-usage). */
+export interface AiUsageSummary {
+  month_start: string;
+  total_tokens: number;
+  /** Soft monthly budget from business_profiles.ai_monthly_token_budget; null = none. */
+  budget: number | null;
+  rows: Array<{
+    workflow_name: string;
+    model: string;
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  }>;
+}
+
 export interface WorkspaceSettings {
   workspace: {
     id: string | null;
@@ -123,6 +138,10 @@ export interface WorkspaceSettings {
     pricing_rules: Record<string, unknown>;
     timezone: string | null;
     notification_prefs: NotificationPrefs;
+    /** Revenue Analyst may render charts in chat (uses more tokens). Default true. */
+    chat_visuals_enabled: boolean;
+    /** Soft monthly AI budget in total tokens; null = no budget alerting. */
+    ai_monthly_token_budget: number | null;
   } | null;
   channels: {
     gmail: {

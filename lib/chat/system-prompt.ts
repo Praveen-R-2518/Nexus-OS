@@ -1,6 +1,7 @@
 import type { AnalystContext, AnalystSnapshot, BusinessContext } from "./analyst-context";
 import type { KnowledgeChunk } from "@/lib/embeddings/store";
 import { DEFAULT_ANALYST_PERSONA } from "./persona";
+import { chartPromptAddendum } from "./visuals";
 
 /**
  * Assemble the Revenue Analyst system prompt: persona + business context + retrieved knowledge +
@@ -23,6 +24,7 @@ const RULES = [
   "Be concise and specific. Prefer the founder's actual numbers and customer names from the snapshot over vague generalities.",
   "All amounts are in the business's own currency as stored; present them as given without inventing a currency symbol you don't have.",
   "The KNOWLEDGE BASE is authoritative context about how this business operates (from the founder's own uploaded documents and past summaries). Use it to ground your advice, but still never invent figures that aren't in the DATA SNAPSHOT.",
+  "When your answer draws on a KNOWLEDGE BASE entry, cite it inline with its bracketed number (e.g. [1]) so the founder can see which source grounded the claim.",
 ];
 
 function formatBusiness(business: BusinessContext | null): string {
@@ -75,12 +77,16 @@ export function buildAnalystSystemPrompt(context: AnalystContext): string {
     ? "\n\nNOTE: This tenant has no conversations yet. Be honest that the inbox is empty and describe what you will watch for once messages arrive. Do not imply any activity has happened."
     : "";
   const knowledgeBlock = formatKnowledge(knowledge ?? []);
+  // Visuals are opt-out per workspace (business_profiles.chat_visuals_enabled);
+  // default ON when no profile exists yet.
+  const visualsBlock = business?.chatVisualsEnabled !== false ? chartPromptAddendum() : "";
 
   return [
     persona,
     "",
     "RULES:",
     ...RULES.map((r) => `- ${r}`),
+    ...(visualsBlock ? ["", visualsBlock] : []),
     "",
     formatBusiness(business),
     ...(knowledgeBlock ? ["", knowledgeBlock] : []),

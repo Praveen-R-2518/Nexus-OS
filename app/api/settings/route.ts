@@ -51,6 +51,8 @@ type SettingsPatchBody = {
   high_risk_score?: unknown;
   notification_prefs?: unknown;
   channel?: unknown;
+  chat_visuals_enabled?: unknown;
+  ai_monthly_token_budget?: unknown;
 };
 
 type ChannelPatch = {
@@ -273,7 +275,7 @@ export async function GET() {
     supabase
       .from("business_profiles")
       .select(
-        "id, name, industry, tone, chat_persona, services, pricing_rules, approval_mode, workspace_id, timezone, high_value_threshold, high_risk_score, notification_prefs",
+        "id, name, industry, tone, chat_persona, services, pricing_rules, approval_mode, workspace_id, timezone, high_value_threshold, high_risk_score, notification_prefs, chat_visuals_enabled, ai_monthly_token_budget",
       )
       .eq("team_id", teamId)
       .maybeSingle(),
@@ -374,6 +376,8 @@ export async function GET() {
     high_value_threshold: number | null;
     high_risk_score: number | null;
     notification_prefs: unknown;
+    chat_visuals_enabled: boolean | null;
+    ai_monthly_token_budget: number | null;
   } | null;
 
   const subscription = subscriptionResult.data as {
@@ -476,6 +480,11 @@ export async function GET() {
               : {},
           timezone: businessProfile.timezone,
           notification_prefs: parseNotificationPrefs(businessProfile.notification_prefs),
+          chat_visuals_enabled: businessProfile.chat_visuals_enabled !== false,
+          ai_monthly_token_budget:
+            typeof businessProfile.ai_monthly_token_budget === "number"
+              ? businessProfile.ai_monthly_token_budget
+              : null,
         }
       : null,
     channels: {
@@ -659,6 +668,28 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Invalid high_risk_score (must be 0..1)" }, { status: 400 });
     }
     updates.high_risk_score = body.high_risk_score;
+  }
+
+  if (body.chat_visuals_enabled !== undefined) {
+    if (typeof body.chat_visuals_enabled !== "boolean") {
+      return NextResponse.json({ error: "Invalid chat_visuals_enabled" }, { status: 400 });
+    }
+    updates.chat_visuals_enabled = body.chat_visuals_enabled;
+  }
+
+  if (body.ai_monthly_token_budget !== undefined) {
+    // null clears the budget (alerts off); otherwise a non-negative integer token count.
+    if (body.ai_monthly_token_budget === null) {
+      updates.ai_monthly_token_budget = null;
+    } else if (
+      typeof body.ai_monthly_token_budget !== "number" ||
+      !Number.isFinite(body.ai_monthly_token_budget) ||
+      body.ai_monthly_token_budget < 0
+    ) {
+      return NextResponse.json({ error: "Invalid ai_monthly_token_budget" }, { status: 400 });
+    } else {
+      updates.ai_monthly_token_budget = Math.floor(body.ai_monthly_token_budget);
+    }
   }
 
   const mergedNotificationPrefs = mergeNotificationPrefs(

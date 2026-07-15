@@ -107,7 +107,13 @@ function enrichClassificationForReply(cls) {
   return out;
 }
 
-function buildUserPayload({ customer_name, channel, original_message, classification_result }) {
+function buildUserPayload({
+  customer_name,
+  channel,
+  original_message,
+  classification_result,
+  similar_context,
+}) {
   const cls = enrichClassificationForReply(normalizeClassification(classification_result));
   const lines = [
     'Generate the reply draft JSON per your instructions.',
@@ -121,7 +127,56 @@ function buildUserPayload({ customer_name, channel, original_message, classifica
     'classification_result (use for tone and approval flags; do not paste into reply_text):',
     JSON.stringify(cls, null, 2),
   ];
+  if (Array.isArray(similar_context) && similar_context.length > 0) {
+    lines.push(
+      '',
+      'similar_past_context (retrieved from this business\'s own knowledge base — ground tone,',
+      'pricing, and policy on it; NEVER copy it verbatim into reply_text and never invent facts',
+      'beyond it):',
+    );
+    similar_context.forEach((c, i) => {
+      lines.push(`[${i + 1}] (${c.kind}) ${String(c.content || '').slice(0, 800)}`);
+    });
+  }
   return lines.join('\n');
+}
+
+/**
+ * Retrieve "similar past context" for a message from the Nexus app's internal
+ * match-embeddings endpoint (token-auth; the app owns pgvector + the embedding
+ * key — n8n never talks to OpenAI embeddings or the DB directly). Best-effort:
+ * any failure returns [] and drafting proceeds without retrieval.
+ */
+async function fetchSimilarContext(teamId, query) {
+  const base =
+    (typeof $env !== 'undefined' && $env.NEXUS_APP_BASE_URL
+      ? String($env.NEXUS_APP_BASE_URL).trim()
+      : '') ||
+    (process.env.NEXUS_APP_BASE_URL ? String(process.env.NEXUS_APP_BASE_URL).trim() : '');
+  const token =
+    (typeof $env !== 'undefined' && $env.N8N_INGEST_TOKEN
+      ? String($env.N8N_INGEST_TOKEN).trim()
+      : '') ||
+    (process.env.N8N_INGEST_TOKEN ? String(process.env.N8N_INGEST_TOKEN).trim() : '');
+  if (!base || !token || !teamId || !query) return [];
+  try {
+    const res = await fetch(
+      `${base.replace(/\/+$/, '')}/api/internal/n8n/match-embeddings`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ team_id: teamId, query: String(query).slice(0, 4000), limit: 4 }),
+      },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.chunks) ? data.chunks : [];
+  } catch {
+    return [];
+  }
 }
 
 async function openaiJsonChat(system, user) {
@@ -159,11 +214,15 @@ const out = [];
 for (const item of items) {
   const j = item.json || {};
   const system = loadReplySystemPrompt(j.reply_system_prompt);
+  const teamId = j.team_id || (j._tenant && j._tenant.team_id) || '';
+  const originalMessage = j.original_message ?? j.message ?? j.text;
+  const similarContext = await fetchSimilarContext(teamId, originalMessage);
   const user = buildUserPayload({
     customer_name: j.customer_name,
     channel: j.channel,
-    original_message: j.original_message ?? j.message ?? j.text,
+    original_message: originalMessage,
     classification_result: j.classification_result ?? j.classification,
+    similar_context: similarContext,
   });
   const replyDraft = await openaiJsonChat(system, user);
   out.push({
@@ -171,6 +230,7 @@ for (const item of items) {
       ...j,
       reply_draft: replyDraft,
       ...replyDraft,
+      similar_context_count: similarContext.length,
     },
   });
 }
