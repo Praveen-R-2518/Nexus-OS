@@ -1,31 +1,35 @@
 import "server-only";
 
-import OpenAI from "openai";
+import { AI_MODELS, AiNotConfiguredError, getOpenAiClient, isMockMode } from "@/lib/ai/provider";
 
 /**
- * Server-only OpenAI wrapper for the Revenue Analyst. Isolated behind one function so the chat
- * route can be smoke-tested with a fake (no live API calls) — mirror the module-interception
- * pattern in scripts/*.test.ts. Uses the existing `openai` dependency and GPT-4o (no fine-tuning).
+ * Server-only chat wrapper for the Revenue Analyst. Thin wrapper over `lib/ai/provider` — the
+ * OpenAI client and model name are centralized there; this file just shapes the streaming /
+ * one-shot call surfaces the chat route and persona "Enhance" endpoint already depend on.
+ * Throws `AiNotConfiguredError` when OPENAI_API_KEY is unset (routes surface this as a 503).
  */
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
-const DEFAULT_MODEL = "gpt-4o";
+function resolveModel(): string {
+  return process.env.OPENAI_MODEL?.trim() || AI_MODELS.CHAT;
+}
 
 /**
  * Stream the analyst reply as text deltas. Yields nothing but the assistant's content chunks.
- * Throws if OPENAI_API_KEY is unset (the route surfaces this as a 503).
  */
 export async function* streamAnalystReply(params: {
   system: string;
   history: ChatTurn[];
 }): AsyncGenerator<string, void, unknown> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set");
+  if (isMockMode()) {
+    yield "This is a mock analyst reply used for CI/tests.";
+    return;
   }
-  const model = process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
-  const client = new OpenAI({ apiKey });
+
+  const client = getOpenAiClient();
+  if (!client) throw new AiNotConfiguredError();
+  const model = resolveModel();
 
   const stream = await client.chat.completions.create({
     model,
@@ -42,7 +46,7 @@ export async function* streamAnalystReply(params: {
 
 /**
  * One-shot, non-streaming completion. Used by the persona "Enhance" endpoint and the
- * best-effort chat-session summarizer. Throws if OPENAI_API_KEY is unset (routes surface 503).
+ * best-effort chat-session summarizer.
  */
 export async function completeText(params: {
   system: string;
@@ -50,12 +54,13 @@ export async function completeText(params: {
   temperature?: number;
   maxTokens?: number;
 }): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set");
+  if (isMockMode()) {
+    return "Mock completion fixture for CI/tests.";
   }
-  const model = process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
-  const client = new OpenAI({ apiKey });
+
+  const client = getOpenAiClient();
+  if (!client) throw new AiNotConfiguredError();
+  const model = resolveModel();
 
   const completion = await client.chat.completions.create({
     model,

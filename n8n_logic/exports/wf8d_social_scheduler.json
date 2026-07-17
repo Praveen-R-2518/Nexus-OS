@@ -2,5 +2,137 @@
   "id": "47BO0agxAJGizttR",
   "name": "WF8d - Social Post Scheduler",
   "active": false,
-  "note": "Created 2026-07-15 via n8n MCP. Schedule Trigger (every 5 min) -> 'Claim Due Posts' (GET {NEXUS_APP_URL}/api/internal/n8n/scheduled-posts, Bearer N8N_INGEST_TOKEN; the endpoint atomically claims due scheduled posts by flipping them to 'publishing' and returns them) -> 'Expand Posts' (Code: one item per post) -> 'Trigger Publish' (POST {N8N_SOCIAL_PUBLISH_WEBHOOK_URL} with {orgId, postId, platforms} -> WF8b VZ9ZaA1S2JxSAeGQ). Uses inline env-based header auth (NEXUS_APP_URL, N8N_INGEST_TOKEN, N8N_SOCIAL_PUBLISH_WEBHOOK_URL). Activate in the n8n UI once WF8b platform credentials are bound. Re-export the full snapshot with the n8n MCP get_workflow_details or the UI export to keep this file in sync."
+  "note": "Exported from live n8n (knurdz3o.app.n8n.cloud) on 2026-07-17. Live workflow id: 47BO0agxAJGizttR.",
+  "nodes": [
+    {
+      "id": "8e6b4de6-813c-4a6b-b9a7-5fd6f6e01e60",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d2f2a625-8767-43b3-8371-ac428327a9d2",
+      "name": "Claim Due Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.NEXUS_APP_URL }}/api/internal/n8n/scheduled-posts",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.N8N_INGEST_TOKEN }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "c28f431c-d243-4f92-9a1f-5ece7f062db7",
+      "name": "Expand Posts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// The scheduled-posts endpoint atomically claims due posts (flips them to\n// 'publishing') and returns them as { success, data:[...] }. Emit one item per\n// post so 'Trigger Publish' fires WF8b once per post. Empty -> no items -> no-op.\nconst resp = $input.first().json || {};\nconst rows = Array.isArray(resp.data) ? resp.data : [];\nreturn rows.map((r) => ({ json: r }));"
+      }
+    },
+    {
+      "id": "5d55266a-a463-468d-bdc6-f1ce3b638202",
+      "name": "Trigger Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_SOCIAL_PUBLISH_WEBHOOK_URL }}",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"orgId\": $json.organization_id, \"postId\": $json.id, \"platforms\": $json.platforms } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Claim Due Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Due Posts": {
+      "main": [
+        [
+          {
+            "node": "Expand Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Posts": {
+      "main": [
+        [
+          {
+            "node": "Trigger Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
 }

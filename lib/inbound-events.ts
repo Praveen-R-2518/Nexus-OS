@@ -227,7 +227,9 @@ export async function applyReplayOutcome(
 /**
  * Advance the status of already-persisted events (e.g. to `processing` once handed to n8n, or
  * `failed` if the hand-off fails). Best-effort: never throws — status bookkeeping must not break
- * the ack path. Returns true on success.
+ * the ack path. Returns true on success. Stamps `processing_started_at` whenever the new status
+ * is `processing`, so `claim_stuck_inbound_events` (migration 20260717130000) can reclaim rows
+ * whose forward never completed (crash, timeout) instead of leaving them stuck forever.
  */
 export async function markInboundEventsStatus(
   supabase: SupabaseClient,
@@ -239,6 +241,7 @@ export async function markInboundEventsStatus(
 
   const patch: Record<string, unknown> = { status };
   if (status === "processed") patch.processed_at = new Date().toISOString();
+  if (status === "processing") patch.processing_started_at = new Date().toISOString();
   if (errorText !== undefined) patch.error = errorText;
 
   try {
@@ -249,5 +252,37 @@ export async function markInboundEventsStatus(
     return !error;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Reclaim `inbound_events` rows stuck at `processing` for longer than `staleAfterMinutes` back to
+ * `received` via the service-role-only `claim_stuck_inbound_events` RPC (migration
+ * 20260717130000_launch_durability_and_tokens). A row can get stuck here when the forward to n8n
+ * "succeeds" (2xx) but the workflow itself crashes/times out downstream, or when a worker process
+ * is killed between marking `processing` and actually finishing. Best-effort: never throws, and a
+ * failure here must never block the caller's regular received/failed drain sweep. Returns the
+ * number of rows reclaimed (0 on any error).
+ */
+export async function reclaimStuckProcessingEvents(
+  supabase: SupabaseClient,
+  options: { staleAfterMinutes: number; limit: number },
+): Promise<number> {
+  try {
+    const { data, error } = await supabase.rpc("claim_stuck_inbound_events", {
+      p_stale_after_minutes: options.staleAfterMinutes,
+      p_limit: options.limit,
+    });
+    if (error) {
+      console.error("[inbound-events] reclaim stuck processing error:", error.message);
+      return 0;
+    }
+    return Array.isArray(data) ? data.length : 0;
+  } catch (e) {
+    console.error(
+      "[inbound-events] reclaim stuck processing threw:",
+      e instanceof Error ? e.message : e,
+    );
+    return 0;
   }
 }

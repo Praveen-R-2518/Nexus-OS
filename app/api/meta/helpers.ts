@@ -42,9 +42,14 @@ export function metaOAuthRedirectUri(): string {
   return `${appUrl()}/api/meta/callback`;
 }
 
+/**
+ * Task D.3: Meta OAuth always lands back on `/profile` (the Settings destination) with its
+ * status params preserved — NOT `/dashboard`/`/settings`, which would either drop the params or
+ * bounce through an extra redirect. `section=channels` lets `/profile` scroll to the right card.
+ */
 export function metaDashboardUrl(params: Record<string, string>): string {
-  const q = new URLSearchParams(params);
-  return `/dashboard?${q.toString()}`;
+  const q = new URLSearchParams({ section: "channels", ...params });
+  return `/profile?${q.toString()}`;
 }
 
 export type MetaOAuthState = {

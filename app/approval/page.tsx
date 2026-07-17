@@ -57,6 +57,10 @@ const STATUS_LABELS: Record<ReplyDraft["approval_status"], string> = {
   rejected: "REJECTED",
 };
 
+// TODO(durable-outbound UI): surface `outbound_jobs.status` (queued/claiming/sending/sent/failed)
+// on approved drafts — requires joining outbound_jobs in GET /api/reply-drafts (or a dedicated
+// field on the PATCH /api/approval response persisted client-side). Types: lib/outbound-jobs.ts.
+
 const SORT_WEIGHT: Record<ReplyDraft["approval_status"], number> = {
   pending: 0,
   approved: 1,

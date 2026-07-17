@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { parseWorkspaceId } from "@/lib/workspace-id";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/gmail/backfill";
 import { getWorkspaceGmailCredential } from "@/lib/gmail/credentials";
 import { forwardInboundToN8n } from "@/lib/n8n-intake";
+import { markInboundEventsStatus, recordInboundEvent } from "@/lib/inbound-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,13 +31,14 @@ const MAX_RUNTIME_MS = 55_000;
  *
  * Claims one pending/running gmail_backfill_jobs row, fetches up to one batch of inbox messages
  * via Gmail API, and forwards each through the same n8n intake path as live Gmail (WF0a ledger).
- * Token-guarded (N8N_INGEST_TOKEN); intended for n8n WF0e on a schedule.
+ * Bootstrap-token-guarded (this endpoint IS the claimer — no job token exists yet); intended for
+ * n8n WF0e on a schedule.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:internal:n8n:gmail-backfill", 30, 60_000);
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  const unauthorized = requireN8nBootstrapToken(request);
   if (unauthorized) return unauthorized;
 
   let workspaceId: string | null = null;
@@ -102,8 +104,32 @@ export async function POST(request: Request) {
       const payload = gmailMessageToIntakePayload(message, credResult.credential.emailAddress);
       if (!payload) continue;
 
+      // Persist-before-forward (Task A.1): same durable ledger the Meta webhook uses, so a
+      // backfill message is never lost to a crashed/timed-out forward, and re-running a job over
+      // an overlapping date range is a no-op instead of a duplicate forward.
+      const ledgerResult = await recordInboundEvent(supabase, {
+        platform: "gmail",
+        externalMessageId: payload.headers["message-id"],
+        rawPayload: payload,
+        workspaceId: credResult.credential.workspaceId,
+        teamId: credResult.credential.teamId,
+      });
+
+      if (ledgerResult.error) {
+        // Could not durably persist — skip forwarding so the message is never lost; the job
+        // keeps its page_token so a retry re-fetches this page and retries the ledger write.
+        continue;
+      }
+      if (ledgerResult.duplicate) {
+        // Already ingested by a previous backfill run over this workspace/date range.
+        continue;
+      }
+
       const outcome = await forwardInboundToN8n(payload, "gmail");
       if (outcome === "skipped") {
+        if (ledgerResult.id) {
+          await markInboundEventsStatus(supabase, [ledgerResult.id], "received", "n8n not configured");
+        }
         await updateGmailBackfillJobProgress(supabase, job.id, {
           lastError: "n8n_not_configured",
         });
@@ -112,7 +138,14 @@ export async function POST(request: Request) {
           { status: 200 },
         );
       }
-      if (outcome === "forwarded") forwarded += 1;
+      if (outcome === "forwarded") {
+        forwarded += 1;
+        if (ledgerResult.id) {
+          await markInboundEventsStatus(supabase, [ledgerResult.id], "processing");
+        }
+      } else if (ledgerResult.id) {
+        await markInboundEventsStatus(supabase, [ledgerResult.id], "received", "n8n forward failed");
+      }
     }
 
     const done = !nextPageToken;

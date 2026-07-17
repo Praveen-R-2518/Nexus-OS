@@ -142,21 +142,26 @@
     },
     {
       "parameters": {
-        "resource": "chat",
-        "chatModel": "gpt-4o",
-        "prompt": {
-          "messages": [
-            { "role": "system", "content": "=You are writing a short, polite follow-up message for {{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).name) || 'the business' }}.\nBusiness tone: {{ ((Array.isArray($('Fetch Business Profile').item.json) ? $('Fetch Business Profile').item.json[0] : $('Fetch Business Profile').item.json).tone) || 'warm and professional' }}\n\nRules:\n1. This is a follow-up because the customer has not responded\n2. Keep it to 2-3 sentences only\n3. Be warm but create gentle urgency - the customer's inquiry is still open\n4. Do NOT repeat pricing or detailed information\n5. End with a simple question or a single call to action\n6. Sound human, not templated\n7. Return ONLY the message text. No subject. No formatting." },
-            { "content": "=Customer name: {{ $('Process Each Follow-up').item.json.leads.customer_name }}\nOriginal intent: {{ $('Process Each Follow-up').item.json.leads.intent }}\nOriginal message: {{ ((Array.isArray($('Fetch Original Conversation').item.json) ? $('Fetch Original Conversation').item.json[0] : $('Fetch Original Conversation').item.json).message) || '' }}\nDays since last contact: 2" }
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org') + '/api/internal/n8n/ai/draft' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
           ]
         },
-        "options": { "maxTokens": 200, "temperature": 0.5 },
-        "requestOptions": {}
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Process Each Follow-up').item.json.team_id,\n  workspace_id: $('Process Each Follow-up').item.json.workspace_id,\n  customer_name: $('Process Each Follow-up').item.json.leads.customer_name,\n  original_message: 'This is a 2-day follow-up on an unanswered inquiry: ' + (((Array.isArray($('Fetch Original Conversation').item.json) ? $('Fetch Original Conversation').item.json[0] : $('Fetch Original Conversation').item.json).message) || ''),\n  classification: { intent_type: $('Process Each Follow-up').item.json.leads.intent, follow_up: true }\n} }}",
+        "options": {
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
+        }
       },
       "id": "ad2e9288-8bbc-488a-baf7-6e5903bc54b7",
       "name": "Generate Follow-up Message",
-      "type": "n8n-nodes-base.openAi",
-      "typeVersion": 1.1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
       "position": [560, 144],
       "retryOnFail": true,
       "maxTries": 3,
@@ -172,7 +177,7 @@
         "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  lead_id: $('Process Each Follow-up').item.json.leads.id,\n  conversation_id: $('Process Each Follow-up').item.json.leads.conversation_id,\n  team_id: $('Process Each Follow-up').item.json.team_id,\n  workspace_id: $('Process Each Follow-up').item.json.workspace_id,\n  draft_text: (($json.message && $json.message.content) || $json.text || $json.content || '').trim(),\n  confidence: 0.75,\n  approval_status: 'pending'\n} }}",
+        "jsonBody": "={{ {\n  lead_id: $('Process Each Follow-up').item.json.leads.id,\n  conversation_id: $('Process Each Follow-up').item.json.leads.conversation_id,\n  team_id: $('Process Each Follow-up').item.json.team_id,\n  workspace_id: $('Process Each Follow-up').item.json.workspace_id,\n  draft_text: ($json.draft_text || '').trim(),\n  confidence: 0.75,\n  approval_status: 'pending'\n} }}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
       },
       "id": "7afab99a-7f5d-4f73-990e-05d79bf19c9b",

@@ -11,6 +11,7 @@ import AppSidebar from "@/components/layout/AppSidebar";
 import { AppTopBar } from "@/components/layout/AppTopBar";
 import TopBar from "@/components/layout/TopBar";
 import { TenantScopeGate } from "@/components/tenant/TenantScope";
+import { TenantScopeErrorBanner } from "@/components/tenant/TenantScopeErrorBanner";
 import { useAppearancePrefs } from "@/lib/use-appearance-prefs";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +117,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                     />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <AppTopBar onOpenMobileNav={() => setMobileNavOpen(true)} />
+                      <TenantScopeErrorBanner />
                       <main
                         data-app-body
                         className="nexus-app-main flex-1 px-4 pb-8 pt-4 md:px-8 md:pt-6 lg:px-10"

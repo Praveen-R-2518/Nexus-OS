@@ -10,6 +10,8 @@
  *  2. The re-forward carries the resolved `_tenant` block for tenant-stamped rows.
  *  3. When N8N_WEBHOOK_BASE_URL is unset, the sweep reports "skipped" and burns NO attempts.
  *  4. Missing/invalid N8N_INGEST_TOKEN is rejected before any DB work.
+ *  5. Stale `processing` rows are reclaimed to `received` (via claim_stuck_inbound_events) BEFORE
+ *     the drain scan, so a crashed forward doesn't strand its row forever.
  *
  * The real route + real lib/inbound-events + lib/n8n-intake run unmodified. `server-only` is stubbed
  * and `@/lib/supabase` is replaced with an in-memory fake supporting the query shape the drain uses.
@@ -40,6 +42,8 @@ function freshStore(): Record<string, Row[]> {
       { id: "e-fresh", platform: "whatsapp", status: "received", received_at: freshTs, attempts: 0, team_id: "t-4", workspace_id: "w-4", raw_payload: { mark: "ok" }, error: null },
       // already processed -> excluded
       { id: "e-done", platform: "gmail", status: "processed", received_at: oldTs, attempts: 1, team_id: "t-5", workspace_id: "w-5", raw_payload: { mark: "ok" }, error: null },
+      // stuck at processing (crashed mid-forward) -> reclaimed to received, then swept + forwarded
+      { id: "e-stuck", platform: "gmail", status: "processing", received_at: oldTs, processing_started_at: oldTs, attempts: 0, team_id: "t-6", workspace_id: "w-6", raw_payload: { mark: "ok" }, error: null },
     ],
   };
 }
@@ -90,6 +94,29 @@ function makeClient(db: Record<string, Row[]>) {
           };
         },
       };
+    },
+    rpc(fnName: string, params: Record<string, unknown>) {
+      if (fnName === "claim_stuck_inbound_events") {
+        const rows = db.inbound_events ?? [];
+        const staleMs = (Number(params.p_stale_after_minutes) || 15) * 60_000;
+        const cutoff = Date.now() - staleMs;
+        const limit = Number(params.p_limit) || 25;
+        const claimed: Row[] = [];
+        for (const r of rows) {
+          if (claimed.length >= limit) break;
+          if (r.status !== "processing") continue;
+          const ts = (r.processing_started_at ?? r.received_at) as string;
+          if (new Date(ts).getTime() >= cutoff) continue;
+          if ((Number(r.attempts) || 0) >= 5) continue;
+          r.status = "received";
+          claimed.push({ ...r });
+        }
+        return Promise.resolve({ data: claimed, error: null });
+      }
+      return Promise.resolve({
+        data: null,
+        error: { message: `unknown rpc ${fnName}` },
+      });
     },
   };
 }
@@ -148,12 +175,13 @@ function eventById(id: string): Row {
   const badAuth = await post(POST, { token: "wrong" });
   assert(badAuth.status === 401, `bad token should be 401, got ${badAuth.status}`);
 
-  // (1)(2) Main sweep with defaults (older_than=10min, max_attempts=5).
+  // (1)(2)(5) Main sweep with defaults (older_than=10min, max_attempts=5).
   const res = await post(POST, { token: TOKEN });
   assert(res.status === 200, `sweep should be 200, got ${res.status}`);
   const json = (await res.json()) as Record<string, number>;
-  assert(json.scanned === 3, `scanned should be 3 (excludes fresh + processed), got ${json.scanned}`);
-  assert(json.forwarded === 1, `forwarded should be 1, got ${json.forwarded}`);
+  assert(json.reclaimed === 1, `reclaimed should be 1 (e-stuck), got ${json.reclaimed}`);
+  assert(json.scanned === 4, `scanned should be 4 (excludes fresh + processed), got ${json.scanned}`);
+  assert(json.forwarded === 2, `forwarded should be 2 (e-ok + reclaimed e-stuck), got ${json.forwarded}`);
   assert(json.exhausted === 1, `exhausted should be 1, got ${json.exhausted}`);
   assert(json.retriable === 1, `retriable should be 1, got ${json.retriable}`);
   assert(json.skipped === 0, `skipped should be 0, got ${json.skipped}`);
@@ -180,6 +208,11 @@ function eventById(id: string): Row {
   assert(fresh.status === "received" && fresh.attempts === 0, "e-fresh untouched (too new)");
   const done = eventById("e-done");
   assert(done.status === "processed" && done.attempts === 1, "e-done untouched (already processed)");
+
+  // (5) Reclaimed row was swept in the SAME pass and forwarded successfully.
+  const stuckReclaimed = eventById("e-stuck");
+  assert(stuckReclaimed.status === "processing", `e-stuck reclaimed + reforwarded -> processing, got ${stuckReclaimed.status}`);
+  assert(stuckReclaimed.attempts === 1, `e-stuck attempts -> 1, got ${stuckReclaimed.attempts}`);
 
   // (2) _tenant enrichment carried on the forward for the tenant-stamped e-ok row.
   const okForward = forwards.find((f) => f.mark === "ok");

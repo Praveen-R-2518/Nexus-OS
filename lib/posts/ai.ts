@@ -1,6 +1,8 @@
 import "server-only";
 
-import OpenAI, { toFile } from "openai";
+import type OpenAI from "openai";
+import { toFile } from "openai";
+import { getOpenAiClient, isOpenAiConfigured } from "@/lib/ai/provider";
 import { POST_PLATFORMS, PLATFORM_LABELS } from "./types";
 import type { Platform, PlatformCaption, PostCaptions } from "./types";
 
@@ -10,6 +12,10 @@ import type { Platform, PlatformCaption, PostCaptions } from "./types";
  * Everything the Posts feature needs from a model lives here: per-platform caption
  * generation (with optional image vision), single-caption enhancement, a caption
  * written from an image, and text-to-image / reference-guided image generation.
+ * The OpenAI client itself comes from the shared `lib/ai/provider` — one hosting
+ * point for `OPENAI_API_KEY` — but keeps its own model defaults: `gpt-image-1`
+ * (not the provider's `AI_MODELS.IMAGE`/dall-e-3) because reference-guided edits
+ * (`images.edit`) require it — dall-e-3 has no edit endpoint.
  *
  * All functions throw {@link OpenAINotConfiguredError} when `OPENAI_API_KEY` is
  * unset so routes can surface a single honest 503 — nothing here is stubbed.
@@ -26,14 +32,14 @@ export class OpenAINotConfiguredError extends Error {
 }
 
 export function isPostAiConfigured(): boolean {
-  return !!process.env.OPENAI_API_KEY?.trim();
+  return isOpenAiConfigured();
 }
 
 function client(feature: string): { openai: OpenAI; textModel: string; imageModel: string } {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) throw new OpenAINotConfiguredError(feature);
+  const openai = getOpenAiClient();
+  if (!openai) throw new OpenAINotConfiguredError(feature);
   return {
-    openai: new OpenAI({ apiKey }),
+    openai,
     textModel: process.env.OPENAI_MODEL?.trim() || DEFAULT_TEXT_MODEL,
     imageModel: process.env.OPENAI_IMAGE_MODEL?.trim() || DEFAULT_IMAGE_MODEL,
   };

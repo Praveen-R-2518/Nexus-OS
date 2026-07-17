@@ -35,4 +35,7 @@ export const queryKeys = {
 
   aiUsage: (teamId: string | null) =>
     [...queryKeys.root(teamId), "aiUsage"] as const,
+
+  workflowLogs: (teamId: string | null, resultFilter: string, offset: number) =>
+    [...queryKeys.root(teamId), "workflowLogs", resultFilter, offset] as const,
 } as const;

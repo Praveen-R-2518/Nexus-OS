@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { upsertConversationEmbedding } from "@/lib/embeddings/store";
@@ -58,7 +58,9 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "api:internal:n8n:conversations", 120, 60_000);
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  // Bootstrap-token-guarded: creating a conversation is the intake/create step itself, before
+  // any job-scoped token would exist for it.
+  const unauthorized = requireN8nBootstrapToken(request);
   if (unauthorized) return unauthorized;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.ingest);

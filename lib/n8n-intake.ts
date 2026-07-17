@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { InboundPlatform } from "@/lib/inbound-events";
+import { n8nWebhookAuthHeaders } from "@/lib/api-security";
 
 /**
  * Shared n8n intake-forward helper (channel-agnostic).
@@ -51,6 +52,7 @@ export async function forwardInboundToN8n(
       headers: {
         "Content-Type": "application/json",
         "x-nexus-channel": channel,
+        ...n8nWebhookAuthHeaders(),
       },
       body: JSON.stringify(payload),
     });

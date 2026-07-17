@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
-import { rateLimitDurable, requireN8nToken } from "@/lib/api-security";
+import { rateLimitDurable, requireN8nBootstrapToken } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Scheduler endpoint (called BY the n8n social-post scheduler workflow, Bearer
- * N8N_INGEST_TOKEN). Atomically CLAIMS due scheduled posts by flipping them to
- * `publishing` and returning them, so overlapping polls never double-publish.
- * The workflow then hands each post to WF8b and reports back via post-result.
+ * Scheduler endpoint (called BY the n8n social-post scheduler workflow). Atomically CLAIMS due
+ * scheduled posts by flipping them to `publishing` and returning them, so overlapping polls
+ * never double-publish. Bootstrap-token-guarded — this endpoint IS the claimer, no job exists
+ * yet. The workflow then hands each post to WF8b and reports back via post-result.
+ *
+ * Task D.1: this path runs completely unattended (no founder present at claim time), so unlike
+ * the manual `/api/posts/publish` route it must NOT self-approve — it only claims posts that
+ * were already approved when scheduled (`schedulePost()` stamps `approval_status`/`approved_at`).
+ * A post stuck in `scheduled` without either set (e.g. a row written before this column existed)
+ * is left alone rather than silently auto-published.
  */
 export async function GET(request: Request) {
   const limited = await rateLimitDurable(
@@ -19,7 +25,7 @@ export async function GET(request: Request) {
   );
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  const unauthorized = requireN8nBootstrapToken(request);
   if (unauthorized) return unauthorized;
 
   let supabase;
@@ -38,6 +44,7 @@ export async function GET(request: Request) {
     .update({ status: "publishing", updated_at: nowIso })
     .eq("status", "scheduled")
     .lte("scheduled_at", nowIso)
+    .or("approval_status.eq.approved,approved_at.not.is.null")
     .select("id, organization_id, platforms, captions, media_url, user_description");
 
   if (error) {

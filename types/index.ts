@@ -214,3 +214,15 @@ export interface WorkspaceSettings {
     channels: boolean;
   };
 }
+
+/** A row from `workflow_logs` (n8n observability, restored by migration 20260713160000). */
+export interface WorkflowLogRow {
+  id: string;
+  workflow_name: string;
+  step: string;
+  result: "success" | "error" | "skipped" | "retry" | string;
+  payload: Record<string, unknown>;
+  error: string | null;
+  timestamp: string;
+  created_at: string;
+}

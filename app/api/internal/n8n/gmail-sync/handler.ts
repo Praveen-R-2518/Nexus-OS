@@ -7,6 +7,7 @@ import {
 } from "@/lib/gmail/backfill";
 import { getWorkspaceGmailCredential } from "@/lib/gmail/credentials";
 import { forwardInboundToN8n } from "@/lib/n8n-intake";
+import { markInboundEventsStatus, recordInboundEvent } from "@/lib/inbound-events";
 
 const MAX_RUNTIME_MS = 55_000;
 const MAX_CREDENTIALS_PER_RUN = 10;
@@ -25,6 +26,8 @@ export type GmailSyncDeps = {
   listMessages: typeof listGmailMessageIds;
   fetchMessage: typeof fetchGmailMessage;
   forward: typeof forwardInboundToN8n;
+  recordEvent: typeof recordInboundEvent;
+  markEventStatus: typeof markInboundEventsStatus;
   now: () => number;
 };
 
@@ -34,6 +37,8 @@ export const defaultGmailSyncDeps: GmailSyncDeps = {
   listMessages: listGmailMessageIds,
   fetchMessage: fetchGmailMessage,
   forward: forwardInboundToN8n,
+  recordEvent: recordInboundEvent,
+  markEventStatus: markInboundEventsStatus,
   now: () => Date.now(),
 };
 
@@ -56,8 +61,9 @@ export interface WorkspaceSyncOutcome {
  * intended for n8n WF0f on a 10-minute schedule.
  */
 export async function runGmailSync(
-  deps: GmailSyncDeps = defaultGmailSyncDeps,
+  depsOverride: Partial<GmailSyncDeps> = {},
 ): Promise<{ status: number; body: Record<string, unknown> }> {
+  const deps: GmailSyncDeps = { ...defaultGmailSyncDeps, ...depsOverride };
   let supabase;
   try {
     supabase = deps.createSupabase();
@@ -132,15 +138,47 @@ export async function runGmailSync(
         );
         if (!payload) continue;
 
+        // Persist-before-forward (Task A.1): mirror the Meta webhook's durable ledger so a Gmail
+        // message is never lost to a crashed/timed-out forward, and re-fetches of the same
+        // Message-ID (day-granular `after:` overlap) are a no-op instead of a duplicate forward.
+        const ledgerResult = await deps.recordEvent(supabase, {
+          platform: "gmail",
+          externalMessageId: payload.headers["message-id"],
+          rawPayload: payload,
+          workspaceId: credResult.credential.workspaceId,
+          teamId: credResult.credential.teamId,
+        });
+
+        if (ledgerResult.error) {
+          // Could not durably persist — skip forwarding so it is never lost; the next sync pass
+          // re-fetches this message (day-granular `after:` overlap) and retries the ledger write.
+          outcome.error = "ledger_persist_failed";
+          continue;
+        }
+        if (ledgerResult.duplicate) {
+          // Already ingested (and forwarded) by a previous pass — do not re-forward.
+          continue;
+        }
+
         const forwardResult = await deps.forward(payload, "gmail");
         if (forwardResult === "skipped") {
           outcome.error = "n8n_not_configured";
+          if (ledgerResult.id) {
+            await deps.markEventStatus(supabase, [ledgerResult.id], "received", "n8n not configured");
+          }
           return {
             status: 200,
             body: { success: true, processed, skipped: true },
           };
         }
-        if (forwardResult === "forwarded") outcome.forwarded += 1;
+        if (forwardResult === "forwarded") {
+          outcome.forwarded += 1;
+          if (ledgerResult.id) {
+            await deps.markEventStatus(supabase, [ledgerResult.id], "processing");
+          }
+        } else if (ledgerResult.id) {
+          await deps.markEventStatus(supabase, [ledgerResult.id], "received", "n8n forward failed");
+        }
       }
 
       await supabase

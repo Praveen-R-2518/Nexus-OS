@@ -25,11 +25,12 @@ process.env.N8N_INGEST_TOKEN = TOKEN;
 
 // --- In-memory Supabase fake --------------------------------------------------------------------
 type Row = Record<string, unknown>;
-const store: Record<string, Row[]> = { reply_drafts: [], conversations: [] };
+const store: Record<string, Row[]> = { reply_drafts: [], conversations: [], outbound_jobs: [] };
 
 function resetStore(): void {
   store.reply_drafts = [];
   store.conversations = [];
+  store.outbound_jobs = [];
 }
 
 function selectBuilder(rows: Row[]) {
@@ -64,9 +65,52 @@ function updateBuilder(rows: Row[], patch: Row) {
   return b;
 }
 
+/** `outbound_jobs` upsert-by-draft_id fake (Task B.1/B.4 — `queueOutboundJob`/`markOutboundJobResult`
+ * exercised transparently via the real `executeSendReply` core). */
+function outboundJobsBuilder(rows: Row[]) {
+  return {
+    upsert(row: Row, _opts?: { onConflict?: string }) {
+      return {
+        select(_cols: string) {
+          return {
+            maybeSingle() {
+              const existing = rows.find((r) => r.draft_id === row.draft_id);
+              if (existing) {
+                Object.assign(existing, row);
+                return Promise.resolve({ data: { ...existing }, error: null });
+              }
+              const inserted = { id: `job-${rows.length + 1}`, attempts: 0, ...row };
+              rows.push(inserted);
+              return Promise.resolve({ data: { ...inserted }, error: null });
+            },
+          };
+        },
+      };
+    },
+    select(_cols: string) {
+      const filters: Array<[string, unknown]> = [];
+      const b = {
+        eq(col: string, val: unknown) {
+          filters.push([col, val]);
+          return b;
+        },
+        maybeSingle() {
+          const hit = rows.find((r) => filters.every(([c, v]) => r[c] === v));
+          return Promise.resolve({ data: hit ? { ...hit } : null, error: null });
+        },
+      };
+      return b;
+    },
+    update(patch: Row) {
+      return updateBuilder(rows, patch);
+    },
+  };
+}
+
 const fakeClient = {
   from(table: string) {
     const rows = store[table] ?? (store[table] = []);
+    if (table === "outbound_jobs") return outboundJobsBuilder(rows);
     return {
       select: () => selectBuilder(rows),
       update: (patch: Row) => updateBuilder(rows, patch),
@@ -193,6 +237,12 @@ async function check(name: string, fn: () => Promise<void>): Promise<void> {
     assert(store.reply_drafts[0].approval_status === "sent", "draft marked sent");
     assert(typeof store.reply_drafts[0].sent_at === "string", "sent_at set");
     assert(store.conversations[0].status === "replied", "conversation marked replied");
+    assert(store.outbound_jobs.length === 1, "outbound_jobs row created");
+    assert(store.outbound_jobs[0].status === "sent", "outbound_jobs row marked sent");
+    assert(
+      store.outbound_jobs[0].provider_message_id === "gmail_msg_1",
+      "outbound_jobs.provider_message_id set from send result",
+    );
   });
 
   await check("already-sent draft is an idempotent no-op", async () => {
@@ -210,6 +260,7 @@ async function check(name: string, fn: () => Promise<void>): Promise<void> {
     assert(res.status === 409, `status ${res.status}`);
     assert(transportCalls === 0, "transport not called");
     assert(store.reply_drafts[0].approval_status === "pending", "draft unchanged");
+    assert(store.outbound_jobs.length === 0, "non-approved draft never queues an outbound job");
   });
 
   await check("missing customer_email → 409, no send", async () => {
@@ -256,6 +307,8 @@ async function check(name: string, fn: () => Promise<void>): Promise<void> {
     assert(store.reply_drafts[0].approval_status === "approved", "draft NOT marked sent");
     assert(store.reply_drafts[0].sent_at === null, "sent_at NOT set");
     assert(store.conversations[0].status === "approved", "conversation NOT marked replied");
+    assert(store.outbound_jobs.length === 1, "outbound_jobs row still exists (retryable)");
+    assert(store.outbound_jobs[0].status === "failed", "outbound_jobs row marked failed, not lost");
   });
 
   console.log(`\nsend-reply: ${passed} checks passed`);

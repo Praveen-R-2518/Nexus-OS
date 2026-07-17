@@ -54,3 +54,43 @@ Applied live to `xuvodbcdmfhlbldbvwvt`:
 - Added `access_token_encrypted` / `refresh_token_encrypted` (`text`, nullable) to `social_credentials`
 - Dropped `NOT NULL` on legacy `access_token` so writers can stop populating plaintext columns
 - Legacy `access_token` / `refresh_token` columns retained (unused); drop deferred pending human sign-off
+
+## 5. Organizations / user_profiles foundation (2026-07-17)
+
+Live `organizations` and `user_profiles` DDL was pulled from project `xuvodbcdmfhlbldbvwvt` on
+**2026-07-17** and reconciled into the repo as additive migrations:
+
+| Role | File |
+|---|---|
+| Foundation (tables, RLS, triggers) | `20260709115800_create_organizations_user_profiles_foundation.sql` |
+| Bridge (`teams.organization_id` FK + backfill) | `20260717120000_teams_organization_id_bridge.sql` |
+
+**Do not rewrite applied migrations.** If live drifts again, add a new sequentially-named migration
+and document it here — never edit or delete files already recorded in remote
+`supabase_migrations.schema_migrations`.
+
+## 5. Schema remediation migrations (2026-07-17)
+
+Greenfield reproducibility + tenant bridge. Apply in timestamp order after existing migrations.
+
+| Timestamp (version) | File | Purpose |
+|---|---|---|
+| `20260709115700` | `20260709115700_daily_reports_wf_columns.sql` | WF5 `daily_reports` product columns when `0004` was skipped. Does **not** add a `date` column. |
+| `20260709115800` | `20260709115800_create_organizations_user_profiles_foundation.sql` | `organizations` + `user_profiles` foundation (live DDL 2026-07-17). Sorts **before** social posting tables. |
+| `20260717120000` | `20260717120000_teams_organization_id_bridge.sql` | 1:1 `teams.organization_id` bridge, backfill from workspace owner, `launch_workspace` sync. |
+| `20260717130000` | `20260717130000_launch_durability_and_tokens.sql` | `private.n8n_job_tokens`, `outbound_jobs`, inbound reclaim, social approval audit columns. |
+
+**Note:** Section 2 still applies — `0004_gmail_product_alignment.sql` and
+`0005_remove_whatsapp_from_conversations_source.sql` must **not** be applied. The remediation
+migrations above replace the safe subset of what `0004` would have added.
+
+### Greenfield ordering
+
+```
+… → 20260709115700 (daily_reports WF columns)
+  → 20260709115800 (organizations / user_profiles)
+  → 20260709115940 (social posting tables)
+  → …
+  → 20260717120000 (teams ↔ org bridge)
+  → 20260717130000 (durability + tokens)
+```

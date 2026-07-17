@@ -54,6 +54,10 @@ export interface SocialPost {
   /** Reason the last publish attempt failed (shown on Failed cards). */
   publish_error: string | null;
   published_at: string | null;
+  /** Audit trail (Task D.1) — stamped by schedulePost()/publish route, not a reviewer queue. */
+  approval_status?: "draft" | "approved" | "rejected" | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
   created_at: string;
   updated_at: string;
 }

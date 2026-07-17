@@ -95,6 +95,28 @@ function makeClient() {
             },
           };
         },
+        // Minimal upsert for `recordInboundEvent` (Task A.1 ledger write): dedups on the
+        // onConflict columns, honoring ignoreDuplicates the same way the real table's unique
+        // index does.
+        upsert(row: Record<string, unknown>, opts?: { onConflict?: string; ignoreDuplicates?: boolean }) {
+          return {
+            select(_cols: string) {
+              const conflictCols = (opts?.onConflict ?? "id").split(",");
+              const existing = rows.find((r) =>
+                conflictCols.every((c) => r[c] === (row as Record<string, unknown>)[c]),
+              );
+              if (existing) {
+                if (opts?.ignoreDuplicates) return Promise.resolve({ data: [], error: null });
+                Object.assign(existing, row);
+                return Promise.resolve({ data: [{ ...existing }], error: null });
+              }
+              const id = `row-${rows.length + 1}`;
+              const newRow = { id, ...row } as Row;
+              rows.push(newRow);
+              return Promise.resolve({ data: [{ ...newRow }], error: null });
+            },
+          };
+        },
         update(patch: Record<string, unknown>) {
           return {
             eq(col: string, val: unknown) {
@@ -106,6 +128,12 @@ function makeClient() {
                   return Promise.resolve({ data: null, error: null });
                 },
               };
+            },
+            in(col: string, vals: unknown[]) {
+              for (const r of rows) {
+                if (vals.includes(r[col])) Object.assign(r, patch);
+              }
+              return Promise.resolve({ data: null, error: null });
             },
           };
         },

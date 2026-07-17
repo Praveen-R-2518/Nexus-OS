@@ -96,17 +96,6 @@
       "main": [
         [
           {
-            "node": "Build Classification Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Classification Request": {
-      "main": [
-        [
-          {
             "node": "Classify Message",
             "type": "main",
             "index": 0
@@ -118,22 +107,11 @@
       "main": [
         [
           {
-            "node": "Record AI Usage (WF2)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
             "node": "Parse AI Response",
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "Record AI Usage (WF2)": {
-      "main": [
+        ],
         [
           {
             "node": "Parse AI Response",
@@ -371,7 +349,7 @@
     },
     {
       "parameters": {
-        "jsCode": "try {\n  // Read the LLM output by node name: 'Record AI Usage (WF2)' sits between\n  // Classify Message and this node, so $input here is the ai-usage endpoint's\n  // response, NOT the model output.\n  const j0 = $('Classify Message').first().json;\n  if (j0._error || j0.error) {\n    return [\n      {\n        json: {\n          _error: true,\n          _errorMessage:\n            (j0.error && j0.error.message) || j0.errorMessage || 'AI classification failed or returned empty',\n          _errorNode: 'ClassifyMessage',\n          _timestamp: new Date().toISOString(),\n        },\n      },\n    ];\n  }\n\n  const rawText = j0.message?.content\n  || j0.text\n  || j0.content\n  || j0.choices?.[0]?.message?.content\n  || j0.data?.choices?.[0]?.message?.content\n  || '';\n\nlet parsed;\ntry {\n  const cleaned = String(rawText)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n  parsed = JSON.parse(cleaned);\n  parsed.classification_failed = false;\n} catch (e) {\n  parsed = {\n    intent: 'other',\n    urgency: 'medium',\n    estimated_value: 0,\n    risk_type: 'none',\n    risk_score: 0.5,\n    missing_fields: [],\n    recommended_action: 'request_approval',\n    confidence: 0.3,\n    classification_failed: true,\n    summary: 'Classification failed - manual review needed'\n  };\n}\n\nconst input = $('Build Classification Input').first().json;\n\nreturn [\n  {\n    json: {\n      ...parsed,\n      estimated_value: Number(parsed.estimated_value) || 0,\n      risk_score: Number(parsed.risk_score) || 0,\n      confidence: Number(parsed.confidence) || 0,\n      missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],\n      conversation_id: input.conversation_id,\n      customer_name: input.customer_name,\n      customer_email: input.customer_email,\n      approval_mode: input.approval_mode,\n      lead_id: input.lead_id || '',\n    },\n  },\n];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'ParseAIResponse',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
+        "jsCode": "try {\n  // 'Classify Message' now calls the app's centralized /api/internal/n8n/ai/classify\n  // endpoint (ai_prompts/classification_prompt.txt schema) instead of OpenAI directly.\n  const j0 = $('Classify Message').first().json;\n  const input = $('Build Classification Input').first().json;\n\n  if (j0 && j0.code === 'ai_not_configured') {\n    return [\n      {\n        json: {\n          intent: 'other',\n          urgency: 'medium',\n          estimated_value: 0,\n          risk_type: 'none',\n          risk_score: 0.5,\n          missing_fields: [],\n          recommended_action: 'request_approval',\n          confidence: 0,\n          classification_failed: true,\n          ai_not_configured: true,\n          summary: 'AI classification is not configured - manual review needed',\n          conversation_id: input.conversation_id,\n          customer_name: input.customer_name,\n          customer_email: input.customer_email,\n          approval_mode: input.approval_mode,\n          lead_id: input.lead_id || '',\n        },\n      },\n    ];\n  }\n\n  const c = j0 && j0.classification;\n  if (!c) {\n    return [\n      {\n        json: {\n          _error: true,\n          _errorMessage:\n            (j0 && j0.error && (j0.error.message || j0.error)) || 'AI classification failed or returned empty',\n          _errorNode: 'ClassifyMessage',\n          _timestamp: new Date().toISOString(),\n        },\n      },\n    ];\n  }\n\n  // Map the canonical classify schema (intent_type/urgency/revenue_risk/lead_score/...) onto\n  // WF2's existing lead fields (intent/estimated_value/risk_type/risk_score/recommended_action)\n  // so Create Lead / Route by Action / Trigger WF3 keep working unchanged. estimated_value has\n  // no canonical equivalent (the shared prompt does not estimate a currency amount) and is 0\n  // until a dedicated field is added - this is a known behavior change from the old ad-hoc prompt.\n  const INTENT_MAP = {\n    pricing_question: 'pricing_request',\n    booking_request: 'booking_request',\n    complaint: 'complaint',\n    churn_risk: 'complaint',\n    support_issue: 'support',\n    follow_up: 'proposal_followup',\n    new_lead: 'other',\n    general: 'other',\n  };\n  const RISK_SCORE_MAP = { low: 0.2, medium: 0.5, high: 0.8, critical: 0.95 };\n\n  const intent = INTENT_MAP[c.intent_type] || 'other';\n  const urgency = c.urgency === 'critical' ? 'high' : c.urgency || 'medium';\n  const riskScore = RISK_SCORE_MAP[c.revenue_risk] ?? 0.5;\n  const riskType =\n    c.intent_type === 'churn_risk' || c.revenue_risk === 'high' || c.revenue_risk === 'critical'\n      ? 'churn_risk'\n      : c.revenue_risk === 'medium'\n        ? 'lead_may_go_cold'\n        : 'none';\n  const recommendedAction = c.needs_human_approval ? 'request_approval' : 'draft_reply';\n\n  return [\n    {\n      json: {\n        intent,\n        urgency,\n        estimated_value: 0,\n        risk_type: riskType,\n        risk_score: riskScore,\n        missing_fields: [],\n        recommended_action: recommendedAction,\n        confidence: Number(c.confidence) || 0,\n        summary: c.summary || '',\n        classification_failed: false,\n        conversation_id: input.conversation_id,\n        customer_name: input.customer_name,\n        customer_email: input.customer_email,\n        approval_mode: input.approval_mode,\n        lead_id: input.lead_id || '',\n      },\n    },\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'ParseAIResponse',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
       },
       "id": "1ecbb8f2-3319-466c-b2d5-f510c9d8db57",
       "name": "Parse AI Response",
@@ -385,8 +363,7 @@
     },
     {
       "parameters": {
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpCustomAuth",
+        "authentication": "none",
         "headerParameters": {
           "parameters": [
             {
@@ -394,12 +371,12 @@
               "value": "application/json"
             },
             {
-              "name": "Prefer",
-              "value": "return=representation"
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN }}"
             }
           ]
         },
-        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  conversation_id: $json.conversation_id,\n  customer_name: $json.customer_name,\n  customer_email: $json.customer_email,\n  intent: $json.intent,\n  urgency: $json.urgency,\n  estimated_value: Number($json.estimated_value) || 0,\n  risk_type: $json.risk_type,\n  risk_score: Number($json.risk_score) || 0,\n  status: 'new',\n  next_action: $json.recommended_action,\n  confidence: Number($json.confidence) || 0\n} }}",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  conversation_id: $json.conversation_id,\n  customer_name: $json.customer_name,\n  customer_email: $json.customer_email,\n  intent: $json.intent,\n  urgency: $json.urgency,\n  estimated_value: Number($json.estimated_value) || 0,\n  risk_type: $json.risk_type,\n  risk_score: Number($json.risk_score) || 0,\n  recommended_action: $json.recommended_action,\n  confidence: Number($json.confidence) || 0\n} }}",
         "method": "POST",
         "options": {
           "response": {
@@ -412,7 +389,7 @@
         "sendBody": true,
         "sendHeaders": true,
         "specifyBody": "json",
-        "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/leads"
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/leads' }}"
       },
       "id": "156d99c8-2cd9-4070-8b31-f7de45abd74e",
       "name": "Create Lead",
@@ -422,12 +399,6 @@
         0,
         320
       ],
-      "credentials": {
-        "httpCustomAuth": {
-          "id": "4rfwTEeSitzS3JeQ",
-          "name": "Supabase API"
-        }
-      },
       "maxTries": 4,
       "retryOnFail": true,
       "waitBetweenTries": 1200
@@ -590,7 +561,7 @@
     },
     {
       "parameters": {
-        "jsCode": "try {\n  const parsed = $('Parse AI Response').first().json;\n  const current = $input.first().json;\n  const responseBody = current.body || current;\n  const row = Array.isArray(responseBody) ? responseBody[0] : responseBody;\n  const leadId = parsed.lead_id || (row && row.id) || current.id || '';\n\n  return [\n    {\n      json: {\n        ...parsed,\n        lead_id: leadId,\n        lead_row: row || null,\n      },\n    },\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'NormalizeLeadResult',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
+        "jsCode": "try {\n  const parsed = $('Parse AI Response').first().json;\n  const current = $input.first().json;\n  const responseBody = current.body || current;\n  let row = Array.isArray(responseBody) ? responseBody[0] : responseBody;\n  if (row && row.data && typeof row.data === 'object') row = row.data;\n  const leadId = parsed.lead_id || (row && row.id) || current.id || '';\n\n  return [\n    {\n      json: {\n        ...parsed,\n        lead_id: leadId,\n        lead_row: row || null,\n      },\n    },\n  ];\n} catch (error) {\n  return [\n    {\n      json: {\n        _error: true,\n        _errorMessage: error.message,\n        _errorNode: 'NormalizeLeadResult',\n        _timestamp: new Date().toISOString(),\n      },\n    },\n  ];\n}"
       },
       "id": "57270f9d-755d-4ee8-b88b-2c18b45c0893",
       "name": "Normalize Lead Result",
@@ -604,27 +575,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst businessName = item.business_name || '';\nconst industry = item.industry || '';\nconst services = item.services || '[]';\nconst pricingRules = item.pricing_rules || '{}';\nconst message = item.message || '';\n\nconst systemPrompt = 'You are a revenue intelligence classifier for a founder-led service business. You analyze customer messages and extract structured data.\\n\\nBusiness context:\\nName: ' + businessName + '\\nIndustry: ' + industry + '\\nServices: ' + services + '\\nPricing: ' + pricingRules + '\\n\\nClassify the incoming customer message and return ONLY a valid JSON object. No markdown. No explanation. No preamble.\\n\\nJSON schema (return exactly this structure):\\n{\\n  \"intent\": \"pricing_request | booking_request | proposal_followup | complaint | support | other\",\\n  \"urgency\": \"low | medium | high\",\\n  \"estimated_value\": number,\\n  \"risk_type\": \"lead_may_go_cold | churn_risk | none\",\\n  \"risk_score\": number between 0 and 1,\\n  \"missing_fields\": [\"field1\", \"field2\"],\\n  \"recommended_action\": \"draft_reply | request_approval | schedule_followup | escalate_to_founder\",\\n  \"confidence\": number between 0 and 1,\\n  \"summary\": \"one sentence summary of the customer message\"\\n}\\n\\nRules:\\n- urgency = high if message contains a pricing request, booking request, or any frustrated or angry tone\\n- urgency = medium for follow-ups or general inquiries\\n- urgency = low for informational questions only\\n- estimated_value: estimate in LKR using pricing_rules context; return 0 if impossible to estimate\\n- risk_score >= 0.8 means the lead is very likely to go cold or churn\\n- confidence reflects how certain you are about intent detection';\n\nconst requestBody = {\n  model: 'gpt-4o',\n  response_format: { type: 'json_object' },\n  temperature: 0.1,\n  max_tokens: 500,\n  messages: [\n    { role: 'system', content: systemPrompt },\n    { role: 'user', content: 'Customer message: ' + message }\n  ]\n};\n\nreturn [{ json: { ...item, requestBody } }];",
-        "mode": "runOnceForAllItems"
-      },
-      "id": "3d0ee2f0-979a-48e6-82a6-96ba1504a3c0",
-      "name": "Build Classification Request",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -784,
-        100
-      ]
-    },
-    {
-      "parameters": {
         "authentication": "none",
         "contentType": "json",
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $vars.OPENAI_API_KEY }}"
+              "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}"
             },
             {
               "name": "Content-Type",
@@ -632,12 +589,20 @@
             }
           ]
         },
-        "jsonBody": "={{ $json.requestBody }}",
+        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workspace_id: $('Receive from WF1').item.json.body.workspace_id || null,\n  message: $json.message,\n  customer_name: $json.customer_name,\n  channel: $('Receive from WF1').item.json.body.channel\n} }}",
         "method": "POST",
         "sendBody": true,
         "sendHeaders": true,
         "specifyBody": "json",
-        "url": "https://api.openai.com/v1/chat/completions"
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org') + '/api/internal/n8n/ai/classify' }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
       },
       "id": "c18782ee-c5ab-445b-a481-7ba4faa12780",
       "name": "Classify Message",
@@ -652,44 +617,6 @@
       "maxTries": 3,
       "retryOnFail": true,
       "waitBetweenTries": 2000
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org') + '/api/internal/n8n/ai-usage' }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  team_id: $('Receive from WF1').item.json.body.team_id,\n  workflow_name: 'WF2',\n  model: $('Build Classification Request').item.json.requestBody.model || $('Classify Message').item.json.model || 'unknown',\n  input_tokens: ($('Classify Message').item.json.usage && ($('Classify Message').item.json.usage.prompt_tokens ?? $('Classify Message').item.json.usage.input_tokens)) ?? null,\n  output_tokens: ($('Classify Message').item.json.usage && ($('Classify Message').item.json.usage.completion_tokens ?? $('Classify Message').item.json.usage.output_tokens)) ?? null\n} }}",
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "text"
-            }
-          }
-        }
-      },
-      "id": "940ae1f9-c2c7-44a6-833d-9a844187084a",
-      "name": "Record AI Usage (WF2)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        -528,
-        220
-      ]
     },
     {
       "parameters": {
@@ -985,6 +912,6 @@
     "exportedAt": "2026-07-14T08:54:18.672294Z",
     "workflowId": "MmA7EKsOYAZgx3ep",
     "source": "live n8n MCP export",
-    "note": "2026-07-14: OpenAI gpt-4o swap, Parse AI Response reads $('Classify Message'), missing-profile logging branch"
+    "note": "2026-07-17: centralized AI - Classify Message now calls /api/internal/n8n/ai/classify (app-hosted OpenAI key) instead of api.openai.com directly; Parse AI Response maps the canonical classification schema onto the existing lead fields; Record AI Usage (WF2) removed (usage now recorded server-side in the endpoint)"
   }
 }

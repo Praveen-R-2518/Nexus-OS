@@ -10,6 +10,7 @@ import { ChartBlock } from "@/components/chat/ChartBlock";
 import { ChatUsageToolbar } from "@/components/chat/ChatUsageToolbar";
 import { parseAssistantContent } from "@/lib/chat/visuals";
 import { cn } from "@/lib/utils";
+import { useAiStatus } from "@/app/hooks/useAiStatus";
 
 type ChatRole = "user" | "assistant";
 
@@ -102,6 +103,7 @@ const SUGGESTIONS = [
 
 export default function ChatPage() {
   const tenant = useTenantScope();
+  const { status: aiStatus } = useAiStatus();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -288,6 +290,12 @@ export default function ChatPage() {
 
       <ChatUsageToolbar teamId={tenant.teamId} enabled={tenant.ready && tenant.teamId !== null} />
 
+      {!aiStatus.configured ? (
+        <p className="mb-4 shrink-0 rounded-lg border border-status-warning-border bg-status-warning-surface px-4 py-2 text-sm text-status-warning">
+          Chat is temporarily unavailable — the AI provider is not configured.
+        </p>
+      ) : null}
+
       <div className="app-glass-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-6">
           {isEmpty ? (
@@ -376,11 +384,12 @@ export default function ChatPage() {
             }}
             rows={1}
             placeholder="Ask what's at risk, who to reply to first…"
-            className="glass-input max-h-40 min-h-11 flex-1 resize-none px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
+            disabled={!aiStatus.configured}
+            className="glass-input max-h-40 min-h-11 flex-1 resize-none px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button
             type="submit"
-            disabled={sending || !input.trim()}
+            disabled={sending || !input.trim() || !aiStatus.configured}
             className="btn-primary inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-medium"
           >
             {sending ? (
