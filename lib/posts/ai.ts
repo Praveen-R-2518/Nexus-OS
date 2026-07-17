@@ -35,8 +35,11 @@ export function isPostAiConfigured(): boolean {
   return isOpenAiConfigured();
 }
 
-function client(feature: string): { openai: OpenAI; textModel: string; imageModel: string } {
-  const openai = getOpenAiClient();
+function client(
+  feature: string,
+  purpose: "chat" | "image" = "chat",
+): { openai: OpenAI; textModel: string; imageModel: string } {
+  const openai = getOpenAiClient(purpose);
   if (!openai) throw new OpenAINotConfiguredError(feature);
   return {
     openai,
@@ -192,7 +195,7 @@ export async function generateImage(params: {
   prompt: string;
   reference?: { bytes: Buffer; filename: string } | null;
 }): Promise<GeneratedImage> {
-  const { openai, imageModel } = client("Image generation");
+  const { openai, imageModel } = client("Image generation", "image");
 
   let b64: string | undefined;
   if (params.reference) {

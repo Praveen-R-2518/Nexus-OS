@@ -10,15 +10,23 @@ import { parseWorkspaceId } from "@/lib/workspace-id";
 
 export const dynamic = "force-dynamic";
 
+// Includes both the legacy set and every value WF2's Parse AI Response node can emit via
+// INTENT_MAP/riskType (n8n_logic/exports/wf2_classification.json) — leads.intent/risk_type are
+// plain `text` columns with no DB check constraint, so this allowlist is app-level only; keep it
+// a superset of what the live classifier actually produces or real classifications silently
+// collapse to the "other"/"none" fallback.
 const INTENTS = [
   "question",
   "complaint",
   "purchase_intent",
   "support",
   "other",
+  "pricing_request",
+  "booking_request",
+  "proposal_followup",
 ] as const;
 const URGENCIES = ["low", "medium", "high"] as const;
-const RISK_TYPES = ["none", "churn_risk", "escalation_risk"] as const;
+const RISK_TYPES = ["none", "churn_risk", "escalation_risk", "lead_may_go_cold"] as const;
 const NEXT_ACTIONS = [
   "draft_reply",
   "request_approval",

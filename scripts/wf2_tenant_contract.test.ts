@@ -82,23 +82,44 @@ for (const logNode of [logError, logUnhandled]) {
 }
 ok("schedule_followup branch + error logging wired");
 
-// 2026-07-14 release hardening: OpenAI swap + Parse wiring fix + missing-profile logging.
-const buildReq = wf2.nodes.find((n: { name: string }) => n.name === "Build Classification Request");
+// 2026-07-17 hardening: classification goes through the app's centralized
+// /api/internal/n8n/ai/classify endpoint — n8n holds NO OpenAI/Azure key and the export
+// contains no direct model call. The app records usage itself, so the old
+// "Build Classification Request" / "Record AI Usage (WF2)" nodes must be gone.
 const classify = wf2.nodes.find((n: { name: string }) => n.name === "Classify Message");
 const parseNode = wf2.nodes.find((n: { name: string }) => n.name === "Parse AI Response");
 const profileMissingIf = wf2.nodes.find((n: { name: string }) => n.name === "Is Profile Missing");
 const logMissingProfile = wf2.nodes.find((n: { name: string }) => n.name === "Log Missing Business Profile");
 
-assert(buildReq && classify && parseNode, "wf2 export missing classification nodes");
-assert(String(buildReq.parameters.jsCode).includes("'gpt-4o'"), "classification model must be gpt-4o");
-assert(!String(buildReq.parameters.jsCode).includes("nemotron"), "OpenRouter Nemotron model must be gone");
-assert(String(classify.parameters.url) === "https://api.openai.com/v1/chat/completions", "Classify Message must call OpenAI");
+assert(classify && parseNode, "wf2 export missing classification nodes");
+assert(
+  !wf2.nodes.some((n: { name: string }) => n.name === "Build Classification Request"),
+  "Build Classification Request must be removed (prompt lives in the app now)",
+);
+assert(
+  String(classify.parameters.url).includes("/api/internal/n8n/ai/classify"),
+  "Classify Message must call the app's /api/internal/n8n/ai/classify endpoint",
+);
+assert(
+  String(classify.parameters.url).includes("$vars.NEXUS_APP_URL"),
+  "Classify Message URL must resolve from $vars.NEXUS_APP_URL",
+);
 const authHeader = classify.parameters.headerParameters.parameters.find(
   (p: { name: string }) => p.name === "Authorization",
 );
-assert(String(authHeader?.value).includes("$vars.OPENAI_API_KEY"), "Classify Message must auth with $vars.OPENAI_API_KEY");
+assert(String(authHeader?.value).includes("$vars.N8N_INGEST_TOKEN"), "Classify Message must auth with $vars.N8N_INGEST_TOKEN");
+const classifyBody = String(classify.parameters.jsonBody);
+assert(classifyBody.includes("team_id"), "classify request must stamp team_id");
+assert(classifyBody.includes("workspace_id"), "classify request must stamp workspace_id");
+assert(
+  !JSON.stringify(wf2.nodes).includes("api.openai.com"),
+  "wf2 export nodes must not contain any direct OpenAI call",
+);
+assert(
+  !JSON.stringify(wf2.nodes).includes("$vars.OPENAI_API_KEY"),
+  "wf2 export nodes must not reference an OpenAI key in n8n",
+);
 
-// Record AI Usage (WF2) sits between Classify Message and Parse AI Response, so
 // Parse must read the model output by node name — reading $input silently
 // collapses every classification to the fallback (root cause of the empty dashboard).
 assert(
@@ -109,6 +130,11 @@ assert(
   !String(parseNode.parameters.jsCode).includes("items[0].json"),
   "Parse AI Response must not read items[0] (that is the ai-usage response)",
 );
+// The app endpoint returns the canonical classify schema; Parse must map it onto the
+// lead fields downstream nodes route on, and fail safe when AI is not configured.
+const parseCode = String(parseNode.parameters.jsCode);
+assert(parseCode.includes("intent_type"), "Parse AI Response must map the canonical intent_type schema");
+assert(parseCode.includes("ai_not_configured"), "Parse AI Response must handle the 503 ai_not_configured body");
 
 assert(profileMissingIf && logMissingProfile, "wf2 export missing no-business-profile logging branch");
 assert(fetchNode.alwaysOutputData === true, "Fetch Business Profile must alwaysOutputData so missing profiles can't kill the run");

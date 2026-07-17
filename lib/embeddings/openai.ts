@@ -36,7 +36,7 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
     return texts.map(mockVector);
   }
 
-  const client = getOpenAiClient();
+  const client = getOpenAiClient("embed");
   if (!client) throw new AiNotConfiguredError();
 
   const model = resolveModel();

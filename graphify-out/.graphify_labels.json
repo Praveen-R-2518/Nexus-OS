@@ -240,5 +240,7 @@
   "238": "ai_classify_route.test.ts",
   "239": "ai_provider.test.ts",
   "240": "20260717131000_n8n_job_token_rpcs.sql",
-  "241": "openai_smoke.test.ts"
+  "241": "openai_smoke.test.ts",
+  "242": "credentials.ts",
+  "243": "outbound-jobs.ts"
 }

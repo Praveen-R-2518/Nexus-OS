@@ -36,6 +36,18 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
   // --- Mock mode (AI_PROVIDER=mock) ---
   delete process.env.OPENAI_API_KEY;
   process.env.AI_PROVIDER = "mock";
+  // AI_MODELS resolves env at module load — clear every override so the defaults
+  // assertion below tests the spec, not whatever the invoking shell has set.
+  delete process.env.OPENAI_BASE_URL;
+  delete process.env.OPENAI_MODEL;
+  delete process.env.OPENAI_MODEL_CLASSIFY;
+  delete process.env.OPENAI_MODEL_DRAFT;
+  delete process.env.OPENAI_MODEL_REPORT;
+  delete process.env.OPENAI_EMBEDDING_MODEL;
+  delete process.env.OPENAI_EMBED_API_KEY;
+  delete process.env.OPENAI_EMBED_BASE_URL;
+  delete process.env.OPENAI_IMAGE_API_KEY;
+  delete process.env.OPENAI_IMAGE_BASE_URL;
 
   const { isMockMode, isOpenAiConfigured, AI_MODELS } = await import("@/lib/ai/provider");
   const { classifyMessage } = await import("@/lib/ai/classify");

@@ -65,7 +65,8 @@ export async function completeText(params: {
   const completion = await client.chat.completions.create({
     model,
     temperature: params.temperature ?? 0.4,
-    max_tokens: params.maxTokens,
+    // gpt-5-family deployments reject the legacy `max_tokens`; this name works on both families.
+    max_completion_tokens: params.maxTokens,
     messages: [
       { role: "system", content: params.system },
       { role: "user", content: params.user },

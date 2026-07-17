@@ -1,7 +1,7 @@
 {
   ".claude/settings.local.json": {
-    "mtime": 1784215107.8288445,
-    "ast_hash": "1bda754e63800937466956cd6bfb4e0d",
+    "mtime": 1784272084.0875275,
+    "ast_hash": "eae287e6314d29f621212df528f7cd79",
     "semantic_hash": ""
   },
   ".cursor/settings.json": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "lib/chat/openai.ts": {
-    "mtime": 1784268651.008361,
-    "ast_hash": "6d21d503b01722db8729152efc8ac7aa",
+    "mtime": 1784274228.979967,
+    "ast_hash": "4bd25646157dc11b53bc28cf538a36fc",
     "semantic_hash": ""
   },
   "lib/chat/system-prompt.ts": {
@@ -705,8 +705,8 @@
     "semantic_hash": "ee34bd0fdc95feff49016b6349890a62"
   },
   "n8n_logic/exports/wf0a_gmail_intake.json": {
-    "mtime": 1784270876.9492948,
-    "ast_hash": "0c79f59508426c3ef0b7832adde96d30",
+    "mtime": 1784274423.2022736,
+    "ast_hash": "36152fca6e54a61bf8fca0710285e46a",
     "semantic_hash": ""
   },
   "n8n_logic/fixtures/gmail_imap_sample.json": {
@@ -1045,8 +1045,8 @@
     "semantic_hash": "234dc00741d443ffdc1895203e89af95"
   },
   "docs/NEXUS_REBUILD_CONTEXT.md": {
-    "mtime": 1784264505.7474434,
-    "ast_hash": "edf7fb686ac255d2796af686dd9bdf3c",
+    "mtime": 1784282728.3383384,
+    "ast_hash": "cfcd8519315c0e5aa563131910da0c69",
     "semantic_hash": ""
   },
   "docs/classification_test_results_v1.md": {
@@ -1195,8 +1195,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/README.md": {
-    "mtime": 1784270857.4521768,
-    "ast_hash": "804e24872c7318a3c4966eeb27ad9acf",
+    "mtime": 1784282769.188796,
+    "ast_hash": "32ae4e416de9a3c1b346dde03beb79a8",
     "semantic_hash": ""
   },
   "scripts/send_e2e.integration.ts": {
@@ -1235,8 +1235,8 @@
     "semantic_hash": ""
   },
   "scripts/wf2_tenant_contract.test.ts": {
-    "mtime": 1784019303.6513746,
-    "ast_hash": "a278ec85bcb27b464d9d90342708e421",
+    "mtime": 1784274782.3992336,
+    "ast_hash": "da2ca3fc462f1b2513cbc731bf6c2cef",
     "semantic_hash": ""
   },
   "supabase/migrations/20260713160000_restore_workflow_logs.sql": {
@@ -1345,13 +1345,13 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf5_daily_buy_back_report.json": {
-    "mtime": 1784269061.2153544,
-    "ast_hash": "6869ddc0969cdfe323d1008f189a3946",
+    "mtime": 1784274423.20307,
+    "ast_hash": "16248e8f78223a0068e3816265a56e4a",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8b_social_publish.json": {
-    "mtime": 1784270844.4249852,
-    "ast_hash": "d2b06733dc0c4e050571ad7714bb8f6c",
+    "mtime": 1784274423.2025762,
+    "ast_hash": "ba6ab16e984119d7a6f6fe7918757c4e",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8c_post_image_generation.json": {
@@ -1520,8 +1520,8 @@
     "semantic_hash": ""
   },
   "lib/embeddings/openai.ts": {
-    "mtime": 1784268779.4390845,
-    "ast_hash": "ea1be5f67d15d9f478c90b16986246da",
+    "mtime": 1784274228.9858959,
+    "ast_hash": "31f5e464722388d9aa47dc2c7cb893ef",
     "semantic_hash": ""
   },
   "lib/embeddings/store.ts": {
@@ -1735,8 +1735,8 @@
     "semantic_hash": ""
   },
   "lib/posts/ai.ts": {
-    "mtime": 1784268745.500845,
-    "ast_hash": "63fec9274aaf97c39e737a6675e35a2a",
+    "mtime": 1784274243.2034922,
+    "ast_hash": "b33245361989302696e99f67c8549389",
     "semantic_hash": ""
   },
   "scripts/social_oauth_state.test.ts": {
@@ -1750,8 +1750,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8d_social_scheduler.json": {
-    "mtime": 1784268030.879948,
-    "ast_hash": "ce5604957943469839180b19f57ed7a9",
+    "mtime": 1784274423.2015114,
+    "ast_hash": "b372b11eb1de9ecb75c3e27f93bc62fb",
     "semantic_hash": ""
   },
   "n8n_logic/exports/.raw/47BO0agxAJGizttR.json": {
@@ -1810,8 +1810,8 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260717120000_teams_organization_id_bridge.sql": {
-    "mtime": 1784267955.8014793,
-    "ast_hash": "7c7af24389be0a633f73a5658e32c616",
+    "mtime": 1784275056.3358488,
+    "ast_hash": "89f6ff7f5595365dc04512525f877f9f",
     "semantic_hash": ""
   },
   "supabase/migrations/20260717130000_launch_durability_and_tokens.sql": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "app/api/internal/n8n/leads/route.ts": {
-    "mtime": 1784269055.1633964,
-    "ast_hash": "161a6bb82f06360521876e761217ddae",
+    "mtime": 1784282321.3218818,
+    "ast_hash": "fe5f0613ddcfbcbc5773b1e63875c1bb",
     "semantic_hash": ""
   },
   "app/api/internal/n8n/outbound-jobs/claim/route.ts": {
@@ -1890,8 +1890,8 @@
     "semantic_hash": ""
   },
   "lib/ai/provider.ts": {
-    "mtime": 1784268497.0469296,
-    "ast_hash": "088649a6ed2b61814ee8c54bd1cd6ebb",
+    "mtime": 1784274175.591394,
+    "ast_hash": "7487b192bc8ba982ff1b67dbd9c7f2b2",
     "semantic_hash": ""
   },
   "lib/ai/report-summary.ts": {
@@ -1935,8 +1935,8 @@
     "semantic_hash": ""
   },
   "scripts/ai_provider.test.ts": {
-    "mtime": 1784269442.8214211,
-    "ast_hash": "44a18a4aa8db0c073c08987441565d2f",
+    "mtime": 1784274279.874609,
+    "ast_hash": "8c4769794bc46427b41ee5bbacbfc359",
     "semantic_hash": ""
   },
   "scripts/approval_route.test.ts": {
@@ -1955,8 +1955,8 @@
     "semantic_hash": ""
   },
   "scripts/openai_smoke.test.ts": {
-    "mtime": 1784269376.3808258,
-    "ast_hash": "6b314b9c7b64e3c392544fe5ee2cbaf5",
+    "mtime": 1784274851.401664,
+    "ast_hash": "c1d2afd77919840a5618a02b8d822cff",
     "semantic_hash": ""
   },
   "scripts/route_reference.test.mjs": {
