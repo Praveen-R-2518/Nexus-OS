@@ -2,6 +2,29 @@
 
 Operational rows (`conversations`, `workflow_logs`, `leads`, etc.) are **team-scoped** (`team_id` required). Intake workflows resolve the tenant from `public.business_profiles` routing columns (see migration `0012_business_profiles_integration_routing.sql`) before the Multi-Channel Normalizer runs.
 
+## Auth hardening: three token types (2026-07-17)
+
+`N8N_INGEST_TOKEN` used to be trusted broadly across every `/api/internal/n8n/*` route. It is
+being replaced by three narrower mechanisms (`lib/api-security.ts`, `lib/n8n-job-tokens.ts`):
+
+| Token | Direction | Guards | Guard helper |
+|---|---|---|---|
+| `N8N_BOOTSTRAP_TOKEN` | n8n → app | Scheduler/claim endpoints that run **before any job exists**: `gmail-sync`, `gmail-backfill`, `inbound-replay`, `scheduled-posts` (GET claim), `conversations` (create), `inbound-record`, `outbound-jobs/claim`. | `requireN8nBootstrapToken()` |
+| Job token (opaque, minted per-call) | n8n → app | Job-scoped callbacks bound to a specific team/workspace/resource and action, single-use, short-lived (default 15 min): `send-reply`, `autopilot-send`, `post-result`, `ai-usage`, `match-embeddings`, `gmail-credentials`, `meta-credentials`, `social-credentials`, `outbound-jobs/result`. Minted with `issueN8nJobToken()`, validated with `requireN8nJobToken()` / `consumeN8nJobToken()`. | `requireN8nJobToken()` |
+| `N8N_WEBHOOK_TOKEN` | app → n8n | Header Auth the app sends when it calls OUT to an n8n webhook (`approval-trigger`, `gmail-inbound`, `publish-social-post`). Configure the matching Header Auth credential on n8n's webhook trigger nodes. | `n8nWebhookAuthHeaders()` |
+
+`N8N_INGEST_TOKEN` (the old broad secret) is kept as a **temporary fallback** during the
+transition:
+- Bootstrap-guarded routes accept `N8N_BOOTSTRAP_TOKEN` **or** `N8N_INGEST_TOKEN`.
+- Job-scoped routes try a scoped job token first; if that fails, they fall back to
+  `N8N_BOOTSTRAP_TOKEN`/`N8N_INGEST_TOKEN` and log a `console.warn` so the still-broad-trust path
+  stays visible in logs. Once n8n workflows mint job tokens for every job-scoped call, drop the
+  fallback and rotate `N8N_INGEST_TOKEN` out.
+
+New job-scoped routes: `POST /api/internal/n8n/outbound-jobs/claim` (bootstrap-guarded; claims
+the next queued `public.outbound_jobs` row and mints a `send_reply` job token bound to it) and
+`POST /api/internal/n8n/outbound-jobs/result` (job-token-guarded status writeback for that job).
+
 ## Tenant routing (WF0a export)
 
 The [`n8n_logic/exports/wf0a_gmail_intake.json`](../n8n_logic/exports/wf0a_gmail_intake.json) graph runs **Tenant Route Extract** → **Supabase GET business_profiles** → **Verify Tenant Context** → **Multi-Channel Normalizer**.
@@ -39,6 +62,14 @@ Current wiring:
 |---|---|
 | App base URL | **Hardcoded** in the node (`https://nexusos.knurdz.org`) — not secret, avoids a variable. |
 | `N8N_INGEST_TOKEN` | `{{ $vars.N8N_INGEST_TOKEN }}` — add as an n8n **Variable** (must match the app's env value). |
+
+> **Naming note:** three different names have shown up for "the app's base URL" across this repo —
+> `NEXT_PUBLIC_SITE_URL` (the real Next.js env var, used for OAuth redirect URIs and Supabase Auth
+> redirects — this is the canonical one for anything running *inside* the app), the n8n Variable
+> `NEXUS_APP_URL` (used by WF8b/WF8d, see below), and `NEXUS_APP_BASE_URL` (referenced by
+> `n8n_logic/workflow_3_agent.js`'s retrieval call and older docs/scripts, kept only as a fallback
+> name in that file). Don't introduce a fourth name — new n8n Variables that need the app's base
+> URL should use `NEXUS_APP_URL`; new Next.js code should use `NEXT_PUBLIC_SITE_URL`.
 
 **Do not activate** for real sends until Gmail `gmail.send` scope is provisioned (until then set
 `CHANNEL_SENDER_TRANSPORT=sandbox` on the app to complete the path without real email).

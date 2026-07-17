@@ -10,6 +10,9 @@ export const queryKeys = {
 
   metrics: (teamId: string | null) => [...queryKeys.root(teamId), "metrics"] as const,
 
+  metricsTimeseries: (teamId: string | null, range: string) =>
+    [...queryKeys.root(teamId), "metricsTimeseries", range] as const,
+
   replyDrafts: (teamId: string | null, status?: string, conversationId?: string) =>
     [
       ...queryKeys.root(teamId),
@@ -32,4 +35,7 @@ export const queryKeys = {
 
   aiUsage: (teamId: string | null) =>
     [...queryKeys.root(teamId), "aiUsage"] as const,
+
+  workflowLogs: (teamId: string | null, resultFilter: string, offset: number) =>
+    [...queryKeys.root(teamId), "workflowLogs", resultFilter, offset] as const,
 } as const;

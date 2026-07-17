@@ -3,8 +3,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   BrandAsset,
+  Platform,
+  PlatformCaption,
+  PostCaptions,
   PostGeneration,
-  PostStatus,
   SocialPost,
 } from "./types";
 
@@ -85,22 +87,151 @@ export async function listPosts(
   return (data ?? []) as SocialPost[];
 }
 
+/** Mirror a single manual caption onto every selected platform. */
+export function captionsFromText(
+  text: string,
+  platforms: Platform[],
+): PostCaptions {
+  const trimmed = text.trim();
+  if (!trimmed) return {};
+  const entry: PlatformCaption = { caption: trimmed, hashtags: [] };
+  const out: PostCaptions = {};
+  for (const p of platforms) out[p] = entry;
+  return out;
+}
+
+export interface PostDraftInput {
+  media_url: string;
+  user_description: string | null;
+  captions: PostCaptions | null;
+  platforms: Platform[];
+  status: "draft" | "scheduled";
+  scheduled_at?: string | null;
+  source?: SocialPost["source"];
+  generation_id?: string | null;
+}
+
 /**
- * Plain status transition. Only the client-safe transitions are allowed here;
- * `published` is set externally by WF8b and must never be written from the UI.
+ * Insert a new social post row directly (RLS-scoped, mirrors uploadBrandAsset).
+ * This is how manual posts are created — no AI/webhook round-trip required.
  */
-export async function updatePostStatus(
+export async function createPost(
+  supabase: SupabaseClient,
+  orgId: string,
+  input: PostDraftInput,
+): Promise<SocialPost> {
+  const { data, error } = await supabase
+    .from("social_posts")
+    .insert({
+      organization_id: orgId,
+      media_url: input.media_url,
+      user_description: input.user_description,
+      captions: input.captions,
+      platforms: input.platforms,
+      status: input.status,
+      scheduled_at: input.scheduled_at ?? null,
+      source: input.source ?? "upload",
+      generation_id: input.generation_id ?? null,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as SocialPost;
+}
+
+/** Fields an owner may edit on a draft/scheduled post from the detail view. */
+export interface PostEditInput {
+  user_description?: string | null;
+  captions?: PostCaptions | null;
+  platforms?: Platform[];
+  status?: "draft" | "scheduled";
+  scheduled_at?: string | null;
+  /** Task D.1 audit trail — stamped by schedulePost(), cleared by unschedulePost(). */
+  approval_status?: "draft" | "approved" | "rejected";
+  approved_at?: string | null;
+}
+
+/**
+ * Edit a draft/scheduled post. Never writes publishing/published/failed —
+ * those are set only by the publish route / WF8b (via a service-role write).
+ */
+export async function updatePost(
   supabase: SupabaseClient,
   orgId: string,
   postId: string,
-  status: Exclude<PostStatus, "published" | "failed">,
+  patch: PostEditInput,
 ): Promise<void> {
   const { error } = await supabase
     .from("social_posts")
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", postId)
     .eq("organization_id", orgId);
   if (error) throw error;
+}
+
+/** Delete a post row. Media objects are left in the bucket (cheap, org-scoped). */
+export async function deletePost(
+  supabase: SupabaseClient,
+  orgId: string,
+  postId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("social_posts")
+    .delete()
+    .eq("id", postId)
+    .eq("organization_id", orgId);
+  if (error) throw error;
+}
+
+/**
+ * Move a post to `scheduled` at the given ISO time. Task D.1: this explicit action from an
+ * authenticated org member IS the approval to publish later unattended, so it stamps
+ * `approval_status`/`approved_at` here — the unattended scheduler
+ * (`/api/internal/n8n/scheduled-posts`) only claims posts where one of those is already set.
+ */
+export async function schedulePost(
+  supabase: SupabaseClient,
+  orgId: string,
+  postId: string,
+  scheduledAtIso: string,
+): Promise<void> {
+  const nowIso = new Date().toISOString();
+  await updatePost(supabase, orgId, postId, {
+    status: "scheduled",
+    scheduled_at: scheduledAtIso,
+    approval_status: "approved",
+    approved_at: nowIso,
+  });
+}
+
+/** Return a scheduled post to `draft` and clear its scheduled time (approval stays recorded). */
+export async function unschedulePost(
+  supabase: SupabaseClient,
+  orgId: string,
+  postId: string,
+): Promise<void> {
+  await updatePost(supabase, orgId, postId, {
+    status: "draft",
+    scheduled_at: null,
+  });
+}
+
+/**
+ * Platforms this org has connected for publishing (from social_credentials).
+ * Drives composer gating — you can only schedule/publish to connected platforms.
+ */
+export async function listConnectedPlatforms(
+  supabase: SupabaseClient,
+  orgId: string,
+): Promise<Platform[]> {
+  const { data, error } = await supabase
+    .from("social_credentials")
+    .select("platform")
+    .eq("organization_id", orgId);
+  if (error) throw error;
+  return (data ?? [])
+    .map((row) => (row as { platform?: unknown }).platform)
+    .filter((p): p is Platform => typeof p === "string") as Platform[];
 }
 
 /**
@@ -186,4 +317,25 @@ export async function uploadBrandAsset(
     .single();
   if (error) throw error;
   return data as BrandAsset;
+}
+
+/**
+ * Remove a brand asset: delete the stored object, then the row. Storage RLS
+ * (see the storage-buckets migration) already scopes deletes to the org.
+ * Best-effort on the object so a missing file never strands the row.
+ */
+export async function deleteBrandAsset(
+  supabase: SupabaseClient,
+  orgId: string,
+  asset: Pick<BrandAsset, "id" | "storage_path">,
+): Promise<void> {
+  if (asset.storage_path) {
+    await supabase.storage.from(BRAND_ASSETS_BUCKET).remove([asset.storage_path]);
+  }
+  const { error } = await supabase
+    .from("brand_assets")
+    .delete()
+    .eq("id", asset.id)
+    .eq("organization_id", orgId);
+  if (error) throw error;
 }

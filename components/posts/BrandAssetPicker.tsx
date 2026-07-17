@@ -2,11 +2,12 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   BRAND_ASSETS_BUCKET,
+  deleteBrandAsset,
   listBrandAssets,
   uploadBrandAsset,
 } from "@/lib/posts/data";
@@ -17,40 +18,58 @@ import { useSignedUrl } from "./shared";
 function BrandAssetThumb({
   asset,
   selected,
+  removing,
   onSelect,
+  onRemove,
 }: {
   asset: BrandAsset;
   selected: boolean;
+  removing: boolean;
   onSelect: () => void;
+  onRemove: () => void;
 }) {
   const { url } = useSignedUrl(BRAND_ASSETS_BUCKET, asset.storage_path);
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      title={asset.name ?? "Brand asset"}
+    <div
       className={cn(
-        "relative aspect-square overflow-hidden rounded-xl border transition-colors",
+        "group relative aspect-square overflow-hidden rounded-xl border transition-colors",
         selected
           ? "border-nexus-approval ring-2 ring-nexus-approval"
           : "border-glass-border hover:border-nexus-approval-border",
       )}
     >
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={asset.name ?? "Brand asset"} className="h-full w-full object-cover" />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center bg-surface-muted">
-          <Spinner className="h-5 w-5" label="Loading asset" />
-        </span>
-      )}
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={selected}
+        title={asset.name ?? "Brand asset"}
+        className="block h-full w-full"
+      >
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt={asset.name ?? "Brand asset"} className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center bg-surface-muted">
+            <Spinner className="h-5 w-5" label="Loading asset" />
+          </span>
+        )}
+      </button>
       {selected ? (
-        <span className="absolute right-1.5 top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-nexus-approval text-white">
+        <span className="pointer-events-none absolute left-1.5 top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-nexus-approval text-white">
           <Check className="h-3.5 w-3.5" aria-hidden />
         </span>
       ) : null}
-    </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={removing}
+        aria-label="Remove brand asset"
+        title="Remove from library"
+        className="absolute right-1.5 top-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-glass-border bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-status-critical focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-100"
+      >
+        {removing ? <Spinner className="h-3.5 w-3.5" label="Removing" /> : <X className="h-3.5 w-3.5" aria-hidden />}
+      </button>
+    </div>
   );
 }
 
@@ -71,6 +90,7 @@ export function BrandAssetPicker({
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const { data: assets = [], isPending } = useQuery({
     queryKey: ["brand-assets", orgId],
@@ -98,6 +118,22 @@ export function BrandAssetPicker({
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function handleRemove(asset: BrandAsset) {
+    if (!window.confirm(`Remove "${asset.name ?? "this asset"}" from your brand library?`)) {
+      return;
+    }
+    setRemovingId(asset.id);
+    try {
+      await deleteBrandAsset(supabase, orgId, asset);
+      if (asset.id === selectedId) onSelect(null);
+      await queryClient.invalidateQueries({ queryKey: ["brand-assets", orgId] });
+    } catch (e) {
+      notify(e instanceof Error ? e.message : "Could not remove brand asset.");
+    } finally {
+      setRemovingId(null);
     }
   }
 
@@ -133,9 +169,11 @@ export function BrandAssetPicker({
                 key={asset.id}
                 asset={asset}
                 selected={asset.id === selectedId}
+                removing={removingId === asset.id}
                 onSelect={() =>
                   onSelect(asset.id === selectedId ? null : asset)
                 }
+                onRemove={() => void handleRemove(asset)}
               />
             ))}
       </div>
@@ -149,10 +187,12 @@ export function BrandAssetPicker({
       />
 
       {selectedId ? (
-        <p className="mt-3 border border-status-caution-border bg-status-caution-surface px-3 py-2 text-xs text-status-caution">
-          Reference-guided generation isn&apos;t live yet — the selected asset is
-          saved to your library, but the image below is generated from your prompt
-          only.
+        <p className="mt-3 text-xs text-muted">
+          Using{" "}
+          <span className="font-medium text-atmospheric-grey">
+            {assets.find((a) => a.id === selectedId)?.name ?? "this asset"}
+          </span>{" "}
+          as a style reference for generation.
         </p>
       ) : null}
     </div>

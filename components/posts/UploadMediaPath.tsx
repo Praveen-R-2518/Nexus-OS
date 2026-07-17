@@ -8,17 +8,16 @@ import { ImagePlus, UploadCloud } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { POST_MEDIA_BUCKET, uploadToBucket } from "@/lib/posts/data";
-import type { SocialPost } from "@/lib/posts/types";
 import { CaptionSection } from "./CaptionSection";
 import { useSignedUrl } from "./shared";
 
 interface UploadMediaPathProps {
   orgId: string;
   notify: (msg: string) => void;
-  onComplete: (post: SocialPost) => void;
+  onDone: () => void;
 }
 
-export function UploadMediaPath({ orgId, notify, onComplete }: UploadMediaPathProps) {
+export function UploadMediaPath({ orgId, notify, onDone }: UploadMediaPathProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -125,9 +124,11 @@ export function UploadMediaPath({ orgId, notify, onComplete }: UploadMediaPathPr
             Write your caption
           </h3>
           <CaptionSection
+            orgId={orgId}
             mediaUrl={mediaPath}
             notify={notify}
-            onComplete={onComplete}
+            source="upload"
+            onDone={onDone}
             showVisionButton
           />
         </div>

@@ -1,7 +1,9 @@
 # Nexus OS — Rebuild Context & Build State
 
 Companion to `/CLAUDE.md`. This file tells you **where the build is now**, **the target
-architecture**, and **the order of work**. Last grounded against the repo: 2026-06-24.
+architecture**, and **the order of work**. Last grounded against the repo: 2026-07-17
+(pre-launch audit — reconciled §2/§4 with the dated decisions in §5, which had drifted out of
+sync with the main body for three weeks).
 
 ---
 
@@ -45,13 +47,25 @@ Tenant isolation (RLS) · `workflow_logs` observability · durable idempotency (
 ### Done / working
 - Gmail OAuth + IMAP intake (`app/api/gmail/*`). *(Human is re-doing Google auth on the production
   domain — leave Gmail source wiring alone unless asked.)*
-- Classification (WF2), reply drafting (WF3), buy-back report (WF4) as n8n Code-node logic.
+- Classification (WF2), reply drafting (WF3), buy-back report (WF4/WF5) as n8n workflows — WF2 and
+  WF5 are active live and proven on a test tenant; WF1/WF3/WF4 (message intake, revenue rescue,
+  follow-up scheduler) were activated live on 2026-07-17 after this audit (tenant-id stamping had
+  already been fixed 2026-07-12, they just hadn't been flipped on — see `n8n_logic/exports/README.md`).
 - Approval flow (`app/api/approval/route.ts`, `/approval` page).
 - Multi-tenant model: `teams → workspaces → profiles → business_profiles`, RLS helpers
   (`private.current_team_id()`, `public.is_workspace_owner()`).
 - Internal n8n ingest endpoints (`app/api/internal/n8n/*`) with `N8N_INGEST_TOKEN`.
 - Design tokens + 5 hand-built UI components (`components/ui/`). shadcn is configured in
   `components.json` but NOT installed (no Radix / CVA in package.json).
+- **Knowledge layer + Chat Agent** (shipped 2026-07-14, detailed in §5) — pgvector `embeddings` +
+  `business_documents`, read-only retrieval-backed Chat Agent at `/chat`.
+- **Social publishing studio** (shipped 2026-07-09→15) — in-app OpenAI caption/image generation
+  (`lib/posts/ai.ts`), manual/schedule/upload composer, WF8b (publish) + WF8d (scheduler, inactive
+  until platform credentials bind) — see `n8n_logic/exports/README.md`. This was previously listed
+  under "Deferred" below; that was stale.
+- **Meta inbound durable ledger** (shipped 2026-06-24, Task 1/2 in §5) — `inbound_events` table,
+  persist-before-ack, edge tenant resolution. Previously listed as a "half-built" weak spot below;
+  that framing was stale — see the corrected list.
 
 ### Half-built — Meta unified inbox (≈70%)
 Built:
@@ -67,21 +81,22 @@ Built:
   graph URL). `lib/meta-deep-links.ts`. `app/api/internal/n8n/meta-credentials/route.ts`.
 - `n8n_logic/multi_channel_normalizer.js`, `tenant_route_resolver.js`.
 
-**NOT done / known weak spots (these are the next work):**
-1. **Dedup is an in-memory `Map`** in the webhook → lost on serverless cold start, not shared
-   across instances. Needs a durable idempotency table keyed on `platform + message_id`.
-2. **n8n forward is fire-and-forget** (`void forwardToN8n(...)`) → if n8n is down, the message is
-   silently dropped. Needs **persist-before-ack**: write the raw event to a durable inbound table,
-   return 200, then process.
+**Resolved since this was first written (see §5 Task 1/2, 2026-06-24):**
+1. ~~Dedup is an in-memory `Map`~~ → durable `inbound_events` idempotency table shipped.
+2. ~~n8n forward is fire-and-forget~~ → persist-before-ack shipped (`lib/inbound-events.ts`).
+
+**Still NOT done / genuinely open weak spots:**
 3. **Tenant routing not verified end-to-end** from a real Meta payload through
-   `tenant_route_resolver.js` into a `conversations` row with correct `team_id`/`workspace_id`.
+   `tenant_route_resolver.js` into a `conversations` row with correct `team_id`/`workspace_id` —
+   blocked on Meta App Review (no real payloads to test against yet).
 4. **Deep links unverified** — WhatsApp must link to the *customer* number, not the business
    number; IG/FB message ids are not always thread ids.
-5. **No outbound Meta sending** (Phase 2): 24-hour window rules, WhatsApp template fallback.
+5. **Meta outbound sending** — code is real and complete (`lib/meta/send.ts`), but intentionally
+   kill-switched behind `META_SEND_ENABLED` (unset by default) pending Meta App Review. Not a bug.
 
 ### Deferred (do not start yet)
-Social publishing studio, AI image generation, hiring/ATS section. See
-`docs/full_new_implementation_blueprint.md`.
+Hiring/ATS section. See `docs/full_new_implementation_blueprint.md`. (Social publishing studio and
+AI image generation, previously listed here, shipped — see "Done" above.)
 
 ---
 
@@ -102,16 +117,18 @@ Social publishing studio, AI image generation, hiring/ATS section. See
 
 UI and pricing are owned by other members; this track is backend/functions.
 
-1. **Reliability foundation:** durable inbound ingestion + idempotency (replaces in-memory dedup
-   and fire-and-forget forward). Channel-agnostic — serves Gmail + Meta. ← FIRST
+1. ~~Reliability foundation~~ — **done** (durable `inbound_events` + idempotency, 2026-06-24).
 2. **Meta inbound end-to-end:** verified tenant routing + normalizer → `conversations`; correct
-   deep links; parser tests for WA/IG/FB payloads.
-3. **Historical backfill on connect** (Gmail first), so dashboards show real numbers immediately.
-4. **Knowledge layer:** `pgvector` `embeddings` table + business-doc ingestion; periodic summaries.
-5. **Chat Agent** (read-only, retrieval over docs + leads + reports; suggestions → approval queue).
-6. **Meta outbound** (approval-gated, messaging-window rules).
-7. Then deferred phases (media studio, image gen, hiring) + production reliability (durable queues,
-   cost tracking, replay tooling).
+   deep links; parser tests for WA/IG/FB payloads. ← still open, blocked on Meta App Review. ← NEXT
+3. ~~Historical backfill on connect~~ — **done** (Gmail; WF0e Gmail Backfill, active).
+4. ~~Knowledge layer~~ — **done** (2026-07-14, pgvector `embeddings` + business-doc ingestion).
+5. ~~Chat Agent~~ — **done** (2026-07-14, read-only retrieval over docs + leads + reports).
+6. **Meta outbound** (approval-gated, messaging-window rules) — code complete, kill-switched on
+   `META_SEND_ENABLED` pending Meta App Review.
+7. ~~Media studio / image gen~~ — **done** (social publishing studio, shipped 2026-07-09→15).
+   Hiring/ATS remains deferred. Production-reliability hardening (durable queues, per-tenant
+   `N8N_INGEST_TOKEN` scoping, replay tooling) is ongoing — see
+   `docs/security_audit_and_review_2026-07-15.md` blocker #7.
 
 Each step ships behind the existing safety model (RLS, approval gate, encrypted tokens) and ends
 with the report-back block from `CLAUDE.md`.

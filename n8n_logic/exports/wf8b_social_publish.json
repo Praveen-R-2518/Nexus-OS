@@ -2,5 +2,344 @@
   "id": "VZ9ZaA1S2JxSAeGQ",
   "name": "WF8b - Social Post Platform Publishing",
   "active": true,
-  "note": "Updated 2026-07-13 (Task 4.3): Fetch Platform Tokens calls GET {NEXUS_APP_URL}/api/internal/n8n/social-credentials?organization_id=... with Bearer N8N_INGEST_TOKEN. Build Platform Post Items unwraps response.data and throws on success:false. Requires deploy of social-credentials endpoint + migration 20260713180000."
+  "note": "Exported from live n8n (knurdz3o.app.n8n.cloud) on 2026-07-17. Live workflow id: VZ9ZaA1S2JxSAeGQ. REQUIRED: on any failure path, POST to /api/internal/n8n/post-result with { postId, status: 'failed', error } so posts do not stay stuck in publishing.",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF8b — post-result writeback (REQUIRED on failure)\n\nSuccess path today PATCHes `social_posts` directly (`Mark Post Published`). **Any error branch must also call** `POST {NEXUS_APP_URL}/api/internal/n8n/post-result` with Bearer `N8N_INGEST_TOKEN` and body `{ postId, status: 'failed', error }` so the post leaves `publishing` instead of hanging.\n\nOn full success, prefer the same endpoint with `{ postId, status: 'published' }` (service-role writeback) instead of a direct Supabase PATCH — the browser cannot write terminal statuses.",
+        "height": 320,
+        "width": 440
+      },
+      "id": "b8b00001-0000-4000-8000-000000000001",
+      "name": "Sticky Note — post-result",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        180
+      ]
+    },
+    {
+      "id": "ad76d65c-3ade-4a86-aa39-d018e49f653d",
+      "name": "Publish Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "path": "publish-social-post",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "c08a827b-4f9e-4f37-8d27-ebde7c7723f1"
+    },
+    {
+      "id": "f82164ac-017b-4c92-be2f-79af14897d64",
+      "name": "Fetch Draft Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        540,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/social_posts?id=eq.{{ $json.body.postId }}",
+        "sendHeaders": false,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "id": "771bdf1c-dde9-470c-b436-9170467cf0c3",
+      "name": "Flatten Post Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "post-id",
+              "name": "id",
+              "value": "={{ $json[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "captions",
+              "name": "captions",
+              "value": "={{ $json[0].captions }}",
+              "type": "object"
+            },
+            {
+              "id": "platforms",
+              "name": "platforms",
+              "value": "={{ $json[0].platforms }}",
+              "type": "object"
+            },
+            {
+              "id": "media-url",
+              "name": "mediaUrl",
+              "value": "={{ $json[0].media_url }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "517c2509-75be-4b63-a561-28455c258ba1",
+      "name": "Fetch Platform Tokens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1140,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ (($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '')) + '/api/internal/n8n/social-credentials?organization_id=' + $('Publish Request').first().json.body.orgId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($vars.N8N_INGEST_TOKEN || $vars.NEXUS_INGEST_TOKEN || '').trim() }}"
+            }
+          ]
+        },
+        "authentication": "none",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {}
+    },
+    {
+      "id": "3b10e707-051b-45d9-bd66-a96b47c6baef",
+      "name": "Post to Platform",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1740,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.platform === \"instagram\" ? \"https://graph.instagram.com/v18.0/ig/me/media\" : $json.platform === \"facebook\" ? \"https://graph.facebook.com/v18.0/me/feed\" : \"https://api.twitter.com/2/tweets\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.platformToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { text: $json.caption } }}"
+      }
+    },
+    {
+      "id": "60e81850-c7b2-44b1-967a-09f0663fc7b5",
+      "name": "Process Each Platform",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "ca221e4c-8380-45b8-8d60-50603044d6c7",
+      "name": "Mark Post Published",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2040,
+        300
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/social_posts?id=eq.{{ $('Publish Request').first().json.body.postId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: \"published\", published_at: $now.toISO() } }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth"
+      },
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "4rfwTEeSitzS3JeQ",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "id": "82da5c2d-77cc-4b1e-9684-f52924394830",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "66265011-8b0b-4961-bc92-7ec0a372951e",
+      "name": "Build Platform Post Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1290,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const post = $('Flatten Post Data').first().json;\nconst resp = $input.first().json;\nif (resp && resp.success === false) {\n  throw new Error(resp.error || 'Failed to fetch social credentials');\n}\nconst creds = Array.isArray(resp?.data) ? resp.data : [];\nconst platforms = post.platforms || [];\nconst captions = post.captions || {};\nconst mediaUrl = post.mediaUrl;\nconst postId = post.id;\n\nconst SUPPORTED = ['instagram', 'facebook', 'x'];\nconst items = [];\n\nfor (const platform of platforms) {\n  if (!SUPPORTED.includes(platform)) {\n    continue;\n  }\n  const cred = creds.find(c => c.platform === platform);\n  if (!cred) {\n    continue;\n  }\n  items.push({\n    json: {\n      platform,\n      caption: (captions[platform] && captions[platform].caption) || '',\n      platformToken: cred.access_token,\n      mediaUrl,\n      postId\n    }\n  });\n}\n\nreturn items;",
+        "mode": "runOnceForAllItems"
+      }
+    }
+  ],
+  "connections": {
+    "Publish Request": {
+      "main": [
+        [
+          {
+            "node": "Fetch Draft Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Draft Post": {
+      "main": [
+        [
+          {
+            "node": "Flatten Post Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Post Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Platform Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Platform": {
+      "main": [
+        [
+          {
+            "node": "Mark Post Published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Post Published": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Platform Tokens": {
+      "main": [
+        [
+          {
+            "node": "Build Platform Post Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Platform Post Items": {
+      "main": [
+        [
+          {
+            "node": "Process Each Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Platform": {
+      "main": [
+        [
+          {
+            "node": "Process Each Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
 }

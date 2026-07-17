@@ -2,19 +2,16 @@
 
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Bell,
   Lock,
   Mail,
-  MessageCircle,
-  MessagesSquare,
-  Camera,
   Shield,
   Sparkles,
   Users,
-  Share2,
   Pause,
   Play,
   Unplug,
@@ -24,12 +21,28 @@ import {
   UploadCloud,
   RotateCcw,
 } from "lucide-react";
+import {
+  FaFacebookF,
+  FaFacebookMessenger,
+  FaInstagram,
+  FaLinkedinIn,
+  FaWhatsapp,
+  FaXTwitter,
+} from "react-icons/fa6";
+import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
+import { POST_PLATFORMS, PLATFORM_LABELS } from "@/lib/posts/types";
+import type { Platform } from "@/lib/posts/types";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
+import {
+  isBillingEnabled,
+  isMetaInboxEnabled,
+  isSocialPublishingEnabled,
+} from "@/lib/feature-flags";
 import {
   planTierToSlug,
   PRICING_TIERS,
@@ -57,6 +70,13 @@ const PRIMARY_BTN =
 
 const SECONDARY_BTN =
   "inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-border-strong bg-surface-muted px-3 py-2 text-sm font-medium text-atmospheric-grey transition hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
+
+const SOCIAL_ICONS: Record<Platform, typeof FaInstagram> = {
+  instagram: FaInstagram,
+  facebook: FaFacebookF,
+  x: FaXTwitter,
+  linkedin: FaLinkedinIn,
+};
 
 const META_LABELS: Record<MetaChannelPlatform, string> = {
   whatsapp: "WhatsApp",
@@ -164,10 +184,52 @@ function SettingsSkeleton() {
   );
 }
 
+/**
+ * Task E.2: `/profile` is the landing spot for OAuth callbacks (Gmail via `/signup?step=gmail`
+ * historically, Meta via `metaDashboardUrl` — Task D.3). Turn their status query params into a
+ * one-line banner instead of silently dropping them, and scroll to the relevant section
+ * (`?section=channels`) so the user lands exactly where the thing they just did lives.
+ */
+function useCallbackStatusBanner(): { message: string; tone: "positive" | "critical" } | null {
+  const searchParams = useSearchParams();
+  const [banner, setBanner] = useState<{ message: string; tone: "positive" | "critical" } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section) {
+      // Defer to the next frame so the section has mounted before we scroll to it.
+      requestAnimationFrame(() => {
+        document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    const metaConnected = searchParams.get("meta_connected");
+    const metaError = searchParams.get("meta_error");
+    const gmailConnected = searchParams.get("gmail_connected");
+    const gmailError = searchParams.get("gmail_error");
+
+    if (metaConnected) {
+      setBanner({ message: `Connected: ${metaConnected.split(",").join(", ")}.`, tone: "positive" });
+    } else if (metaError) {
+      setBanner({ message: `Meta connection failed (${metaError}). Please try again.`, tone: "critical" });
+    } else if (gmailConnected) {
+      setBanner({ message: "Gmail connected.", tone: "positive" });
+    } else if (gmailError) {
+      setBanner({ message: `Gmail connection failed (${gmailError}). Please try again.`, tone: "critical" });
+    }
+  }, [searchParams]);
+
+  return banner;
+}
+
 export function SettingsView() {
   const tenant = useTenantScope();
   const queryClient = useQueryClient();
   const queriesEnabled = tenant.ready && !!tenant.teamId;
+  const [socialBusy, setSocialBusy] = useState<Platform | null>(null);
+  const callbackBanner = useCallbackStatusBanner();
 
   const {
     data: settings,
@@ -184,9 +246,11 @@ export function SettingsView() {
   const profile = settings?.business_profile;
 
   const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [industry, setIndustry] = useState("");
   const [timezone, setTimezone] = useState("");
   const [currency, setCurrency] = useState("");
+  const [pricingNotes, setPricingNotes] = useState("");
   const [tone, setTone] = useState("");
   const [chatPersona, setChatPersona] = useState(DEFAULT_ANALYST_PERSONA);
   const [enhancing, setEnhancing] = useState(false);
@@ -215,6 +279,11 @@ export function SettingsView() {
   );
 
   useEffect(() => {
+    if (!settings) return;
+    setFullName(settings.account.full_name ?? "");
+  }, [settings]);
+
+  useEffect(() => {
     if (!profile) return;
     setName(profile.name);
     setIndustry(profile.industry);
@@ -223,6 +292,9 @@ export function SettingsView() {
       typeof profile.pricing_rules.currency === "string"
         ? profile.pricing_rules.currency
         : settings?.fields.currency_from_pricing_rules ?? "",
+    );
+    setPricingNotes(
+      typeof profile.pricing_rules.notes === "string" ? profile.pricing_rules.notes : "",
     );
     setTone(profile.tone);
     setChatPersona(profile.chat_persona ?? DEFAULT_ANALYST_PERSONA);
@@ -247,7 +319,7 @@ export function SettingsView() {
     mutationFn: updateSettingsMutation,
     onSuccess: (next) => {
       queryClient.setQueryData(queryKeys.settings(tenant.teamId), next);
-      setSaveMessage("Settings saved.");
+      setSaveMessage("Profile saved.");
       setSaveError(null);
     },
     onError: (err) => {
@@ -308,6 +380,11 @@ export function SettingsView() {
     );
   }, [settings]);
 
+  function handleAccountSave(e: React.FormEvent) {
+    e.preventDefault();
+    saveMutation.mutate({ full_name: fullName.trim() });
+  }
+
   function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
     if (!settings?.editable.workspace_profile) return;
@@ -316,6 +393,7 @@ export function SettingsView() {
       industry,
       timezone: timezone.trim() || undefined,
       currency: currency.trim().toUpperCase() || undefined,
+      pricing_notes: pricingNotes,
     });
   }
 
@@ -363,6 +441,24 @@ export function SettingsView() {
     saveMutation.mutate({ notification_prefs: next });
   }
 
+  async function handleSocialDisconnect(platform: Platform) {
+    if (!window.confirm(`Disconnect ${PLATFORM_LABELS[platform]} publishing?`)) return;
+    setSocialBusy(platform);
+    try {
+      const res = await authenticatedFetch("/api/social/disconnect", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ platform }),
+      });
+      if (!res.ok) throw new Error("Disconnect failed");
+      await refetch();
+    } catch {
+      /* surfaced by the row state on next refetch */
+    } finally {
+      setSocialBusy(null);
+    }
+  }
+
   async function handleChannelAction(
     target: "gmail" | MetaChannelPlatform,
     action: "set_sync" | "disconnect",
@@ -399,8 +495,8 @@ export function SettingsView() {
   if (!tenant.ready || tenant.loading) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-muted">
-        <Spinner className="h-8 w-8" label="Loading settings" />
-        <p className="text-sm">Loading settings…</p>
+        <Spinner className="h-8 w-8" label="Loading profile" />
+        <p className="text-sm">Loading profile…</p>
       </div>
     );
   }
@@ -409,7 +505,7 @@ export function SettingsView() {
     return (
       <ExecutiveEmptyState
         title="Workspace setup required"
-        description="Complete onboarding to bind your team before managing workspace settings."
+        description="Complete onboarding to bind your team before managing your profile."
         icon={<Sparkles className="shrink-0" aria-hidden />}
         className="min-h-[50vh] app-glass-card"
       />
@@ -421,13 +517,27 @@ export function SettingsView() {
   return (
     <div className="min-h-0 space-y-10">
       <header className="hairline-b pb-8">
-        <p className="nexus-meta text-nexus-approval">Workspace</p>
+        <p className="nexus-meta text-nexus-approval">Account</p>
         <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Settings</h1>
         <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
-          Manage your workspace profile, connected channels, AI approval rules, billing,
-          and security preferences.
+          Manage your account, workspace profile, connected channels, AI approval rules,
+          billing, and security preferences.
         </p>
       </header>
+
+      {callbackBanner ? (
+        <div
+          role="status"
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            callbackBanner.tone === "positive"
+              ? "border-nexus-growth-border bg-nexus-growth-soft text-status-positive"
+              : "border-status-critical-border bg-status-critical-surface text-status-critical",
+          )}
+        >
+          {callbackBanner.message}
+        </div>
+      ) : null}
 
       {errorMsg ? (
         <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
@@ -446,6 +556,65 @@ export function SettingsView() {
         <SettingsSkeleton />
       ) : settings ? (
         <div className="space-y-6">
+          <SettingsSection
+            id="account"
+            title="Profile Settings"
+            description="Your personal identity in Nexus OS."
+          >
+            <form onSubmit={handleAccountSave} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FieldRow label="Display name">
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    disabled={saveMutation.isPending}
+                    className={INPUT_CLASS}
+                    placeholder="Your name"
+                    autoComplete="name"
+                  />
+                </FieldRow>
+                <FieldRow label="Email">
+                  <input
+                    type="email"
+                    value={settings.account.email ?? ""}
+                    readOnly
+                    disabled
+                    className={cn(INPUT_CLASS, "opacity-70")}
+                  />
+                </FieldRow>
+              </div>
+              <button
+                type="submit"
+                disabled={saveMutation.isPending}
+                className={PRIMARY_BTN}
+              >
+                {saveMutation.isPending ? "Saving…" : "Save account"}
+              </button>
+            </form>
+          </SettingsSection>
+
+          <SettingsSection
+            id="team"
+            title="Team"
+            description="Invite teammates and manage workspace access."
+          >
+            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium text-atmospheric-grey">Team members</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Send invites and manage roles from the Team page.
+                  </p>
+                </div>
+              </div>
+              <Link href="/team" className={SECONDARY_BTN}>
+                Open Team
+              </Link>
+            </div>
+          </SettingsSection>
+
           <SettingsSection
             id="workspace-profile"
             title="Workspace Profile"
@@ -509,6 +678,20 @@ export function SettingsView() {
                   />
                 </FieldRow>
               </div>
+
+              <FieldRow
+                label="Pricing rules"
+                hint="Services, packages, and rate notes used when drafting replies."
+              >
+                <textarea
+                  value={pricingNotes}
+                  onChange={(e) => setPricingNotes(e.target.value)}
+                  disabled={!settings.editable.workspace_profile || saveMutation.isPending}
+                  rows={5}
+                  className={cn(INPUT_CLASS, "resize-y")}
+                  placeholder="Example: Strategy calls $500. Monthly retainer from $2k. Rush support +20%."
+                />
+              </FieldRow>
 
               {saveMessage ? (
                 <p className="text-sm text-status-positive" role="status">
@@ -621,14 +804,18 @@ export function SettingsView() {
                 </div>
               </div>
 
-              {(Object.keys(META_LABELS) as MetaChannelPlatform[]).map((platform) => {
+              {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_META_INBOX (default OFF) — the Meta
+                  connect/OAuth routes stay alive, this only hides the connect affordance so we
+                  don't invite tenants into an unfinished unified inbox. */}
+              {isMetaInboxEnabled() &&
+                (Object.keys(META_LABELS) as MetaChannelPlatform[]).map((platform) => {
                 const channel = settings.channels.meta.platforms[platform];
                 const Icon =
                   platform === "whatsapp"
-                    ? MessagesSquare
+                    ? FaWhatsapp
                     : platform === "instagram"
-                      ? Camera
-                      : MessageCircle;
+                      ? FaInstagram
+                      : FaFacebookMessenger;
                 return (
                   <div
                     key={platform}
@@ -741,7 +928,7 @@ export function SettingsView() {
                   Chat personalization
                 </span>
                 <span className="block text-xs text-muted">
-                  This is sent to your AI assistant as its system message — shape it into a
+                  This is sent to your AI assistant as its system message. Shape it into a
                   specialized business analyst. Your read-only safety rules (never send, never
                   fabricate numbers) are always kept on top of whatever you write here.
                 </span>
@@ -795,7 +982,7 @@ export function SettingsView() {
                 <div>
                   <p className="text-sm font-medium text-atmospheric-grey">Visual answers</p>
                   <p className="mt-1 text-xs leading-relaxed text-muted">
-                    Let the Revenue Analyst build charts and tables inside chat answers when
+                    Let Chat build charts and tables inside chat answers when
                     they explain the data better than text. Note: visual answers use more AI
                     usage per reply.
                   </p>
@@ -916,7 +1103,7 @@ export function SettingsView() {
                   <Lock className="mr-1 inline h-3 w-3 align-[-1px]" aria-hidden />
                   Privacy: your documents are stored privately, encrypted at rest, and scoped to
                   this workspace only. They are used solely to inform your AI assistant&apos;s
-                  answers — never shared with other tenants and never used to train AI models.
+                  answers. Never shared with other tenants and never used to train AI models.
                 </p>
               </div>
 
@@ -931,9 +1118,9 @@ export function SettingsView() {
                   disabled={!settings.editable.ai_rules || saveMutation.isPending}
                   className={INPUT_CLASS}
                 >
-                  <option value="approval_queue">Approval queue — gate all replies</option>
+                  <option value="approval_queue">Approval queue: gate all replies</option>
                   <option value="autopilot">
-                    Autopilot — auto-send low-risk, low-value replies
+                    Autopilot: auto-send low-risk, low-value replies
                   </option>
                 </select>
               </FieldRow>
@@ -970,7 +1157,7 @@ export function SettingsView() {
                 </FieldRow>
                 <FieldRow
                   label="Monthly AI budget (tokens)"
-                  hint="Soft alert threshold against tracked AI usage — never blocks sends. Leave empty for no budget."
+                  hint="Soft alert threshold against tracked AI usage. Never blocks sends. Leave empty for no budget."
                 >
                   <input
                     type="number"
@@ -1021,9 +1208,13 @@ export function SettingsView() {
                     </p>
                   ) : null}
                 </div>
-                <Link href="/pricing" className={SECONDARY_BTN}>
-                  View plans
-                </Link>
+                {/* Task E.6: no checkout/payment-method flow ships yet — hide the plan-change CTA
+                    behind NEXT_PUBLIC_FEATURE_BILLING until that's wired up. */}
+                {isBillingEnabled() ? (
+                  <Link href="/pricing" className={SECONDARY_BTN}>
+                    View plans
+                  </Link>
+                ) : null}
               </div>
 
               <div className="rounded-xl border border-glass-border px-4 py-4">
@@ -1124,53 +1315,66 @@ export function SettingsView() {
             </div>
           </SettingsSection>
 
-          <SettingsSection
-            id="team"
-            title="Team"
-            description="Invite teammates and manage workspace access."
-          >
-            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <Users className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium text-atmospheric-grey">Team members</p>
-                  <p className="mt-1 text-xs text-muted">
-                    Send invites and manage roles from the Team page.
-                  </p>
-                </div>
-              </div>
-              <Link href="/team" className={SECONDARY_BTN}>
-                Open Team
-              </Link>
-            </div>
-          </SettingsSection>
-
+          {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_SOCIAL_PUBLISHING (default OFF) — /posts
+              and the social connect/publish routes stay alive, this only hides the section. */}
+          {isSocialPublishingEnabled() ? (
           <SettingsSection
             id="social-posting"
             title="Social Posting"
-            description="Linked publishing accounts for the Posts workspace."
+            description="Connect the accounts Nexus OS publishes posts to."
           >
-            <div className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <Share2 className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium text-atmospheric-grey">
-                    {settings.social.connected
-                      ? `${settings.social.platform_count} platform${settings.social.platform_count === 1 ? "" : "s"} connected`
-                      : "No social accounts connected"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    {settings.social.connected
-                      ? settings.social.platforms.join(", ")
-                      : "Connect platforms from Posts when you are ready to publish."}
-                  </p>
-                </div>
-              </div>
-              <Link href="/posts" className={SECONDARY_BTN}>
-                Open Posts
-              </Link>
+            <div className="space-y-3">
+              {POST_PLATFORMS.map((platform) => {
+                const connected = settings.social.platforms.includes(platform);
+                const Icon = SOCIAL_ICONS[platform];
+                return (
+                  <div
+                    key={platform}
+                    className="flex flex-col gap-3 rounded-xl border border-glass-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+                      <div>
+                        <p className="text-sm font-medium text-atmospheric-grey">
+                          {PLATFORM_LABELS[platform]}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          {connected
+                            ? "Connected for publishing."
+                            : "Not connected — you can't publish here yet."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill
+                        connected={connected}
+                        label={connected ? "Connected" : "Not connected"}
+                      />
+                      {connected ? (
+                        <button
+                          type="button"
+                          disabled={socialBusy === platform}
+                          onClick={() => void handleSocialDisconnect(platform)}
+                          className={SECONDARY_BTN}
+                        >
+                          {socialBusy === platform ? (
+                            <Spinner className="h-4 w-4" label="Working" />
+                          ) : (
+                            <Unplug className="h-4 w-4" aria-hidden />
+                          )}
+                          Disconnect
+                        </button>
+                      ) : null}
+                      <a href={`/api/social/connect?platform=${platform}`} className={SECONDARY_BTN}>
+                        {connected ? "Reconnect" : "Connect"}
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </SettingsSection>
+          ) : null}
 
           <SettingsSection
             id="notifications"
@@ -1232,7 +1436,7 @@ export function SettingsView() {
         </div>
       ) : errorMsg ? (
         <EmptyState
-          title="Settings unavailable"
+          title="Profile unavailable"
           description={errorMsg}
           icon={<AlertTriangle />}
           className="app-glass-card min-h-[40vh]"

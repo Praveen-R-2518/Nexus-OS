@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AtSign, Briefcase, Camera, ThumbsUp } from "lucide-react";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { signStoragePath } from "@/lib/posts/data";
 import { PLATFORM_LABELS, STATUS_LABELS } from "@/lib/posts/types";
@@ -15,13 +15,11 @@ export const PRIMARY_BTN =
 export const SECONDARY_BTN =
   "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface-muted px-4 py-2 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50";
 
-// This lucide build ships no brand marks, so each platform maps to a distinct
-// representative glyph instead.
-const PLATFORM_ICONS: Record<Platform, typeof Camera> = {
-  instagram: Camera,
-  facebook: ThumbsUp,
-  x: AtSign,
-  linkedin: Briefcase,
+const PLATFORM_ICONS: Record<Platform, typeof FaInstagram> = {
+  instagram: FaInstagram,
+  facebook: FaFacebookF,
+  x: FaXTwitter,
+  linkedin: FaLinkedinIn,
 };
 
 export function PlatformIcon({
@@ -42,9 +40,9 @@ export function PlatformIcon({
 
 const STATUS_STYLES: Record<PostStatus, string> = {
   draft: "border-border-strong bg-surface-muted text-atmospheric-grey/70 dark:text-atmospheric-grey/60",
-  pending_approval:
+  scheduled:
     "border-nexus-approval-border bg-nexus-approval-soft text-nexus-approval",
-  approved: "border-nexus-growth-border bg-nexus-growth-soft text-status-positive",
+  publishing: "border-nexus-growth-border bg-nexus-growth-soft text-status-positive",
   published: "border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution",
   failed: "border-status-critical-border bg-status-critical-surface text-status-critical",
 };
@@ -65,20 +63,6 @@ export function StatusBadge({
       )}
     >
       {STATUS_LABELS[status] ?? status}
-    </span>
-  );
-}
-
-/** Small "Coming soon" pill for stubbed, not-yet-built actions. */
-export function ComingSoonTag({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border border-border-strong bg-surface-muted px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-muted",
-        className,
-      )}
-    >
-      Coming soon
     </span>
   );
 }

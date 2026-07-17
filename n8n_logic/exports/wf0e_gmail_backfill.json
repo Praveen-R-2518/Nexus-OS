@@ -2,5 +2,94 @@
   "id": "Y54F1bZLJkRyexTH",
   "name": "WF0e Gmail Backfill",
   "active": true,
-  "note": "Created in live n8n on 2026-07-13. Polls gmail_backfill_jobs and POSTs to {NEXUS_APP_URL}/api/internal/n8n/gmail-backfill with NEXUS_INGEST_TOKEN. Requires deploy of Task 3.4 app code."
+  "note": "Hardened 2026-07-17: no Supabase service-role. Schedule → POST {NEXUS_APP_URL}/api/internal/n8n/gmail-backfill (empty body; app claims next pending job). Re-import into live n8n after pull.",
+  "nodes": [
+    {
+      "id": "sn-wf0e",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "content": "## Nexus OS — WF0e Gmail Backfill\n\nPOST `/api/internal/n8n/gmail-backfill` with bootstrap token.\nThe app claims the oldest pending/running `gmail_backfill_jobs` row — no Supabase REST fetch needed.\n\n**Required n8n Variables:** `NEXUS_APP_URL`, `N8N_BOOTSTRAP_TOKEN` (or legacy `N8N_INGEST_TOKEN`).",
+        "height": 220,
+        "width": 420
+      }
+    },
+    {
+      "id": "sched-wf0e",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "run-backfill",
+      "name": "Run Gmail Backfill",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/gmail-backfill' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Run Gmail Backfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
 }

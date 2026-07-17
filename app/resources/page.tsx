@@ -65,7 +65,7 @@ const groups: ResourceGroup[] = [
       },
       {
         title: "Reading churn signals before they cost you",
-        desc: "The subtle cues that predict cancellation — and how to act on them.",
+        desc: "The subtle cues that predict cancellation, and how to act on them.",
         meta: "Article",
         href: "/customers",
       },
@@ -136,7 +136,7 @@ const faqs = [
   },
   {
     q: "Do AI replies send automatically?",
-    a: "No. Every draft lands in the Approval Queue. A human reviews, edits, and approves before anything is sent — you stay in control of your brand voice.",
+    a: "No. Every draft lands in the Approval Queue. A human reviews, edits, and approves before anything is sent. You stay in control of your brand voice.",
   },
   {
     q: "How do I get started and what does it cost?",
@@ -278,7 +278,7 @@ export default function ResourcesPage() {
               Still have questions?
             </h2>
             <p className="mt-2 max-w-xl text-base leading-relaxed text-muted dark:text-slate-300">
-              Read the docs or talk to our team — we will help you map Nexus OS to
+              Read the docs or talk to our team. We will help you map Nexus OS to
               your revenue motion.
             </p>
           </div>

@@ -132,7 +132,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
       <div className="rounded-xl border border-nexus-execution-border bg-nexus-execution-soft px-4 py-3 text-sm text-amber-950 dark:border-nexus-execution-border dark:bg-nexus-execution-soft dark:text-amber-100">
         <p className="flex items-center gap-2 font-medium">
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-          Billing integration coming soon — you will not be charged yet.
+          Billing integration coming soon. You will not be charged yet.
         </p>
       </div>
 

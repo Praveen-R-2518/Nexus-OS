@@ -62,9 +62,18 @@ export function PostCard({
               <span className="text-xs">No platforms</span>
             )}
           </div>
-          <time className="text-xs tabular-nums text-muted" dateTime={post.updated_at}>
-            {formatRelativeTime(post.updated_at)}
-          </time>
+          {post.status === "scheduled" && post.scheduled_at ? (
+            <time
+              className="text-xs tabular-nums text-nexus-approval"
+              dateTime={post.scheduled_at}
+            >
+              Scheduled · {formatRelativeTime(post.scheduled_at)}
+            </time>
+          ) : (
+            <time className="text-xs tabular-nums text-muted" dateTime={post.updated_at}>
+              {formatRelativeTime(post.updated_at)}
+            </time>
+          )}
         </div>
       </div>
     </button>

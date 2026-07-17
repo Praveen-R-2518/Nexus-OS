@@ -32,7 +32,7 @@ type DocSection = {
 const sections: DocSection[] = [
   {
     id: "getting-started",
-    eyebrow: "01 — Start here",
+    eyebrow: "01 · Start here",
     title: "Getting Started",
     intro:
       "Stand up your workspace and connect your first revenue channel in under ten minutes.",
@@ -57,7 +57,7 @@ const sections: DocSection[] = [
   },
   {
     id: "core-modules",
-    eyebrow: "02 — The console",
+    eyebrow: "02 · The console",
     title: "Core Modules",
     intro:
       "Every authenticated tab in Nexus OS, and what it does for your revenue motion.",
@@ -87,7 +87,7 @@ const sections: DocSection[] = [
   },
   {
     id: "concepts",
-    eyebrow: "03 — How it thinks",
+    eyebrow: "03 · How it thinks",
     title: "Core Concepts",
     intro:
       "The models and scoring that decide what your team sees first.",
@@ -95,7 +95,7 @@ const sections: DocSection[] = [
     links: [
       {
         title: "Lead classification & intent",
-        desc: "How incoming messages are categorized by intent — purchase, support, churn — and scored.",
+        desc: "How incoming messages are categorized by intent (purchase, support, churn) and scored.",
         tag: "AI",
       },
       {
@@ -110,14 +110,14 @@ const sections: DocSection[] = [
       },
       {
         title: "Draft & approval flow",
-        desc: "From AI-generated draft to human-approved send — the lifecycle of every reply.",
+        desc: "From AI-generated draft to human-approved send: the lifecycle of every reply.",
         tag: "Workflow",
       },
     ],
   },
   {
     id: "integrations",
-    eyebrow: "04 — Connect everything",
+    eyebrow: "04 · Connect everything",
     title: "Integrations",
     intro:
       "Nexus OS sits on top of the tools you already run.",

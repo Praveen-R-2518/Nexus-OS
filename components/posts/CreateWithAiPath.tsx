@@ -11,14 +11,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   POST_MEDIA_BUCKET,
   getGeneration,
-  linkGenerationToPost,
   signStoragePath,
 } from "@/lib/posts/data";
-import {
-  editImageStub,
-  generatePostImage,
-} from "@/lib/posts/webhooks";
-import type { BrandAsset, SocialPost } from "@/lib/posts/types";
+import { editImage, generatePostImage } from "@/lib/posts/webhooks";
+import type { BrandAsset } from "@/lib/posts/types";
 import { BrandAssetPicker } from "./BrandAssetPicker";
 import { CaptionSection } from "./CaptionSection";
 import { PRIMARY_BTN, SECONDARY_BTN } from "./shared";
@@ -26,7 +22,7 @@ import { PRIMARY_BTN, SECONDARY_BTN } from "./shared";
 interface CreateWithAiPathProps {
   orgId: string;
   notify: (msg: string) => void;
-  onComplete: (post: SocialPost) => void;
+  onDone: () => void;
 }
 
 /** The AI image currently on screen; drives Undo (via parent_generation_id). */
@@ -39,7 +35,7 @@ interface CurrentGen {
   parentId: string | null;
 }
 
-export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPathProps) {
+export function CreateWithAiPath({ orgId, notify, onDone }: CreateWithAiPathProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [prompt, setPrompt] = useState("");
   const [selectedAsset, setSelectedAsset] = useState<BrandAsset | null>(null);
@@ -59,7 +55,11 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
     setError(null);
     setGenerating(true);
     try {
-      const result = await generatePostImage({ prompt: text, parentGenerationId });
+      const result = await generatePostImage({
+        prompt: text,
+        parentGenerationId,
+        referenceAssetPath: selectedAsset?.storage_path ?? null,
+      });
       setGen({
         id: result.generation_id,
         imagePath: result.image_path,
@@ -102,23 +102,25 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
 
   async function edit() {
     if (!gen) return;
+    const instruction = window.prompt(
+      "Describe the change you want to make to this image:",
+    );
+    if (!instruction?.trim()) return;
     setEditBusy(true);
+    setError(null);
     try {
-      await editImageStub({ editOf: gen.id, editInstruction: "" });
-    } catch {
-      notify("Not available yet.");
+      const result = await editImage({ editOf: gen.id, editInstruction: instruction.trim() });
+      setGen({
+        id: result.generation_id,
+        imagePath: result.image_path,
+        signedUrl: result.signed_url,
+        prompt: result.enhanced_prompt || instruction.trim(),
+        parentId: gen.id,
+      });
+    } catch (e) {
+      notify(e instanceof Error ? e.message : "Image edit failed.");
     } finally {
       setEditBusy(false);
-    }
-  }
-
-  async function handleCreated(post: SocialPost) {
-    if (!gen) return;
-    // Reconcile provenance: the caption webhook creates the row as an upload.
-    try {
-      await linkGenerationToPost(supabase, orgId, post.id, gen.id);
-    } catch {
-      // Provenance is non-blocking; the draft is already valid.
     }
   }
 
@@ -152,10 +154,12 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
             Write your caption
           </h3>
           <CaptionSection
+            orgId={orgId}
             mediaUrl={gen.imagePath}
             notify={notify}
-            onCreated={handleCreated}
-            onComplete={onComplete}
+            source="ai_generated"
+            generationId={gen.id}
+            onDone={onDone}
             showVisionButton
           />
         </div>
@@ -177,7 +181,7 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={3}
-          placeholder="Describe the image you want — the prompt is AI-enhanced before generation."
+          placeholder="Describe the image you want. The prompt is AI-enhanced before generation."
           className="glass-input min-h-[6rem] w-full resize-y px-3 py-2.5 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted"
         />
       </div>
@@ -256,10 +260,12 @@ export function CreateWithAiPath({ orgId, notify, onComplete }: CreateWithAiPath
                 disabled={editBusy}
                 className={SECONDARY_BTN}
               >
-                <Pencil className="h-4 w-4" aria-hidden /> Edit
-                <span className="ml-1 inline-flex items-center rounded-full border border-border-strong bg-surface-muted px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-muted">
-                  Coming soon
-                </span>
+                {editBusy ? (
+                  <Spinner className="h-4 w-4" label="Editing" />
+                ) : (
+                  <Pencil className="h-4 w-4" aria-hidden />
+                )}{" "}
+                Edit
               </button>
             </div>
             <button

@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { listPosts } from "@/lib/posts/data";
-import { POST_STATUSES, STATUS_LABELS } from "@/lib/posts/types";
+import { BOARD_FILTER_STATUSES, POST_STATUSES, STATUS_LABELS } from "@/lib/posts/types";
 import type { PostStatus, SocialPost } from "@/lib/posts/types";
 import { PostCard } from "./PostCard";
 import { PRIMARY_BTN } from "./shared";
@@ -43,12 +43,18 @@ export function PostStatusBoard({ orgId, onNewPost, onOpenPost }: PostStatusBoar
     return c;
   }, [posts]);
 
-  const visible = useMemo(
-    () => (filter === "all" ? posts : posts.filter((p) => p.status === filter)),
-    [posts, filter],
-  );
+  const visible = useMemo(() => {
+    if (filter === "scheduled") {
+      // Scheduled posts sort by publish time, soonest first.
+      return posts
+        .filter((p) => p.status === "scheduled")
+        .slice()
+        .sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""));
+    }
+    return filter === "all" ? posts : posts.filter((p) => p.status === filter);
+  }, [posts, filter]);
 
-  const filters: Filter[] = ["all", ...POST_STATUSES];
+  const filters: Filter[] = ["all", ...BOARD_FILTER_STATUSES];
   const errorMsg = error instanceof Error ? error.message : null;
 
   return (
@@ -59,8 +65,8 @@ export function PostStatusBoard({ orgId, onNewPost, onOpenPost }: PostStatusBoar
           <div>
             <h1 className="nexus-app-title text-atmospheric-grey">Posts</h1>
             <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
-              Draft, caption, and route social posts through the approval queue
-              before they go live.
+              Draft, schedule, and publish social posts across your connected
+              platforms.
             </p>
           </div>
           <button type="button" onClick={onNewPost} className={PRIMARY_BTN}>

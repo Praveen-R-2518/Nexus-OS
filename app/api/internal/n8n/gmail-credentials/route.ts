@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimitDurable,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
 import {
   decryptSecret,
@@ -87,7 +87,19 @@ export async function GET(request: Request) {
   );
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  // Optional least-privilege scoping: n8n MAY pass ?workspace_id=<uuid> to fetch
+  // a single tenant's credential instead of the full connected set. Bulk remains
+  // the default so the existing scheduled poll keeps working unchanged.
+  const workspaceFilter = parseWorkspaceId(
+    new URL(request.url).searchParams.get("workspace_id"),
+  );
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "read_gmail_credentials",
+    { workspaceId: workspaceFilter },
+    "internal n8n gmail-credentials GET",
+  );
   if (unauthorized) return unauthorized;
 
   if (!isEncryptionConfigured()) {
@@ -106,13 +118,6 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-
-  // Optional least-privilege scoping: n8n MAY pass ?workspace_id=<uuid> to fetch
-  // a single tenant's credential instead of the full connected set. Bulk remains
-  // the default so the existing scheduled poll keeps working unchanged.
-  const workspaceFilter = parseWorkspaceId(
-    new URL(request.url).searchParams.get("workspace_id"),
-  );
 
   let query = supabase
     .from("gmail_credentials")
@@ -234,9 +239,6 @@ export async function POST(request: Request) {
   );
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
-
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
   const body = parsed.body;
@@ -248,6 +250,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "read_gmail_credentials",
+    { resourceType: "gmail_credential", resourceId: id },
+    "internal n8n gmail-credentials POST",
+  );
+  if (unauthorized) return unauthorized;
 
   const lastSyncedAt =
     typeof body.last_synced_at === "string" && body.last_synced_at.trim()

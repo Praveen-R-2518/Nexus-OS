@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimitDurable,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { parseWorkspaceId } from "@/lib/workspace-id";
@@ -13,15 +13,14 @@ export const dynamic = "force-dynamic";
 
 /**
  * Channel Sender — turns an APPROVED reply_draft into a real email (docs/channel_sender.md).
- * Called by the n8n approval-trigger workflow, guarded by N8N_INGEST_TOKEN. Tenant-scoped and
- * idempotent. All send logic lives in `lib/channel-sender.ts`; this route only auth/parses.
+ * Called by the n8n approval-trigger workflow. Job-scoped: expects a single-use token minted
+ * for action `send_reply` bound to (team_id, draft). Falls back to the bootstrap/legacy
+ * `N8N_INGEST_TOKEN` (with a warning) until n8n mints job tokens. Tenant-scoped and idempotent.
+ * All send logic lives in `lib/channel-sender.ts`; this route only auth/parses.
  */
 export async function POST(request: Request) {
   const limited = await rateLimitDurable(request, "api:internal:n8n:send-reply", 60, 60_000);
   if (limited) return limited;
-
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
@@ -41,6 +40,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "send_reply",
+    { teamId, resourceType: "draft", resourceId: draftId },
+    "internal n8n send-reply",
+  );
+  if (unauthorized) return unauthorized;
 
   let supabase;
   try {

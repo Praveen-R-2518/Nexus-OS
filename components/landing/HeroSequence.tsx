@@ -30,7 +30,7 @@ function HeroIntroContent({ showCta = true }: { showCta?: boolean }) {
         The revenue &amp; AI engine for modern founders.
       </h1>
       <p className="apple-body mt-6 max-w-xl text-apple-text-secondary">
-        Nexus OS rescues revenue from the chaos of every channel — so you never
+        Nexus OS rescues revenue from the chaos of every channel, so you never
         choose between saving time and saving deals.
       </p>
       {showCta ? (

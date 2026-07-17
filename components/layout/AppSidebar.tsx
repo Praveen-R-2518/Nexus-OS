@@ -7,15 +7,16 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
+  ClipboardList,
   FileText,
   ImageIcon,
   Inbox,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { prefetchNavRoute } from "@/lib/queries/nav-prefetch";
 import { useTenantScopeOptional } from "@/components/tenant/TenantScope";
+import { isSocialPublishingEnabled } from "@/lib/feature-flags";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
@@ -32,12 +34,15 @@ const SIDEBAR_COLLAPSED_WIDTH = "4.75rem";
 const appNav = [
   { href: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { href: "/inbox", label: "Inbox", icon: Inbox },
-  { href: "/chat", label: "Revenue Analyst", icon: Sparkles },
-  { href: "/posts", label: "Posts", icon: ImageIcon },
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
+  // Task C: hidden behind NEXT_PUBLIC_FEATURE_SOCIAL_PUBLISHING (default OFF) — the /posts route
+  // stays alive for direct/deep links, this only hides the nav entry.
+  { href: "/posts", label: "Posts", icon: ImageIcon, flag: "socialPublishing" as const },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/team", label: "Team", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/logs", label: "Logs", icon: ClipboardList },
+  { href: "/profile", label: "Settings", icon: Settings },
 ] as const;
 
 function isNavActive(pathname: string, href: string): boolean {
@@ -59,6 +64,9 @@ function SidebarNav({
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const tenant = useTenantScopeOptional();
+  const visibleNav = appNav.filter(
+    (item) => !("flag" in item) || item.flag !== "socialPublishing" || isSocialPublishingEnabled(),
+  );
 
   return (
     <nav
@@ -68,7 +76,7 @@ function SidebarNav({
       )}
       aria-label="App"
     >
-      {appNav.map(({ href, label, icon: Icon }) => {
+      {visibleNav.map(({ href, label, icon: Icon }) => {
         const active = isNavActive(pathname, href);
         return (
           <Link

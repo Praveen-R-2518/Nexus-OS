@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { resolveOrganizationIdForUser } from "@/lib/organization-bridge";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 /**
@@ -10,6 +11,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
  *   organization_id IN (SELECT organization_id FROM user_profiles WHERE id = auth.uid())
  * so the org id must come from the caller's own `user_profiles` row, read through
  * the authenticated browser client — the exact source RLS checks against.
+ *
+ * When `user_profiles.organization_id` is null, falls back to `teams.organization_id`
+ * for the user's team (profiles.team_id / workspace_members / team owner).
  */
 export function useOrganization(): {
   userId: string | null;
@@ -48,17 +52,7 @@ export function useOrganization(): {
           return;
         }
 
-        const { data, error: profileErr } = await supabase
-          .from("user_profiles")
-          .select("organization_id")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (profileErr) throw profileErr;
-
-        const orgId =
-          data && typeof (data as { organization_id?: unknown }).organization_id === "string"
-            ? ((data as { organization_id: string }).organization_id.trim() || null)
-            : null;
+        const orgId = await resolveOrganizationIdForUser(supabase, user.id);
 
         if (!cancelled) {
           setUserId(user.id);

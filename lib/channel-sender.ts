@@ -17,6 +17,7 @@ import { getWorkspaceMetaCredential } from "@/lib/meta/credentials";
 import { MetaSendError, sendMetaMessage } from "@/lib/meta/send";
 import { chooseSendStrategy, type MetaPlatform } from "@/lib/meta/window";
 import { decideAutoSend } from "@/lib/approval-policy";
+import { markOutboundJobResult, queueOutboundJob } from "@/lib/outbound-jobs";
 
 export interface SenderResult {
   status: number;
@@ -68,6 +69,30 @@ type BusinessProfileRow = {
 
 function err(error: string, status: number): SenderResult {
   return { status, body: { success: false, error } };
+}
+
+/**
+ * Advance the `outbound_jobs` row for `draftId` to a terminal status based on the dispatch
+ * outcome, then pass the result through unchanged. Best-effort — `markOutboundJobResult` never
+ * throws, so this can never turn a real send success/failure into a different HTTP response.
+ */
+async function finalizeOutboundJob(
+  supabase: SupabaseClient,
+  draftId: string,
+  result: SenderResult,
+): Promise<SenderResult> {
+  if (result.status >= 200 && result.status < 300) {
+    const messageId =
+      typeof result.body.messageId === "string" ? result.body.messageId : null;
+    await markOutboundJobResult(supabase, draftId, { status: "sent", providerMessageId: messageId });
+  } else {
+    const error =
+      typeof result.body.error === "string"
+        ? result.body.error
+        : `send failed with status ${result.status}`;
+    await markOutboundJobResult(supabase, draftId, { status: "failed", error });
+  }
+  return result;
 }
 
 /** Derive a reply subject from the inbound message payload; fall back to a safe default. */
@@ -168,6 +193,20 @@ export async function executeSendReply(
     (draft.workspace_id ? String(draft.workspace_id) : null);
   if (!workspaceId) return err("Could not resolve workspace_id for send", 409);
 
+  // Durable outbound (Task B.1/B.2): ensure a `queued` outbound_jobs row exists before we attempt
+  // dispatch. The human-approval path (`/api/approval`) already queues one on approve; autopilot
+  // does not, so this upsert is what creates it for that path. From here on every return finalizes
+  // the job to 'sent' or 'failed' via `finalize` so the row never stays stuck at 'queued' once a
+  // send attempt has actually started.
+  await queueOutboundJob(supabase, {
+    draftId,
+    teamId,
+    workspaceId,
+    conversationId,
+    channel: conversation.source ?? null,
+  });
+  const finalize = (result: SenderResult) => finalizeOutboundJob(supabase, draftId, result);
+
   // Channel dispatch (docs/meta_outbound.md §2): Meta sources go to the Graph
   // sender (kill-switch gated), everything else keeps the live Gmail path.
   const metaPlatform = metaPlatformOf(conversation);
@@ -182,20 +221,20 @@ export async function executeSendReply(
         ? (conversation.customer_phone ?? "").trim() ||
           (conversation.customer_email ?? "").trim()
         : (conversation.customer_email ?? "").trim());
-    if (!recipient) return err("Conversation has no Meta recipient id to send to", 409);
+    if (!recipient) return finalize(err("Conversation has no Meta recipient id to send to", 409));
 
     const credResult = await getWorkspaceMetaCredential(supabase, workspaceId, metaPlatform);
     if (!credResult.ok || !credResult.credential) {
       if (credResult.error === "encryption_not_configured") {
-        return err("Server configuration error", 503);
+        return finalize(err("Server configuration error", 503));
       }
       if (credResult.error === "decrypt_failed") {
-        return err("Meta credential could not be used to send", 502);
+        return finalize(err("Meta credential could not be used to send", 502));
       }
       if (credResult.error === "token_expired") {
-        return err("Meta connection expired — reconnect the account in Settings", 409);
+        return finalize(err("Meta connection expired — reconnect the account in Settings", 409));
       }
-      return err(`No connected ${metaPlatform} account for this workspace`, 409);
+      return finalize(err(`No connected ${metaPlatform} account for this workspace`, 409));
     }
 
     // Compliance window (lib/meta/window.ts is the single source of truth).
@@ -205,16 +244,18 @@ export async function executeSendReply(
       humanAgentEnabled: process.env.META_HUMAN_AGENT_ENABLED?.trim() === "true",
     });
     if (strategy.kind === "blocked") {
-      return err(`Cannot send on ${metaPlatform}: ${strategy.reason}`, 409);
+      return finalize(err(`Cannot send on ${metaPlatform}: ${strategy.reason}`, 409));
     }
 
     // Out-of-window WhatsApp requires a pre-approved template (HSM).
     const templateName = process.env.META_WA_TEMPLATE_NAME?.trim();
     const templateLang = process.env.META_WA_TEMPLATE_LANG?.trim() || "en";
     if (strategy.kind === "template" && !templateName) {
-      return err(
-        "Outside the 24h WhatsApp window and no approved template is configured (META_WA_TEMPLATE_NAME)",
-        409,
+      return finalize(
+        err(
+          "Outside the 24h WhatsApp window and no approved template is configured (META_WA_TEMPLATE_NAME)",
+          409,
+        ),
       );
     }
 
@@ -241,24 +282,24 @@ export async function executeSendReply(
       );
       // 501 = kill-switch off (META_SEND_ENABLED unset) — surface that clearly.
       if (status === 501) {
-        return err("Meta outbound sending is not enabled yet", 501);
+        return finalize(err("Meta outbound sending is not enabled yet", 501));
       }
-      return err("Failed to send reply", 502);
+      return finalize(err("Failed to send reply", 502));
     }
   } else {
     const recipient = (conversation.customer_email ?? "").trim();
-    if (!recipient) return err("Conversation has no customer_email to send to", 409);
+    if (!recipient) return finalize(err("Conversation has no customer_email to send to", 409));
 
     // Resolve the workspace's Gmail credential (decrypt + refresh server-side).
     const credResult = await getWorkspaceGmailCredential(supabase, workspaceId);
     if (!credResult.ok || !credResult.credential) {
       if (credResult.error === "encryption_not_configured") {
-        return err("Server configuration error", 503);
+        return finalize(err("Server configuration error", 503));
       }
       if (credResult.error === "refresh_failed" || credResult.error === "decrypt_failed") {
-        return err("Gmail credential could not be used to send", 502);
+        return finalize(err("Gmail credential could not be used to send", 502));
       }
-      return err("No connected Gmail account for this workspace", 409);
+      return finalize(err("No connected Gmail account for this workspace", 409));
     }
     const credential = credResult.credential;
 
@@ -278,7 +319,7 @@ export async function executeSendReply(
         `[channel-sender] transport error (upstream=${upstream}):`,
         e instanceof Error ? e.message : e,
       );
-      return err("Failed to send reply", 502);
+      return finalize(err("Failed to send reply", 502));
     }
   }
 
@@ -297,10 +338,10 @@ export async function executeSendReply(
   if (draftUpdErr) {
     console.error("[channel-sender] draft status update error:", draftUpdErr);
     // The email WAS sent; surface but do not pretend it failed.
-    return {
+    return finalize({
       status: 200,
       body: { success: true, messageId, warning: "sent_but_status_update_failed" },
-    };
+    });
   }
 
   const { error: convUpdErr } = await supabase
@@ -312,7 +353,7 @@ export async function executeSendReply(
     console.error("[channel-sender] conversation status update error:", convUpdErr);
   }
 
-  return { status: 200, body: { success: true, alreadySent: false, messageId } };
+  return finalize({ status: 200, body: { success: true, alreadySent: false, messageId } });
 }
 
 export interface AutopilotInput {

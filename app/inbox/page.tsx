@@ -134,7 +134,7 @@ function intentBadgeLabel(
 function urgencyBadgeLabel(
   urgency: Conversation["urgency"] | null | undefined,
 ): string {
-  if (urgency == null) return "—";
+  if (urgency == null) return "n/a";
   return urgency.charAt(0).toUpperCase() + urgency.slice(1);
 }
 

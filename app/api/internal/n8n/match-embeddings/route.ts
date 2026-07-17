@@ -4,7 +4,7 @@ import {
   jsonError,
   rateLimitDurable,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { matchKnowledge, type EmbeddingKind } from "@/lib/embeddings/store";
@@ -20,7 +20,9 @@ const MAX_LIMIT = 12;
  * (WF3 reply drafting pulls "similar past context" through here; n8n never talks to
  * pgvector or OpenAI embeddings directly). Body: { team_id, query, kinds?, limit? }.
  * Returns team-scoped chunks via the same thresholded/weighted matchKnowledge path
- * the analyst chat uses.
+ * the analyst chat uses. Job-scoped: expects a single-use token minted for action
+ * `match_embeddings` bound to team_id; falls back to the bootstrap/legacy `N8N_INGEST_TOKEN`
+ * (with a warning) until n8n mints job tokens.
  */
 export async function POST(request: Request) {
   const limited = await rateLimitDurable(
@@ -30,9 +32,6 @@ export async function POST(request: Request) {
     60_000,
   );
   if (limited) return limited;
-
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
@@ -44,6 +43,14 @@ export async function POST(request: Request) {
   if (!teamId || !query) {
     return jsonError("team_id and query are required", 400);
   }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "match_embeddings",
+    { teamId },
+    "internal n8n match-embeddings",
+  );
+  if (unauthorized) return unauthorized;
 
   const kinds = Array.isArray(body.kinds)
     ? body.kinds.filter(

@@ -2,5 +2,97 @@
   "id": "lr4HzWo2QeghXxhH",
   "name": "WF0d Ledger Drain",
   "active": true,
-  "note": "Exported from live n8n (knurdz3o) on 2026-07-13. Replays inbound_events stuck at received/failed every 10 min via Supabase REST + gmail-inbound webhook."
+  "note": "Hardened 2026-07-17: no Supabase service-role. Schedule → POST {NEXUS_APP_URL}/api/internal/n8n/inbound-replay with N8N_BOOTSTRAP_TOKEN (or legacy N8N_INGEST_TOKEN). Re-import into live n8n after pull.",
+  "nodes": [
+    {
+      "id": "e1f2a3b4-c5d6-7890-abcd-ef0123456789",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "content": "## Nexus OS — WF0d Ledger Drain\n\nReplays `inbound_events` stuck at `received`/`failed` via the app endpoint.\n\n**Required n8n Variables:** `NEXUS_APP_URL`, `N8N_BOOTSTRAP_TOKEN` (or legacy `N8N_INGEST_TOKEN`).\n\n**Do NOT** use Supabase service-role credentials in this workflow.",
+        "height": 240,
+        "width": 420
+      }
+    },
+    {
+      "id": "f2a3b4c5-d6e7-8901-bcde-f01234567890",
+      "name": "Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a3b4c5d6-e7f8-9012-cdef-012345678901",
+      "name": "Trigger Inbound Replay",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/inbound-replay' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { older_than_minutes: 10, max_attempts: 5, limit: 50 } }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 10 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Trigger Inbound Replay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
 }

@@ -3,149 +3,133 @@
  *
  * Paste into an n8n **Code** node (Run once for all items). Use async/await if required by your n8n version.
  *
- * Prompt: classification_prompt.txt in ai_prompts/ (override filename with NEXUS_CLASSIFICATION_PROMPT_FILE).
+ * Centralized AI: this node no longer calls OpenAI directly. It POSTs to the Next.js app's
+ * `/api/internal/n8n/ai/classify` endpoint, which holds the single `OPENAI_API_KEY` and runs
+ * `lib/ai/classify.ts` (loads `ai_prompts/classification_prompt.txt` server-side). n8n only
+ * needs the app URL + ingest token — never the OpenAI key.
  *
  * Env:
- * - OPENAI_API_KEY (required) — n8n variables or host env; never hard-code.
- * - OPENAI_MODEL — default gpt-4o-mini
- * - NEXUS_PROMPT_DIR — absolute path to folder containing prompt .txt files (optional)
- * - NEXUS_CLASSIFICATION_PROMPT_FILE — prompt filename inside that folder (optional)
+ * - NEXUS_APP_URL (required) — the Next.js app's base URL. n8n Variable preferred
+ *   ($vars.NEXUS_APP_URL) — n8n Cloud blocks $env in node expressions
+ *   (N8N_BLOCK_ENV_ACCESS_IN_NODE), so $vars is checked first below.
+ * - N8N_INGEST_TOKEN (required) — Bearer token the app's internal routes require.
  *
  * Input JSON per item:
- * - customer_name, channel, message (or original_message / text)
+ * - customer_name, channel, message (or original_message / text), team_id, workspace_id
  *
- * Output: Nexus schema fields (intent_type, urgency, …) spread on the item plus classification_result.
+ * Output: classification fields spread on the item plus classification_result. On a 503
+ * `ai_not_configured` response, the item is annotated with `classification_failed: true` and
+ * `ai_not_configured: true` instead of throwing, so the workflow can branch to a human queue.
  */
 
-const fs = require('fs');
-const path = require('path');
-
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-
-function getApiKey() {
-  const fromN8n =
-    typeof $env !== 'undefined' && $env.OPENAI_API_KEY
-      ? String($env.OPENAI_API_KEY).trim()
-      : '';
-  const fromProcess = process.env.OPENAI_API_KEY
-    ? String(process.env.OPENAI_API_KEY).trim()
-    : '';
-  const key = fromN8n || fromProcess;
-  if (!key) {
+function getAppUrl() {
+  const fromVars =
+    typeof $vars !== 'undefined' && $vars.NEXUS_APP_URL ? String($vars.NEXUS_APP_URL).trim() : '';
+  const fromEnv =
+    typeof $env !== 'undefined' && $env.NEXUS_APP_URL ? String($env.NEXUS_APP_URL).trim() : '';
+  const fromProcess = process.env.NEXUS_APP_URL ? String(process.env.NEXUS_APP_URL).trim() : '';
+  const url = fromVars || fromEnv || fromProcess;
+  if (!url) {
     throw new Error(
-      'OPENAI_API_KEY is not set. Add it to n8n environment variables or credentials-derived env; do not hard-code the key in this file.',
+      'NEXUS_APP_URL is not set. Add it as an n8n Variable ($vars.NEXUS_APP_URL, Settings -> Variables).',
     );
   }
-  return key;
+  return url.replace(/\/+$/, '');
 }
 
-function getModel() {
-  const m =
-    (typeof $env !== 'undefined' && $env.OPENAI_MODEL) ||
-    process.env.OPENAI_MODEL ||
-    'gpt-4o-mini';
-  return String(m).trim();
-}
-
-function getClassificationPromptBasename() {
+function getIngestToken() {
+  const fromVars =
+    typeof $vars !== 'undefined' && $vars.N8N_INGEST_TOKEN
+      ? String($vars.N8N_INGEST_TOKEN).trim()
+      : '';
   const fromEnv =
-    (typeof $env !== 'undefined' && $env.NEXUS_CLASSIFICATION_PROMPT_FILE) ||
-    process.env.NEXUS_CLASSIFICATION_PROMPT_FILE;
-  const name = fromEnv ? String(fromEnv).trim() : '';
-  return name || 'classification_prompt.txt';
-}
-
-function resolvePromptDir() {
-  const envDir =
-    typeof $env !== 'undefined' && $env.NEXUS_PROMPT_DIR
-      ? String($env.NEXUS_PROMPT_DIR).trim()
-      : process.env.NEXUS_PROMPT_DIR
-        ? String(process.env.NEXUS_PROMPT_DIR).trim()
-        : '';
-  const candidates = [envDir, path.join(__dirname, '..', 'ai_prompts'), path.join(process.cwd(), 'ai_prompts')].filter(Boolean);
-
-  for (const dir of candidates) {
-    if (dir && fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
-      return dir;
-    }
+    typeof $env !== 'undefined' && $env.N8N_INGEST_TOKEN
+      ? String($env.N8N_INGEST_TOKEN).trim()
+      : '';
+  const fromProcess = process.env.N8N_INGEST_TOKEN
+    ? String(process.env.N8N_INGEST_TOKEN).trim()
+    : '';
+  const token = fromVars || fromEnv || fromProcess;
+  if (!token) {
+    throw new Error(
+      'N8N_INGEST_TOKEN is not set. Add it as an n8n Variable ($vars.N8N_INGEST_TOKEN, Settings -> Variables).',
+    );
   }
-  throw new Error(
-    'Cannot resolve ai_prompts directory. Set NEXUS_PROMPT_DIR to the folder containing your classification prompt .txt files.',
-  );
+  return token;
 }
 
-function loadClassificationSystemPrompt(override, dir) {
-  if (override && String(override).trim()) return String(override).trim();
-  const base = getClassificationPromptBasename();
-  const full = path.join(dir, base);
-  if (!fs.existsSync(full)) {
-    throw new Error(`Classification prompt not found: ${full}`);
-  }
-  return fs.readFileSync(full, 'utf8');
-}
-
-function buildUserPayload({ customer_name, channel, message }) {
-  const lines = [
-    'Classify this single inbound customer message. Use only the message text for classification; the rest is context.',
-    '',
-    `customer_name: ${customer_name ?? ''}`,
-    `channel: ${channel ?? ''}`,
-    '',
-    'message:',
-    String(message ?? ''),
-  ];
-  return lines.join('\n');
-}
-
-async function openaiJsonChat(system, user) {
-  const key = getApiKey();
-  const model = getModel();
-  const res = await fetch(OPENAI_URL, {
+async function classifyViaApp({ team_id, workspace_id, message, customer_name, channel }) {
+  const url = `${getAppUrl()}/api/internal/n8n/ai/classify`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${getIngestToken()}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify({ team_id, workspace_id, message, customer_name, channel }),
   });
   const raw = await res.text();
+  if (res.status === 503) {
+    let body;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      body = { error: raw };
+    }
+    if (body && body.code === 'ai_not_configured') {
+      return { ai_not_configured: true };
+    }
+  }
   if (!res.ok) {
-    throw new Error(`OpenAI error ${res.status}: ${raw.slice(0, 800)}`);
+    throw new Error(`Classify endpoint error ${res.status}: ${raw.slice(0, 800)}`);
   }
   const data = JSON.parse(raw);
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('OpenAI: missing choices[0].message.content');
-  return JSON.parse(text);
+  return { classification: data.classification, model: data.model };
 }
 
 const items = $input.all();
 const out = [];
-const promptDir = resolvePromptDir();
 
 for (const item of items) {
   const j = item.json || {};
-  const system = loadClassificationSystemPrompt(j.classification_system_prompt, promptDir);
-  const user = buildUserPayload({
-    customer_name: j.customer_name,
-    channel: j.channel,
-    message: j.message ?? j.original_message ?? j.text,
-  });
-  const classification = await openaiJsonChat(system, user);
-  out.push({
-    json: {
-      ...j,
-      classification_result: classification,
-      ...classification,
-    },
-  });
+  const message = j.message ?? j.original_message ?? j.text;
+
+  try {
+    const result = await classifyViaApp({
+      team_id: j.team_id || (j._tenant && j._tenant.team_id),
+      workspace_id: j.workspace_id || (j._tenant && j._tenant.workspace_id) || null,
+      message,
+      customer_name: j.customer_name,
+      channel: j.channel,
+    });
+
+    if (result.ai_not_configured) {
+      out.push({
+        json: {
+          ...j,
+          classification_failed: true,
+          ai_not_configured: true,
+        },
+      });
+      continue;
+    }
+
+    out.push({
+      json: {
+        ...j,
+        classification_result: result.classification,
+        ...result.classification,
+      },
+    });
+  } catch (error) {
+    out.push({
+      json: {
+        ...j,
+        classification_failed: true,
+        error: error.message,
+      },
+    });
+  }
 }
 
 return out;

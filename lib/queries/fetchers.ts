@@ -4,9 +4,12 @@ import type {
   Conversation,
   DailyReport,
   Metrics,
+  MetricsTimeseries,
+  MetricsTimeseriesRange,
   NotificationPrefs,
   ReplyDraft,
   ReplyDraftWithConversation,
+  WorkflowLogRow,
   WorkspaceSettings,
 } from "@/types";
 
@@ -46,6 +49,20 @@ export async function metricsQuery(): Promise<Metrics> {
     throw new Error("Invalid metrics response");
   }
   return json.metrics;
+}
+
+export async function metricsTimeseriesQuery(
+  range: MetricsTimeseriesRange,
+): Promise<MetricsTimeseries> {
+  const res = await authenticatedFetch(
+    `/api/metrics/timeseries?range=${encodeURIComponent(range)}`,
+  );
+  const json = await readJson<MetricsTimeseries & { error?: string }>(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!Array.isArray(json.points) || typeof json.range !== "string") {
+    throw new Error("Invalid metrics timeseries response");
+  }
+  return { range: json.range as MetricsTimeseriesRange, points: json.points };
 }
 
 export async function replyDraftsQuery(
@@ -89,6 +106,36 @@ export async function aiUsageQuery(): Promise<AiUsageSummary> {
   return json.usage;
 }
 
+export interface WorkflowLogsPage {
+  data: WorkflowLogRow[];
+  count: number;
+  limit: number;
+  offset: number;
+}
+
+export async function workflowLogsQuery(
+  result: string,
+  offset: number,
+  limit = 50,
+): Promise<WorkflowLogsPage> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (result) params.set("result", result);
+  const res = await authenticatedFetch(`/api/workflow-logs?${params.toString()}`);
+  const json = await readJson<
+    { data?: WorkflowLogRow[]; count?: number; limit?: number; offset?: number; error?: string }
+  >(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!Array.isArray(json.data)) {
+    throw new Error("Invalid workflow logs response");
+  }
+  return {
+    data: json.data,
+    count: json.count ?? json.data.length,
+    limit: json.limit ?? limit,
+    offset: json.offset ?? offset,
+  };
+}
+
 export async function conversationDraftsQuery(id: string): Promise<ReplyDraft[]> {
   const res = await authenticatedFetch(
     `/api/conversations/${encodeURIComponent(id)}`,
@@ -109,6 +156,7 @@ export async function settingsQuery(): Promise<WorkspaceSettings> {
 }
 
 export type SettingsPatchInput = {
+  full_name?: string;
   name?: string;
   industry?: string;
   tone?: string;
@@ -117,6 +165,7 @@ export type SettingsPatchInput = {
   approval_mode?: "approval_queue" | "autopilot";
   timezone?: string;
   currency?: string;
+  pricing_notes?: string;
   high_value_threshold?: number;
   high_risk_score?: number;
   chat_visuals_enabled?: boolean;

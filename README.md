@@ -138,7 +138,7 @@ Five-stage pipeline from inbox to send:
 | **4. Approval** | Next.js `/approval` | Founder reviews, edits, approves or rejects → triggers n8n approval webhook |
 | **5. Sync** | n8n send workflow | Approved drafts dispatch via configured channel; status flows back to `conversations` |
 
-**Real-time path:** Supabase Realtime + React Query keep the Command Center (`/dashboard`) and Inbox (`/inbox`) current without manual refresh.
+**Live-refresh path:** React Query polling (short `staleTime` + `refetchInterval` on the relevant queries) keeps the Command Center (`/dashboard`) and Inbox (`/inbox`) current without a manual refresh. Supabase Realtime is not wired up — this is plain REST polling.
 
 ---
 
@@ -153,7 +153,7 @@ Five-stage pipeline from inbox to send:
          │                                    ▲
          ▼                                    │
 ┌─────────────────────┐              ┌─────────────────────┐
-│   Next.js 14 App    │◄──Realtime──▶│      Supabase       │
+│   Next.js 14 App    │◄──REST poll──▶│      Supabase       │
 │   (App Router)      │   REST/Auth  │  PostgreSQL + RLS   │
 │  dashboard/inbox/   │              │  teams · workspaces │
 │  approval/signup    │              │  conversations ·    │
@@ -200,7 +200,7 @@ Five-stage pipeline from inbox to send:
 |-------|------------|----------------|-----|
 | **Frontend** | Next.js (App Router), React, TypeScript, Tailwind CSS | Next `14.2.35`, React `18`, TS `5` | SSR + API routes in one deployable surface; type-safe UI |
 | **UI motion** | Framer Motion, Lenis, Three.js (landing) | — | "Atmospheric Executive" dark glass aesthetic |
-| **Backend** | Supabase (Postgres, Auth, Realtime) | `@supabase/supabase-js` `2.x` | Managed Postgres + RLS for multi-tenant SaaS |
+| **Backend** | Supabase (Postgres, Auth) | `@supabase/supabase-js` `2.x` | Managed Postgres + RLS for multi-tenant SaaS; UI stays current via React Query polling, not Realtime |
 | **Automation** | n8n Cloud | 5 workflows, 50+ nodes | Visual orchestration; non-devs can audit flows |
 | **AI** | OpenAI GPT-4o | `openai` `6.x` | Classification + reply generation with structured JSON |
 | **Hosting** | Vercel / Netlify (configured) | `netlify.toml` present | Edge-friendly Next.js deploy |
@@ -248,7 +248,7 @@ supabase db push
 # Or run SQL files manually in the Supabase SQL editor (0001 → latest).
 ```
 
-Enable **Realtime** on tables your dashboard subscribes to (`conversations`, `leads`, `reply_drafts` as needed).
+No Supabase Realtime setup is required — the dashboard, inbox, and approval queue stay current via React Query polling (short `staleTime`/`refetchInterval` on the relevant queries) against the normal REST API, not Realtime subscriptions.
 
 ### 4. n8n workflows
 
@@ -407,12 +407,10 @@ Clicking the confirmation email link hits `/auth/callback`, which exchanges the 
 | Endpoint | Auth | Purpose |
 |----------|------|---------|
 | `GET/POST /api/conversations` | User session | List / ingest conversations |
-| `GET /api/leads` | User session | Classified leads |
 | `GET /api/reply-drafts` | User session | Pending drafts |
 | `POST /api/approval` | User session | Approve / reject draft |
 | `GET /api/metrics` | User session | Dashboard aggregates |
 | `POST /api/internal/n8n/conversations` | `N8N_INGEST_TOKEN` | Alternative n8n ingest |
-| `POST /api/internal/n8n/workflow-logs` | `N8N_INGEST_TOKEN` | Workflow audit ingest |
 | `POST /api/gmail/test-imap` | User session | Validate Gmail credentials |
 | `GET /api/meta/connect` | User session | Start Meta OAuth (WhatsApp / Instagram / Facebook) |
 | `GET /api/meta/callback` | User session | Meta OAuth callback (encrypt tokens, sync routing keys) |
@@ -530,7 +528,7 @@ npm run n8n:export-workflows   # Regenerate n8n JSON exports
 - **Noise filter** reduces OpenAI spend linearly with inbox spam volume.
 - **Dedup** in WF0a prevents duplicate lead creation on thread replies.
 - **Rate limits** on API routes (`lib/api-security.ts`) protect approval and ingest endpoints.
-- **Realtime** subscriptions — scope channels per `team_id` to avoid fan-out at high tenant counts.
+- **Polling intervals** — the dashboard/inbox use React Query `staleTime`/`refetchInterval`, not Realtime; tune those intervals (or move to Realtime scoped per `team_id`) if per-tenant request volume becomes a concern at scale.
 
 ---
 

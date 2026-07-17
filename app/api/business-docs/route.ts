@@ -1,6 +1,7 @@
 import { jsonError, rateLimit, requireApiTenantContext } from "@/lib/api-security";
 import { extractText, isSupportedDoc } from "@/lib/documents/extract";
 import { deleteEmbeddingsForSource, upsertDocEmbeddings } from "@/lib/embeddings/store";
+import { isOpenAiConfigured } from "@/lib/ai/provider";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
   if (limited) return limited;
 
   // Embedding requires the model — fail fast + clearly.
-  if (!process.env.OPENAI_API_KEY?.trim()) {
+  if (!isOpenAiConfigured()) {
     return jsonError("Document ingest is not configured (OPENAI_API_KEY missing)", 503);
   }
 

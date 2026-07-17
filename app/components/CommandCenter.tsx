@@ -30,7 +30,7 @@ export default function CommandCenter() {
 
       {/* Subtitle */}
       <p className="text-gray-400 text-sm mb-8">
-        Live revenue rescue ops — prioritize revenue at risk, route hot leads, and intercept churn
+        Live revenue rescue ops. Prioritize revenue at risk, route hot leads, and intercept churn
         before it lands.
       </p>
 

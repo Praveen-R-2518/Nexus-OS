@@ -213,7 +213,7 @@ export default function CustomersPage() {
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
               <figcaption className="mt-8 font-mono text-xs uppercase tracking-[0.2em] text-muted dark:text-slate-400">
-                <span className="text-atmospheric-grey dark:text-white">{t.name}</span> — {t.role}
+                <span className="text-atmospheric-grey dark:text-white">{t.name}</span>, {t.role}
               </figcaption>
             </figure>
           </ScrollReveal>

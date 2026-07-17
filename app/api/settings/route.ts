@@ -39,6 +39,7 @@ const COMMON_TIMEZONES = [
 ] as const;
 
 type SettingsPatchBody = {
+  full_name?: unknown;
   name?: unknown;
   industry?: unknown;
   tone?: unknown;
@@ -47,6 +48,7 @@ type SettingsPatchBody = {
   approval_mode?: unknown;
   timezone?: unknown;
   currency?: unknown;
+  pricing_notes?: unknown;
   high_value_threshold?: unknown;
   high_risk_score?: unknown;
   notification_prefs?: unknown;
@@ -264,6 +266,7 @@ export async function GET() {
     gmailResult,
     metaResult,
     userProfileResult,
+    accountProfileResult,
   ] = await Promise.all([
     workspaceId
       ? supabase
@@ -316,6 +319,11 @@ export async function GET() {
       .select("organization_id")
       .eq("id", user.id)
       .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle(),
   ]);
 
   const queryError =
@@ -324,7 +332,8 @@ export async function GET() {
     subscriptionResult.error ??
     gmailResult.error ??
     metaResult.error ??
-    userProfileResult.error;
+    userProfileResult.error ??
+    accountProfileResult.error;
 
   if (queryError) {
     return NextResponse.json({ error: queryError.message }, { status: 500 });
@@ -460,6 +469,14 @@ export async function GET() {
   const highRiskScore = numOrDefault(businessProfile?.high_risk_score, HIGH_RISK_SCORE);
 
   const settings: WorkspaceSettings = {
+    account: {
+      full_name:
+        typeof (accountProfileResult.data as { full_name?: unknown } | null)?.full_name ===
+        "string"
+          ? ((accountProfileResult.data as { full_name: string }).full_name.trim() || null)
+          : null,
+      email: user.email ?? null,
+    },
     workspace: {
       id: workspace?.id ?? workspaceId,
       name: workspace?.name ?? businessProfile?.name ?? null,
@@ -555,7 +572,7 @@ export async function PATCH(request: Request) {
   if (!parsed.ok) return parsed.response;
 
   const body = parsed.body as SettingsPatchBody;
-  const { supabase, teamId, workspaceId } = tenant;
+  const { supabase, teamId, workspaceId, user } = tenant;
 
   const { data: existing, error: fetchErr } = await supabase
     .from("business_profiles")
@@ -647,6 +664,21 @@ export async function PATCH(request: Request) {
     pricingRulesDirty = true;
   }
 
+  if (body.pricing_notes !== undefined) {
+    if (typeof body.pricing_notes !== "string") {
+      return NextResponse.json({ error: "Invalid pricing_notes" }, { status: 400 });
+    }
+    const trimmed = body.pricing_notes.trim().slice(0, 8000);
+    if (trimmed.length > 0) {
+      nextPricingRules = { ...nextPricingRules, notes: trimmed };
+    } else {
+      const rest = { ...nextPricingRules };
+      delete rest.notes;
+      nextPricingRules = rest;
+    }
+    pricingRulesDirty = true;
+  }
+
   if (body.high_value_threshold !== undefined) {
     if (
       typeof body.high_value_threshold !== "number" ||
@@ -719,8 +751,27 @@ export async function PATCH(request: Request) {
     }
   }
 
+  let accountUpdated = false;
+  if (body.full_name !== undefined) {
+    if (typeof body.full_name !== "string") {
+      return NextResponse.json({ error: "Invalid full_name" }, { status: 400 });
+    }
+    const trimmed = body.full_name.trim().slice(0, 120);
+    const { error: accountErr } = await supabase
+      .from("profiles")
+      .update({
+        full_name: trimmed.length > 0 ? trimmed : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+    if (accountErr) {
+      return NextResponse.json({ error: accountErr.message }, { status: 500 });
+    }
+    accountUpdated = true;
+  }
+
   const hasProfileUpdates = Object.keys(updates).length > 1;
-  if (!hasProfileUpdates && !channelPatch) {
+  if (!hasProfileUpdates && !channelPatch && !accountUpdated) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 

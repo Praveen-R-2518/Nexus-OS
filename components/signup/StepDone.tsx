@@ -10,7 +10,7 @@ import {
 import { authPrimaryButton } from "@/components/signup/authStyles";
 
 function planLabel(tier: PlanTier | null): string {
-  if (!tier) return "—";
+  if (!tier) return "n/a";
   if (tier === "pro") return "Professional";
   if (tier === "enterprise") return "Enterprise";
   return tier.charAt(0).toUpperCase() + tier.slice(1);
@@ -62,7 +62,7 @@ export default function StepDone({ snapshot }: StepDoneProps) {
             <Check className={`mr-1 inline h-4 w-4 shrink-0 ${accent}`} aria-hidden />
             Plan:{" "}
             <span className="ml-1 text-foreground">
-              {planLabel(snapshot.planTier)} — 14-day free trial
+              {planLabel(snapshot.planTier)} · 14-day free trial
             </span>
           </li>
           <li className="flex items-center">

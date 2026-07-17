@@ -8,8 +8,7 @@
     "Fetch Business Profile": { "main": [[{ "node": "Wait for Context", "type": "main", "index": 1 }]] },
     "Wait for Context": { "main": [[{ "node": "Build Reply Context", "type": "main", "index": 0 }]] },
     "Build Reply Context": { "main": [[{ "node": "Generate Reply Draft", "type": "main", "index": 0 }]] },
-    "Generate Reply Draft": { "main": [[{ "node": "Record AI Usage (WF3)", "type": "main", "index": 0 }]] },
-    "Record AI Usage (WF3)": { "main": [[{ "node": "Prepare Draft", "type": "main", "index": 0 }]] },
+    "Generate Reply Draft": { "main": [[{ "node": "Prepare Draft", "type": "main", "index": 0 }]] },
     "Prepare Draft": { "main": [[{ "node": "Save Reply Draft", "type": "main", "index": 0 }]] },
     "Save Reply Draft": { "main": [[{ "node": "Autopilot Send (policy-gated)", "type": "main", "index": 0 }]] },
     "Autopilot Send (policy-gated)": { "main": [[{ "node": "Update Lead Status", "type": "main", "index": 0 }]] },
@@ -94,30 +93,8 @@
     },
     {
       "parameters": {
-        "resource": "chat",
-        "chatModel": "gpt-4o",
-        "prompt": {
-          "messages": [
-            { "role": "system", "content": "=You are a professional customer success assistant for {{ $json.business_name }}.\n\nBusiness tone: {{ $json.business_tone }}\nServices and pricing: {{ $json.services }}\nPricing rules: {{ $json.pricing_rules }}\n\nRules for your reply:\n1. Address the customer by their first name only\n2. Directly answer their specific question or request\n3. Use the pricing and services context to give accurate information\n4. If the intent is a pricing_request, include the relevant package price and a clear next step (e.g., \"I can schedule a quick call\")\n5. If the intent is a complaint, acknowledge the issue first, then offer a solution - do not be defensive\n6. Keep the reply to 3-5 sentences maximum\n7. End with one clear, specific call to action\n8. Match the business tone exactly: {{ $json.business_tone }}\n9. Sound human. Never use phrases like \"I hope this message finds you well\" or \"Please do not hesitate to contact us\"\n10. Return ONLY the reply text. No subject line. No metadata. No markdown formatting." },
-            { "content": "=Customer name: {{ $json.customer_name }}\nIntent: {{ $json.intent }}\nUrgency: {{ $json.urgency }}\nMissing information needed: {{ $json.missing_fields }}\nCustomer message: {{ $json.customer_message }}" }
-          ]
-        },
-        "options": { "maxTokens": 400, "temperature": 0.4 },
-        "requestOptions": {}
-      },
-      "id": "9d2edac8-d8fb-4ce1-b323-f1bdedc3b392",
-      "name": "Generate Reply Draft",
-      "type": "n8n-nodes-base.openAi",
-      "typeVersion": 1.1,
-      "position": [832, 128],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
-    },
-    {
-      "parameters": {
         "method": "POST",
-        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org') + '/api/internal/n8n/ai-usage' }}",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org') + '/api/internal/n8n/ai/draft' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -127,20 +104,28 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  team_id: $('Receive Lead').item.json.body.team_id,\n  workflow_name: 'WF3',\n  model: 'gpt-4o',\n  input_tokens: ($('Generate Reply Draft').item.json.usage && $('Generate Reply Draft').item.json.usage.prompt_tokens) ?? null,\n  output_tokens: ($('Generate Reply Draft').item.json.usage && $('Generate Reply Draft').item.json.usage.completion_tokens) ?? null\n} }}",
-        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+        "jsonBody": "={{ {\n  team_id: $('Receive Lead').item.json.body.team_id,\n  workspace_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).workspace_id,\n  original_message: $json.customer_message,\n  customer_name: $json.customer_name,\n  classification: {\n    intent: $json.intent,\n    urgency: $json.urgency,\n    estimated_value: $json.estimated_value,\n    missing_fields: JSON.parse($json.missing_fields || '[]')\n  }\n} }}",
+        "options": {
+          "response": {
+            "response": { "neverError": true, "responseFormat": "json" }
+          }
+        }
       },
-      "id": "cc000001-0000-4000-8000-000000000001",
-      "name": "Record AI Usage (WF3)",
+      "id": "9d2edac8-d8fb-4ce1-b323-f1bdedc3b392",
+      "name": "Generate Reply Draft",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [976, 128]
+      "position": [832, 128],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "draft_text", "name": "draft_text", "value": "={{ (($json.message && $json.message.content) || $json.text || $json.content || '').trim() }}", "type": "string" },
+            { "id": "draft_text", "name": "draft_text", "value": "={{ $json.draft_text || '' }}", "type": "string" },
+            { "id": "ai_not_configured", "name": "ai_not_configured", "value": "={{ $json.code === 'ai_not_configured' }}", "type": "boolean" },
             { "id": "lead_id", "name": "lead_id", "value": "={{ $('Build Reply Context').item.json.lead_id }}", "type": "string" },
             { "id": "confidence", "name": "confidence", "value": "={{ Number($('Build Reply Context').item.json.confidence) || 0 }}", "type": "number" },
             { "id": "approval_mode", "name": "approval_mode", "value": "={{ $('Build Reply Context').item.json.approval_mode }}", "type": "string" }
