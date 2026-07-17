@@ -1,3 +1,4 @@
+import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import type {
   Conversation,
   DailyReport,
@@ -57,7 +58,7 @@ async function requestJson<T>(
 
   let response: Response;
   try {
-    response = await fetch(url, { ...init, headers });
+    response = await authenticatedFetch(url, { ...init, headers });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Network error calling ${path}: ${message}`);

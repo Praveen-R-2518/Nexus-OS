@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   JSON_LIMITS,
   jsonError,
+  n8nWebhookAuthHeaders,
   rateLimit,
   readJsonObjectWithLimit,
   requireApiOrgContext,
@@ -24,6 +25,9 @@ function publishWebhookUrl(): string | null {
  * Publish a post now. Validates ownership + that every target platform is
  * connected, flips the row to `publishing`, and triggers WF8b. WF8b writes the
  * final `published`/`failed` state back via /api/internal/n8n/post-result.
+ *
+ * Task D.1: a previously-`rejected` post is blocked; otherwise this request itself records
+ * approval (`approval_status`/`approved_at`/`approved_by`) if not already set.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:posts:publish", 20, 60_000);
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
   // Load the post (RLS scopes to the caller's org).
   const { data: post, error: postErr } = await org.supabase
     .from("social_posts")
-    .select("id, status, platforms")
+    .select("id, status, platforms, approval_status, approved_at")
     .eq("id", postId)
     .eq("organization_id", org.organizationId)
     .maybeSingle();
@@ -55,6 +59,20 @@ export async function POST(request: Request) {
   if (status === "publishing" || status === "published") {
     return jsonError(`Post is already ${status}`, 409);
   }
+
+  // Task D.1: `social_posts.approval_status` is an audit trail, not a separate reviewer queue —
+  // there is no second-approver UI for posts today. A previously-rejected post can't be silently
+  // re-published, but otherwise this explicit "Publish now" request from an authenticated org
+  // member IS the approval; we stamp it below in the same update that flips the post to
+  // `publishing`, so `approval_status`/`approved_at` are always populated before WF8b/post-result
+  // ever run for this post.
+  const approvalStatus = (post as { approval_status?: string | null }).approval_status ?? null;
+  if (approvalStatus === "rejected") {
+    return jsonError("This post was rejected and can't be published as-is. Edit it first.", 409);
+  }
+  const alreadyApproved =
+    approvalStatus === "approved" ||
+    (post as { approved_at?: string | null }).approved_at != null;
 
   // Every target platform must have a connected credential.
   const { data: creds } = await org.supabase
@@ -77,10 +95,19 @@ export async function POST(request: Request) {
     return jsonError("Publishing is not configured yet", 503);
   }
 
-  // Flip to publishing before firing WF8b so the board reflects it immediately.
+  // Flip to publishing before firing WF8b so the board reflects it immediately. Stamp approval
+  // (Task D.1) in the same write when it wasn't already recorded (e.g. via schedulePost()).
+  const nowIso = new Date().toISOString();
   const { error: updErr } = await org.supabase
     .from("social_posts")
-    .update({ status: "publishing", publish_error: null, updated_at: new Date().toISOString() })
+    .update({
+      status: "publishing",
+      publish_error: null,
+      updated_at: nowIso,
+      ...(alreadyApproved
+        ? {}
+        : { approval_status: "approved", approved_at: nowIso, approved_by: org.user.id }),
+    })
     .eq("id", postId)
     .eq("organization_id", org.organizationId);
   if (updErr) return jsonError(updErr.message, 500);
@@ -88,7 +115,7 @@ export async function POST(request: Request) {
   try {
     const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...n8nWebhookAuthHeaders() },
       body: JSON.stringify({ orgId: org.organizationId, postId, platforms }),
     });
     if (!res.ok) {

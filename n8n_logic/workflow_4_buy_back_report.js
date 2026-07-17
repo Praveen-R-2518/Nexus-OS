@@ -1,9 +1,14 @@
 /**
- * Nexus OS — Workflow 4: Daily Buy-Back Report (n8n Code node)
+ * Nexus OS — Workflow 4/5: Daily Buy-Back Report (n8n Code node)
  *
  * Paste into an n8n **Code** node (Run once for all items).
  *
- * Prompt: ai_prompts/buy_back_report_prompt.txt (or NEXUS_PROMPT_DIR).
+ * Centralized AI: this node no longer calls OpenAI directly. It POSTs to the Next.js app's
+ * `/api/internal/n8n/ai/report-summary` endpoint, which holds the single `OPENAI_API_KEY` and
+ * runs `lib/ai/report-summary.ts` (loads `ai_prompts/buy_back_report_prompt.txt` server-side
+ * in `style: "markdown"` mode). Unlike classify/draft, this endpoint never 503s — when
+ * OPENAI_API_KEY is unset (or the live call fails) it returns a labelled
+ * `{ summary, source: "fallback" }` instead of failing the report.
  *
  * Input (per item) — supply metrics from Supabase / aggregations / n8n Set node:
  *   Prefer a single object in `buy_back_metrics`, or top-level fields:
@@ -16,74 +21,48 @@
  *   - follow_ups_scheduled
  *   - estimated_hours_saved
  *   - workflow_logs  (array of strings)
+ *   - team_id / _tenant.team_id, workspace_id / _tenant.workspace_id (optional, for ai_usage)
  *
- * Output JSON: { markdown_report: string }  (markdown only per prompt; wrapped for n8n wiring)
+ * Output JSON: { markdown_report: string, report_source: 'openai'|'fallback' }
  *
- * API key: OPENAI_API_KEY as an n8n Variable ($vars.OPENAI_API_KEY) — n8n Cloud blocks $env
- * in node expressions (N8N_BLOCK_ENV_ACCESS_IN_NODE); never hard-code the key in this file.
+ * Env: NEXUS_APP_URL, N8N_INGEST_TOKEN as n8n Variables ($vars.*) — n8n Cloud blocks $env in
+ * node expressions (N8N_BLOCK_ENV_ACCESS_IN_NODE); never hard-code either value in this file.
  */
 
-const fs = require('fs');
-const path = require('path');
-
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-
-function getApiKey() {
-  const fromN8nVars =
-    typeof $vars !== 'undefined' && $vars.OPENAI_API_KEY
-      ? String($vars.OPENAI_API_KEY).trim()
-      : '';
-  const fromN8nEnv =
-    typeof $env !== 'undefined' && $env.OPENAI_API_KEY
-      ? String($env.OPENAI_API_KEY).trim()
-      : '';
-  const fromProcess = process.env.OPENAI_API_KEY
-    ? String(process.env.OPENAI_API_KEY).trim()
-    : '';
-  const key = fromN8nVars || fromN8nEnv || fromProcess;
-  if (!key) {
+function getAppUrl() {
+  const fromVars =
+    typeof $vars !== 'undefined' && $vars.NEXUS_APP_URL ? String($vars.NEXUS_APP_URL).trim() : '';
+  const fromEnv =
+    typeof $env !== 'undefined' && $env.NEXUS_APP_URL ? String($env.NEXUS_APP_URL).trim() : '';
+  const fromProcess = process.env.NEXUS_APP_URL ? String(process.env.NEXUS_APP_URL).trim() : '';
+  const url = fromVars || fromEnv || fromProcess;
+  if (!url) {
     throw new Error(
-      'OPENAI_API_KEY is not set. Add it as an n8n Variable ($vars.OPENAI_API_KEY, Settings -> Variables) — n8n Cloud blocks $env; do not hard-code the API key.',
+      'NEXUS_APP_URL is not set. Add it as an n8n Variable ($vars.NEXUS_APP_URL, Settings -> Variables).',
     );
   }
-  return key;
+  return url.replace(/\/+$/, '');
 }
 
-function getModel() {
-  const m =
-    (typeof $env !== 'undefined' && $env.OPENAI_MODEL) ||
-    process.env.OPENAI_MODEL ||
-    'gpt-4o-mini';
-  return String(m).trim();
-}
-
-function resolvePromptDir() {
-  const envDir =
-    typeof $env !== 'undefined' && $env.NEXUS_PROMPT_DIR
-      ? String($env.NEXUS_PROMPT_DIR).trim()
-      : process.env.NEXUS_PROMPT_DIR
-        ? String(process.env.NEXUS_PROMPT_DIR).trim()
-        : '';
-  if (envDir && fs.existsSync(path.join(envDir, 'buy_back_report_prompt.txt'))) {
-    return envDir;
+function getIngestToken() {
+  const fromVars =
+    typeof $vars !== 'undefined' && $vars.N8N_INGEST_TOKEN
+      ? String($vars.N8N_INGEST_TOKEN).trim()
+      : '';
+  const fromEnv =
+    typeof $env !== 'undefined' && $env.N8N_INGEST_TOKEN
+      ? String($env.N8N_INGEST_TOKEN).trim()
+      : '';
+  const fromProcess = process.env.N8N_INGEST_TOKEN
+    ? String(process.env.N8N_INGEST_TOKEN).trim()
+    : '';
+  const token = fromVars || fromEnv || fromProcess;
+  if (!token) {
+    throw new Error(
+      'N8N_INGEST_TOKEN is not set. Add it as an n8n Variable ($vars.N8N_INGEST_TOKEN, Settings -> Variables).',
+    );
   }
-  const nextToScript = path.join(__dirname, '..', 'ai_prompts');
-  if (fs.existsSync(path.join(nextToScript, 'buy_back_report_prompt.txt'))) {
-    return nextToScript;
-  }
-  const cwd = path.join(process.cwd(), 'ai_prompts');
-  if (fs.existsSync(path.join(cwd, 'buy_back_report_prompt.txt'))) {
-    return cwd;
-  }
-  throw new Error(
-    'Cannot find ai_prompts/buy_back_report_prompt.txt. Set NEXUS_PROMPT_DIR or run from repo root.',
-  );
-}
-
-function loadReportSystemPrompt(override) {
-  if (override && String(override).trim()) return String(override).trim();
-  const dir = resolvePromptDir();
-  return fs.readFileSync(path.join(dir, 'buy_back_report_prompt.txt'), 'utf8');
+  return token;
 }
 
 function pickMetrics(j) {
@@ -112,32 +91,21 @@ function pickMetrics(j) {
   return out;
 }
 
-async function openaiMarkdownReport(system, user) {
-  const key = getApiKey();
-  const model = getModel();
-  const res = await fetch(OPENAI_URL, {
+async function reportSummaryViaApp({ team_id, workspace_id, stats, style }) {
+  const url = `${getAppUrl()}/api/internal/n8n/ai/report-summary`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${getIngestToken()}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify({ team_id, workspace_id, stats, style }),
   });
   const raw = await res.text();
   if (!res.ok) {
-    throw new Error(`OpenAI error ${res.status}: ${raw.slice(0, 800)}`);
+    throw new Error(`Report-summary endpoint error ${res.status}: ${raw.slice(0, 800)}`);
   }
-  const data = JSON.parse(raw);
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('OpenAI: missing report content');
-  return String(text).trim();
+  return JSON.parse(raw);
 }
 
 const items = $input.all();
@@ -145,16 +113,22 @@ const out = [];
 
 for (const item of items) {
   const j = item.json || {};
-  const system = loadReportSystemPrompt(j.buy_back_report_system_prompt);
   const metrics = pickMetrics(j);
-  const user =
-    'Here are the metrics JSON for today’s Buy-Back Report. Use only these values.\n\n' +
-    JSON.stringify(metrics, null, 2);
-  const markdown_report = await openaiMarkdownReport(system, user);
+  const teamId = j.team_id || (j._tenant && j._tenant.team_id) || undefined;
+  const workspaceId = j.workspace_id || (j._tenant && j._tenant.workspace_id) || undefined;
+
+  const { summary, source } = await reportSummaryViaApp({
+    team_id: teamId,
+    workspace_id: workspaceId,
+    stats: metrics,
+    style: 'markdown',
+  });
+
   out.push({
     json: {
       ...j,
-      markdown_report,
+      markdown_report: summary,
+      report_source: source,
     },
   });
 }

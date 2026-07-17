@@ -3,6 +3,7 @@ import "server-only";
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { resolveOrganizationIdForUser } from "@/lib/organization-bridge";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { createServerClient } from "@/lib/supabase";
 
@@ -155,20 +156,14 @@ export async function requireApiOrgContext(): Promise<ApiOrgContextResult> {
     return { ok: false, response: jsonError("Unauthorized", 401) };
   }
 
-  const { data: profile, error: profileErr } = await supabase
-    .from("user_profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profileErr) {
-    return { ok: false, response: jsonError(profileErr.message, 500) };
+  let organizationId: string;
+  try {
+    const resolved = await resolveOrganizationIdForUser(supabase, user.id);
+    organizationId = resolved ?? "";
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to resolve organization";
+    return { ok: false, response: jsonError(message, 500) };
   }
-
-  const orgIdRaw =
-    profile && (profile as { organization_id?: unknown }).organization_id;
-  const organizationId =
-    typeof orgIdRaw === "string" && orgIdRaw.trim() ? orgIdRaw.trim() : "";
 
   if (!organizationId) {
     return {
@@ -347,17 +342,107 @@ export async function readJsonObjectWithLimit(
   return { ok: true, body: parsed as Record<string, unknown> };
 }
 
-export function requireN8nToken(request: Request): NextResponse | null {
-  const expected = process.env.N8N_INGEST_TOKEN?.trim();
-  if (!expected) {
+function bearerToken(request: Request): string {
+  const header = request.headers.get("authorization") ?? "";
+  return header.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? "";
+}
+
+/**
+ * Guards scheduler/claim endpoints that run BEFORE any specific job exists yet (e.g. the Gmail
+ * sync poll, the ledger drain sweep, claiming a due scheduled post). Accepts the new
+ * `N8N_BOOTSTRAP_TOKEN` OR — during the migration off one broad secret — the legacy
+ * `N8N_INGEST_TOKEN`, so existing n8n Variables keep working until they're rotated.
+ */
+export function requireN8nBootstrapToken(request: Request): NextResponse | null {
+  const bootstrap = process.env.N8N_BOOTSTRAP_TOKEN?.trim();
+  const legacy = process.env.N8N_INGEST_TOKEN?.trim();
+  if (!bootstrap && !legacy) {
     return jsonError("Internal workflow endpoint is not configured", 503);
   }
 
-  const header = request.headers.get("authorization") ?? "";
-  const token = header.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? "";
-  if (!token || !constantTimeEqual(token, expected)) {
+  const token = bearerToken(request);
+  if (!token) {
+    return jsonError("Unauthorized", 401);
+  }
+  if (bootstrap && constantTimeEqual(token, bootstrap)) return null;
+  if (legacy && constantTimeEqual(token, legacy)) return null;
+
+  return jsonError("Unauthorized", 401);
+}
+
+/**
+ * @deprecated Alias of `requireN8nBootstrapToken`, kept only so existing call sites keep
+ * compiling during the n8n auth hardening migration. New code should call
+ * `requireN8nBootstrapToken` directly for scheduler/claim endpoints, or `requireN8nJobToken`
+ * (optionally via a job-token-first/bootstrap-fallback pattern) for job-scoped callbacks.
+ */
+export const requireN8nToken = requireN8nBootstrapToken;
+
+/**
+ * Guards job-scoped callback endpoints (send-reply, credential reads, result writebacks) with a
+ * single-use, short-lived token minted for exactly this `expectedAction` and — when supplied —
+ * bound to the matching team/workspace/resource (see `lib/n8n-job-tokens.ts`). Returns `null` on
+ * success; an error `NextResponse` on any missing/invalid/expired/mismatched token.
+ */
+export async function requireN8nJobToken(
+  request: Request,
+  expectedAction: string,
+  bindings?: {
+    teamId?: string | null;
+    workspaceId?: string | null;
+    resourceType?: string | null;
+    resourceId?: string | null;
+  },
+): Promise<NextResponse | null> {
+  const token = bearerToken(request);
+  if (!token) {
     return jsonError("Unauthorized", 401);
   }
 
+  const { consumeN8nJobToken } = await import("@/lib/n8n-job-tokens");
+  const result = await consumeN8nJobToken(token, expectedAction, bindings);
+  if (!result.ok) {
+    return jsonError(result.error, result.status);
+  }
   return null;
+}
+
+/**
+ * Transition-period guard for job-scoped routes: try a scoped job token for `expectedAction`
+ * first; if that fails, fall back to the bootstrap/legacy-ingest token and log a warning so the
+ * still-broad-trust path is visible in logs until n8n workflows are updated to mint job tokens.
+ */
+export async function requireN8nJobOrBootstrapToken(
+  request: Request,
+  expectedAction: string,
+  bindings: {
+    teamId?: string | null;
+    workspaceId?: string | null;
+    resourceType?: string | null;
+    resourceId?: string | null;
+  } | undefined,
+  routeLabel: string,
+): Promise<NextResponse | null> {
+  const jobTokenError = await requireN8nJobToken(request, expectedAction, bindings);
+  if (!jobTokenError) return null;
+
+  const bootstrapError = requireN8nBootstrapToken(request);
+  if (bootstrapError) return bootstrapError;
+
+  console.warn(
+    `[${routeLabel}] accepted legacy bootstrap/ingest token for a '${expectedAction}' call — expected a scoped job token`,
+  );
+  return null;
+}
+
+/**
+ * Authorization header the app sends when calling OUT to an n8n webhook (outbound direction —
+ * the mirror image of `requireN8nBootstrapToken`/`requireN8nJobToken`, which guard n8n calling
+ * IN). Configure n8n's webhook trigger nodes with Header Auth matching `N8N_WEBHOOK_TOKEN`.
+ * Returns `{}` (no header) when unset so existing unauthenticated webhooks keep working during
+ * rollout.
+ */
+export function n8nWebhookAuthHeaders(): Record<string, string> {
+  const token = process.env.N8N_WEBHOOK_TOKEN?.trim();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }

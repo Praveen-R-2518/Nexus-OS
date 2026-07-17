@@ -7,6 +7,11 @@ const PROTECTED_PREFIXES = [
   "/approval",
   "/report",
   "/onboarding",
+  "/chat",
+  "/posts",
+  "/profile",
+  "/team",
+  "/logs",
 ] as const;
 
 function isProtectedPath(pathname: string): boolean {
@@ -102,6 +107,16 @@ export const config = {
     "/login/:path*",
     "/onboarding",
     "/onboarding/:path*",
+    "/chat",
+    "/chat/:path*",
+    "/posts",
+    "/posts/:path*",
+    "/profile",
+    "/profile/:path*",
+    "/team",
+    "/team/:path*",
+    "/logs",
+    "/logs/:path*",
     "/auth/callback",
   ],
 };

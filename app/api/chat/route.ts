@@ -11,6 +11,7 @@ import { buildAnalystContext } from "@/lib/chat/analyst-context";
 import { buildAnalystSystemPrompt } from "@/lib/chat/system-prompt";
 import { completeText, streamAnalystReply, type ChatTurn } from "@/lib/chat/openai";
 import { upsertSummaryEmbedding } from "@/lib/embeddings/store";
+import { isOpenAiConfigured } from "@/lib/ai/provider";
 
 export const dynamic = "force-dynamic";
 
@@ -108,8 +109,11 @@ export async function POST(request: Request) {
   if (limited) return limited;
 
   // The analyst needs the model; fail fast + clearly rather than mid-stream.
-  if (!process.env.OPENAI_API_KEY?.trim()) {
-    return jsonError("Chat is not configured (OPENAI_API_KEY missing)", 503);
+  if (!isOpenAiConfigured()) {
+    return Response.json(
+      { error: "Chat is not configured (OPENAI_API_KEY missing)", code: "ai_not_configured" },
+      { status: 503 },
+    );
   }
 
   const tenant = await requireApiTenantContext();

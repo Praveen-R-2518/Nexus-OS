@@ -3,12 +3,13 @@ import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import {
   applyReplayOutcome,
   fetchStuckInboundEvents,
+  reclaimStuckProcessingEvents,
 } from "@/lib/inbound-events";
 import { channelForPlatform, forwardInboundToN8n } from "@/lib/n8n-intake";
 
@@ -29,15 +30,16 @@ function clampInt(value: unknown, fallback: number, min: number, max: number): n
  * Ledger drain worker (Task 3.2).
  *
  * Re-forwards inbound_events rows stuck at `received`/`failed` back to the n8n intake webhook.
- * Token-guarded (N8N_INGEST_TOKEN); intended to be called on a schedule (every 5-10 min) by an n8n
- * workflow. Caps attempts: once a row reaches `max_attempts` it is parked as `failed` and no longer
- * picked up. Nothing is ever silently dropped — a re-forward that fails stays retriable until the cap.
+ * Bootstrap-token-guarded (this is the claim/reclaim sweep itself — no job exists yet); intended
+ * to be called on a schedule (every 5-10 min) by an n8n workflow. Caps attempts: once a row
+ * reaches `max_attempts` it is parked as `failed` and no longer picked up. Nothing is ever
+ * silently dropped — a re-forward that fails stays retriable until the cap.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:internal:n8n:inbound-replay", 60, 60_000);
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  const unauthorized = requireN8nBootstrapToken(request);
   if (unauthorized) return unauthorized;
 
   // Body is optional; defaults are used when absent or malformed-but-empty.
@@ -64,6 +66,13 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  // Reclaim rows stuck at `processing` (forward "succeeded" but the workflow never finished, or a
+  // worker died mid-flight) back to `received` FIRST, so this same sweep can pick them up below.
+  const reclaimed = await reclaimStuckProcessingEvents(supabase, {
+    staleAfterMinutes: olderThanMinutes,
+    limit,
+  });
 
   const stuck = await fetchStuckInboundEvents(supabase, {
     olderThanMinutes,
@@ -126,6 +135,7 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       success: true,
+      reclaimed,
       scanned: stuck.length,
       forwarded,
       exhausted,

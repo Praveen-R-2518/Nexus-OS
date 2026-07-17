@@ -1,0 +1,88 @@
+{
+  "id": "wfErrorAlertsStub001",
+  "name": "WF Error Alerts (stub)",
+  "active": false,
+  "note": "Stub only — activate after wiring a workflow-logs write endpoint on the app. Documents the target pattern: Error Trigger → POST {NEXUS_APP_URL}/api/internal/n8n/workflow-logs with bootstrap token. Keep inactive until that route exists.",
+  "nodes": [
+    {
+      "id": "sn-error-alerts",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "content": "## Nexus OS — Error Alerts (stub)\n\nWhen a workflow fails, log structured context to `workflow_logs` **via the app** — never Supabase service-role.\n\nTarget (future): `POST {NEXUS_APP_URL}/api/internal/n8n/workflow-logs`\nBearer `N8N_BOOTSTRAP_TOKEN`\nBody: `{ team_id, workspace_id, workflow_name, step, result: 'error', error, payload }`\n\nKeep **inactive** until the app endpoint ships. Then attach this workflow to production workflows via n8n Error Workflow settings.",
+        "height": 280,
+        "width": 460
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        280
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "log-via-app",
+      "name": "Log Error Via App (future)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        280
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/workflow-logs' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $json.execution?.data?.resultData?.runData?.['Receive from WF1']?.[0]?.data?.main?.[0]?.[0]?.json?.body?.team_id || null,\n  workspace_id: $json.execution?.data?.resultData?.runData?.['Receive from WF1']?.[0]?.data?.main?.[0]?.[0]?.json?.body?.workspace_id || null,\n  workflow_name: $json.workflow?.name || 'unknown',\n  step: 'error_trigger',\n  result: 'error',\n  error: $json.execution?.error?.message || 'workflow_error',\n  payload: { execution_id: $json.execution?.id, mode: $json.execution?.mode }\n} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Log Error Via App (future)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

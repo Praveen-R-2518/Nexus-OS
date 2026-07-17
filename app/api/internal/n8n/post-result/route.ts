@@ -3,16 +3,19 @@ import {
   JSON_LIMITS,
   rateLimitDurable,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
+import { parseWorkspaceId } from "@/lib/workspace-id";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Publish-result writeback (called BY WF8b / the scheduler, Bearer N8N_INGEST_TOKEN).
- * Sets the final `published`/`failed` state — the browser is forbidden from writing
- * these statuses, so the terminal transition happens here with the service role.
+ * Publish-result writeback (called BY WF8b / the scheduler). Sets the final
+ * `published`/`failed` state — the browser is forbidden from writing these statuses, so the
+ * terminal transition happens here with the service role. Job-scoped: expects a single-use
+ * token minted for action `post_result` bound to (resource: post); falls back to the
+ * bootstrap/legacy `N8N_INGEST_TOKEN` (with a warning) until n8n mints job tokens.
  */
 export async function POST(request: Request) {
   const limited = await rateLimitDurable(
@@ -22,9 +25,6 @@ export async function POST(request: Request) {
     60_000,
   );
   if (limited) return limited;
-
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
@@ -41,6 +41,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "post_result",
+    { resourceType: "post", resourceId: parseWorkspaceId(postId) },
+    "internal n8n post-result",
+  );
+  if (unauthorized) return unauthorized;
 
   let supabase;
   try {

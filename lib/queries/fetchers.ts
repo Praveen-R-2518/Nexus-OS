@@ -9,6 +9,7 @@ import type {
   NotificationPrefs,
   ReplyDraft,
   ReplyDraftWithConversation,
+  WorkflowLogRow,
   WorkspaceSettings,
 } from "@/types";
 
@@ -103,6 +104,36 @@ export async function aiUsageQuery(): Promise<AiUsageSummary> {
     throw new Error("Invalid AI usage response");
   }
   return json.usage;
+}
+
+export interface WorkflowLogsPage {
+  data: WorkflowLogRow[];
+  count: number;
+  limit: number;
+  offset: number;
+}
+
+export async function workflowLogsQuery(
+  result: string,
+  offset: number,
+  limit = 50,
+): Promise<WorkflowLogsPage> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (result) params.set("result", result);
+  const res = await authenticatedFetch(`/api/workflow-logs?${params.toString()}`);
+  const json = await readJson<
+    { data?: WorkflowLogRow[]; count?: number; limit?: number; offset?: number; error?: string }
+  >(res);
+  if (!res.ok) throw new Error(errFrom(res, json));
+  if (!Array.isArray(json.data)) {
+    throw new Error("Invalid workflow logs response");
+  }
+  return {
+    data: json.data,
+    count: json.count ?? json.data.length,
+    limit: json.limit ?? limit,
+    offset: json.offset ?? offset,
+  };
 }
 
 export async function conversationDraftsQuery(id: string): Promise<ReplyDraft[]> {

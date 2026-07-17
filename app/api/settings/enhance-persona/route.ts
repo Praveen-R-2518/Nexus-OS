@@ -6,6 +6,7 @@ import {
   requireApiTenantContext,
 } from "@/lib/api-security";
 import { completeText } from "@/lib/chat/openai";
+import { isOpenAiConfigured } from "@/lib/ai/provider";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +32,11 @@ export async function POST(request: Request) {
   const limited = rateLimit(request, "api:enhance-persona", 15, 60_000);
   if (limited) return limited;
 
-  if (!process.env.OPENAI_API_KEY?.trim()) {
-    return jsonError("Enhance is not configured (OPENAI_API_KEY missing)", 503);
+  if (!isOpenAiConfigured()) {
+    return Response.json(
+      { error: "Enhance is not configured (OPENAI_API_KEY missing)", code: "ai_not_configured" },
+      { status: 503 },
+    );
   }
 
   const tenant = await requireApiTenantContext();

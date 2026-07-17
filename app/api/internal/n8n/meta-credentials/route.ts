@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimitDurable,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
 import {
   decryptSecret,
@@ -90,7 +90,17 @@ export async function GET(request: Request) {
   );
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  const url = new URL(request.url);
+  const platformFilter = url.searchParams.get("platform")?.trim();
+  // Optional least-privilege scoping (see gmail-credentials): bulk stays default.
+  const workspaceFilter = parseWorkspaceId(url.searchParams.get("workspace_id"));
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "read_meta_credentials",
+    { workspaceId: workspaceFilter },
+    "internal n8n meta-credentials GET",
+  );
   if (unauthorized) return unauthorized;
 
   if (!isEncryptionConfigured()) {
@@ -109,11 +119,6 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-
-  const url = new URL(request.url);
-  const platformFilter = url.searchParams.get("platform")?.trim();
-  // Optional least-privilege scoping (see gmail-credentials): bulk stays default.
-  const workspaceFilter = parseWorkspaceId(url.searchParams.get("workspace_id"));
 
   let query = supabase
     .from("meta_credentials")
@@ -218,9 +223,6 @@ export async function POST(request: Request) {
   );
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
-
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
   const body = parsed.body;
@@ -232,6 +234,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "read_meta_credentials",
+    { resourceType: "meta_credential", resourceId: id },
+    "internal n8n meta-credentials POST",
+  );
+  if (unauthorized) return unauthorized;
 
   const lastSyncedAt =
     typeof body.last_synced_at === "string" && body.last_synced_at.trim()

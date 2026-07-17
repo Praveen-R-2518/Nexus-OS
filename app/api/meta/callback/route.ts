@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { encryptSecret, isEncryptionConfigured } from "@/lib/encryption/credential-secret";
+import { createServerClient } from "@/lib/supabase";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import {
   decodeOAuthState,
@@ -37,8 +39,15 @@ type MetaPhoneNumbersResponse = {
   data?: Array<{ id?: string; display_phone_number?: string }>;
 };
 
-function errorRedirect(): NextResponse {
-  return NextResponse.redirect(metaDashboardUrl({ meta_error: "true" }));
+// `NextResponse.redirect` requires an ABSOLUTE URL — `metaDashboardUrl()` returns a relative
+// `/profile?...` path, so every redirect must be resolved against the incoming request first
+// (mirrors app/api/gmail/callback/handler.ts's `absoluteRedirect`).
+function absoluteRedirect(request: Request, path: string): NextResponse {
+  return NextResponse.redirect(new URL(path, request.url));
+}
+
+function errorRedirect(request: Request, reason: string = "true"): NextResponse {
+  return absoluteRedirect(request, metaDashboardUrl({ meta_error: reason }));
 }
 
 async function exchangeCodeForToken(code: string): Promise<MetaTokenResponse | null> {
@@ -110,10 +119,10 @@ async function fetchWaPhoneNumberId(
 }
 
 async function upsertMetaCredential(
-  supabase: ReturnType<typeof createSupabaseRouteHandlerClient>,
+  db: SupabaseClient,
   row: Record<string, unknown>,
 ): Promise<boolean> {
-  const { error: upsertErr } = await supabase
+  const { error: upsertErr } = await db
     .from("meta_credentials")
     .upsert(row, { onConflict: "workspace_id,user_id,platform" });
 
@@ -123,14 +132,14 @@ async function upsertMetaCredential(
   const userId = row.user_id as string;
   const platform = row.platform as string;
 
-  await supabase
+  await db
     .from("meta_credentials")
     .delete()
     .eq("workspace_id", workspaceId)
     .eq("user_id", userId)
     .eq("platform", platform);
 
-  const { error: insErr } = await supabase.from("meta_credentials").insert(row);
+  const { error: insErr } = await db.from("meta_credentials").insert(row);
   return !insErr;
 }
 
@@ -141,21 +150,21 @@ export async function GET(request: Request) {
   const stateRaw = searchParams.get("state");
 
   if (oauthError || !code || !stateRaw) {
-    return errorRedirect();
+    return errorRedirect(request, "missing_params");
   }
 
   const state = decodeOAuthState(stateRaw);
   if (!state) {
-    return errorRedirect();
+    return errorRedirect(request, "invalid_state");
   }
 
   const { workspace_id, team_id, user_id } = state;
 
-  let supabase;
+  let supabase: ReturnType<typeof createSupabaseRouteHandlerClient>;
   try {
     supabase = createSupabaseRouteHandlerClient();
   } catch {
-    return errorRedirect();
+    return errorRedirect(request, "supabase_init");
   }
 
   const {
@@ -163,41 +172,61 @@ export async function GET(request: Request) {
     error: userErr,
   } = await supabase.auth.getUser();
 
-  if (userErr || !user || user.id !== user_id) {
-    return errorRedirect();
+  if (userErr) {
+    console.error("[meta.callback] auth_get_user error:", userErr.message);
+  }
+  if (user?.id && user.id !== user_id) {
+    return errorRedirect(request, "auth_user_mismatch");
   }
 
-  const { data: workspace, error: wsErr } = await supabase
+  // Safari ITP can drop the session cookie on the Meta → app redirect (same failure mode as the
+  // Gmail OAuth callback — app/api/gmail/callback/handler.ts). The state is HMAC-signed and
+  // expiring, so it proves which user started the flow; when the session is absent, continue
+  // with the service-role client (RLS would otherwise block every query here) instead of
+  // dead-ending in an error redirect for a browser quirk (Task D.4).
+  const effectiveUserId = user?.id ?? user_id;
+  const db = user?.id
+    ? supabase
+    : (() => {
+        try {
+          return createServerClient();
+        } catch {
+          return null;
+        }
+      })();
+  if (!db) return errorRedirect(request, "supabase_init");
+
+  const { data: workspace, error: wsErr } = await db
     .from("workspaces")
     .select("id, owner_user_id")
     .eq("id", workspace_id)
     .maybeSingle();
 
-  if (wsErr || !workspace || workspace.owner_user_id !== user.id) {
-    return errorRedirect();
+  if (wsErr || !workspace || workspace.owner_user_id !== effectiveUserId) {
+    return errorRedirect(request, "workspace_forbidden");
   }
 
   if (metaConfigError() || !isEncryptionConfigured()) {
-    return errorRedirect();
+    return errorRedirect(request, "oauth_config");
   }
 
   let shortTokenJson: MetaTokenResponse | null;
   try {
     shortTokenJson = await exchangeCodeForToken(code);
   } catch {
-    return errorRedirect();
+    return errorRedirect(request, "token_exchange");
   }
 
   const shortToken = shortTokenJson?.access_token;
   if (!shortToken || shortTokenJson?.error) {
-    return errorRedirect();
+    return errorRedirect(request, "token_exchange");
   }
 
   let longTokenJson: MetaTokenResponse | null;
   try {
     longTokenJson = await exchangeLongLivedToken(shortToken);
   } catch {
-    return errorRedirect();
+    return errorRedirect(request, "token_exchange");
   }
 
   const userAccessToken = longTokenJson?.access_token ?? shortToken;
@@ -214,11 +243,11 @@ export async function GET(request: Request) {
   try {
     pages = await fetchPageAccounts(userAccessToken);
   } catch {
-    return errorRedirect();
+    return errorRedirect(request, "pages_fetch");
   }
 
   if (pages.length === 0) {
-    return errorRedirect();
+    return errorRedirect(request, "no_pages");
   }
 
   const page = pages[0];
@@ -252,7 +281,7 @@ export async function GET(request: Request) {
   try {
     accessTokenEncrypted = encryptSecret(pageAccessToken);
   } catch {
-    return errorRedirect();
+    return errorRedirect(request, "encrypt");
   }
 
   const platformsToConnect: MetaPlatform[] = state.platform
@@ -268,7 +297,7 @@ export async function GET(request: Request) {
     const row = {
       workspace_id,
       team_id,
-      user_id: user.id,
+      user_id: effectiveUserId,
       platform,
       status: "connected" as const,
       page_id: pageId || null,
@@ -284,12 +313,12 @@ export async function GET(request: Request) {
       last_verified_at: now,
     };
 
-    const ok = await upsertMetaCredential(supabase, row);
+    const ok = await upsertMetaCredential(db, row);
     if (ok) connectedPlatforms.push(platform);
   }
 
   if (connectedPlatforms.length === 0) {
-    return errorRedirect();
+    return errorRedirect(request, "upsert_meta_credentials");
   }
 
   try {
@@ -300,7 +329,7 @@ export async function GET(request: Request) {
     if (waDisplayPhone) profilePatch.whatsapp_routing_number = waDisplayPhone;
 
     if (Object.keys(profilePatch).length > 0) {
-      await supabase.from("business_profiles").upsert(
+      await db.from("business_profiles").upsert(
         { team_id, workspace_id, ...profilePatch },
         { onConflict: "team_id" },
       );
@@ -309,7 +338,8 @@ export async function GET(request: Request) {
     // best-effort routing sync
   }
 
-  return NextResponse.redirect(
+  return absoluteRedirect(
+    request,
     metaDashboardUrl({
       meta_connected: connectedPlatforms.join(","),
     }),

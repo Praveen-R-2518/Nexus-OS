@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { parseWorkspaceId } from "@/lib/workspace-id";
@@ -29,14 +29,13 @@ function optionalTokenCount(value: unknown): number | null {
  * AI cost/usage recorder (Task 4.4).
  *
  * n8n workflows POST token counts from existing OpenAI/OpenRouter responses after classify/draft/report
- * steps. Token-guarded (N8N_INGEST_TOKEN); inserts via service role into tenant-scoped ai_usage.
+ * steps. Job-scoped: expects a single-use token minted for action `record_ai_usage` bound to
+ * team_id; falls back to the bootstrap/legacy `N8N_INGEST_TOKEN` (with a warning) until n8n mints
+ * job tokens. Inserts via service role into tenant-scoped ai_usage.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:internal:n8n:ai-usage", 240, 60_000);
   if (limited) return limited;
-
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
@@ -49,6 +48,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "record_ai_usage",
+    { teamId },
+    "internal n8n ai-usage",
+  );
+  if (unauthorized) return unauthorized;
 
   const workflowName = boundedString(body.workflow_name, 80);
   if (!workflowName) {

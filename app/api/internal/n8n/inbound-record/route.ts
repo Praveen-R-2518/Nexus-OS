@@ -3,7 +3,7 @@ import {
   JSON_LIMITS,
   rateLimit,
   readJsonObjectWithLimit,
-  requireN8nToken,
+  requireN8nBootstrapToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
 import { parseWorkspaceId } from "@/lib/workspace-id";
@@ -32,13 +32,14 @@ function boundedString(value: unknown, maxLength: number): string | null {
  * n8n (e.g. WF0a IMAP intake) calls this per fetched message BEFORE processing so that Gmail —
  * like Meta — flows through the durable `inbound_events` ledger keyed on (platform,
  * external_message_id). The response `duplicate` flag lets the caller drop re-deliveries as no-ops.
- * Token-guarded (N8N_INGEST_TOKEN); the RLS-locked ledger is only writable by the service role.
+ * Bootstrap-token-guarded (this IS the intake/record step, before any job-scoped token exists);
+ * the RLS-locked ledger is only writable by the service role.
  */
 export async function POST(request: Request) {
   const limited = rateLimit(request, "api:internal:n8n:inbound-record", 240, 60_000);
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
+  const unauthorized = requireN8nBootstrapToken(request);
   if (unauthorized) return unauthorized;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.ingest);

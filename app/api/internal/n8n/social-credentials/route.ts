@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rateLimitDurable, requireN8nToken } from "@/lib/api-security";
+import { rateLimitDurable, requireN8nJobOrBootstrapToken } from "@/lib/api-security";
 import {
   decryptSecret,
   isEncryptionConfigured,
@@ -27,16 +27,6 @@ export async function GET(request: Request) {
   );
   if (limited) return limited;
 
-  const unauthorized = requireN8nToken(request);
-  if (unauthorized) return unauthorized;
-
-  if (!isEncryptionConfigured()) {
-    return NextResponse.json(
-      { success: false, error: "Server configuration error" },
-      { status: 500 },
-    );
-  }
-
   const organizationId = parseWorkspaceId(
     new URL(request.url).searchParams.get("organization_id"),
   );
@@ -47,6 +37,21 @@ export async function GET(request: Request) {
         error: "organization_id is required and must be a valid UUID",
       },
       { status: 400 },
+    );
+  }
+
+  const unauthorized = await requireN8nJobOrBootstrapToken(
+    request,
+    "read_social_credentials",
+    { resourceType: "organization", resourceId: organizationId },
+    "internal n8n social-credentials GET",
+  );
+  if (unauthorized) return unauthorized;
+
+  if (!isEncryptionConfigured()) {
+    return NextResponse.json(
+      { success: false, error: "Server configuration error" },
+      { status: 500 },
     );
   }
 

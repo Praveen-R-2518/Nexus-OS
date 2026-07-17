@@ -17,9 +17,48 @@ moduleWithLoad._load = function (this: unknown, ...args: unknown[]) {
 
 type CredRow = { id: string; workspace_id: string; last_synced_at: string | null };
 
+/**
+ * `inbound_events` fake keyed by (platform, external_message_id) — mirrors the real table's
+ * unique index closely enough to exercise `recordInboundEvent`'s upsert/dedup + `markInboundEventsStatus`
+ * against this fake client (Task A.1 ledger write added to the sync worker).
+ */
 function fakeSupabase(rows: CredRow[], selectError: string | null = null) {
   const updates: Array<{ id: string; values: Record<string, unknown> }> = [];
+  const inboundEvents: Array<Record<string, unknown>> = [];
+  let nextEventId = 1;
+
   const qb = (table: string) => {
+    if (table === "inbound_events") {
+      return {
+        upsert(row: Record<string, unknown>) {
+          return {
+            select(_cols: string) {
+              const key = `${row.platform}:${row.external_message_id}`;
+              const existing = inboundEvents.find(
+                (e) => `${e.platform}:${e.external_message_id}` === key,
+              );
+              if (existing) return Promise.resolve({ data: [], error: null });
+              const id = `evt-${nextEventId++}`;
+              inboundEvents.push({ ...row, id, status: "received" });
+              return Promise.resolve({ data: [{ id }], error: null });
+            },
+          };
+        },
+        update(patch: Record<string, unknown>) {
+          return {
+            in(col: string, ids: string[]) {
+              if (col === "id") {
+                for (const e of inboundEvents) {
+                  if (ids.includes(e.id as string)) Object.assign(e, patch);
+                }
+              }
+              return Promise.resolve({ data: null, error: null });
+            },
+          };
+        },
+      };
+    }
+
     const chain: any = {
       _updateValues: null as Record<string, unknown> | null,
       select() { return chain; },
@@ -41,10 +80,14 @@ function fakeSupabase(rows: CredRow[], selectError: string | null = null) {
         return chain;
       },
     };
-    assert.equal(table, "gmail_credentials", "only gmail_credentials should be touched");
+    assert.equal(
+      table,
+      "gmail_credentials",
+      "only gmail_credentials/inbound_events should be touched",
+    );
     return chain;
   };
-  return { client: { from: qb } as any, updates };
+  return { client: { from: qb } as any, updates, inboundEvents };
 }
 
 const GOOD_CRED = {
@@ -73,6 +116,21 @@ const MESSAGE = {
     body: { data: Buffer.from("How much is the starter package?").toString("base64url") },
   },
 };
+
+/** Real Gmail messages have distinct Message-IDs; the ledger dedups on this, so tests that
+ * fetch several message ids must not collapse them onto the fixed MESSAGE constant's id. */
+function messageFor(messageId: string) {
+  return {
+    ...MESSAGE,
+    id: messageId,
+    payload: {
+      ...MESSAGE.payload,
+      headers: MESSAGE.payload.headers.map((h) =>
+        h.name === "Message-ID" ? { ...h, value: `<${messageId}@x.com>` } : h,
+      ),
+    },
+  };
+}
 
 let passed = 0;
 function ok(name: string): void {
@@ -112,7 +170,7 @@ async function run() {
         listedAfter = input.afterDate;
         return { messageIds: ["m1", "m2"], nextPageToken: null };
       },
-      fetchMessage: async () => MESSAGE as any,
+      fetchMessage: async (_t, messageId) => messageFor(messageId) as any,
       forward: async () => "forwarded" as const,
       now: () => Date.now(),
     });
@@ -210,7 +268,48 @@ async function run() {
     ok("n8n unconfigured -> skipped, not crashed");
   }
 
-  console.log(`\ngmail_sync: ${passed}/6 checks passed`);
+  // 7) Ledger dedup: same Message-ID already ingested -> not re-forwarded (Task A.1)
+  {
+    const { client, inboundEvents } = fakeSupabase([
+      { id: "cred-1", workspace_id: "ws-1", last_synced_at: null },
+    ]);
+    let forwardCalls = 0;
+    const res = await runGmailSync({
+      createSupabase: () => client,
+      resolveCredential: async () => GOOD_CRED as any,
+      listMessages: async () => ({ messageIds: ["m1"], nextPageToken: null }),
+      fetchMessage: async (_t, messageId) => messageFor(messageId) as any,
+      forward: async () => {
+        forwardCalls += 1;
+        return "forwarded" as const;
+      },
+      now: () => Date.now(),
+    });
+    assert.equal(res.status, 200);
+    assert.equal(forwardCalls, 1, "first pass forwards once");
+    assert.equal(inboundEvents.length, 1, "ledger row persisted");
+    assert.equal(inboundEvents[0].status, "processing", "ledger row marked processing after forward");
+    assert.equal(inboundEvents[0].workspace_id, "ws-1", "ledger row tenant-stamped from credential");
+    assert.equal(inboundEvents[0].team_id, "team-1", "ledger row tenant-stamped from credential");
+
+    // A second pass re-fetches the same Message-ID (day-granular `after:` overlap) -> deduped.
+    const res2 = await runGmailSync({
+      createSupabase: () => client,
+      resolveCredential: async () => GOOD_CRED as any,
+      listMessages: async () => ({ messageIds: ["m1"], nextPageToken: null }),
+      fetchMessage: async (_t, messageId) => messageFor(messageId) as any,
+      forward: async () => {
+        forwardCalls += 1;
+        return "forwarded" as const;
+      },
+      now: () => Date.now(),
+    });
+    assert.equal(res2.status, 200);
+    assert.equal(forwardCalls, 1, "second pass does not re-forward the same Message-ID");
+    ok("ledger dedup prevents double-forward across sync passes");
+  }
+
+  console.log(`\ngmail_sync: ${passed}/7 checks passed`);
 }
 
 run().catch((e) => {

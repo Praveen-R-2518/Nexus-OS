@@ -146,6 +146,9 @@ export interface PostEditInput {
   platforms?: Platform[];
   status?: "draft" | "scheduled";
   scheduled_at?: string | null;
+  /** Task D.1 audit trail — stamped by schedulePost(), cleared by unschedulePost(). */
+  approval_status?: "draft" | "approved" | "rejected";
+  approved_at?: string | null;
 }
 
 /**
@@ -180,20 +183,28 @@ export async function deletePost(
   if (error) throw error;
 }
 
-/** Move a post to `scheduled` at the given ISO time. */
+/**
+ * Move a post to `scheduled` at the given ISO time. Task D.1: this explicit action from an
+ * authenticated org member IS the approval to publish later unattended, so it stamps
+ * `approval_status`/`approved_at` here — the unattended scheduler
+ * (`/api/internal/n8n/scheduled-posts`) only claims posts where one of those is already set.
+ */
 export async function schedulePost(
   supabase: SupabaseClient,
   orgId: string,
   postId: string,
   scheduledAtIso: string,
 ): Promise<void> {
+  const nowIso = new Date().toISOString();
   await updatePost(supabase, orgId, postId, {
     status: "scheduled",
     scheduled_at: scheduledAtIso,
+    approval_status: "approved",
+    approved_at: nowIso,
   });
 }
 
-/** Return a scheduled post to `draft` and clear its scheduled time. */
+/** Return a scheduled post to `draft` and clear its scheduled time (approval stays recorded). */
 export async function unschedulePost(
   supabase: SupabaseClient,
   orgId: string,

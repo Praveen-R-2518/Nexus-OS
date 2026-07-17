@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -37,6 +38,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
+import {
+  isBillingEnabled,
+  isMetaInboxEnabled,
+  isSocialPublishingEnabled,
+} from "@/lib/feature-flags";
 import {
   planTierToSlug,
   PRICING_TIERS,
@@ -178,11 +184,52 @@ function SettingsSkeleton() {
   );
 }
 
+/**
+ * Task E.2: `/profile` is the landing spot for OAuth callbacks (Gmail via `/signup?step=gmail`
+ * historically, Meta via `metaDashboardUrl` — Task D.3). Turn their status query params into a
+ * one-line banner instead of silently dropping them, and scroll to the relevant section
+ * (`?section=channels`) so the user lands exactly where the thing they just did lives.
+ */
+function useCallbackStatusBanner(): { message: string; tone: "positive" | "critical" } | null {
+  const searchParams = useSearchParams();
+  const [banner, setBanner] = useState<{ message: string; tone: "positive" | "critical" } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section) {
+      // Defer to the next frame so the section has mounted before we scroll to it.
+      requestAnimationFrame(() => {
+        document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    const metaConnected = searchParams.get("meta_connected");
+    const metaError = searchParams.get("meta_error");
+    const gmailConnected = searchParams.get("gmail_connected");
+    const gmailError = searchParams.get("gmail_error");
+
+    if (metaConnected) {
+      setBanner({ message: `Connected: ${metaConnected.split(",").join(", ")}.`, tone: "positive" });
+    } else if (metaError) {
+      setBanner({ message: `Meta connection failed (${metaError}). Please try again.`, tone: "critical" });
+    } else if (gmailConnected) {
+      setBanner({ message: "Gmail connected.", tone: "positive" });
+    } else if (gmailError) {
+      setBanner({ message: `Gmail connection failed (${gmailError}). Please try again.`, tone: "critical" });
+    }
+  }, [searchParams]);
+
+  return banner;
+}
+
 export function SettingsView() {
   const tenant = useTenantScope();
   const queryClient = useQueryClient();
   const queriesEnabled = tenant.ready && !!tenant.teamId;
   const [socialBusy, setSocialBusy] = useState<Platform | null>(null);
+  const callbackBanner = useCallbackStatusBanner();
 
   const {
     data: settings,
@@ -478,6 +525,20 @@ export function SettingsView() {
         </p>
       </header>
 
+      {callbackBanner ? (
+        <div
+          role="status"
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            callbackBanner.tone === "positive"
+              ? "border-nexus-growth-border bg-nexus-growth-soft text-status-positive"
+              : "border-status-critical-border bg-status-critical-surface text-status-critical",
+          )}
+        >
+          {callbackBanner.message}
+        </div>
+      ) : null}
+
       {errorMsg ? (
         <div className="border border-status-critical-border bg-status-critical-surface px-4 py-3 font-mono text-sm text-status-critical">
           <span>{errorMsg}</span>{" "}
@@ -743,7 +804,11 @@ export function SettingsView() {
                 </div>
               </div>
 
-              {(Object.keys(META_LABELS) as MetaChannelPlatform[]).map((platform) => {
+              {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_META_INBOX (default OFF) — the Meta
+                  connect/OAuth routes stay alive, this only hides the connect affordance so we
+                  don't invite tenants into an unfinished unified inbox. */}
+              {isMetaInboxEnabled() &&
+                (Object.keys(META_LABELS) as MetaChannelPlatform[]).map((platform) => {
                 const channel = settings.channels.meta.platforms[platform];
                 const Icon =
                   platform === "whatsapp"
@@ -1143,9 +1208,13 @@ export function SettingsView() {
                     </p>
                   ) : null}
                 </div>
-                <Link href="/pricing" className={SECONDARY_BTN}>
-                  View plans
-                </Link>
+                {/* Task E.6: no checkout/payment-method flow ships yet — hide the plan-change CTA
+                    behind NEXT_PUBLIC_FEATURE_BILLING until that's wired up. */}
+                {isBillingEnabled() ? (
+                  <Link href="/pricing" className={SECONDARY_BTN}>
+                    View plans
+                  </Link>
+                ) : null}
               </div>
 
               <div className="rounded-xl border border-glass-border px-4 py-4">
@@ -1246,6 +1315,9 @@ export function SettingsView() {
             </div>
           </SettingsSection>
 
+          {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_SOCIAL_PUBLISHING (default OFF) — /posts
+              and the social connect/publish routes stay alive, this only hides the section. */}
+          {isSocialPublishingEnabled() ? (
           <SettingsSection
             id="social-posting"
             title="Social Posting"
@@ -1302,6 +1374,7 @@ export function SettingsView() {
               })}
             </div>
           </SettingsSection>
+          ) : null}
 
           <SettingsSection
             id="notifications"

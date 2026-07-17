@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import {
   JSON_LIMITS,
+  n8nWebhookAuthHeaders,
   rateLimit,
   readJsonObjectWithLimit,
   requireApiTenantContext,
 } from "@/lib/api-security";
+import { createServerClient } from "@/lib/supabase";
+import { queueOutboundJob, type OutboundJobRow } from "@/lib/outbound-jobs";
 import type { ReplyDraft } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -101,7 +104,7 @@ export async function PATCH(request: Request) {
 
   const { data: convRow, error: convFetchErr } = await supabase
     .from("conversations")
-    .select("workspace_id")
+    .select("workspace_id, source")
     .eq("id", conversationId)
     .eq("team_id", teamId)
     .maybeSingle();
@@ -158,6 +161,27 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: convErr.message }, { status: 500 });
     }
 
+    // Durable outbound (Task B.1): a queued `outbound_jobs` row is the source of truth for
+    // "this reply needs to be sent" — it survives an n8n webhook failure below, a crashed worker,
+    // or n8n being unreachable, and can be drained/retried later. Writes go through a
+    // service-role client because RLS revokes insert/update on this table from `authenticated`.
+    let outboundJob: OutboundJobRow | null = null;
+    try {
+      const serviceClient = createServerClient();
+      outboundJob = await queueOutboundJob(serviceClient, {
+        draftId,
+        teamId,
+        workspaceId,
+        conversationId,
+        channel: (convRow as { source?: string } | null)?.source ?? null,
+      });
+    } catch (e) {
+      console.error(
+        "[approval] failed to queue outbound job:",
+        e instanceof Error ? e.message : String(e),
+      );
+    }
+
     const webhook = approvalWebhookUrl();
     if (!webhook) {
       console.error(
@@ -167,7 +191,7 @@ export async function PATCH(request: Request) {
       try {
         const res = await fetch(webhook, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...n8nWebhookAuthHeaders() },
           body: JSON.stringify({
             draft_id: draftId,
             action: "approve",
@@ -193,7 +217,9 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       success: true,
+      status: outboundJob?.status ?? "queued",
       draft: updatedDraft as ReplyDraft,
+      outbound_job: outboundJob,
     });
   }
 

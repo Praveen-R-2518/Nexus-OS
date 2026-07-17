@@ -3,8 +3,13 @@ import { createHash, createHmac, timingSafeEqual } from "crypto";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// `gmail.send` is required for Task B (durable outbound) — the Channel Sender (lib/gmail/send.ts)
+// dispatches approved replies through the Gmail API. Adding a scope here only changes what the
+// OAuth consent screen requests; it does NOT change transport behavior — real sends stay gated
+// behind CHANNEL_SENDER_TRANSPORT=sandbox opt-in (used by tests) vs. the live Gmail call.
 export const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/userinfo.email",
 ].join(" ");
 
