@@ -7,7 +7,7 @@
         "height": 520,
         "width": 400
       },
-      "id": "00000027-0000-4000-8000-000000276096",
+      "id": "00000036-0000-4000-8000-000000368989",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -225,7 +225,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $vars.NEXUS_WORKSPACE_ID, payload: $json } }}"
+        "jsonBody": "={{ { workflow_name: \"WF0a Gmail Intake\", step: \"noise_filter_dropped\", result: \"skipped\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: $json } }}"
       },
       "id": "00000000-0000-4000-8000-000000000035",
       "name": "Log Noise Drop",
@@ -416,7 +416,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { source: $json.normalized.source, channel: $json.normalized.channel || \"email\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $vars.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", external_thread_id: $json.normalized.external_thread_id || null, external_permalink: $json.normalized.external_permalink || null, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, external_permalink: $json.normalized.external_permalink, ingest_source: $json.normalized.source }) } }}"
+        "jsonBody": "={{ { source: $json.normalized.source, channel: $json.normalized.channel || \"email\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", external_thread_id: $json.normalized.external_thread_id || null, external_permalink: $json.normalized.external_permalink || null, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { lead_hint: $json.lead_id, external_thread_id: $json.normalized.external_thread_id, external_permalink: $json.normalized.external_permalink, ingest_source: $json.normalized.source }) } }}"
       },
       "id": "00000000-0000-4000-8000-000000000040",
       "name": "POST Conversation (append)",
@@ -515,7 +515,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { source: $json.normalized.source, channel: $json.normalized.channel || \"email\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $vars.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", external_thread_id: $json.normalized.external_thread_id || null, external_permalink: $json.normalized.external_permalink || null, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, external_permalink: $json.normalized.external_permalink, ingest_source: $json.normalized.source }) } }}"
+        "jsonBody": "={{ { source: $json.normalized.source, channel: $json.normalized.channel || \"email\", team_id: $json.normalized.team_id, workspace_id: $json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, customer_name: $json.normalized.customer_name, customer_email: $json.normalized.customer_email_or_phone, message: $json.normalized.message, received_at: $json.normalized.received_at, status: \"unread\", external_thread_id: $json.normalized.external_thread_id || null, external_permalink: $json.normalized.external_permalink || null, raw_payload: Object.assign({}, $json.normalized.raw_payload || {}, { external_thread_id: $json.normalized.external_thread_id, external_permalink: $json.normalized.external_permalink, ingest_source: $json.normalized.source }) } }}"
       },
       "id": "00000000-0000-4000-8000-000000000042",
       "name": "POST Conversation (new)",
@@ -637,7 +637,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $vars.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}"
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}"
       },
       "id": "00000000-0000-4000-8000-000000000044",
       "name": "Log Intake OK",
@@ -653,6 +653,96 @@
           "name": "Supabase API"
         }
       },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "try {\n  const norm = $('Dedup Decision').first().json.normalized || {};\n  const source = String(norm.source || 'gmail').toLowerCase();\n  const platform = ['gmail', 'whatsapp', 'instagram', 'facebook'].includes(source) ? source : 'gmail';\n  let externalMessageId = '';\n  const raw = norm.raw_payload || {};\n  const body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n  if (platform === 'gmail') {\n    const headers = body.headers || {};\n    const mid = headers['message-id'] || headers['Message-ID'] || body.messageId || '';\n    externalMessageId = String(mid).replace(/[<>]/g, '').trim();\n  } else if (platform === 'whatsapp') {\n    externalMessageId =\n      body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id || body.message_id || '';\n  } else if (platform === 'instagram' || platform === 'facebook') {\n    externalMessageId =\n      body.entry?.[0]?.messaging?.[0]?.message?.mid ||\n      body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id ||\n      '';\n  }\n  if (!externalMessageId) {\n    return [{ json: { skip: true, reason: 'no_external_message_id' } }];\n  }\n  return [{ json: { skip: false, platform, external_message_id: externalMessageId } }];\n} catch (error) {\n  return [{ json: { skip: true, reason: error.message } }];\n}"
+      },
+      "id": "00000000-0000-4000-8000-000000000047",
+      "name": "Build Inbound Finalize Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3580,
+        380
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000472",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000471",
+      "name": "Has Inbound Event?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3820,
+        380
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/inbound-finalize' }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.N8N_BOOTSTRAP_TOKEN || $env.N8N_INGEST_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { platform: $json.platform, external_message_id: $json.external_message_id } }}"
+      },
+      "id": "00000000-0000-4000-8000-000000000048",
+      "name": "Finalize Inbound Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4060,
+        300
+      ],
       "onError": "continueRegularOutput"
     },
     {
@@ -678,7 +768,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $vars.NEXUS_WORKSPACE_ID, payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}"
+        "jsonBody": "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_error', result: 'error', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { error: $json, normalized: $('Dedup Decision').first().json.normalized } } }}"
       },
       "id": "00000000-0000-4000-8000-000000000045",
       "name": "Log Intake Error",
@@ -928,6 +1018,40 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Log Intake OK": {
+      "main": [
+        [
+          {
+            "node": "Build Inbound Finalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Inbound Finalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Has Inbound Event?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Inbound Event?": {
+      "main": [
+        [
+          {
+            "node": "Finalize Inbound Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     },
     "Log Intake Error": {

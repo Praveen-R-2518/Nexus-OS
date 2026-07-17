@@ -75,7 +75,7 @@
         "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  workflow_name: 'followup',\n  step: 'no_pending_followups',\n  result: 'skipped',\n  payload: {},\n  timestamp: $now.toISO()\n} }}",
+        "jsonBody": "={{ {\n  workflow_name: 'followup',\n  step: 'no_pending_followups',\n  result: 'skipped',\n  team_id: null,\n  payload: {},\n  timestamp: $now.toISO()\n} }}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
       },
       "id": "7c1136b6-8bab-49f6-a90f-f693dc0fb8a4",
@@ -196,7 +196,7 @@
         "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  status: 'sent'\n} }}",
+        "jsonBody": "={{ {\n  status: 'drafted'\n} }}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
       },
       "id": "52accd87-4254-49ec-9a7a-9544a7a5f2d2",
@@ -215,7 +215,7 @@
         "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  workflow_name: 'followup',\n  step: 'followup_draft_created',\n  result: 'success',\n  payload: {\n    lead_id: $('Process Each Follow-up').item.json.leads.id,\n    followup_id: $('Process Each Follow-up').item.json.id\n  },\n  timestamp: $now.toISO()\n} }}",
+        "jsonBody": "={{ {\n  workflow_name: 'followup',\n  step: 'followup_draft_created',\n  result: 'success',\n  team_id: $('Process Each Follow-up').item.json.team_id,\n  workspace_id: $('Process Each Follow-up').item.json.workspace_id,\n  payload: {\n    lead_id: $('Process Each Follow-up').item.json.leads.id,\n    followup_id: $('Process Each Follow-up').item.json.id\n  },\n  timestamp: $now.toISO()\n} }}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
       },
       "id": "d0a74486-c65f-456e-8f38-8a4473b15b74",

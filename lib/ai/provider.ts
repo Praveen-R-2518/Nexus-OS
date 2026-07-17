@@ -42,14 +42,67 @@ export type AiOperation =
 export function isMockMode(): boolean {
   const provider = process.env.AI_PROVIDER?.trim().toLowerCase();
   if (provider === "mock") return true;
-  const key = process.env.OPENAI_API_KEY?.trim().toLowerCase();
+  const key = resolveGlobalApiKey()?.toLowerCase();
   return key === "mock";
+}
+
+/** Primary chat/classify key — accepts common Azure aliases so hosting panels that use AZURE_* still work. */
+function resolveGlobalApiKey(): string | undefined {
+  return (
+    process.env.OPENAI_API_KEY?.trim() ||
+    process.env.AZURE_OPENAI_API_KEY?.trim() ||
+    process.env.AZURE_API_KEY?.trim() ||
+    undefined
+  );
+}
+
+/** Normalizes Azure resource URLs to the OpenAI-compatible `/openai/v1` surface. */
+function normalizeOpenAiCompatibleBaseUrl(raw: string | undefined): string | undefined {
+  const trimmed = raw?.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.includes(".openai.azure.com") && !trimmed.includes("/openai/")) {
+    return `${trimmed.replace(/\/$/, "")}/openai/v1`;
+  }
+  return trimmed;
+}
+
+function resolveGlobalBaseUrl(): string | undefined {
+  const raw =
+    process.env.OPENAI_BASE_URL?.trim() || process.env.AZURE_OPENAI_ENDPOINT?.trim();
+  return normalizeOpenAiCompatibleBaseUrl(raw);
 }
 
 /** True when a real (or mock) OpenAI key is configured — the gate every AI route/function checks first. */
 export function isOpenAiConfigured(): boolean {
-  if (isMockMode()) return true;
-  return !!process.env.OPENAI_API_KEY?.trim();
+  const mock = isMockMode();
+  const apiKey = resolveGlobalApiKey();
+  const configured = mock || !!apiKey;
+  // #region agent log
+  fetch("http://127.0.0.1:7718/ingest/82f32985-4bff-4337-b714-72c7f9526288", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "23c246" },
+    body: JSON.stringify({
+      sessionId: "23c246",
+      runId: "post-fix",
+      hypothesisId: "A,B,C,D",
+      location: "lib/ai/provider.ts:isOpenAiConfigured",
+      message: "AI config gate evaluated",
+      data: {
+        configured,
+        mock,
+        resolvedKeyLen: apiKey?.length ?? 0,
+        resolvedKeyIsMock: apiKey?.toLowerCase() === "mock",
+        openAiKeyLen: process.env.OPENAI_API_KEY?.trim().length ?? 0,
+        azureOpenAiKeyLen: process.env.AZURE_OPENAI_API_KEY?.trim().length ?? 0,
+        aiProvider: process.env.AI_PROVIDER?.trim() || null,
+        hasResolvedBaseUrl: !!resolveGlobalBaseUrl(),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  if (mock) return true;
+  return !!apiKey;
 }
 
 /**
@@ -83,8 +136,8 @@ function resolveClientConfig(purpose: ClientPurpose): {
     return { apiKey: overrideKey, baseURL: overrideBase || undefined };
   }
   return {
-    apiKey: process.env.OPENAI_API_KEY?.trim(),
-    baseURL: process.env.OPENAI_BASE_URL?.trim() || undefined,
+    apiKey: resolveGlobalApiKey(),
+    baseURL: resolveGlobalBaseUrl(),
   };
 }
 
