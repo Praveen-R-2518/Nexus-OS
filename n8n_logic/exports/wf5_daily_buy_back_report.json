@@ -516,7 +516,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const http = $input.first().json;\nconst rows = Array.isArray(http)\n  ? http\n  : Array.isArray(http.body)\n    ? http.body\n    : [];\n\nlet tenants = rows\n  .filter((r) => r && r.team_id)\n  .map((r) => ({\n    team_id: String(r.team_id),\n    workspace_id: r.workspace_id ?? null,\n  }));\n\nif (tenants.length === 0) {\n  const fallback =\n    typeof $env !== 'undefined' && $env.NEXUS_TEAM_ID\n      ? String($env.NEXUS_TEAM_ID).trim()\n      : '';\n  if (fallback) {\n    tenants = [{ team_id: fallback, workspace_id: null }];\n  }\n}\n\nreturn tenants.map((t) => ({ json: t }));"
+        "jsCode": "const http = $input.first().json;\nconst rows = Array.isArray(http)\n  ? http\n  : Array.isArray(http.body)\n    ? http.body\n    : [];\n\nlet tenants = rows\n  .filter((r) => r && r.team_id)\n  .map((r) => ({\n    team_id: String(r.team_id),\n    workspace_id: r.workspace_id ?? null,\n  }));\n\nif (tenants.length === 0) {\n  const fallback =\n    typeof $env !== 'undefined' && $vars.NEXUS_TEAM_ID\n      ? String($vars.NEXUS_TEAM_ID).trim()\n      : '';\n  if (fallback) {\n    tenants = [{ team_id: fallback, workspace_id: null }];\n  }\n}\n\nreturn tenants.map((t) => ({ json: t }));"
       },
       "id": "d0a87cb4-9473-41d1-bcc9-5d662c091ddd",
       "name": "Normalize Tenant List",

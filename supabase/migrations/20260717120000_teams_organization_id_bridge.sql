@@ -9,18 +9,21 @@ create unique index if not exists teams_organization_id_uidx
   on public.teams (organization_id)
   where organization_id is not null;
 
--- Backfill: workspace owner → user_profiles.organization_id (one org per team).
+-- Backfill: workspace owner → user_profiles.organization_id. The bridge is 1:1, but live
+-- data can have several teams whose workspace owners share one organization (test tenants),
+-- so deduplicate per ORGANIZATION too — the team with the earliest workspace wins; later
+-- teams keep organization_id null rather than violating teams_organization_id_uidx.
 update public.teams t
 set organization_id = sub.organization_id
 from (
-  select distinct on (w.team_id)
+  select distinct on (up.organization_id)
     w.team_id,
     up.organization_id
   from public.workspaces w
   join public.user_profiles up on up.id = w.owner_user_id
   where w.owner_user_id is not null
     and up.organization_id is not null
-  order by w.team_id, w.created_at asc nulls last
+  order by up.organization_id, w.created_at asc nulls last
 ) sub
 where t.id = sub.team_id
   and t.organization_id is null;
@@ -79,14 +82,19 @@ begin
   if v_existing_team_id is not null then
     v_team_id := v_existing_team_id;
 
-    update public.teams
-    set organization_id = (
-      select organization_id
-      from public.user_profiles
-      where id = v_uid
-    )
-    where id = v_team_id
-      and organization_id is null;
+    update public.teams t
+    set organization_id = up.organization_id
+    from public.user_profiles up
+    where t.id = v_team_id
+      and t.organization_id is null
+      and up.id = v_uid
+      and up.organization_id is not null
+      -- 1:1 bridge: never steal an organization already linked to another team.
+      and not exists (
+        select 1 from public.teams t2
+        where t2.organization_id = up.organization_id
+          and t2.id <> v_team_id
+      );
 
     select w.id into v_workspace_id
     from public.workspaces w
@@ -176,14 +184,19 @@ begin
     returning id into v_team_id;
   end if;
 
-  update public.teams
-  set organization_id = (
-    select organization_id
-    from public.user_profiles
-    where id = v_uid
-  )
-  where id = v_team_id
-    and organization_id is null;
+  update public.teams t
+  set organization_id = up.organization_id
+  from public.user_profiles up
+  where t.id = v_team_id
+    and t.organization_id is null
+    and up.id = v_uid
+    and up.organization_id is not null
+    -- 1:1 bridge: never steal an organization already linked to another team.
+    and not exists (
+      select 1 from public.teams t2
+      where t2.organization_id = up.organization_id
+        and t2.id <> v_team_id
+    );
 
   update public.profiles
   set team_id = v_team_id, updated_at = now()

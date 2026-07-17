@@ -35,14 +35,14 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.NEXUS_APP_URL }}/api/internal/n8n/scheduled-posts",
+        "url": "={{ $vars.NEXUS_APP_URL }}/api/internal/n8n/scheduled-posts",
         "sendHeaders": true,
         "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.N8N_INGEST_TOKEN }}"
+              "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}"
             }
           ]
         },
@@ -81,7 +81,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.N8N_SOCIAL_PUBLISH_WEBHOOK_URL }}",
+        "url": "={{ $vars.N8N_SOCIAL_PUBLISH_WEBHOOK_URL }}",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",

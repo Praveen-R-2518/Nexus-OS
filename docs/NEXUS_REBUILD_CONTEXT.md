@@ -47,14 +47,31 @@ Tenant isolation (RLS) · `workflow_logs` observability · durable idempotency (
 ### Done / working
 - Gmail OAuth + IMAP intake (`app/api/gmail/*`). *(Human is re-doing Google auth on the production
   domain — leave Gmail source wiring alone unless asked.)*
-- Classification (WF2), reply drafting (WF3), buy-back report (WF4/WF5) as n8n workflows — WF2 and
-  WF5 are active live and proven on a test tenant; WF1/WF3/WF4 (message intake, revenue rescue,
-  follow-up scheduler) were activated live on 2026-07-17 after this audit (tenant-id stamping had
-  already been fixed 2026-07-12, they just hadn't been flipped on — see `n8n_logic/exports/README.md`).
+- Classification (WF2), reply drafting (WF3), follow-up scheduling (WF4), buy-back report (WF5) as
+  n8n workflows — WF1/WF2/WF3/WF4/WF5 are all **active live** as of 2026-07-17 (second pass). WF3/WF4
+  had been re-activation-blocked since the first 07-17 pass: their "Generate Reply/Follow-up
+  Message" nodes used n8n's native OpenAI **Credential**, which was never bound (a different config
+  surface from the `$vars.OPENAI_API_KEY` Variable used elsewhere) — n8n's `publish_workflow`
+  rejected activation outright. Fixed by re-wiring both through the app's `/api/internal/n8n/ai/draft`
+  endpoint (same pattern as WF2's classify call) instead of a native credential — see
+  `n8n_logic/exports/README.md`. WF2 was also re-wired live to match: `Classify Message` now calls
+  `/api/internal/n8n/ai/classify` and `Create Lead` calls `/api/internal/n8n/leads`, removing the
+  direct `api.openai.com` call and the Supabase service-role write. **Caveat:** these live n8n
+  workflows call `$vars.NEXUS_APP_URL` (production), but `main` is currently missing nearly the
+  entire `/api/internal/n8n/*` surface these calls depend on (only 4 of ~20 endpoints exist there —
+  see §4 note). They will 404 in production until `issue-fix2` is merged and deployed.
 - Approval flow (`app/api/approval/route.ts`, `/approval` page).
 - Multi-tenant model: `teams → workspaces → profiles → business_profiles`, RLS helpers
   (`private.current_team_id()`, `public.is_workspace_owner()`).
-- Internal n8n ingest endpoints (`app/api/internal/n8n/*`) with `N8N_INGEST_TOKEN`.
+- Internal n8n ingest endpoints (`app/api/internal/n8n/*`) with `N8N_INGEST_TOKEN`. **On the
+  `issue-fix2` branch only** — `main` currently ships just 4 of these routes (`conversations`,
+  `gmail-credentials`, `meta-credentials`, `workflow-logs`); everything else (`ai/classify`,
+  `ai/draft`, `ai/report-summary`, `leads`, `send-reply`, `outbound-jobs/*`, `scheduled-posts`,
+  `social-credentials`, `gmail-sync`, `gmail-backfill`, `inbound-replay`, `inbound-record`,
+  `autopilot-send`, `post-result`, `match-embeddings`, `ai-usage`) is unmerged. Every live n8n
+  workflow above calls these by production URL — **merging + deploying `issue-fix2` is the single
+  highest-priority manual step**; until then WF2/WF3/WF4/WF8b/WF8d/approval-send all 404 silently
+  in production even though they're "active."
 - Design tokens + 5 hand-built UI components (`components/ui/`). shadcn is configured in
   `components.json` but NOT installed (no Radix / CVA in package.json).
 - **Knowledge layer + Chat Agent** (shipped 2026-07-14, detailed in §5) — pgvector `embeddings` +

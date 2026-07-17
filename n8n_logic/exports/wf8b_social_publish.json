@@ -52,7 +52,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+              "value": "={{ $vars.SUPABASE_ANON_KEY }}"
             }
           ]
         },
