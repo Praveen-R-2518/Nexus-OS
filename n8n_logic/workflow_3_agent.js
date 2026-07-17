@@ -14,7 +14,8 @@
  * Output JSON: reply_text, approval_required, approval_reason, tone, next_step,
  * follow_up_needed, follow_up_delay_minutes
  *
- * API key: OPENAI_API_KEY via n8n environment or process.env — never hard-code.
+ * API key: OPENAI_API_KEY as an n8n Variable ($vars.OPENAI_API_KEY) — n8n Cloud blocks $env
+ * in node expressions (N8N_BLOCK_ENV_ACCESS_IN_NODE); never hard-code the key in this file.
  */
 
 const fs = require('fs');
@@ -23,17 +24,21 @@ const path = require('path');
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 function getApiKey() {
-  const fromN8n =
+  const fromN8nVars =
+    typeof $vars !== 'undefined' && $vars.OPENAI_API_KEY
+      ? String($vars.OPENAI_API_KEY).trim()
+      : '';
+  const fromN8nEnv =
     typeof $env !== 'undefined' && $env.OPENAI_API_KEY
       ? String($env.OPENAI_API_KEY).trim()
       : '';
   const fromProcess = process.env.OPENAI_API_KEY
     ? String(process.env.OPENAI_API_KEY).trim()
     : '';
-  const key = fromN8n || fromProcess;
+  const key = fromN8nVars || fromN8nEnv || fromProcess;
   if (!key) {
     throw new Error(
-      'OPENAI_API_KEY is not set. Use n8n environment variables or host env; do not hard-code the API key.',
+      'OPENAI_API_KEY is not set. Add it as an n8n Variable ($vars.OPENAI_API_KEY, Settings -> Variables) — n8n Cloud blocks $env; do not hard-code the API key.',
     );
   }
   return key;
@@ -148,12 +153,21 @@ function buildUserPayload({
  * any failure returns [] and drafting proceeds without retrieval.
  */
 async function fetchSimilarContext(teamId, query) {
+  // Live n8n Variable is named NEXUS_APP_URL (see docs/n8n_workspace_env.md); NEXUS_APP_BASE_URL
+  // is kept as a fallback name for self-hosted n8n instances that set it via $env/process.env.
   const base =
+    (typeof $vars !== 'undefined' && $vars.NEXUS_APP_URL ? String($vars.NEXUS_APP_URL).trim() : '') ||
+    (typeof $vars !== 'undefined' && $vars.NEXUS_APP_BASE_URL
+      ? String($vars.NEXUS_APP_BASE_URL).trim()
+      : '') ||
     (typeof $env !== 'undefined' && $env.NEXUS_APP_BASE_URL
       ? String($env.NEXUS_APP_BASE_URL).trim()
       : '') ||
     (process.env.NEXUS_APP_BASE_URL ? String(process.env.NEXUS_APP_BASE_URL).trim() : '');
   const token =
+    (typeof $vars !== 'undefined' && $vars.N8N_INGEST_TOKEN
+      ? String($vars.N8N_INGEST_TOKEN).trim()
+      : '') ||
     (typeof $env !== 'undefined' && $env.N8N_INGEST_TOKEN
       ? String($env.N8N_INGEST_TOKEN).trim()
       : '') ||

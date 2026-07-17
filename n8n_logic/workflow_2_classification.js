@@ -6,7 +6,8 @@
  * Prompt: classification_prompt.txt in ai_prompts/ (override filename with NEXUS_CLASSIFICATION_PROMPT_FILE).
  *
  * Env:
- * - OPENAI_API_KEY (required) — n8n variables or host env; never hard-code.
+ * - OPENAI_API_KEY (required) — n8n Variables ($vars) preferred; n8n Cloud blocks $env in
+ *   node expressions (N8N_BLOCK_ENV_ACCESS_IN_NODE), so $vars is checked first below.
  * - OPENAI_MODEL — default gpt-4o-mini
  * - NEXUS_PROMPT_DIR — absolute path to folder containing prompt .txt files (optional)
  * - NEXUS_CLASSIFICATION_PROMPT_FILE — prompt filename inside that folder (optional)
@@ -23,17 +24,21 @@ const path = require('path');
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 function getApiKey() {
-  const fromN8n =
+  const fromN8nVars =
+    typeof $vars !== 'undefined' && $vars.OPENAI_API_KEY
+      ? String($vars.OPENAI_API_KEY).trim()
+      : '';
+  const fromN8nEnv =
     typeof $env !== 'undefined' && $env.OPENAI_API_KEY
       ? String($env.OPENAI_API_KEY).trim()
       : '';
   const fromProcess = process.env.OPENAI_API_KEY
     ? String(process.env.OPENAI_API_KEY).trim()
     : '';
-  const key = fromN8n || fromProcess;
+  const key = fromN8nVars || fromN8nEnv || fromProcess;
   if (!key) {
     throw new Error(
-      'OPENAI_API_KEY is not set. Add it to n8n environment variables or credentials-derived env; do not hard-code the key in this file.',
+      'OPENAI_API_KEY is not set. Add it as an n8n Variable ($vars.OPENAI_API_KEY, Settings -> Variables) — n8n Cloud blocks $env; do not hard-code the key in this file.',
     );
   }
   return key;

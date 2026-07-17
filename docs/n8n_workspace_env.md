@@ -40,6 +40,14 @@ Current wiring:
 | App base URL | **Hardcoded** in the node (`https://nexusos.knurdz.org`) — not secret, avoids a variable. |
 | `N8N_INGEST_TOKEN` | `{{ $vars.N8N_INGEST_TOKEN }}` — add as an n8n **Variable** (must match the app's env value). |
 
+> **Naming note:** three different names have shown up for "the app's base URL" across this repo —
+> `NEXT_PUBLIC_SITE_URL` (the real Next.js env var, used for OAuth redirect URIs and Supabase Auth
+> redirects — this is the canonical one for anything running *inside* the app), the n8n Variable
+> `NEXUS_APP_URL` (used by WF8b/WF8d, see below), and `NEXUS_APP_BASE_URL` (referenced by
+> `n8n_logic/workflow_3_agent.js`'s retrieval call and older docs/scripts, kept only as a fallback
+> name in that file). Don't introduce a fourth name — new n8n Variables that need the app's base
+> URL should use `NEXUS_APP_URL`; new Next.js code should use `NEXT_PUBLIC_SITE_URL`.
+
 **Do not activate** for real sends until Gmail `gmail.send` scope is provisioned (until then set
 `CHANNEL_SENDER_TRANSPORT=sandbox` on the app to complete the path without real email).
 
