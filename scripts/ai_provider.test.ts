@@ -36,6 +36,18 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
   // --- Mock mode (AI_PROVIDER=mock) ---
   delete process.env.OPENAI_API_KEY;
   process.env.AI_PROVIDER = "mock";
+  // AI_MODELS resolves env at module load — clear every override so the defaults
+  // assertion below tests the spec, not whatever the invoking shell has set.
+  delete process.env.OPENAI_BASE_URL;
+  delete process.env.OPENAI_MODEL;
+  delete process.env.OPENAI_MODEL_CLASSIFY;
+  delete process.env.OPENAI_MODEL_DRAFT;
+  delete process.env.OPENAI_MODEL_REPORT;
+  delete process.env.OPENAI_EMBEDDING_MODEL;
+  delete process.env.OPENAI_EMBED_API_KEY;
+  delete process.env.OPENAI_EMBED_BASE_URL;
+  delete process.env.OPENAI_IMAGE_API_KEY;
+  delete process.env.OPENAI_IMAGE_BASE_URL;
 
   const { isMockMode, isOpenAiConfigured, AI_MODELS } = await import("@/lib/ai/provider");
   const { classifyMessage } = await import("@/lib/ai/classify");
@@ -86,12 +98,23 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
   // --- Not configured (no key, no mock) ---
   delete process.env.AI_PROVIDER;
   delete process.env.OPENAI_API_KEY;
+  delete process.env.AZURE_OPENAI_API_KEY;
+  delete process.env.AZURE_API_KEY;
 
   // classify/provider modules cache nothing env-dependent across calls, so re-check live.
   const { isOpenAiConfigured: isConfiguredNow } = await import("@/lib/ai/provider");
 
   await check("not configured when no key/mock set", () => {
     assert(isConfiguredNow() === false, "isOpenAiConfigured false");
+  });
+
+  await check("azure alias env vars count as configured", () => {
+    process.env.AZURE_OPENAI_API_KEY = "azure-only-key";
+    assert(isConfiguredNow() === true, "AZURE_OPENAI_API_KEY satisfies gate");
+    delete process.env.AZURE_OPENAI_API_KEY;
+    process.env.AZURE_API_KEY = "azure-api-key";
+    assert(isConfiguredNow() === true, "AZURE_API_KEY satisfies gate");
+    delete process.env.AZURE_API_KEY;
   });
 
   await check("classifyMessage throws AiNotConfiguredError when not configured", async () => {
@@ -113,7 +136,7 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
     assert(summary.includes("Acme"), "fallback summary uses stats");
   });
 
-  console.log(`\nai_provider: ${passed}/8 checks passed`);
+  console.log(`\nai_provider: ${passed}/9 checks passed`);
 })().catch((e) => {
   console.error("FAIL:", e instanceof Error ? e.message : e);
   process.exit(1);

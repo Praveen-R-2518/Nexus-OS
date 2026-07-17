@@ -1,26 +1,18 @@
 {
   "id": "47BO0agxAJGizttR",
   "name": "WF8d - Social Post Scheduler",
-  "active": false,
-  "note": "Exported from live n8n (knurdz3o.app.n8n.cloud) on 2026-07-17. Live workflow id: 47BO0agxAJGizttR.",
+  "active": true,
+  "note": "Hardened 2026-07-17: active, NEXUS_APP_URL fallback, WF8b webhook auth header on trigger.",
   "nodes": [
     {
       "id": "8e6b4de6-813c-4a6b-b9a7-5fd6f6e01e60",
       "name": "Every 5 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [
-        0,
-        0
-      ],
+      "position": [0, 0],
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 5
-            }
-          ]
+          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
         }
       }
     },
@@ -29,29 +21,21 @@
       "name": "Claim Due Posts",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [
-        224,
-        0
-      ],
+      "position": [224, 0],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.NEXUS_APP_URL }}/api/internal/n8n/scheduled-posts",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/scheduled-posts' }}",
         "sendHeaders": true,
-        "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.N8N_INGEST_TOKEN }}"
+              "value": "=Bearer {{ $vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN }}"
             }
           ]
         },
         "options": {
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
         }
       }
     },
@@ -60,14 +44,10 @@
       "name": "Expand Posts",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        448,
-        0
-      ],
+      "position": [448, 0],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "// The scheduled-posts endpoint atomically claims due posts (flips them to\n// 'publishing') and returns them as { success, data:[...] }. Emit one item per\n// post so 'Trigger Publish' fires WF8b once per post. Empty -> no items -> no-op.\nconst resp = $input.first().json || {};\nconst rows = Array.isArray(resp.data) ? resp.data : [];\nreturn rows.map((r) => ({ json: r }));"
+        "jsCode": "const resp = $input.first().json || {};\nconst rows = Array.isArray(resp.data) ? resp.data : [];\nreturn rows.map((r) => ({ json: r }));"
       }
     },
     {
@@ -75,64 +55,40 @@
       "name": "Trigger Publish",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [
-        672,
-        0
-      ],
+      "position": [672, 0],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.N8N_SOCIAL_PUBLISH_WEBHOOK_URL }}",
+        "url": "={{ ($vars.N8N_SOCIAL_PUBLISH_WEBHOOK_URL || (($vars.N8N_WEBHOOK_BASE_URL || 'https://knurdz3o.app.n8n.cloud').replace(/\\/$/, '') + '/webhook/publish-social-post')) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_WEBHOOK_TOKEN }}"
+            },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ { \"orgId\": $json.organization_id, \"postId\": $json.id, \"platforms\": $json.platforms } }}",
         "options": {
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
+          "response": { "response": { "neverError": true } }
         }
       }
     }
   ],
   "connections": {
     "Every 5 Minutes": {
-      "main": [
-        [
-          {
-            "node": "Claim Due Posts",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Claim Due Posts", "type": "main", "index": 0 }]]
     },
     "Claim Due Posts": {
-      "main": [
-        [
-          {
-            "node": "Expand Posts",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Expand Posts", "type": "main", "index": 0 }]]
     },
     "Expand Posts": {
-      "main": [
-        [
-          {
-            "node": "Trigger Publish",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Trigger Publish", "type": "main", "index": 0 }]]
     }
   },
-  "settings": {
-    "executionOrder": "v1",
-    "availableInMCP": true
-  }
+  "settings": { "executionOrder": "v1", "availableInMCP": true }
 }

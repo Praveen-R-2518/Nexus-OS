@@ -6,19 +6,28 @@ import {
   requireN8nToken,
 } from "@/lib/api-security";
 import { createServerClient } from "@/lib/supabase";
+import { upsertConversationEmbedding } from "@/lib/embeddings/store";
 import { parseWorkspaceId } from "@/lib/workspace-id";
 
 export const dynamic = "force-dynamic";
 
+// Includes both the legacy set and every value WF2's Parse AI Response node can emit via
+// INTENT_MAP/riskType (n8n_logic/exports/wf2_classification.json) — leads.intent/risk_type are
+// plain `text` columns with no DB check constraint, so this allowlist is app-level only; keep it
+// a superset of what the live classifier actually produces or real classifications silently
+// collapse to the "other"/"none" fallback.
 const INTENTS = [
   "question",
   "complaint",
   "purchase_intent",
   "support",
   "other",
+  "pricing_request",
+  "booking_request",
+  "proposal_followup",
 ] as const;
 const URGENCIES = ["low", "medium", "high"] as const;
-const RISK_TYPES = ["none", "churn_risk", "escalation_risk"] as const;
+const RISK_TYPES = ["none", "churn_risk", "escalation_risk", "lead_may_go_cold"] as const;
 const NEXT_ACTIONS = [
   "draft_reply",
   "request_approval",
@@ -101,7 +110,7 @@ export async function POST(request: Request) {
   // this is the durability gap Task A.3 closes (WF2's direct-REST path trusts the payload blindly).
   const { data: convRow, error: convErr } = await supabase
     .from("conversations")
-    .select("id, team_id, workspace_id")
+    .select("id, team_id, workspace_id, message, customer_name, source, channel")
     .eq("id", conversationId)
     .eq("team_id", teamId)
     .maybeSingle();
@@ -152,6 +161,28 @@ export async function POST(request: Request) {
       { success: false, error: "Failed to create lead" },
       { status: 502 },
     );
+  }
+
+  const convMessage = boundedString(
+    (convRow as { message?: unknown }).message,
+    20_000,
+  );
+  if (convMessage) {
+    const customerName = boundedString(
+      (convRow as { customer_name?: unknown }).customer_name,
+      250,
+    );
+    await upsertConversationEmbedding({
+      supabase,
+      teamId,
+      workspaceId: resolvedWorkspaceId,
+      sourceId: conversationId,
+      content: customerName ? `${customerName}: ${convMessage}` : convMessage,
+      metadata: {
+        source: (convRow as { source?: string | null }).source ?? null,
+        channel: (convRow as { channel?: string | null }).channel ?? null,
+      },
+    });
   }
 
   return NextResponse.json({ success: true, data }, { status: 201 });

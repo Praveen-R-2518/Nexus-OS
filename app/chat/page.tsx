@@ -293,6 +293,9 @@ export default function ChatPage() {
       {!aiStatus.configured ? (
         <p className="mb-4 shrink-0 rounded-lg border border-status-warning-border bg-status-warning-surface px-4 py-2 text-sm text-status-warning">
           Chat is temporarily unavailable — the AI provider is not configured.
+          {aiStatus.configHint ? (
+            <span className="mt-1 block text-status-warning/90">{aiStatus.configHint}</span>
+          ) : null}
         </p>
       ) : null}
 

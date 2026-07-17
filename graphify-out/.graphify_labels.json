@@ -220,8 +220,6 @@
   "218": "store.ts",
   "219": "n8n-job-tokens.ts",
   "220": "AppShell.tsx",
-  "221": "api.ts",
-  "222": "route.ts",
   "223": "layout.tsx",
   "224": "system-prompt.ts",
   "225": "approval_route.test.ts",
@@ -229,16 +227,14 @@
   "227": "route_reference.test.mjs",
   "228": "route.ts",
   "229": "route.ts",
-  "230": "credentials.ts",
   "231": "n8n_job_tokens.test.ts",
   "232": "workflow_logs_route.test.ts",
-  "233": "route.ts",
-  "234": "e2e_live_hop.ts",
   "235": "internal_leads.test.ts",
   "236": "createSupabaseRouteHandlerClient",
   "237": "AuthGuard.tsx",
   "238": "ai_classify_route.test.ts",
   "239": "ai_provider.test.ts",
   "240": "20260717131000_n8n_job_token_rpcs.sql",
-  "241": "openai_smoke.test.ts"
+  "241": "openai_smoke.test.ts",
+  "243": "outbound-jobs.ts"
 }

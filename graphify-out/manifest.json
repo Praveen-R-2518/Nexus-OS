@@ -1,7 +1,7 @@
 {
   ".claude/settings.local.json": {
-    "mtime": 1784215107.8288445,
-    "ast_hash": "1bda754e63800937466956cd6bfb4e0d",
+    "mtime": 1784272084.0875275,
+    "ast_hash": "eae287e6314d29f621212df528f7cd79",
     "semantic_hash": ""
   },
   ".cursor/settings.json": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "lib/chat/openai.ts": {
-    "mtime": 1784268651.008361,
-    "ast_hash": "6d21d503b01722db8729152efc8ac7aa",
+    "mtime": 1784274228.979967,
+    "ast_hash": "4bd25646157dc11b53bc28cf538a36fc",
     "semantic_hash": ""
   },
   "lib/chat/system-prompt.ts": {
@@ -705,8 +705,8 @@
     "semantic_hash": "ee34bd0fdc95feff49016b6349890a62"
   },
   "n8n_logic/exports/wf0a_gmail_intake.json": {
-    "mtime": 1784270876.9492948,
-    "ast_hash": "0c79f59508426c3ef0b7832adde96d30",
+    "mtime": 1784284827.0776951,
+    "ast_hash": "7c7d4cf1139ec955f77ad9f851670584",
     "semantic_hash": ""
   },
   "n8n_logic/fixtures/gmail_imap_sample.json": {
@@ -775,8 +775,8 @@
     "semantic_hash": "c56b5f3c12f777a86e2513f45daab56a"
   },
   "scripts/build_n8n_workflow_exports.js": {
-    "mtime": 1783940453.6295252,
-    "ast_hash": "fb9312713521a063cef6985d8a0d3f6f",
+    "mtime": 1784284813.0741394,
+    "ast_hash": "ac3c830fa3adbd981288cb35e9e2eb4a",
     "semantic_hash": ""
   },
   "scripts/chat_analyst.test.ts": {
@@ -1045,8 +1045,8 @@
     "semantic_hash": "234dc00741d443ffdc1895203e89af95"
   },
   "docs/NEXUS_REBUILD_CONTEXT.md": {
-    "mtime": 1784264505.7474434,
-    "ast_hash": "edf7fb686ac255d2796af686dd9bdf3c",
+    "mtime": 1784282728.3383384,
+    "ast_hash": "cfcd8519315c0e5aa563131910da0c69",
     "semantic_hash": ""
   },
   "docs/classification_test_results_v1.md": {
@@ -1125,8 +1125,8 @@
     "semantic_hash": "7821d7fa056879fb906e4d7977e0bd25"
   },
   "app/api/internal/n8n/send-reply/route.ts": {
-    "mtime": 1784268634.2802634,
-    "ast_hash": "6da4362afe7125ea0284a17b21eb530b",
+    "mtime": 1784284669.6135545,
+    "ast_hash": "9ee639720de73075b478c8b97ca6d076",
     "semantic_hash": ""
   },
   "lib/approval-policy.ts": {
@@ -1145,8 +1145,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/approval_trigger.json": {
-    "mtime": 1783843480.718763,
-    "ast_hash": "422ffdd2feb9a07912dd29b3f5d7a36b",
+    "mtime": 1784284779.0891032,
+    "ast_hash": "0670f2b1c56be8bae6b3e5321fd6981c",
     "semantic_hash": ""
   },
   "scripts/approval_policy.test.ts": {
@@ -1180,13 +1180,13 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf3_revenue_rescue.json": {
-    "mtime": 1784269001.9310145,
-    "ast_hash": "17d7275622b0b83dd903f9b40c876aaa",
+    "mtime": 1784284766.804098,
+    "ast_hash": "b06f7c2dc2060d0d7a1d1f15f627f263",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf4_followup_scheduler.json": {
-    "mtime": 1784269274.1191578,
-    "ast_hash": "47f1d54b136a726290c13a468831d287",
+    "mtime": 1784284783.9636717,
+    "ast_hash": "13854d42de7129e0a8813e5a03262730",
     "semantic_hash": ""
   },
   "scripts/autopilot_send.test.ts": {
@@ -1195,8 +1195,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/README.md": {
-    "mtime": 1784270857.4521768,
-    "ast_hash": "804e24872c7318a3c4966eeb27ad9acf",
+    "mtime": 1784282769.188796,
+    "ast_hash": "32ae4e416de9a3c1b346dde03beb79a8",
     "semantic_hash": ""
   },
   "scripts/send_e2e.integration.ts": {
@@ -1230,13 +1230,13 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf2_classification.json": {
-    "mtime": 1784270847.8416688,
-    "ast_hash": "097d726b86dabfce24b7ec97bcd99fcb",
+    "mtime": 1784284782.1756542,
+    "ast_hash": "1679b0babd9f85eda54a4394ee835a1e",
     "semantic_hash": ""
   },
   "scripts/wf2_tenant_contract.test.ts": {
-    "mtime": 1784019303.6513746,
-    "ast_hash": "a278ec85bcb27b464d9d90342708e421",
+    "mtime": 1784274782.3992336,
+    "ast_hash": "da2ca3fc462f1b2513cbc731bf6c2cef",
     "semantic_hash": ""
   },
   "supabase/migrations/20260713160000_restore_workflow_logs.sql": {
@@ -1345,13 +1345,13 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf5_daily_buy_back_report.json": {
-    "mtime": 1784269061.2153544,
-    "ast_hash": "6869ddc0969cdfe323d1008f189a3946",
+    "mtime": 1784284797.5122564,
+    "ast_hash": "a490bbf29346c48d805ac6496090dd3c",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8b_social_publish.json": {
-    "mtime": 1784270844.4249852,
-    "ast_hash": "d2b06733dc0c4e050571ad7714bb8f6c",
+    "mtime": 1784284740.4267218,
+    "ast_hash": "f12a261e4d92757354b62d034a1e7af1",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8c_post_image_generation.json": {
@@ -1520,8 +1520,8 @@
     "semantic_hash": ""
   },
   "lib/embeddings/openai.ts": {
-    "mtime": 1784268779.4390845,
-    "ast_hash": "ea1be5f67d15d9f478c90b16986246da",
+    "mtime": 1784274228.9858959,
+    "ast_hash": "31f5e464722388d9aa47dc2c7cb893ef",
     "semantic_hash": ""
   },
   "lib/embeddings/store.ts": {
@@ -1735,8 +1735,8 @@
     "semantic_hash": ""
   },
   "lib/posts/ai.ts": {
-    "mtime": 1784268745.500845,
-    "ast_hash": "63fec9274aaf97c39e737a6675e35a2a",
+    "mtime": 1784274243.2034922,
+    "ast_hash": "b33245361989302696e99f67c8549389",
     "semantic_hash": ""
   },
   "scripts/social_oauth_state.test.ts": {
@@ -1750,8 +1750,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8d_social_scheduler.json": {
-    "mtime": 1784268030.879948,
-    "ast_hash": "ce5604957943469839180b19f57ed7a9",
+    "mtime": 1784284752.1346574,
+    "ast_hash": "59c8703b96b05b119c1d03fb7681e7c8",
     "semantic_hash": ""
   },
   "n8n_logic/exports/.raw/47BO0agxAJGizttR.json": {
@@ -1810,8 +1810,8 @@
     "semantic_hash": ""
   },
   "supabase/migrations/20260717120000_teams_organization_id_bridge.sql": {
-    "mtime": 1784267955.8014793,
-    "ast_hash": "7c7af24389be0a633f73a5658e32c616",
+    "mtime": 1784275056.3358488,
+    "ast_hash": "89f6ff7f5595365dc04512525f877f9f",
     "semantic_hash": ""
   },
   "supabase/migrations/20260717130000_launch_durability_and_tokens.sql": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "app/api/internal/n8n/leads/route.ts": {
-    "mtime": 1784269055.1633964,
-    "ast_hash": "161a6bb82f06360521876e761217ddae",
+    "mtime": 1784284674.429975,
+    "ast_hash": "60e4702a7029c2d66a416b515dc7e415",
     "semantic_hash": ""
   },
   "app/api/internal/n8n/outbound-jobs/claim/route.ts": {
@@ -1890,8 +1890,8 @@
     "semantic_hash": ""
   },
   "lib/ai/provider.ts": {
-    "mtime": 1784268497.0469296,
-    "ast_hash": "088649a6ed2b61814ee8c54bd1cd6ebb",
+    "mtime": 1784274175.591394,
+    "ast_hash": "7487b192bc8ba982ff1b67dbd9c7f2b2",
     "semantic_hash": ""
   },
   "lib/ai/report-summary.ts": {
@@ -1925,8 +1925,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf_error_alerts.json": {
-    "mtime": 1784270835.8571393,
-    "ast_hash": "09fe6e2ba0a32d6a5482e5d1d00170c6",
+    "mtime": 1784284798.8103158,
+    "ast_hash": "09de6cd5282d7365a8103a34dc7fde14",
     "semantic_hash": ""
   },
   "scripts/ai_classify_route.test.ts": {
@@ -1935,8 +1935,8 @@
     "semantic_hash": ""
   },
   "scripts/ai_provider.test.ts": {
-    "mtime": 1784269442.8214211,
-    "ast_hash": "44a18a4aa8db0c073c08987441565d2f",
+    "mtime": 1784274279.874609,
+    "ast_hash": "8c4769794bc46427b41ee5bbacbfc359",
     "semantic_hash": ""
   },
   "scripts/approval_route.test.ts": {
@@ -1955,8 +1955,8 @@
     "semantic_hash": ""
   },
   "scripts/openai_smoke.test.ts": {
-    "mtime": 1784269376.3808258,
-    "ast_hash": "6b314b9c7b64e3c392544fe5ee2cbaf5",
+    "mtime": 1784274851.401664,
+    "ast_hash": "c1d2afd77919840a5618a02b8d822cff",
     "semantic_hash": ""
   },
   "scripts/route_reference.test.mjs": {
@@ -1987,6 +1987,21 @@
   "docs/LAUNCH_ACTIVATION.md": {
     "mtime": 1784270867.1093395,
     "ast_hash": "09b489cda7c9bf514caa1ebb50ad8f29",
+    "semantic_hash": ""
+  },
+  "app/api/internal/n8n/inbound-finalize/route.ts": {
+    "mtime": 1784284657.1402392,
+    "ast_hash": "1d8536d890220d496fcf3d50e6a0509c",
+    "semantic_hash": ""
+  },
+  "app/api/internal/n8n/workflow-logs/route.ts": {
+    "mtime": 1784284667.9280372,
+    "ast_hash": "9f22f6ba3540796e9ca7736143344052",
+    "semantic_hash": ""
+  },
+  "n8n_logic/exports/wf0g_outbound_drain.json": {
+    "mtime": 1784284706.2946408,
+    "ast_hash": "2f60825525b2afd99eec80b606fd3ea6",
     "semantic_hash": ""
   }
 }

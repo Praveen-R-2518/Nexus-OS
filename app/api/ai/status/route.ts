@@ -14,7 +14,40 @@ export async function GET(request: Request) {
   if (limited) return limited;
 
   const tenant = await requireApiTenantContext();
-  if (!tenant.ok) return tenant.response;
+  if (!tenant.ok) {
+    // #region agent log
+    fetch("http://127.0.0.1:7718/ingest/82f32985-4bff-4337-b714-72c7f9526288", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "23c246" },
+      body: JSON.stringify({
+        sessionId: "23c246",
+        runId: "post-fix",
+        hypothesisId: "E",
+        location: "app/api/ai/status/route.ts:GET",
+        message: "AI status tenant auth failed",
+        data: { status: tenant.response.status },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    return tenant.response;
+  }
 
-  return NextResponse.json(getAiStatus());
+  const status = getAiStatus();
+  // #region agent log
+  fetch("http://127.0.0.1:7718/ingest/82f32985-4bff-4337-b714-72c7f9526288", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "23c246" },
+    body: JSON.stringify({
+      sessionId: "23c246",
+      runId: "post-fix",
+      hypothesisId: "A,B,C,D",
+      location: "app/api/ai/status/route.ts:GET",
+      message: "AI status response",
+      data: { configured: status.configured, mock: status.mock, features: status.features },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  return NextResponse.json(status);
 }

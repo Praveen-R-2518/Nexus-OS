@@ -14,6 +14,8 @@ export type AiStatus = {
   configured: boolean;
   mock: boolean;
   features: AiFeatureStatus;
+  /** Shown in the UI when `configured` is false — explains where to set keys. */
+  configHint?: string;
 };
 
 /**
@@ -33,5 +35,9 @@ export function getAiStatus(): AiStatus {
       chat: configured,
       embeddings: configured,
     },
+    ...(!configured && {
+      configHint:
+        "Set OPENAI_API_KEY (and OPENAI_BASE_URL for Azure) on your app host (e.g. Vercel), then redeploy. Chat reads the Next.js server env only — not n8n Variables.",
+    }),
   };
 }

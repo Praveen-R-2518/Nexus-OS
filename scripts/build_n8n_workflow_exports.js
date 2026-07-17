@@ -145,6 +145,36 @@ try {
 }
 `.trim();
 
+const buildInboundFinalizePayloadJs = `
+try {
+  const norm = $('Dedup Decision').first().json.normalized || {};
+  const source = String(norm.source || 'gmail').toLowerCase();
+  const platform = ['gmail', 'whatsapp', 'instagram', 'facebook'].includes(source) ? source : 'gmail';
+  let externalMessageId = '';
+  const raw = norm.raw_payload || {};
+  const body = raw.body && typeof raw.body === 'object' ? raw.body : raw;
+  if (platform === 'gmail') {
+    const headers = body.headers || {};
+    const mid = headers['message-id'] || headers['Message-ID'] || body.messageId || '';
+    externalMessageId = String(mid).replace(/[<>]/g, '').trim();
+  } else if (platform === 'whatsapp') {
+    externalMessageId =
+      body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id || body.message_id || '';
+  } else if (platform === 'instagram' || platform === 'facebook') {
+    externalMessageId =
+      body.entry?.[0]?.messaging?.[0]?.message?.mid ||
+      body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id ||
+      '';
+  }
+  if (!externalMessageId) {
+    return [{ json: { skip: true, reason: 'no_external_message_id' } }];
+  }
+  return [{ json: { skip: false, platform, external_message_id: externalMessageId } }];
+} catch (error) {
+  return [{ json: { skip: true, reason: error.message } }];
+}
+`.trim();
+
 function uuid(i) {
   const p = String(i).padStart(12, "0");
   return `${p.slice(0, 8)}-${p.slice(0, 4)}-4000-8000-${p.slice(0, 12)}`;
@@ -537,6 +567,40 @@ const nodesGmail = [
     body: "={{ { workflow_name: 'WF0a Gmail Intake', step: 'gmail_intake_ok', result: 'success', team_id: $('Dedup Decision').first().json.normalized.team_id, workspace_id: $('Dedup Decision').first().json.normalized.workspace_id || $env.NEXUS_WORKSPACE_ID, payload: { source: $('Dedup Decision').first().json.normalized.source, wf2_response: $json } } }}",
     onError: "continueRegularOutput",
   }),
+  codeNode(uuid(47), "Build Inbound Finalize Payload", [3580, 380], buildInboundFinalizePayloadJs),
+  {
+    parameters: {
+      conditions: {
+        options: { version: 2, leftValue: "", caseSensitive: true, typeValidation: "loose" },
+        conditions: [
+          {
+            id: uuid(472),
+            leftValue: "={{ $json.skip }}",
+            rightValue: false,
+            operator: { type: "boolean", operation: "equals" },
+          },
+        ],
+        combinator: "and",
+      },
+    },
+    id: uuid(471),
+    name: "Has Inbound Event?",
+    type: "n8n-nodes-base.if",
+    typeVersion: 2.3,
+    position: [3820, 380],
+    onError: "continueRegularOutput",
+  },
+  httpNode(uuid(48), "Finalize Inbound Event", [4060, 300], {
+    method: "POST",
+    url: "={{ ($env.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/inbound-finalize' }}",
+    headers: [
+      { name: "Authorization", value: "=Bearer {{ $env.N8N_BOOTSTRAP_TOKEN || $env.N8N_INGEST_TOKEN }}" },
+      { name: "Content-Type", value: "application/json" },
+    ],
+    body: "={{ { platform: $json.platform, external_message_id: $json.external_message_id } }}",
+    options: { response: { response: { neverError: true, responseFormat: "json" } } },
+    onError: "continueRegularOutput",
+  }),
   httpNode(uuid(45), "Log Intake Error", [2860, 80], {
     method: "POST",
     url: `${supabaseBaseUrl}/workflow_logs`,
@@ -578,6 +642,12 @@ const connGmail = buildConnections({
   "POST Conversation (new)": [[{ node: "Trigger WF2 Classification (new)", type: "main", index: 0 }]],
   "Trigger WF2 Classification (append)": [[{ node: "Log Intake OK", type: "main", index: 0 }]],
   "Trigger WF2 Classification (new)": [[{ node: "Log Intake OK", type: "main", index: 0 }]],
+  "Log Intake OK": [[{ node: "Build Inbound Finalize Payload", type: "main", index: 0 }]],
+  "Build Inbound Finalize Payload": [[{ node: "Has Inbound Event?", type: "main", index: 0 }]],
+  "Has Inbound Event?": [
+    [{ node: "Finalize Inbound Event", type: "main", index: 0 }],
+    [],
+  ],
 });
 
 connGmail["POST Conversation (append)"].main = [

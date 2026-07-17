@@ -446,6 +446,10 @@
         "headerParameters": {
           "parameters": [
             {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.N8N_WEBHOOK_TOKEN }}"
+            },
+            {
               "name": "Content-Type",
               "value": "application/json"
             }
