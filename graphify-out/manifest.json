@@ -705,8 +705,8 @@
     "semantic_hash": "ee34bd0fdc95feff49016b6349890a62"
   },
   "n8n_logic/exports/wf0a_gmail_intake.json": {
-    "mtime": 1784274423.2022736,
-    "ast_hash": "36152fca6e54a61bf8fca0710285e46a",
+    "mtime": 1784284827.0776951,
+    "ast_hash": "7c7d4cf1139ec955f77ad9f851670584",
     "semantic_hash": ""
   },
   "n8n_logic/fixtures/gmail_imap_sample.json": {
@@ -775,8 +775,8 @@
     "semantic_hash": "c56b5f3c12f777a86e2513f45daab56a"
   },
   "scripts/build_n8n_workflow_exports.js": {
-    "mtime": 1783940453.6295252,
-    "ast_hash": "fb9312713521a063cef6985d8a0d3f6f",
+    "mtime": 1784284813.0741394,
+    "ast_hash": "ac3c830fa3adbd981288cb35e9e2eb4a",
     "semantic_hash": ""
   },
   "scripts/chat_analyst.test.ts": {
@@ -1125,8 +1125,8 @@
     "semantic_hash": "7821d7fa056879fb906e4d7977e0bd25"
   },
   "app/api/internal/n8n/send-reply/route.ts": {
-    "mtime": 1784268634.2802634,
-    "ast_hash": "6da4362afe7125ea0284a17b21eb530b",
+    "mtime": 1784284669.6135545,
+    "ast_hash": "9ee639720de73075b478c8b97ca6d076",
     "semantic_hash": ""
   },
   "lib/approval-policy.ts": {
@@ -1145,8 +1145,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/approval_trigger.json": {
-    "mtime": 1783843480.718763,
-    "ast_hash": "422ffdd2feb9a07912dd29b3f5d7a36b",
+    "mtime": 1784284779.0891032,
+    "ast_hash": "0670f2b1c56be8bae6b3e5321fd6981c",
     "semantic_hash": ""
   },
   "scripts/approval_policy.test.ts": {
@@ -1180,13 +1180,13 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf3_revenue_rescue.json": {
-    "mtime": 1784269001.9310145,
-    "ast_hash": "17d7275622b0b83dd903f9b40c876aaa",
+    "mtime": 1784284766.804098,
+    "ast_hash": "b06f7c2dc2060d0d7a1d1f15f627f263",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf4_followup_scheduler.json": {
-    "mtime": 1784269274.1191578,
-    "ast_hash": "47f1d54b136a726290c13a468831d287",
+    "mtime": 1784284783.9636717,
+    "ast_hash": "13854d42de7129e0a8813e5a03262730",
     "semantic_hash": ""
   },
   "scripts/autopilot_send.test.ts": {
@@ -1230,8 +1230,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf2_classification.json": {
-    "mtime": 1784270847.8416688,
-    "ast_hash": "097d726b86dabfce24b7ec97bcd99fcb",
+    "mtime": 1784284782.1756542,
+    "ast_hash": "1679b0babd9f85eda54a4394ee835a1e",
     "semantic_hash": ""
   },
   "scripts/wf2_tenant_contract.test.ts": {
@@ -1345,13 +1345,13 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf5_daily_buy_back_report.json": {
-    "mtime": 1784274423.20307,
-    "ast_hash": "16248e8f78223a0068e3816265a56e4a",
+    "mtime": 1784284797.5122564,
+    "ast_hash": "a490bbf29346c48d805ac6496090dd3c",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8b_social_publish.json": {
-    "mtime": 1784274423.2025762,
-    "ast_hash": "ba6ab16e984119d7a6f6fe7918757c4e",
+    "mtime": 1784284740.4267218,
+    "ast_hash": "f12a261e4d92757354b62d034a1e7af1",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8c_post_image_generation.json": {
@@ -1750,8 +1750,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf8d_social_scheduler.json": {
-    "mtime": 1784274423.2015114,
-    "ast_hash": "b372b11eb1de9ecb75c3e27f93bc62fb",
+    "mtime": 1784284752.1346574,
+    "ast_hash": "59c8703b96b05b119c1d03fb7681e7c8",
     "semantic_hash": ""
   },
   "n8n_logic/exports/.raw/47BO0agxAJGizttR.json": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "app/api/internal/n8n/leads/route.ts": {
-    "mtime": 1784282321.3218818,
-    "ast_hash": "fe5f0613ddcfbcbc5773b1e63875c1bb",
+    "mtime": 1784284674.429975,
+    "ast_hash": "60e4702a7029c2d66a416b515dc7e415",
     "semantic_hash": ""
   },
   "app/api/internal/n8n/outbound-jobs/claim/route.ts": {
@@ -1925,8 +1925,8 @@
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf_error_alerts.json": {
-    "mtime": 1784270835.8571393,
-    "ast_hash": "09fe6e2ba0a32d6a5482e5d1d00170c6",
+    "mtime": 1784284798.8103158,
+    "ast_hash": "09de6cd5282d7365a8103a34dc7fde14",
     "semantic_hash": ""
   },
   "scripts/ai_classify_route.test.ts": {
@@ -1987,6 +1987,21 @@
   "docs/LAUNCH_ACTIVATION.md": {
     "mtime": 1784270867.1093395,
     "ast_hash": "09b489cda7c9bf514caa1ebb50ad8f29",
+    "semantic_hash": ""
+  },
+  "app/api/internal/n8n/inbound-finalize/route.ts": {
+    "mtime": 1784284657.1402392,
+    "ast_hash": "1d8536d890220d496fcf3d50e6a0509c",
+    "semantic_hash": ""
+  },
+  "app/api/internal/n8n/workflow-logs/route.ts": {
+    "mtime": 1784284667.9280372,
+    "ast_hash": "9f22f6ba3540796e9ca7736143344052",
+    "semantic_hash": ""
+  },
+  "n8n_logic/exports/wf0g_outbound_drain.json": {
+    "mtime": 1784284706.2946408,
+    "ast_hash": "2f60825525b2afd99eec80b606fd3ea6",
     "semantic_hash": ""
   }
 }

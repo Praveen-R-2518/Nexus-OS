@@ -2,7 +2,7 @@
   "id": "wfErrorAlertsStub001",
   "name": "WF Error Alerts (stub)",
   "active": false,
-  "note": "Stub only — activate after wiring a workflow-logs write endpoint on the app. Documents the target pattern: Error Trigger → POST {NEXUS_APP_URL}/api/internal/n8n/workflow-logs with bootstrap token. Keep inactive until that route exists.",
+  "note": "Error alerting via app workflow-logs endpoint (route shipped 2026-07-17). Activate and attach as Error Workflow on production workflows.",
   "nodes": [
     {
       "id": "sn-error-alerts",

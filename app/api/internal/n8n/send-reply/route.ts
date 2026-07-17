@@ -41,10 +41,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const jobId = parseWorkspaceId(body.job_id);
   const unauthorized = await requireN8nJobOrBootstrapToken(
     request,
     "send_reply",
-    { teamId, resourceType: "draft", resourceId: draftId },
+    jobId
+      ? { teamId, resourceType: "outbound_job", resourceId: jobId }
+      : { teamId, resourceType: "draft", resourceId: draftId },
     "internal n8n send-reply",
   );
   if (unauthorized) return unauthorized;

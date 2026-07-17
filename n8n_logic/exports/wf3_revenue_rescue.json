@@ -3,13 +3,20 @@
   "active": false,
   "settings": { "executionOrder": "v1" },
   "connections": {
-    "Receive Lead": { "main": [[{ "node": "Fetch Conversation", "type": "main", "index": 0 }, { "node": "Fetch Business Profile", "type": "main", "index": 0 }]] },
+    "Receive Lead": { "main": [[{ "node": "Verify Webhook Auth", "type": "main", "index": 0 }]] },
+    "Verify Webhook Auth": { "main": [[{ "node": "Fetch Conversation", "type": "main", "index": 0 }, { "node": "Fetch Business Profile", "type": "main", "index": 0 }]] },
     "Fetch Conversation": { "main": [[{ "node": "Wait for Context", "type": "main", "index": 0 }]] },
     "Fetch Business Profile": { "main": [[{ "node": "Wait for Context", "type": "main", "index": 1 }]] },
     "Wait for Context": { "main": [[{ "node": "Build Reply Context", "type": "main", "index": 0 }]] },
     "Build Reply Context": { "main": [[{ "node": "Generate Reply Draft", "type": "main", "index": 0 }]] },
     "Generate Reply Draft": { "main": [[{ "node": "Prepare Draft", "type": "main", "index": 0 }]] },
-    "Prepare Draft": { "main": [[{ "node": "Save Reply Draft", "type": "main", "index": 0 }]] },
+    "Prepare Draft": { "main": [[{ "node": "AI Configured?", "type": "main", "index": 0 }]] },
+    "AI Configured?": {
+      "main": [
+        [{ "node": "Save Reply Draft", "type": "main", "index": 0 }],
+        [{ "node": "Log AI Not Configured", "type": "main", "index": 0 }]
+      ]
+    },
     "Save Reply Draft": { "main": [[{ "node": "Autopilot Send (policy-gated)", "type": "main", "index": 0 }]] },
     "Autopilot Send (policy-gated)": { "main": [[{ "node": "Update Lead Status", "type": "main", "index": 0 }]] },
     "Update Lead Status": { "main": [[{ "node": "Schedule Follow-up", "type": "main", "index": 0 }]] },
@@ -24,6 +31,17 @@
       "typeVersion": 2.1,
       "position": [-288, 128],
       "webhookId": "cac7bc3a-f48c-4e11-8fd2-4b2e7e4178af"
+    },
+    {
+      "id": "wf3-auth-0001",
+      "name": "Verify Webhook Auth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 128],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function getVar(name) {\n  if (typeof $vars !== 'undefined' && $vars[name] != null && String($vars[name]).trim()) return String($vars[name]).trim();\n  return '';\n}\nconst expected = getVar('N8N_WEBHOOK_TOKEN');\nif (!expected) throw new Error('N8N_WEBHOOK_TOKEN is not set in n8n Variables');\nconst req = $input.first().json || {};\nconst headers = req.headers || {};\nconst auth = String(headers.authorization || headers.Authorization || '').trim();\nconst token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : auth;\nif (!token || token !== expected) throw new Error('Unauthorized');\nreturn $input.all();"
+      }
     },
     {
       "parameters": {
@@ -140,6 +158,55 @@
       "position": [1120, 128]
     },
     {
+      "id": "wf3-if-ai-0001",
+      "name": "AI Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1260, 128],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "ai-not-configured",
+              "leftValue": "={{ $json.ai_not_configured }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            },
+            {
+              "id": "draft-nonempty",
+              "leftValue": "={{ ($json.draft_text || '').trim().length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "wf3-log-ai-0001",
+      "name": "Log AI Not Configured",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1500, 280],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/workflow-logs' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  team_id: $('Receive Lead').item.json.body.team_id,\n  workspace_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).workspace_id,\n  workflow_name: 'reply_generation',\n  step: 'ai_not_configured',\n  result: 'skipped',\n  error: 'ai_not_configured',\n  payload: { lead_id: $('Build Reply Context').item.json.lead_id }\n} }}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
+      }
+    },
+    {
       "parameters": {
         "method": "POST",
         "url": "https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/reply_drafts",
@@ -166,7 +233,7 @@
       "position": [1820, 128],
       "parameters": {
         "method": "POST",
-        "url": "https://nexusos.knurdz.org/api/internal/n8n/autopilot-send",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/autopilot-send' }}",
         "sendHeaders": true,
         "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{ $vars.N8N_INGEST_TOKEN }}" }, { "name": "Content-Type", "value": "application/json" }] },
         "sendBody": true,
@@ -223,7 +290,7 @@
         "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Prefer", "value": "return=minimal" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  workflow_name: 'reply_generation',\n  step: 'reply_generated',\n  result: 'success',\n  payload: {\n    lead_id: $('Build Reply Context').item.json.lead_id,\n    draft_id: (($('Save Reply Draft').item.json.body && $('Save Reply Draft').item.json.body[0] && $('Save Reply Draft').item.json.body[0].id) || (Array.isArray($('Save Reply Draft').item.json) && $('Save Reply Draft').item.json[0] && $('Save Reply Draft').item.json[0].id) || $('Save Reply Draft').item.json.id),\n    approval_mode: $('Build Reply Context').item.json.approval_mode,\n    confidence: Number($('Build Reply Context').item.json.confidence) || 0\n  },\n  timestamp: $now.toISO()\n} }}",
+        "jsonBody": "={{ {\n  workflow_name: 'reply_generation',\n  step: 'reply_generated',\n  result: 'success',\n  team_id: $('Receive Lead').item.json.body.team_id,\n  workspace_id: (Array.isArray($('Fetch Conversation').item.json) ? $('Fetch Conversation').item.json[0] : $('Fetch Conversation').item.json).workspace_id,\n  payload: {\n    lead_id: $('Build Reply Context').item.json.lead_id,\n    draft_id: (($('Save Reply Draft').item.json.body && $('Save Reply Draft').item.json.body[0] && $('Save Reply Draft').item.json.body[0].id) || (Array.isArray($('Save Reply Draft').item.json) && $('Save Reply Draft').item.json[0] && $('Save Reply Draft').item.json[0].id) || $('Save Reply Draft').item.json.id),\n    approval_mode: $('Build Reply Context').item.json.approval_mode,\n    confidence: Number($('Build Reply Context').item.json.confidence) || 0\n  },\n  timestamp: $now.toISO()\n} }}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "text" } } }
       },
       "id": "2caacb6f-62f2-4882-bd9e-837fb4f6c033",

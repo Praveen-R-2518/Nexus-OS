@@ -29,6 +29,17 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function getVar(name) {\n  if (typeof $vars !== 'undefined' && $vars[name] != null && String($vars[name]).trim()) return String($vars[name]).trim();\n  return '';\n}\nconst expected = getVar('N8N_WEBHOOK_TOKEN');\nif (!expected) throw new Error('N8N_WEBHOOK_TOKEN is not set in n8n Variables');\nconst req = $input.first().json || {};\nconst headers = req.headers || {};\nconst auth = String(headers.authorization || headers.Authorization || '').trim();\nconst token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : auth;\nif (!token || token !== expected) throw new Error('Unauthorized');\nreturn $input.all();"
+      },
+      "id": "11111111-0000-4000-8000-000000000008",
+      "name": "Verify Webhook Auth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [380, 120]
+    },
+    {
+      "parameters": {
         "jsCode": "// Validate the approval payload and normalize it for the send executor.\n// Only 'approve' actions are forwarded; anything else is a no-op.\nconst req = $input.first().json || {};\nconst b = (req && typeof req.body === 'object' && req.body) ? req.body : req;\n\nif (b.action && b.action !== 'approve') {\n  return [{ json: { skip: true, reason: `ignored action: ${b.action}` } }];\n}\n\nconst draft_id = b.draft_id;\nconst team_id = b.team_id;\nif (!draft_id || !team_id) {\n  throw new Error('approval-trigger requires draft_id and team_id');\n}\n\nreturn [{\n  json: {\n    skip: false,\n    draft_id,\n    team_id,\n    conversation_id: b.conversation_id || null,\n    workspace_id: b.workspace_id || null,\n  },\n}];\n"
       },
       "id": "11111111-0000-4000-8000-000000000003",
@@ -62,7 +73,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://nexusos.knurdz.org/api/internal/n8n/send-reply",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/n8n/send-reply' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -108,6 +119,9 @@
   ],
   "connections": {
     "Approval Webhook": {
+      "main": [[{ "node": "Verify Webhook Auth", "type": "main", "index": 0 }]]
+    },
+    "Verify Webhook Auth": {
       "main": [[{ "node": "Validate Payload", "type": "main", "index": 0 }]]
     },
     "Validate Payload": {
