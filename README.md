@@ -407,12 +407,10 @@ Clicking the confirmation email link hits `/auth/callback`, which exchanges the 
 | Endpoint | Auth | Purpose |
 |----------|------|---------|
 | `GET/POST /api/conversations` | User session | List / ingest conversations |
-| `GET /api/leads` | User session | Classified leads |
 | `GET /api/reply-drafts` | User session | Pending drafts |
 | `POST /api/approval` | User session | Approve / reject draft |
 | `GET /api/metrics` | User session | Dashboard aggregates |
 | `POST /api/internal/n8n/conversations` | `N8N_INGEST_TOKEN` | Alternative n8n ingest |
-| `POST /api/internal/n8n/workflow-logs` | `N8N_INGEST_TOKEN` | Workflow audit ingest |
 | `POST /api/gmail/test-imap` | User session | Validate Gmail credentials |
 | `GET /api/meta/connect` | User session | Start Meta OAuth (WhatsApp / Instagram / Facebook) |
 | `GET /api/meta/callback` | User session | Meta OAuth callback (encrypt tokens, sync routing keys) |

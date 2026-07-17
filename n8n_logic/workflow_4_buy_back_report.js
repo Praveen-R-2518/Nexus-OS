@@ -19,7 +19,8 @@
  *
  * Output JSON: { markdown_report: string }  (markdown only per prompt; wrapped for n8n wiring)
  *
- * API key: OPENAI_API_KEY via n8n environment or process.env — never hard-code.
+ * API key: OPENAI_API_KEY as an n8n Variable ($vars.OPENAI_API_KEY) — n8n Cloud blocks $env
+ * in node expressions (N8N_BLOCK_ENV_ACCESS_IN_NODE); never hard-code the key in this file.
  */
 
 const fs = require('fs');
@@ -28,17 +29,21 @@ const path = require('path');
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 function getApiKey() {
-  const fromN8n =
+  const fromN8nVars =
+    typeof $vars !== 'undefined' && $vars.OPENAI_API_KEY
+      ? String($vars.OPENAI_API_KEY).trim()
+      : '';
+  const fromN8nEnv =
     typeof $env !== 'undefined' && $env.OPENAI_API_KEY
       ? String($env.OPENAI_API_KEY).trim()
       : '';
   const fromProcess = process.env.OPENAI_API_KEY
     ? String(process.env.OPENAI_API_KEY).trim()
     : '';
-  const key = fromN8n || fromProcess;
+  const key = fromN8nVars || fromN8nEnv || fromProcess;
   if (!key) {
     throw new Error(
-      'OPENAI_API_KEY is not set. Configure n8n environment variables or host env; do not hard-code the API key.',
+      'OPENAI_API_KEY is not set. Add it as an n8n Variable ($vars.OPENAI_API_KEY, Settings -> Variables) — n8n Cloud blocks $env; do not hard-code the API key.',
     );
   }
   return key;
