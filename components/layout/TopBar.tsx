@@ -71,10 +71,10 @@ export default function TopBar() {
 
         <div className="flex shrink-0 items-center gap-2 font-chrome md:gap-3">
           <Link
-            href="mailto:support@example.com"
+            href="/login"
             className="hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[color:var(--apple-hairline)] bg-transparent px-3 py-2 text-[13px] font-medium tracking-normal text-apple-text transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.06] lg:inline-flex"
           >
-            Contact sales
+            Sign in
           </Link>
           <Link
             href="/signup"
