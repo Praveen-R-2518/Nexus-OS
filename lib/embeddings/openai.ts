@@ -5,7 +5,8 @@ import { AI_MODELS, AiNotConfiguredError, getOpenAiClient, isMockMode } from "@/
 /**
  * Server-only OpenAI embeddings wrapper for the knowledge layer (pgvector RAG). Thin wrapper
  * over `lib/ai/provider` — the OpenAI client and default embedding model are centralized there.
- * Model is text-embedding-3-small (1536 dims) to match the embeddings.embedding vector(1536)
+ * Default model is text-embedding-3-small (1536 dims). When using text-embedding-3-large we
+ * pass `dimensions: 1536` so vectors still match the embeddings.embedding vector(1536) column.
  * column. In mock mode (`AI_PROVIDER=mock` / `OPENAI_API_KEY=mock`), returns deterministic
  * zero-ish vectors so ingest/retrieval tests never need a live key.
  */
@@ -40,6 +41,11 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
   if (!client) throw new AiNotConfiguredError();
 
   const model = resolveModel();
-  const response = await client.embeddings.create({ model, input: texts });
+  const response = await client.embeddings.create({
+    model,
+    input: texts,
+    // pgvector column is vector(1536); large models must request reduced dimensions.
+    dimensions: 1536,
+  });
   return response.data.map((d) => d.embedding as number[]);
 }
