@@ -33,6 +33,7 @@ import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import { POST_PLATFORMS, PLATFORM_LABELS } from "@/lib/posts/types";
 import type { Platform } from "@/lib/posts/types";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { MailboxConnectForm } from "@/components/settings/MailboxConnectForm";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
@@ -803,6 +804,12 @@ export function SettingsView() {
                   </a>
                 </div>
               </div>
+
+              <MailboxConnectForm
+                workspaceId={settings.workspace.id}
+                editable={settings.editable.channels}
+                onConnected={() => void refetch()}
+              />
 
               {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_META_INBOX (default OFF) — the Meta
                   connect/OAuth routes stay alive, this only hides the connect affordance so we
