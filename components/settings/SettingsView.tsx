@@ -42,7 +42,6 @@ import { useTenantScope } from "@/components/tenant/TenantScope";
 import {
   isBillingEnabled,
   isMetaInboxEnabled,
-  isSocialPublishingEnabled,
 } from "@/lib/feature-flags";
 import {
   planTierToSlug,
@@ -1322,9 +1321,6 @@ export function SettingsView() {
             </div>
           </SettingsSection>
 
-          {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_SOCIAL_PUBLISHING (default OFF) — /posts
-              and the social connect/publish routes stay alive, this only hides the section. */}
-          {isSocialPublishingEnabled() ? (
           <SettingsSection
             id="social-posting"
             title="Social Posting"
@@ -1381,7 +1377,6 @@ export function SettingsView() {
               })}
             </div>
           </SettingsSection>
-          ) : null}
 
           <SettingsSection
             id="notifications"
