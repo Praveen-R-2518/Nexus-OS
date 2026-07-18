@@ -40,8 +40,8 @@
     "semantic_hash": "65be1e02ccb5c50e349ff1e42ea64600"
   },
   "app/api/chat/route.ts": {
-    "mtime": 1784268692.6078165,
-    "ast_hash": "96cf8e9deddb04af17cd1290c66e2378",
+    "mtime": 1784352827.4201841,
+    "ast_hash": "14ef799032c20b05e96316aad520aca6",
     "semantic_hash": ""
   },
   "app/api/conversations/[id]/route.ts": {
@@ -80,9 +80,9 @@
     "semantic_hash": "bf977e316b3155b30b217f2cf561c732"
   },
   "app/api/gmail/test-imap/route.ts": {
-    "mtime": 1783578897.3351893,
-    "ast_hash": "d167026fa7f830a3c9dd6792b3fe9ae4",
-    "semantic_hash": "d167026fa7f830a3c9dd6792b3fe9ae4"
+    "mtime": 1784350752.0031662,
+    "ast_hash": "c9d80b75c268ab385a4b4312abe2b18b",
+    "semantic_hash": ""
   },
   "app/api/internal/n8n/conversations/route.ts": {
     "mtime": 1784268609.1256795,
@@ -160,8 +160,8 @@
     "semantic_hash": "c247c47fb50a9213f9f38f471ef6d773"
   },
   "app/chat/page.tsx": {
-    "mtime": 1784268896.1467779,
-    "ast_hash": "7efacdb9531ceaee8b4ab657dd346e0a",
+    "mtime": 1784352977.4843338,
+    "ast_hash": "993ee9d3c0d787b69ee03c4cae0005b1",
     "semantic_hash": ""
   },
   "app/components/CommandCenter.tsx": {
@@ -350,9 +350,9 @@
     "semantic_hash": "4d3879e3683ef7e91a3cdebd1c3dfcf3"
   },
   "components/layout/TopBar.tsx": {
-    "mtime": 1783584540.9461377,
-    "ast_hash": "527a2304e8c03aa57a6f2ae15d5cf66d",
-    "semantic_hash": "527a2304e8c03aa57a6f2ae15d5cf66d"
+    "mtime": 1784349280.1360683,
+    "ast_hash": "75581761dfb21737991de51cada9fc1c",
+    "semantic_hash": ""
   },
   "components/marketing/ScrollReveal.tsx": {
     "mtime": 1783578897.3496454,
@@ -705,8 +705,8 @@
     "semantic_hash": "ee34bd0fdc95feff49016b6349890a62"
   },
   "n8n_logic/exports/wf0a_gmail_intake.json": {
-    "mtime": 1784284827.0776951,
-    "ast_hash": "7c7d4cf1139ec955f77ad9f851670584",
+    "mtime": 1784351481.4736316,
+    "ast_hash": "6fc5666375971d51896e46e6558c02e5",
     "semantic_hash": ""
   },
   "n8n_logic/fixtures/gmail_imap_sample.json": {
@@ -730,9 +730,9 @@
     "semantic_hash": "15dd1ccb6ffb0c3e190d4655deb6cc0c"
   },
   "n8n_logic/multi_channel_normalizer.js": {
-    "mtime": 1783578897.3648508,
-    "ast_hash": "6e2da1d500035b4c6a068f15569d66da",
-    "semantic_hash": "6e2da1d500035b4c6a068f15569d66da"
+    "mtime": 1784351077.3622956,
+    "ast_hash": "2fb5d23c80daf7c6cc84b332dba423b7",
+    "semantic_hash": ""
   },
   "n8n_logic/noise_filter.js": {
     "mtime": 1783578897.365054,
@@ -765,8 +765,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1784270848.798948,
-    "ast_hash": "bce47f0fd71685e3e34e60eb8ceebefe",
+    "mtime": 1784351438.54284,
+    "ast_hash": "d6008978b15d65e80696f5bfc41b05f4",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -1170,8 +1170,8 @@
     "semantic_hash": ""
   },
   "lib/channel-sender.ts": {
-    "mtime": 1784269405.0710826,
-    "ast_hash": "66030ae2e3c1bee945b0b904f6cdaf04",
+    "mtime": 1784351012.190716,
+    "ast_hash": "0e41ead2a07e31d1f26201534cbd07cf",
     "semantic_hash": ""
   },
   "n8n_logic/exports/wf1_message_intake.json": {
@@ -1300,8 +1300,8 @@
     "semantic_hash": ""
   },
   "components/settings/SettingsView.tsx": {
-    "mtime": 1784269935.7261703,
-    "ast_hash": "5c75077ef02b7ed4705fd7ccbaf6dabf",
+    "mtime": 1784351295.9038553,
+    "ast_hash": "55854f21a103cb827d312ec5e202d358",
     "semantic_hash": ""
   },
   "lib/gmail/backfill-jobs.ts": {
@@ -1520,8 +1520,8 @@
     "semantic_hash": ""
   },
   "lib/embeddings/openai.ts": {
-    "mtime": 1784274228.9858959,
-    "ast_hash": "31f5e464722388d9aa47dc2c7cb893ef",
+    "mtime": 1784349281.7831264,
+    "ast_hash": "195a7d0f43a876955ba76d206571cb28",
     "semantic_hash": ""
   },
   "lib/embeddings/store.ts": {
@@ -1820,8 +1820,8 @@
     "semantic_hash": ""
   },
   "app/api/ai/status/route.ts": {
-    "mtime": 1784268841.4184244,
-    "ast_hash": "0127c38bb21d0a89ea274a66e01a9552",
+    "mtime": 1784288873.369843,
+    "ast_hash": "05f32a82464dfeee3a7e8e8a9149bcf5",
     "semantic_hash": ""
   },
   "app/api/internal/n8n/ai/classify/route.ts": {
@@ -1860,8 +1860,8 @@
     "semantic_hash": ""
   },
   "app/hooks/useAiStatus.ts": {
-    "mtime": 1784268860.1294742,
-    "ast_hash": "d545f2f6a845260a5a4a5333332d75f8",
+    "mtime": 1784288859.4508355,
+    "ast_hash": "6b40b80a98376e57502072d63dad0fe7",
     "semantic_hash": ""
   },
   "app/logs/page.tsx": {
@@ -1890,8 +1890,8 @@
     "semantic_hash": ""
   },
   "lib/ai/provider.ts": {
-    "mtime": 1784274175.591394,
-    "ast_hash": "7487b192bc8ba982ff1b67dbd9c7f2b2",
+    "mtime": 1784288854.690946,
+    "ast_hash": "aed4a2e05538d1b064b368ab823bf4b2",
     "semantic_hash": ""
   },
   "lib/ai/report-summary.ts": {
@@ -1900,8 +1900,8 @@
     "semantic_hash": ""
   },
   "lib/ai/status.ts": {
-    "mtime": 1784268640.092221,
-    "ast_hash": "306e5aa78500521240feb2e610c66f35",
+    "mtime": 1784288857.2615678,
+    "ast_hash": "cf0bd54366e388f4e45d847c0f9dc855",
     "semantic_hash": ""
   },
   "lib/feature-flags.ts": {
@@ -1935,8 +1935,8 @@
     "semantic_hash": ""
   },
   "scripts/ai_provider.test.ts": {
-    "mtime": 1784274279.874609,
-    "ast_hash": "8c4769794bc46427b41ee5bbacbfc359",
+    "mtime": 1784288865.0278478,
+    "ast_hash": "dda3489b482af95300e673ecc67ab7cf",
     "semantic_hash": ""
   },
   "scripts/approval_route.test.ts": {
@@ -2002,6 +2002,66 @@
   "n8n_logic/exports/wf0g_outbound_drain.json": {
     "mtime": 1784284706.2946408,
     "ast_hash": "2f60825525b2afd99eec80b606fd3ea6",
+    "semantic_hash": ""
+  },
+  "app/api/internal/n8n/mailbox-sync/route.ts": {
+    "mtime": 1784350876.4899654,
+    "ast_hash": "b392c1fc689789f1c0a572a8b27cc3fc",
+    "semantic_hash": ""
+  },
+  "components/chat/ChatSessionList.tsx": {
+    "mtime": 1784352984.9430432,
+    "ast_hash": "16372bd2e8a563eb7572c9a29eab9a27",
+    "semantic_hash": ""
+  },
+  "components/settings/MailboxConnectForm.tsx": {
+    "mtime": 1784351269.5088134,
+    "ast_hash": "56960910a4155230d814564b57ea248c",
+    "semantic_hash": ""
+  },
+  "lib/mailbox/credentials.ts": {
+    "mtime": 1784350780.5577443,
+    "ast_hash": "fe5f81772e4abec7845fb5e62b691ca9",
+    "semantic_hash": ""
+  },
+  "lib/mailbox/imap.ts": {
+    "mtime": 1784350834.4270637,
+    "ast_hash": "d0b771e1fb6eded605c3d32fbb3f3eeb",
+    "semantic_hash": ""
+  },
+  "lib/mailbox/smtp-send.ts": {
+    "mtime": 1784350896.7950904,
+    "ast_hash": "0229775b9f092596e9e9b0c5f29e203a",
+    "semantic_hash": ""
+  },
+  "lib/mailbox/sync.ts": {
+    "mtime": 1784350868.5966377,
+    "ast_hash": "ee58387a7ed7022be436fcd9113b7b4a",
+    "semantic_hash": ""
+  },
+  "scripts/mailbox_sync.test.ts": {
+    "mtime": 1784351364.15048,
+    "ast_hash": "0234c6e608dcb7861f23cfdef76459b5",
+    "semantic_hash": ""
+  },
+  "scripts/prepare_n8n_deploy_payload.mjs": {
+    "mtime": 1784286082.8263316,
+    "ast_hash": "90f4bf1897e65802c8923acac6467c82",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260718120000_generic_mailbox_credentials.sql": {
+    "mtime": 1784350678.9689188,
+    "ast_hash": "f4f20852e1548a1aa9d20e496e421ea6",
+    "semantic_hash": ""
+  },
+  "app/apple-icon.svg": {
+    "mtime": 1784349278.3305018,
+    "ast_hash": "a70afd265b4b7d865682139556baaab4",
+    "semantic_hash": ""
+  },
+  "app/icon.svg": {
+    "mtime": 1784349277.128462,
+    "ast_hash": "c941bb9929789532a849f057e2ef25fc",
     "semantic_hash": ""
   }
 }

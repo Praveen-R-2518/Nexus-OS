@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Send, MessageSquare, BookOpen } from "lucide-react";
+import { Sparkles, Send, MessageSquare, BookOpen, ArrowLeft, Plus } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import { ChartBlock } from "@/components/chat/ChartBlock";
 import { ChatUsageToolbar } from "@/components/chat/ChatUsageToolbar";
+import { ChatSessionList, type ChatSession } from "@/components/chat/ChatSessionList";
 import { parseAssistantContent } from "@/lib/chat/visuals";
 import { cn } from "@/lib/utils";
 import { useAiStatus } from "@/app/hooks/useAiStatus";
@@ -104,10 +105,13 @@ const SUGGESTIONS = [
 export default function ChatPage() {
   const tenant = useTenantScope();
   const { status: aiStatus } = useAiStatus();
+  const [view, setView] = useState<"list" | "chat">("list");
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -121,11 +125,23 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Load the most recent session's history so the panel resumes where the founder left off.
+  const refreshSessions = useCallback(async () => {
+    try {
+      const res = await authenticatedFetch("/api/chat");
+      if (!res.ok) return;
+      const json = (await res.json()) as { sessions?: ChatSession[] };
+      setSessions(json.sessions ?? []);
+    } catch {
+      /* keep the current list on a transient error */
+    }
+  }, []);
+
+  // On entry, load the list of past chats. The founder picks one (or starts a new chat) —
+  // we never auto-open a conversation.
   useEffect(() => {
     if (!tenant.ready) return;
     if (tenant.teamId === null) {
-      setLoadingHistory(false);
+      setLoadingSessions(false);
       return;
     }
     let cancelled = false;
@@ -133,40 +149,95 @@ export default function ChatPage() {
       try {
         const res = await authenticatedFetch("/api/chat");
         if (!res.ok) throw new Error("Could not load chat sessions");
-        const json = (await res.json()) as {
-          sessions?: Array<{ id: string }>;
-        };
-        const latest = json.sessions?.[0]?.id ?? null;
-        if (!latest) {
-          if (!cancelled) setLoadingHistory(false);
-          return;
-        }
-        sessionIdRef.current = latest;
-        const msgRes = await authenticatedFetch(
-          `/api/chat?session_id=${encodeURIComponent(latest)}`,
-        );
-        if (!msgRes.ok) throw new Error("Could not load chat history");
-        const msgJson = (await msgRes.json()) as {
-          messages?: Array<{ role: string; content: string }>;
-        };
-        if (cancelled) return;
-        setMessages(
-          (msgJson.messages ?? [])
-            .filter((m) => m.role === "user" || m.role === "assistant")
-            .map((m) => ({ role: m.role as ChatRole, content: m.content })),
-        );
+        const json = (await res.json()) as { sessions?: ChatSession[] };
+        if (!cancelled) setSessions(json.sessions ?? []);
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Could not load chat history");
+          setError(e instanceof Error ? e.message : "Could not load chats");
         }
       } finally {
-        if (!cancelled) setLoadingHistory(false);
+        if (!cancelled) setLoadingSessions(false);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [tenant.ready, tenant.teamId]);
+
+  // Open an existing chat and resume where the founder left off.
+  const openSession = useCallback(async (id: string) => {
+    setError(null);
+    sessionIdRef.current = id;
+    setMessages([]);
+    setMessagesLoading(true);
+    setView("chat");
+    try {
+      const res = await authenticatedFetch(
+        `/api/chat?session_id=${encodeURIComponent(id)}`,
+      );
+      if (!res.ok) throw new Error("Could not load chat history");
+      const json = (await res.json()) as {
+        messages?: Array<{ role: string; content: string }>;
+      };
+      setMessages(
+        (json.messages ?? [])
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => ({ role: m.role as ChatRole, content: m.content })),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load chat history");
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  const startNewChat = useCallback(() => {
+    setError(null);
+    sessionIdRef.current = null;
+    setMessages([]);
+    setMessagesLoading(false);
+    setView("chat");
+  }, []);
+
+  const openList = useCallback(() => {
+    setError(null);
+    setView("list");
+    void refreshSessions();
+  }, [refreshSessions]);
+
+  const deleteSession = useCallback(
+    async (id: string) => {
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      if (sessionIdRef.current === id) sessionIdRef.current = null;
+      try {
+        const res = await authenticatedFetch(
+          `/api/chat?session_id=${encodeURIComponent(id)}`,
+          { method: "DELETE" },
+        );
+        if (!res.ok) throw new Error("delete failed");
+      } catch {
+        void refreshSessions(); // re-sync if the optimistic removal didn't stick
+      }
+    },
+    [refreshSessions],
+  );
+
+  const renameSession = useCallback(
+    async (id: string, title: string) => {
+      setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, title } : s)));
+      try {
+        const res = await authenticatedFetch("/api/chat", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ session_id: id, title }),
+        });
+        if (!res.ok) throw new Error("rename failed");
+      } catch {
+        void refreshSessions();
+      }
+    },
+    [refreshSessions],
+  );
 
   const send = useCallback(
     async (raw: string) => {
@@ -256,7 +327,7 @@ export default function ChatPage() {
     [sending],
   );
 
-  if (tenant.loading || loadingHistory) {
+  if (tenant.loading || loadingSessions) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-muted">
         <Spinner className="h-8 w-8" label="Loading analyst" />
@@ -276,11 +347,41 @@ export default function ChatPage() {
     );
   }
 
+  if (view === "list") {
+    return (
+      <ChatSessionList
+        sessions={sessions}
+        onOpen={openSession}
+        onNewChat={startNewChat}
+        onDelete={deleteSession}
+        onRename={renameSession}
+      />
+    );
+  }
+
   const isEmpty = messages.length === 0;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-4 shrink-0">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={openList}
+            className="glass-pill inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-glass hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            <span>Chats</span>
+          </button>
+          <button
+            type="button"
+            onClick={startNewChat}
+            className="glass-pill inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-glass"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            <span>New chat</span>
+          </button>
+        </div>
         <h1 className="nexus-app-title text-foreground">Chat</h1>
         <p className="mt-2 flex items-center gap-2 text-base text-muted">
           <Sparkles className="h-5 w-5 shrink-0 text-nexus-discovery" aria-hidden />
@@ -301,7 +402,12 @@ export default function ChatPage() {
 
       <div className="app-glass-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-6">
-          {isEmpty ? (
+          {messagesLoading ? (
+            <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 text-muted">
+              <Spinner className="h-6 w-6" label="Loading conversation" />
+              <p className="text-sm">Loading conversation…</p>
+            </div>
+          ) : isEmpty ? (
             <div className="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
               <span className="glass-pill mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-nexus-discovery">
                 <MessageSquare className="h-6 w-6" aria-hidden />
