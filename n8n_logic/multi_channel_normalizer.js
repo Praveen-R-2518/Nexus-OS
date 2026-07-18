@@ -218,6 +218,9 @@ function detectSource(rawInput) {
     const e = String(explicit).toLowerCase();
     if (["whatsapp", "instagram", "facebook"].includes(e)) return e;
     if (["gmail", "demo"].includes(e)) return e;
+    // Generic business mailbox (any-provider IMAP/SMTP): the Next.js mailbox poller stamps
+    // `__source:"email"` so a Zoho/Outlook/cPanel box is tagged `source:"email"`, not "gmail".
+    if (["email", "imap"].includes(e)) return "email";
   }
   const ch = String(raw.channel || "").toLowerCase();
   if (ch === "whatsapp") return "whatsapp";
@@ -245,7 +248,10 @@ function detectSource(rawInput) {
   );
 }
 
-function parseGmail(rawInput) {
+// `source` lets a generic mailbox reuse this Gmail-safe parser while tagging the conversation as
+// "email" instead of "gmail" (parseGmail's header/thread-id handling is already provider-neutral —
+// threadKey falls back to references/in-reply-to/message-id, which any IMAP server sends).
+function parseGmail(rawInput, source = "gmail") {
   const raw = unwrapBody(rawInput) || {};
   const headers = parseHeaders(raw);
   const fromField = raw.from || raw.From || headers.from || "";
@@ -266,7 +272,7 @@ function parseGmail(rawInput) {
   const receivedAt = typeof dateValue === "number" ? new Date(dateValue).toISOString() : new Date(dateValue).toISOString();
 
   return {
-    source: "gmail",
+    source,
     customer_name,
     customer_email_or_phone,
     message,
@@ -282,6 +288,11 @@ function parseGmail(rawInput) {
       body_for_rules: message,
     },
   };
+}
+
+/** Generic business mailbox (IMAP/SMTP) — same parsing as Gmail, tagged `source:"email"`. */
+function parseEmail(rawInput) {
+  return parseGmail(rawInput, "email");
 }
 
 function parseDemo(rawInput) {
@@ -461,6 +472,7 @@ function normalizeItem(raw) {
   const tenant = readVerifiedTenant(raw);
   const source = detectSource(raw);
   if (source === "gmail") return attachTenant(parseGmail(raw), tenant);
+  if (source === "email") return attachTenant(parseEmail(raw), tenant);
   if (source === "demo") return attachTenant(parseDemo(raw), tenant);
   if (source === "whatsapp") return attachTenant(parseWhatsapp(raw), tenant);
   if (source === "instagram") return attachTenant(parseInstagram(raw), tenant);
@@ -489,6 +501,7 @@ if (typeof module !== "undefined" && module.exports) {
     normalizeItem,
     detectSource,
     parseGmail,
+    parseEmail,
     parseDemo,
     parseWhatsapp,
     parseInstagram,

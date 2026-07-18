@@ -13,6 +13,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getWorkspaceGmailCredential } from "@/lib/gmail/credentials";
 import { GmailSendError, sendGmailMessage } from "@/lib/gmail/send";
+import { getWorkspaceMailboxCredential } from "@/lib/mailbox/credentials";
+import { SmtpSendError, sendSmtpMessage } from "@/lib/mailbox/smtp-send";
 import { getWorkspaceMetaCredential } from "@/lib/meta/credentials";
 import { MetaSendError, sendMetaMessage } from "@/lib/meta/send";
 import { chooseSendStrategy, type MetaPlatform } from "@/lib/meta/window";
@@ -290,36 +292,66 @@ export async function executeSendReply(
     const recipient = (conversation.customer_email ?? "").trim();
     if (!recipient) return finalize(err("Conversation has no customer_email to send to", 409));
 
-    // Resolve the workspace's Gmail credential (decrypt + refresh server-side).
+    // Resolve the workspace's Gmail OAuth credential FIRST (decrypt + refresh server-side). This keeps
+    // the Gmail path — and every existing test — byte-for-byte unchanged: a workspace with a connected
+    // Gmail account never reaches the SMTP fallback below.
     const credResult = await getWorkspaceGmailCredential(supabase, workspaceId);
-    if (!credResult.ok || !credResult.credential) {
-      if (credResult.error === "encryption_not_configured") {
-        return finalize(err("Server configuration error", 503));
+    if (credResult.ok && credResult.credential) {
+      const credential = credResult.credential;
+      // Send via the injectable transport (no state change on failure).
+      try {
+        const result = await sendGmailMessage({
+          accessToken: credential.accessToken,
+          from: credential.emailAddress,
+          to: recipient,
+          subject: deriveSubject(conversation.raw_payload),
+          body: draft.draft_text,
+        });
+        messageId = result.messageId;
+      } catch (e) {
+        const upstream = e instanceof GmailSendError ? e.status : "n/a";
+        console.error(
+          `[channel-sender] transport error (upstream=${upstream}):`,
+          e instanceof Error ? e.message : e,
+        );
+        return finalize(err("Failed to send reply", 502));
       }
-      if (credResult.error === "refresh_failed" || credResult.error === "decrypt_failed") {
-        return finalize(err("Gmail credential could not be used to send", 502));
+    } else if (credResult.error === "no_connected_credential") {
+      // No Gmail OAuth mailbox for this workspace — fall through to a generic SMTP mailbox
+      // (credential_type='imap' with an smtp_host) if one is connected. Same approval gate, same
+      // durable outbound bookkeeping; only the transport differs. Encryption is already gated above
+      // (the Gmail resolver returns encryption_not_configured first), so at runtime the only mailbox
+      // failure that isn't "no usable mailbox" is a decrypt error.
+      const mailbox = await getWorkspaceMailboxCredential(supabase, workspaceId);
+      if (mailbox.ok && mailbox.credential?.smtp) {
+        try {
+          const result = await sendSmtpMessage({
+            smtp: mailbox.credential.smtp,
+            from: mailbox.credential.emailAddress,
+            to: recipient,
+            subject: deriveSubject(conversation.raw_payload),
+            body: draft.draft_text,
+          });
+          messageId = result.messageId;
+        } catch (e) {
+          const upstream = e instanceof SmtpSendError ? e.status : "n/a";
+          console.error(
+            `[channel-sender] smtp transport error (upstream=${upstream}):`,
+            e instanceof Error ? e.message : e,
+          );
+          return finalize(err("Failed to send reply", 502));
+        }
+      } else if (mailbox.error === "decrypt_failed") {
+        return finalize(err("Mailbox credential could not be used to send", 502));
+      } else {
+        return finalize(err("No connected mailbox for this workspace", 409));
       }
+    } else if (credResult.error === "encryption_not_configured") {
+      return finalize(err("Server configuration error", 503));
+    } else if (credResult.error === "refresh_failed" || credResult.error === "decrypt_failed") {
+      return finalize(err("Gmail credential could not be used to send", 502));
+    } else {
       return finalize(err("No connected Gmail account for this workspace", 409));
-    }
-    const credential = credResult.credential;
-
-    // Send via the injectable transport (no state change on failure).
-    try {
-      const result = await sendGmailMessage({
-        accessToken: credential.accessToken,
-        from: credential.emailAddress,
-        to: recipient,
-        subject: deriveSubject(conversation.raw_payload),
-        body: draft.draft_text,
-      });
-      messageId = result.messageId;
-    } catch (e) {
-      const upstream = e instanceof GmailSendError ? e.status : "n/a";
-      console.error(
-        `[channel-sender] transport error (upstream=${upstream}):`,
-        e instanceof Error ? e.message : e,
-      );
-      return finalize(err("Failed to send reply", 502));
     }
   }
 

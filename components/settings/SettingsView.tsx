@@ -33,6 +33,7 @@ import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import { POST_PLATFORMS, PLATFORM_LABELS } from "@/lib/posts/types";
 import type { Platform } from "@/lib/posts/types";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { MailboxConnectForm } from "@/components/settings/MailboxConnectForm";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
@@ -41,7 +42,6 @@ import { useTenantScope } from "@/components/tenant/TenantScope";
 import {
   isBillingEnabled,
   isMetaInboxEnabled,
-  isSocialPublishingEnabled,
 } from "@/lib/feature-flags";
 import {
   planTierToSlug,
@@ -804,6 +804,12 @@ export function SettingsView() {
                 </div>
               </div>
 
+              <MailboxConnectForm
+                workspaceId={settings.workspace.id}
+                editable={settings.editable.channels}
+                onConnected={() => void refetch()}
+              />
+
               {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_META_INBOX (default OFF) — the Meta
                   connect/OAuth routes stay alive, this only hides the connect affordance so we
                   don't invite tenants into an unfinished unified inbox. */}
@@ -1315,9 +1321,6 @@ export function SettingsView() {
             </div>
           </SettingsSection>
 
-          {/* Task C: hidden behind NEXT_PUBLIC_FEATURE_SOCIAL_PUBLISHING (default OFF) — /posts
-              and the social connect/publish routes stay alive, this only hides the section. */}
-          {isSocialPublishingEnabled() ? (
           <SettingsSection
             id="social-posting"
             title="Social Posting"
@@ -1374,7 +1377,6 @@ export function SettingsView() {
               })}
             </div>
           </SettingsSection>
-          ) : null}
 
           <SettingsSection
             id="notifications"
