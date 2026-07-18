@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
-  ClipboardList,
   FileText,
   ImageIcon,
   Inbox,
@@ -24,7 +23,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { prefetchNavRoute } from "@/lib/queries/nav-prefetch";
 import { useTenantScopeOptional } from "@/components/tenant/TenantScope";
-import { isSocialPublishingEnabled } from "@/lib/feature-flags";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
@@ -36,12 +34,9 @@ const appNav = [
   { href: "/inbox", label: "Inbox", icon: Inbox },
   { href: "/approval", label: "Approval Queue", icon: CheckCircle2 },
   { href: "/report", label: "Buy-Back Report", icon: FileText },
-  // Task C: hidden behind NEXT_PUBLIC_FEATURE_SOCIAL_PUBLISHING (default OFF) — the /posts route
-  // stays alive for direct/deep links, this only hides the nav entry.
-  { href: "/posts", label: "Posts", icon: ImageIcon, flag: "socialPublishing" as const },
+  { href: "/posts", label: "Posts", icon: ImageIcon },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/team", label: "Team", icon: Users },
-  { href: "/logs", label: "Logs", icon: ClipboardList },
   { href: "/profile", label: "Settings", icon: Settings },
 ] as const;
 
@@ -64,9 +59,6 @@ function SidebarNav({
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const tenant = useTenantScopeOptional();
-  const visibleNav = appNav.filter(
-    (item) => !("flag" in item) || item.flag !== "socialPublishing" || isSocialPublishingEnabled(),
-  );
 
   return (
     <nav
@@ -76,7 +68,7 @@ function SidebarNav({
       )}
       aria-label="App"
     >
-      {visibleNav.map(({ href, label, icon: Icon }) => {
+      {appNav.map(({ href, label, icon: Icon }) => {
         const active = isNavActive(pathname, href);
         return (
           <Link
