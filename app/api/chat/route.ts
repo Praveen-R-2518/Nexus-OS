@@ -10,12 +10,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildAnalystContext } from "@/lib/chat/analyst-context";
 import { buildAnalystSystemPrompt } from "@/lib/chat/system-prompt";
 import { completeText, streamAnalystReply, type ChatTurn } from "@/lib/chat/openai";
-import { upsertSummaryEmbedding } from "@/lib/embeddings/store";
+import { deleteEmbeddingsForSource, upsertSummaryEmbedding } from "@/lib/embeddings/store";
 import { isOpenAiConfigured } from "@/lib/ai/provider";
 
 export const dynamic = "force-dynamic";
 
 const MAX_MESSAGE_LEN = 4000;
+const MAX_TITLE_LEN = 80;
 const HISTORY_TURNS = 10; // last N stored turns injected for continuity (cost-aware)
 
 type MessageRow = { role?: string | null; content?: string | null };
@@ -23,6 +24,42 @@ type MessageRow = { role?: string | null; content?: string | null };
 function sessionTitle(message: string): string {
   const clean = message.replace(/\s+/g, " ").trim();
   return clean.length <= 60 ? clean : `${clean.slice(0, 60).trimEnd()}…`;
+}
+
+/**
+ * Generate a short, human-readable name for a brand-new chat session (best-effort). Runs one cheap
+ * completion over the opening exchange, then updates chat_sessions.title. Any failure (no key,
+ * model error) is swallowed — the truncated first-message placeholder title stays in place.
+ */
+async function generateSessionTitle(params: {
+  supabase: SupabaseClient;
+  teamId: string;
+  sessionId: string;
+  question: string;
+  reply: string;
+}): Promise<void> {
+  const { supabase, teamId, sessionId, question, reply } = params;
+  try {
+    const raw = await completeText({
+      system:
+        "You name chat conversations. Given the opening exchange between a founder and their " +
+        "revenue analyst, output a concise title of at most 6 words that captures the topic. " +
+        "No quotes, no trailing punctuation, Title Case. Output only the title.",
+      user: `Founder: ${question}\nAnalyst: ${reply}`.slice(0, 2000),
+      temperature: 0.3,
+      maxTokens: 24,
+    });
+    const title = raw.replace(/\s+/g, " ").replace(/^["']|["']$/g, "").trim().slice(0, MAX_TITLE_LEN);
+    if (!title) return;
+
+    await supabase
+      .from("chat_sessions")
+      .update({ title })
+      .eq("id", sessionId)
+      .eq("team_id", teamId);
+  } catch {
+    /* best-effort: keep the placeholder title */
+  }
 }
 
 /**
@@ -266,6 +303,18 @@ export async function POST(request: Request) {
             history,
             reply: content,
           });
+
+          // For a brand-new session, replace the truncated placeholder title with an AI-generated
+          // name. Fire-and-forget after close() so it never adds latency to the reply.
+          if (!providedSessionId) {
+            void generateSessionTitle({
+              supabase,
+              teamId,
+              sessionId,
+              question: message,
+              reply: content,
+            });
+          }
         }
       }
     },
@@ -280,4 +329,73 @@ export async function POST(request: Request) {
       ...(sourcesHeader ? { "x-knowledge-sources": sourcesHeader } : {}),
     },
   });
+}
+
+/**
+ * DELETE /api/chat?session_id=<uuid> → remove a chat session (messages cascade) and clean up its
+ * rolling summary embedding. Tenant-scoped.
+ */
+export async function DELETE(request: Request) {
+  const limited = rateLimit(request, "api:chat:delete", 30, 60_000);
+  if (limited) return limited;
+
+  const tenant = await requireApiTenantContext();
+  if (!tenant.ok) return tenant.response;
+  const { supabase, teamId } = tenant;
+
+  const url = new URL(request.url);
+  const sessionId = url.searchParams.get("session_id")?.trim() || null;
+  if (!sessionId) return jsonError("session_id is required", 400);
+
+  const { error } = await supabase
+    .from("chat_sessions")
+    .delete()
+    .eq("id", sessionId)
+    .eq("team_id", teamId);
+  if (error) return jsonError(error.message, 500);
+
+  // Best-effort: drop the session's summary embedding (source_id = sessionId). Never fatal.
+  await deleteEmbeddingsForSource({ supabase, teamId, sourceId: sessionId });
+
+  return Response.json({ ok: true });
+}
+
+/**
+ * PATCH /api/chat  body { session_id, title } → rename a chat session. Tenant-scoped.
+ */
+export async function PATCH(request: Request) {
+  const limited = rateLimit(request, "api:chat:patch", 30, 60_000);
+  if (limited) return limited;
+
+  const tenant = await requireApiTenantContext();
+  if (!tenant.ok) return tenant.response;
+  const { supabase, teamId } = tenant;
+
+  const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
+  if (!parsed.ok) return parsed.response;
+
+  const sessionId =
+    typeof parsed.body.session_id === "string" && parsed.body.session_id.trim()
+      ? parsed.body.session_id.trim()
+      : null;
+  if (!sessionId) return jsonError("session_id is required", 400);
+
+  const rawTitle = parsed.body.title;
+  const title =
+    typeof rawTitle === "string"
+      ? rawTitle.replace(/\s+/g, " ").trim().slice(0, MAX_TITLE_LEN)
+      : "";
+  if (!title) return jsonError("title is required", 400);
+
+  const { data, error } = await supabase
+    .from("chat_sessions")
+    .update({ title })
+    .eq("id", sessionId)
+    .eq("team_id", teamId)
+    .select("id, title")
+    .maybeSingle();
+  if (error) return jsonError(error.message, 500);
+  if (!data) return jsonError("Chat session not found", 404);
+
+  return Response.json(data);
 }
