@@ -261,40 +261,44 @@ export default function SignupPage() {
   }, []);
 
   return (
-    <div className="min-h-screen px-4 py-8 sm:py-12">
+    <div className="flex-1 bg-[#f5f5f7] px-5 py-12 md:px-8 md:py-16">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 hairline-b pb-8 text-center sm:mb-10">
-          <p className="nexus-meta text-nexus-approval">
+        <header className="mb-8 border-b border-[color:var(--apple-hairline)] pb-8 text-center sm:mb-10">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#6e6e73]">
             Onboard workspace
           </p>
-          <h1 className="mt-4 nexus-section-title text-atmospheric-grey">
+          <h1 className="mt-4 text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             Revenue command center
           </h1>
-          <p className="mx-auto mt-3 max-w-lg nexus-body text-muted">
+          <p className="mx-auto mt-3 max-w-lg text-[16px] leading-[1.55] text-[#6e6e73]">
             Create a workspace, connect Gmail, and choose the automation setup that fits your team.
           </p>
-          <p className="mt-4 text-sm text-muted">
+          <p className="mt-4 text-[14px] text-[#6e6e73]">
             Already registered?{" "}
-            <Link href="/login" className="cursor-pointer font-medium text-nexus-approval underline underline-offset-4">
+            <Link
+              href="/login"
+              className="landing-link cursor-pointer font-medium text-[color:var(--nexus-approval)]"
+            >
               Sign in
             </Link>
           </p>
           {inviteToken && inviteStatusError ? (
             <p
               role="alert"
-              className="mx-auto mt-5 max-w-lg rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-sm text-status-warning"
+              className="mx-auto mt-5 max-w-lg rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-[14px] text-status-warning"
             >
               {inviteStatusError}
             </p>
           ) : validInvite && invitePreview ? (
-            <p className="mx-auto mt-5 max-w-lg rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-nexus-approval">
-              You&apos;re joining <span className="font-semibold">{invitePreview.organization_name}</span>.
+            <p className="mx-auto mt-5 max-w-lg rounded-xl border border-[color:var(--nexus-approval-border)] bg-[color:var(--nexus-approval-soft)] px-4 py-3 text-[14px] text-[color:var(--nexus-approval)]">
+              You&apos;re joining{" "}
+              <span className="font-semibold">{invitePreview.organization_name}</span>.
             </p>
           ) : null}
         </header>
-        <div className="app-glass-card rounded-2xl p-4 sm:p-8">
+        <div className="landing-card p-4 sm:p-8">
           <ProgressBar currentStep={snapshot.currentStep} steps={STEP_LABELS} />
-          <div className="mt-8 hairline-t pt-8 sm:mt-10">
+          <div className="mt-8 border-t border-[color:var(--apple-hairline)] pt-8 sm:mt-10">
             {snapshot.currentStep === 1 ? (
               <StepAccount
                 snapshot={snapshot}

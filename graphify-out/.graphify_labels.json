@@ -197,7 +197,6 @@
   "195": "20260714210000_business_profiles_settings_fields.sql",
   "196": "route.ts",
   "197": "rate_limit_durable.test.ts",
-  "198": "StepDone.tsx",
   "199": "Manual actions — what the founder/operator must do by hand",
   "200": "match_embeddings_route.test.ts",
   "201": "chat_prompt_injection.test.ts",

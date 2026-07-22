@@ -528,7 +528,7 @@ export default function StepAccount({
       <div className="mx-auto max-w-lg space-y-5">
         <div>
           <h2 className="nexus-section-title text-foreground">Verify your email</h2>
-          <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-base text-[#6e6e73]">
             We sent a confirmation link to{" "}
             <span className="font-medium text-foreground">{lockedEmail}</span>. Clicking it
             signs you in automatically and continues your workspace setup. No separate
@@ -536,13 +536,13 @@ export default function StepAccount({
           </p>
         </div>
         {pendingInfo ? (
-          <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground dark:border-nexus-approval-border dark:bg-nexus-approval-soft">
+          <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground">
             {pendingInfo}
           </div>
         ) : null}
-        <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground dark:border-nexus-approval-border dark:bg-nexus-approval-soft">
+        <div className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-4 py-3 text-sm text-foreground">
           <p className="font-medium">Next steps</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-gray-600 dark:text-gray-300">
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-[#6e6e73]">
             <li>Open the email and click the confirmation link.</li>
             <li>
               Open it in this same browser. This page continues automatically once
@@ -564,7 +564,7 @@ export default function StepAccount({
         </button>
         <Link
           href="/login?next=%2Fsignup%3Fstep%3Dworkspace"
-          className="block text-center text-sm font-medium text-nexus-approval underline underline-offset-4 dark:text-nexus-approval"
+          className="block text-center text-sm font-medium text-nexus-approval underline underline-offset-4"
         >
           Log in instead
         </Link>
@@ -574,7 +574,7 @@ export default function StepAccount({
           </p>
         ) : null}
         {resendMessage ? (
-          <p className="text-sm font-medium text-nexus-approval dark:text-nexus-approval" role="status">
+          <p className="text-sm font-medium text-nexus-approval" role="status">
             {resendMessage}
           </p>
         ) : null}
@@ -586,7 +586,7 @@ export default function StepAccount({
     <form onSubmit={onSubmit} className="mx-auto max-w-lg space-y-5">
       <div>
         <h2 className="nexus-section-title text-foreground">Create your account</h2>
-        <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-base text-[#6e6e73]">
           After you create your account, we&apos;ll email you a verification link.
           Once your email is confirmed, signup resumes here with workspace setup.
         </p>
@@ -659,18 +659,18 @@ export default function StepAccount({
           hint="Optional. Defaults to your name if left blank."
         />
       )}
-      <label className="flex cursor-pointer items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-[#6e6e73]">
         <input
           type="checkbox"
-          className="mt-1 h-4 w-4 rounded border border-glass-border bg-glass text-nexus-approval focus:ring-1 focus:ring-nexus-approval"
+          className="mt-1 h-4 w-4 rounded border border-[color:var(--apple-hairline)] bg-white text-nexus-approval focus:ring-1 focus:ring-nexus-approval"
           checked={terms}
           onChange={(e) => setTerms(e.target.checked)}
           required
         />
         <span>
           I agree to the{" "}
-          <span className="font-medium text-nexus-approval dark:text-nexus-approval">Terms of Service</span> and{" "}
-          <span className="font-medium text-nexus-approval dark:text-nexus-approval">Privacy Policy</span>
+          <span className="font-medium text-nexus-approval">Terms of Service</span> and{" "}
+          <span className="font-medium text-nexus-approval">Privacy Policy</span>
         </span>
       </label>
       {formError ? (

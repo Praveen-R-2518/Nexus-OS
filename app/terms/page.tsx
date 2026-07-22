@@ -11,26 +11,26 @@ const LAST_UPDATED = "June 18, 2026";
 
 export default function TermsPage() {
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="hairline-b pb-12 pt-4">
-        <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
+    <div className="mx-auto flex w-full max-w-[980px] flex-1 flex-col px-5 py-12 md:px-8 md:py-16">
+      <header className="border-b border-[color:var(--apple-hairline)] pb-12">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#6e6e73]">
           Legal
         </p>
-        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey">
+        <h1 className="landing-section-headline mt-3 max-w-3xl text-[#1d1d1f]">
           Terms of Service
         </h1>
-        <p className="mt-5 max-w-2xl nexus-body text-muted">
+        <p className="mt-5 max-w-2xl text-[17px] leading-[1.55] text-[#6e6e73]">
           These terms govern your access to and use of Nexus OS. By creating an
           account or connecting a service, you agree to them.
         </p>
-        <p className="mt-3 font-mono text-[11px] uppercase tracking-widest text-muted">
+        <p className="mt-3 font-mono text-[11px] uppercase tracking-widest text-[#86868b]">
           Last updated {LAST_UPDATED}
         </p>
       </header>
 
-      <article className="max-w-3xl space-y-10 py-12 text-sm leading-relaxed text-muted dark:text-slate-300">
+      <article className="max-w-3xl space-y-10 py-12 text-[15px] leading-relaxed text-[#6e6e73]">
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             1. Acceptance of terms
           </h2>
           <p>
@@ -41,7 +41,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             2. The Service
           </h2>
           <p>
@@ -52,7 +52,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             3. Your account
           </h2>
           <p>
@@ -63,7 +63,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             4. Google and Gmail integration
           </h2>
           <p>
@@ -81,7 +81,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             5. Acceptable use
           </h2>
           <p>
@@ -93,7 +93,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             6. Disclaimers and limitation of liability
           </h2>
           <p>
@@ -105,7 +105,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             7. Changes to these terms
           </h2>
           <p>
@@ -116,7 +116,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             8. Contact
           </h2>
           <p>

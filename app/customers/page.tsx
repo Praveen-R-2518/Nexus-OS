@@ -1,244 +1,199 @@
 "use client";
 
 import Link from "next/link";
-import { Style_Script } from "next/font/google";
-import { ArrowUpRight, Clock, Quote, ShieldCheck, TrendingUp } from "lucide-react";
-import { ScrollReveal } from "@/components/marketing/ScrollReveal";
+import { ArrowUpRight, Quote, ShieldCheck, Layers, Ban } from "lucide-react";
+import { FinalCta } from "@/components/landing/FinalCta";
+import { ChannelMarquee } from "@/components/landing/ChannelMarquee";
+import { AnimatedHeading } from "@/components/landing/primitives/AnimatedHeading";
+import { Eyebrow } from "@/components/landing/primitives/Eyebrow";
+import { LiftButton } from "@/components/landing/primitives/LiftButton";
+import { Odometer } from "@/components/landing/primitives/Odometer";
+import { Reveal } from "@/components/landing/primitives/Reveal";
+import { Section } from "@/components/landing/primitives/Section";
+import { TracedCard } from "@/components/landing/primitives/TracedCard";
+import { STAKES, TRUST } from "@/lib/landing/content";
+import { TESTIMONIALS } from "@/lib/landing/testimonials";
 
-const styleScript = Style_Script({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-style-script",
-  display: "swap",
-});
+/**
+ * Honest social proof only — the same capability figures and architecture
+ * guarantees as the landing page. Named customer quotes render when
+ * `lib/landing/testimonials.ts` is filled in; until then this page still
+ * reads complete without inventing outcomes.
+ */
 
-const stats = [
-  {
-    value: "$4.2M+",
-    label: "Revenue rescued",
-    desc: "At-risk deals recovered across teams running Nexus OS.",
-    icon: TrendingUp,
-  },
-  {
-    value: "37%",
-    label: "Lower churn",
-    desc: "Average drop in logo churn within the first two quarters.",
-    icon: ShieldCheck,
-  },
-  {
-    value: "11 hrs",
-    label: "Saved weekly",
-    desc: "Per operator, by automating triage and reply drafting.",
-    icon: Clock,
-  },
-];
+const capabilityStats = STAKES.stats;
 
-type CaseStudy = {
-  company: string;
-  segment: string;
-  challenge: string;
-  outcome: string;
-  metric: string;
-  metricLabel: string;
-};
-
-const caseStudies: CaseStudy[] = [
-  {
-    company: "Northwind SaaS",
-    segment: "B2B Software · 40 seats",
-    challenge:
-      "High-intent trial users were slipping through a noisy shared inbox before sales could respond.",
-    outcome:
-      "Nexus OS flagged purchase intent in real time and drafted replies, cutting first-response time from hours to minutes.",
-    metric: "+28%",
-    metricLabel: "trial-to-paid conversion",
-  },
-  {
-    company: "Atlas Logistics",
-    segment: "Operations · 120 seats",
-    challenge:
-      "Churn signals were buried in support threads and only surfaced after customers had already decided to leave.",
-    outcome:
-      "Churn detection routed at-risk accounts to a save-team queue with context-aware draft outreach.",
-    metric: "-41%",
-    metricLabel: "quarterly churn",
-  },
-  {
-    company: "Meridian Studio",
-    segment: "Agency · 18 seats",
-    challenge:
-      "Founders were personally triaging every email, spending evenings on manual follow-ups.",
-    outcome:
-      "The Approval Queue let the team approve AI drafts in one click while keeping their brand voice.",
-    metric: "9 hrs",
-    metricLabel: "reclaimed per week",
-  },
-];
-
-const testimonials = [
-  {
-    quote:
-      "Nexus OS pays for itself the first time it saves a deal we would have missed. It is the operating system our revenue runs on.",
-    name: "Priya N.",
-    role: "Founder, Northwind SaaS",
-  },
-  {
-    quote:
-      "We finally see churn coming. The save-team gets a warm draft before the customer even asks to cancel.",
-    name: "Marcus T.",
-    role: "Head of Success, Atlas Logistics",
-  },
-];
-
-const logos = [
-  "Northwind",
-  "Atlas",
-  "Meridian",
-  "Lumen",
-  "Halcyon",
-  "Vertex",
-];
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
 
 export default function CustomersPage() {
   return (
-    <div className={`flex flex-1 flex-col ${styleScript.variable}`}>
-      <ScrollReveal className="hairline-b pb-12 pt-4">
-        <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
-          Customers
-        </p>
-        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey dark:text-white">
-          Revenue teams that stopped losing deals
-        </h1>
-        <p className="mt-5 max-w-2xl nexus-body text-muted dark:text-slate-300">
-          From solo founders to 120-seat operations, teams use Nexus OS to
-          intercept churn, route hot leads, and reclaim hours every week.
-        </p>
-      </ScrollReveal>
+    <div className="flex-1 bg-white text-[#1d1d1f]">
+      <Section tone="page" width="wide">
+        <Reveal>
+          <Eyebrow>Customers</Eyebrow>
+        </Reveal>
+        <AnimatedHeading
+          text="Built for teams who refuse to lose deals in the inbox"
+          className="landing-section-headline mt-5 max-w-[720px] text-balance"
+        />
+        <Reveal delay={0.08}>
+          <p className="mt-5 max-w-[560px] text-[17px] leading-[1.55] text-[#6e6e73]">
+            Nexus OS is a revenue command center — every message triaged, every
+            reply drafted, nothing sent without you. The figures below describe
+            the system as built, not invented customer outcomes.
+          </p>
+        </Reveal>
+      </Section>
 
-      <div className="grid gap-4 py-12 sm:grid-cols-3">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <ScrollReveal
+      <Section tone="alt" rule width="wide">
+        <dl className="grid grid-cols-1 border-t border-[color:var(--apple-hairline)] sm:grid-cols-3">
+          {capabilityStats.map((stat, i) => (
+            <Reveal
               key={stat.label}
               delay={i * 0.08}
-              className="h-full"
+              className="border-b border-[color:var(--apple-hairline)] py-8 sm:border-b-0 sm:border-r sm:px-7 sm:first:pl-0 sm:last:border-r-0"
             >
-              <div className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 dark:border-border dark:bg-surface-card">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-nexus-growth-border bg-nexus-growth-soft text-nexus-growth dark:border-nexus-growth-border dark:bg-nexus-growth-soft dark:text-nexus-growth">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <p className="mt-5 text-4xl font-bold tabular-nums tracking-tight text-status-positive">
-                  {stat.value}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-atmospheric-grey dark:text-white">
-                  {stat.label}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted dark:text-slate-300">
-                  {stat.desc}
-                </p>
-              </div>
-            </ScrollReveal>
-          );
-        })}
-      </div>
-
-      <ScrollReveal className="py-8">
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 rounded-2xl border border-border bg-white px-6 py-8 dark:border-border dark:bg-surface-card">
-          {logos.map((logo) => (
-            <span
-              key={logo}
-              className="font-sans text-lg font-semibold tracking-normal text-atmospheric-grey/40 transition-colors hover:text-atmospheric-grey dark:text-white/30 dark:hover:text-white"
-            >
-              {logo}
-            </span>
+              <dd className="flex items-baseline gap-1 text-[44px] font-semibold leading-none tracking-[-0.02em] text-[#1d1d1f]">
+                <Odometer value={stat.value} suffix={stat.suffix} />
+              </dd>
+              <dt className="mt-3 text-[15px] font-medium text-[#1d1d1f]">
+                {stat.label}
+              </dt>
+              <p className="mt-1.5 text-[13px] leading-[1.5] text-[#86868b]">
+                {stat.note}
+              </p>
+            </Reveal>
           ))}
-        </div>
-      </ScrollReveal>
+        </dl>
+      </Section>
 
-      <div className="space-y-6 py-12">
-        <ScrollReveal>
-          <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
-            Case studies
-          </h2>
-        </ScrollReveal>
-        <div className="grid gap-5 lg:grid-cols-3">
-          {caseStudies.map((cs, i) => (
-            <ScrollReveal key={cs.company} delay={i * 0.08} className="h-full">
-              <article className="flex h-full flex-col rounded-2xl border border-border bg-white p-7 transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35 dark:hover:bg-[#1f1f1f]">
-                <h3 className="font-sans text-xl font-semibold tracking-tight text-atmospheric-grey dark:text-white">
-                  {cs.company}
-                </h3>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted dark:text-slate-400">
-                  {cs.segment}
-                </p>
-                <p className="mt-5 text-sm leading-relaxed text-muted dark:text-slate-300">
-                  <span className="font-semibold text-atmospheric-grey dark:text-white">
-                    Challenge.{" "}
-                  </span>
-                  {cs.challenge}
-                </p>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-muted dark:text-slate-300">
-                  <span className="font-semibold text-atmospheric-grey dark:text-white">
-                    Outcome.{" "}
-                  </span>
-                  {cs.outcome}
-                </p>
-                <div className="mt-6 hairline-t pt-5">
-                  <p className="text-3xl font-bold tabular-nums tracking-tight text-status-positive">
-                    {cs.metric}
-                  </p>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted dark:text-slate-400">
-                    {cs.metricLabel}
-                  </p>
-                </div>
-              </article>
-            </ScrollReveal>
-          ))}
-        </div>
-      </div>
+      <ChannelMarquee />
 
-      <div className="grid gap-5 py-12 md:grid-cols-2">
-        {testimonials.map((t, i) => (
-          <ScrollReveal key={t.name} delay={i * 0.1} className="h-full">
-            <figure className="flex h-full flex-col rounded-[2rem] border border-border bg-[#f8fafc] p-10 dark:border-white/20 dark:bg-[#1c1c1c]">
-              <Quote
-                className="h-7 w-7 text-ref-cta dark:text-muted"
-                aria-hidden
-              />
-              <blockquote
-                className="mt-5 flex-1 text-2xl leading-relaxed text-slate-900 dark:text-white/90 md:text-3xl"
-                style={{ fontFamily: "var(--font-style-script), cursive" }}
+      <Section tone="page" rule width="wide">
+        <Reveal>
+          <Eyebrow>Why teams switch</Eyebrow>
+        </Reveal>
+        <AnimatedHeading
+          text="The boring guarantees, in writing."
+          className="landing-section-headline mt-5 max-w-[640px] text-balance"
+        />
+        <div className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {TRUST.items.slice(0, 3).map((item, i) => {
+            const Icon = i === 0 ? ShieldCheck : i === 1 ? Layers : Ban;
+            return (
+              <Reveal key={item.id} delay={i * 0.05} className="h-full">
+                <TracedCard className="h-full p-7">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] bg-[color:var(--nexus-approval-soft)] text-[color:var(--nexus-approval)]">
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <h3 className="mt-4 text-[16px] font-semibold text-[#1d1d1f]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-[14px] leading-[1.55] text-[#6e6e73]">
+                    {item.body}
+                  </p>
+                </TracedCard>
+              </Reveal>
+            );
+          })}
+        </div>
+      </Section>
+
+      {TESTIMONIALS.length > 0 ? (
+        <Section tone="alt" rule width="wide">
+          <Reveal>
+            <Eyebrow>In their words</Eyebrow>
+          </Reveal>
+          <AnimatedHeading
+            text="What teams say after the first week."
+            className="landing-section-headline mt-5"
+          />
+          <ul className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {TESTIMONIALS.map((t, i) => (
+              <Reveal
+                key={t.name}
+                as="li"
+                delay={i * 0.05}
+                className="flex h-full flex-col rounded-2xl border border-[color:var(--apple-hairline)] bg-white p-7"
               >
-                &ldquo;{t.quote}&rdquo;
-              </blockquote>
-              <figcaption className="mt-8 font-mono text-xs uppercase tracking-[0.2em] text-muted dark:text-slate-400">
-                <span className="text-atmospheric-grey dark:text-white">{t.name}</span>, {t.role}
-              </figcaption>
-            </figure>
-          </ScrollReveal>
-        ))}
-      </div>
+                <Quote
+                  className="h-5 w-5 text-[color:var(--nexus-approval)]"
+                  aria-hidden
+                />
+                <blockquote className="mt-4 flex-1 text-[15px] leading-[1.6] text-[#1d1d1f]">
+                  “{t.quote}”
+                </blockquote>
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-[color:var(--apple-hairline)] pt-5">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f5f5f7] font-mono text-[11px] font-semibold text-[#6e6e73]"
+                    aria-hidden
+                  >
+                    {initialsOf(t.name)}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px] font-medium text-[#1d1d1f]">
+                      {t.name}
+                    </span>
+                    <span className="block truncate text-[12px] text-[#86868b]">
+                      {t.role}
+                    </span>
+                  </span>
+                </figcaption>
+              </Reveal>
+            ))}
+          </ul>
+        </Section>
+      ) : (
+        <Section tone="alt" rule width="wide">
+          <Reveal>
+            <div className="rounded-2xl border border-[color:var(--apple-hairline)] bg-white p-8 md:p-10 landing-elev-1">
+              <Eyebrow>Case studies</Eyebrow>
+              <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
+                Real customer stories land here when we have permission to share them.
+              </h2>
+              <p className="mt-3 max-w-[520px] text-[15px] leading-[1.55] text-[#6e6e73]">
+                We do not invent quotes or revenue outcomes. Until named
+                references exist, the architecture guarantees above are the
+                proof you can verify in the product.
+              </p>
+              <div className="mt-7">
+                <LiftButton href="/signup">Start free trial</LiftButton>
+              </div>
+            </div>
+          </Reveal>
+        </Section>
+      )}
 
-      <ScrollReveal className="pb-16">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] border border-border bg-white p-10 dark:border-border dark:bg-surface-card md:flex-row md:items-center">
-          <div>
-            <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
-              Your team could be next
-            </h2>
-            <p className="mt-2 max-w-xl text-base leading-relaxed text-muted dark:text-slate-300">
-              See how much revenue Nexus OS can rescue for your operation.
-            </p>
+      <Section tone="page" rule width="wide">
+        <Reveal>
+          <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-[color:var(--apple-hairline)] bg-[#f5f5f7] p-8 md:flex-row md:items-center md:p-10">
+            <div>
+              <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
+                Your team could be next
+              </h2>
+              <p className="mt-2 max-w-[480px] text-[15px] leading-[1.55] text-[#6e6e73]">
+                Connect one inbox and see what the last thirty days were hiding.
+              </p>
+            </div>
+            <Link
+              href="/signup"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[color:var(--nexus-approval)] px-6 text-[15px] font-medium text-white transition-colors hover:bg-[#2b82ff]"
+            >
+              Start now
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+            </Link>
           </div>
-          <Link
-            href="/signup"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:border-nexus-approval dark:bg-nexus-approval"
-          >
-            Start now
-            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
-          </Link>
-        </div>
-      </ScrollReveal>
+        </Reveal>
+      </Section>
+
+      <FinalCta />
     </div>
   );
 }

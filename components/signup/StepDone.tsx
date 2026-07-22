@@ -20,7 +20,7 @@ type StepDoneProps = {
   snapshot: SignupSnapshot;
 };
 
-const accent = "text-nexus-growth dark:text-nexus-growth";
+const accent = "text-nexus-growth";
 
 export default function StepDone({ snapshot }: StepDoneProps) {
   const router = useRouter();
@@ -38,12 +38,12 @@ export default function StepDone({ snapshot }: StepDoneProps) {
         <h2 className="mt-3 nexus-section-title text-foreground">
           Nexus OS is ready
         </h2>
-        <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-base text-[#6e6e73]">
           Your workspace is configured. Summary below.
         </p>
       </div>
-      <div className="rounded-xl border border-glass-border bg-glass p-5 text-left text-sm">
-        <p className="mb-3 nexus-meta text-nexus-growth dark:text-nexus-growth">
+      <div className="rounded-xl border border-[color:var(--apple-hairline)] bg-white p-5 text-left text-sm">
+        <p className="mb-3 nexus-meta text-nexus-growth">
           Summary
         </p>
         <ul className="space-y-2 text-atmospheric-grey">
@@ -71,11 +71,11 @@ export default function StepDone({ snapshot }: StepDoneProps) {
           </li>
         </ul>
       </div>
-      <div className="rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft p-5 text-left text-sm dark:border-nexus-discovery-border dark:bg-nexus-discovery-soft">
-        <p className="mb-3 nexus-meta text-nexus-discovery dark:text-nexus-discovery">
+      <div className="rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft p-5 text-left text-sm">
+        <p className="mb-3 nexus-meta text-nexus-discovery">
           Onboarding checklist
         </p>
-        <ul className="space-y-2 text-black/70 dark:text-white/65">
+        <ul className="space-y-2 text-[#6e6e73]">
           {snapshot.gmailConnected === true ? (
             <li className={`flex items-center ${accent}`}>
               <Check className="mr-1 inline h-4 w-4 shrink-0" aria-hidden />

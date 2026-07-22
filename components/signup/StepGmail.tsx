@@ -154,7 +154,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
         <h2 className="nexus-section-title text-foreground">Connect Gmail</h2>
-        <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-base text-[#6e6e73]">
           Connect your inbox by signing in with Google. You can skip and finish
           later.
         </p>
@@ -165,7 +165,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
             className={cn(
               "flex items-center rounded-xl border border-dashed px-3 py-2 text-sm",
               banner.type === "ok"
-                ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake dark:border-nexus-intake-border dark:bg-nexus-intake-soft dark:text-nexus-intake"
+                ? "border-nexus-intake-border bg-nexus-intake-soft text-nexus-intake"
                 : "border-badge-critical-ring bg-badge-critical-bg text-badge-critical-text",
             )}
             role="status"
@@ -194,7 +194,7 @@ export default function StepGmail({ snapshot, onComplete }: StepGmailProps) {
           type="button"
           disabled={busy}
           onClick={skip}
-          className="cursor-pointer text-sm font-medium text-gray-500 underline decoration-black/30 underline-offset-4 transition hover:text-gray-800 dark:text-gray-400 dark:decoration-white/30 dark:hover:text-gray-200"
+          className="cursor-pointer text-sm font-medium text-[#6e6e73] underline decoration-black/30 underline-offset-4 transition hover:text-[#1d1d1f]"
         >
           Skip for now
         </button>

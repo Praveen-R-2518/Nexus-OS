@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import BillingToggle from "@/components/pricing/BillingToggle";
+import { LandingBillingToggle } from "@/components/landing/LandingBillingToggle";
 import PricingCard from "@/components/signup/PricingCard";
 import { PRICING_TIERS, priceForTier } from "@/lib/pricing/plans";
 import type { BillingCycle, PlanTier, SignupSnapshot } from "@/components/signup/types";
@@ -87,14 +87,14 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="nexus-section-title text-foreground">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             Choose your plan
           </h2>
-          <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[15px] text-[#6e6e73]">
             Smart defaults based on your workspace. Change anytime before going live.
           </p>
         </div>
-        <BillingToggle cycle={cycle} onChange={setCycle} />
+        <LandingBillingToggle cycle={cycle} onChange={setCycle} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -111,7 +111,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
             return (
               <div
                 key={tier.slug}
-                className="relative flex h-full flex-col rounded-xl border border-glass-border bg-glass p-4 sm:p-5"
+                className="relative flex h-full flex-col rounded-2xl border border-[color:var(--apple-hairline)] bg-white p-5 sm:p-6"
               >
                 <div className="mb-3 text-center">
                   <p className="font-sans text-base font-semibold tracking-normal text-atmospheric-grey">
@@ -128,7 +128,7 @@ export default function StepPlan({ snapshot, onComplete }: StepPlanProps) {
                 </ul>
                 <Link
                   href={tier.ctaHref}
-                  className="glass-pill mt-auto inline-flex w-full cursor-pointer items-center justify-center rounded-xl px-3 py-2 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-glass"
+                  className="mt-auto inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[color:var(--apple-hairline)] bg-white px-3 py-2 text-[14px] font-medium text-[#1d1d1f] transition-colors hover:bg-black/[0.03]"
                 >
                   Contact Sales
                 </Link>

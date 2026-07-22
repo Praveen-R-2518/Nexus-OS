@@ -15,7 +15,7 @@ type StepPaymentProps = {
 };
 
 const fieldClass =
-  "glass-input h-11 w-full px-3 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted";
+  "landing-input h-11 w-full px-3 text-sm text-atmospheric-grey outline-none transition placeholder:text-muted";
 
 function planTitle(tier: SignupSnapshot["planTier"]): string {
   if (tier === "pro") return "Professional";
@@ -83,25 +83,25 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
     return (
       <div className="mx-auto max-w-lg space-y-6 text-center">
         <div>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-nexus-growth-border bg-nexus-growth-soft dark:border-nexus-growth-border dark:bg-nexus-growth-soft">
-            <Check className="h-7 w-7 text-nexus-growth dark:text-nexus-growth" aria-hidden />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-nexus-growth-border bg-nexus-growth-soft">
+            <Check className="h-7 w-7 text-nexus-growth" aria-hidden />
           </div>
           <h2 className="mt-4 nexus-section-title text-foreground">
             You&apos;re all set
           </h2>
-          <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-base text-[#6e6e73]">
             No credit card required. Your Starter free trial is ready.
           </p>
         </div>
 
-        <div className="rounded-xl border border-glass-border bg-glass p-5 text-left">
-          <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
+        <div className="rounded-xl border border-[color:var(--apple-hairline)] bg-white p-5 text-left">
+          <p className="nexus-meta text-nexus-growth">
             What&apos;s included
           </p>
           <ul className="mt-4 space-y-2 text-sm text-muted">
             {STARTER_TRIAL_INCLUDES.map((item) => (
               <li key={item} className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-nexus-growth dark:text-nexus-growth" aria-hidden />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-nexus-growth" aria-hidden />
                 {item}
               </li>
             ))}
@@ -129,7 +129,7 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <div className="rounded-xl border border-nexus-execution-border bg-nexus-execution-soft px-4 py-3 text-sm text-amber-950 dark:border-nexus-execution-border dark:bg-nexus-execution-soft dark:text-amber-100">
+      <div className="rounded-xl border border-nexus-execution-border bg-nexus-execution-soft px-4 py-3 text-sm text-amber-950">
         <p className="flex items-center gap-2 font-medium">
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
           Billing integration coming soon. You will not be charged yet.
@@ -140,13 +140,13 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
         <h2 className="nexus-section-title text-foreground">
           Activate {planTitle(snapshot.planTier)}
         </h2>
-        <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-base text-[#6e6e73]">
           Enter payment details to activate your plan. Charges are disabled until billing goes live.
         </p>
       </div>
 
       {pricing ? (
-        <div className="rounded-xl border border-glass-border bg-glass p-4 text-sm">
+        <div className="rounded-xl border border-[color:var(--apple-hairline)] bg-white p-4 text-sm">
           <div className="flex justify-between gap-4 text-xs">
             <span className="text-muted">Plan</span>
             <span className="text-atmospheric-grey">{planTitle(snapshot.planTier)}</span>
@@ -178,14 +178,14 @@ export default function StepPayment({ snapshot, onNext }: StepPaymentProps) {
           e.preventDefault();
           void activatePlan();
         }}
-        className="space-y-4 rounded-xl border border-glass-border bg-glass p-4"
+        className="space-y-4 rounded-xl border border-[color:var(--apple-hairline)] bg-white p-4"
       >
-        <div className="flex items-center gap-2 nexus-meta text-nexus-approval dark:text-nexus-approval">
+        <div className="flex items-center gap-2 nexus-meta text-nexus-approval">
           <CreditCard className="h-4 w-4" aria-hidden />
           Payment details
         </div>
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-black/75 dark:text-white/70">
+          <span className="text-sm font-medium text-[#6e6e73]">
             Card number
           </span>
           <input
