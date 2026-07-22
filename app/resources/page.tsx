@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -7,10 +8,19 @@ import {
   Lightbulb,
   LifeBuoy,
   Newspaper,
+  Plus,
   Video,
   type LucideIcon,
 } from "lucide-react";
-import { ScrollReveal } from "@/components/marketing/ScrollReveal";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { FinalCta } from "@/components/landing/FinalCta";
+import { AnimatedHeading } from "@/components/landing/primitives/AnimatedHeading";
+import { Eyebrow } from "@/components/landing/primitives/Eyebrow";
+import { LiftButton } from "@/components/landing/primitives/LiftButton";
+import { Reveal } from "@/components/landing/primitives/Reveal";
+import { Section } from "@/components/landing/primitives/Section";
+import { TracedCard } from "@/components/landing/primitives/TracedCard";
+import { DURATION, EASE } from "@/lib/landing/motion";
 
 type Resource = {
   title: string;
@@ -140,164 +150,197 @@ const faqs = [
   },
   {
     q: "How do I get started and what does it cost?",
-    a: "Create a workspace from the signup wizard and pick a plan. See current pricing on the signup flow.",
+    a: "Create a workspace from the signup wizard and pick a plan. See current pricing on the pricing page.",
   },
 ];
 
 export default function ResourcesPage() {
+  const reduce = useReducedMotion();
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
   return (
-    <div className="flex flex-1 flex-col">
-      <ScrollReveal className="hairline-b pb-12 pt-4">
-        <p className="nexus-meta text-nexus-execution dark:text-nexus-execution">
-          Resources
-        </p>
-        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey dark:text-white">
-          Learn, build, and ship faster
-        </h1>
-        <p className="mt-5 max-w-2xl nexus-body text-muted dark:text-slate-300">
-          Playbooks, articles, demos, and release notes to help you get the most
-          revenue out of Nexus OS.
-        </p>
-      </ScrollReveal>
+    <div className="flex-1 bg-white text-[#1d1d1f]">
+      <Section tone="page" width="wide">
+        <Reveal>
+          <Eyebrow>Resources</Eyebrow>
+        </Reveal>
+        <AnimatedHeading
+          text="Learn, build, and ship faster"
+          className="landing-section-headline mt-5 max-w-[640px] text-balance"
+        />
+        <Reveal delay={0.08}>
+          <p className="mt-5 max-w-[560px] text-[17px] leading-[1.55] text-[#6e6e73]">
+            Playbooks, articles, demos, and release notes to help you get the
+            most out of Nexus OS.
+          </p>
+        </Reveal>
+      </Section>
 
-      <div className="space-y-16 py-16">
-        {groups.map((group) => {
-          const Icon = group.icon;
-          return (
-            <ScrollReveal key={group.id}>
-              <section>
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution dark:border-nexus-execution-border dark:bg-nexus-execution-soft dark:text-nexus-execution">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
-                    {group.title}
-                  </h2>
-                </div>
+      {groups.map((group, gi) => {
+        const Icon = group.icon;
+        return (
+          <Section
+            key={group.id}
+            tone={gi % 2 === 0 ? "alt" : "page"}
+            rule
+            width="wide"
+          >
+            <Reveal>
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] bg-[color:var(--nexus-approval-soft)] text-[color:var(--nexus-approval)]">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <h2 className="landing-section-headline text-[clamp(1.5rem,2.5vw,2rem)]">
+                  {group.title}
+                </h2>
+              </div>
+            </Reveal>
 
-                <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.title}
-                      href={item.href}
-                      className="group flex h-full flex-col rounded-2xl border border-border bg-white p-6 transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35 dark:hover:bg-[#1f1f1f]"
-                    >
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {group.items.map((item, i) => (
+                <Reveal key={item.title} delay={i * 0.05} className="h-full">
+                  <Link href={item.href} className="block h-full">
+                    <TracedCard className="flex h-full flex-col p-6 transition-transform">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-xs font-medium text-muted dark:text-slate-400">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#86868b]">
                           {item.meta}
                         </span>
                         <ArrowUpRight
-                          className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-atmospheric-grey dark:text-slate-400 dark:group-hover:text-white"
+                          className="h-4 w-4 text-[#86868b]"
                           aria-hidden
                         />
                       </div>
-                      <h3 className="mt-4 font-sans text-lg font-semibold tracking-tight text-atmospheric-grey dark:text-white">
+                      <h3 className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-[#1d1d1f]">
                         {item.title}
                       </h3>
-                      <p className="mt-2 flex-1 text-sm leading-relaxed text-muted dark:text-slate-300">
+                      <p className="mt-2 flex-1 text-[14px] leading-[1.55] text-[#6e6e73]">
                         {item.desc}
                       </p>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            </ScrollReveal>
-          );
-        })}
-
-        <ScrollReveal>
-          <section>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution dark:border-nexus-execution-border dark:bg-nexus-execution-soft dark:text-nexus-execution">
-                <GitBranch className="h-5 w-5" aria-hidden />
-              </span>
-              <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
-                Changelog
-              </h2>
-            </div>
-            <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-white dark:border-border dark:bg-surface-card">
-              {changelog.map((entry) => (
-                <div
-                  key={entry.version}
-                  className="flex flex-col gap-2 border-b border-border px-6 py-5 last:border-b-0 sm:flex-row sm:items-center sm:gap-6 dark:border-white/10"
-                >
-                  <div className="flex shrink-0 items-baseline gap-3 sm:w-40">
-                    <span className="font-mono text-sm font-bold tabular-nums text-atmospheric-grey dark:text-white">
-                      {entry.version}
-                    </span>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-muted dark:text-slate-400">
-                      {entry.date}
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed text-muted dark:text-slate-300">
-                    {entry.note}
-                  </p>
-                </div>
+                    </TracedCard>
+                  </Link>
+                </Reveal>
               ))}
             </div>
-          </section>
-        </ScrollReveal>
+          </Section>
+        );
+      })}
 
-        <ScrollReveal>
-          <section>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-nexus-execution-border bg-nexus-execution-soft text-nexus-execution dark:border-nexus-execution-border dark:bg-nexus-execution-soft dark:text-nexus-execution">
-                <LifeBuoy className="h-5 w-5" aria-hidden />
-              </span>
-              <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
-                Frequently asked
-              </h2>
-            </div>
-            <div className="mt-7 space-y-3">
-              {faqs.map((faq) => (
-                <details
-                  key={faq.q}
-                  className="group rounded-2xl border border-border bg-white px-6 py-5 transition-colors hover:border-slate-300 dark:border-white/15 dark:bg-[#161616] dark:hover:border-white/35"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-sans text-base font-semibold tracking-tight text-atmospheric-grey dark:text-white">
-                    {faq.q}
-                    <ArrowUpRight
-                      className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-90 dark:text-slate-400"
-                      aria-hidden
-                    />
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-muted dark:text-slate-300">
-                    {faq.a}
-                  </p>
-                </details>
-              ))}
-            </div>
-          </section>
-        </ScrollReveal>
-      </div>
-
-      <ScrollReveal className="pb-16">
-        <div className="flex flex-col items-start justify-between gap-6 rounded-[2rem] border border-border bg-[#f8fafc] p-10 dark:border-white/20 dark:bg-[#1c1c1c] md:flex-row md:items-center">
-          <div>
-            <h2 className="nexus-section-title text-atmospheric-grey dark:text-white">
-              Still have questions?
+      <Section tone="alt" rule width="wide">
+        <Reveal>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] bg-[color:var(--nexus-approval-soft)] text-[color:var(--nexus-approval)]">
+              <GitBranch className="h-5 w-5" aria-hidden />
+            </span>
+            <h2 className="landing-section-headline text-[clamp(1.5rem,2.5vw,2rem)]">
+              Changelog
             </h2>
-            <p className="mt-2 max-w-xl text-base leading-relaxed text-muted dark:text-slate-300">
-              Read the docs or talk to our team. We will help you map Nexus OS to
-              your revenue motion.
-            </p>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-3">
-            <Link
-              href="/docs"
-              className="inline-flex items-center gap-2 rounded-full border border-nexus-approval bg-nexus-approval px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:border-nexus-approval dark:bg-nexus-approval"
-            >
-              Read the docs
-            </Link>
-            <Link
-              href="mailto:support@example.com"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-5 py-2.5 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-nexus-execution-soft dark:border-border dark:bg-surface-card dark:text-white dark:hover:bg-surface-elevated"
-            >
-              Contact support
-            </Link>
+        </Reveal>
+        <Reveal delay={0.06}>
+          <div className="mt-8 overflow-hidden rounded-2xl border border-[color:var(--apple-hairline)] bg-white">
+            {changelog.map((entry) => (
+              <div
+                key={entry.version}
+                className="flex flex-col gap-2 border-b border-[color:var(--apple-hairline)] px-6 py-5 last:border-b-0 sm:flex-row sm:items-center sm:gap-6"
+              >
+                <div className="flex shrink-0 items-baseline gap-3 sm:w-40">
+                  <span className="font-mono text-[13px] font-semibold tabular-nums text-[#1d1d1f]">
+                    {entry.version}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#86868b]">
+                    {entry.date}
+                  </span>
+                </div>
+                <p className="text-[14px] leading-[1.55] text-[#6e6e73]">
+                  {entry.note}
+                </p>
+              </div>
+            ))}
           </div>
+        </Reveal>
+      </Section>
+
+      <Section tone="page" rule width="wide" id="faq">
+        <Reveal>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] bg-[color:var(--nexus-approval-soft)] text-[color:var(--nexus-approval)]">
+              <LifeBuoy className="h-5 w-5" aria-hidden />
+            </span>
+            <h2 className="landing-section-headline text-[clamp(1.5rem,2.5vw,2rem)]">
+              Frequently asked
+            </h2>
+          </div>
+        </Reveal>
+        <div className="mt-8 border-t border-[color:var(--apple-hairline)]">
+          {faqs.map((faq, i) => {
+            const isOpen = openFaq === i;
+            return (
+              <div
+                key={faq.q}
+                className="border-b border-[color:var(--apple-hairline)]"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                  className="group flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--nexus-approval)]"
+                >
+                  <span className="text-[16px] font-medium text-[#1d1d1f]">
+                    {faq.q}
+                  </span>
+                  <motion.span
+                    className="shrink-0 text-[#86868b]"
+                    animate={{ rotate: isOpen ? 45 : 0 }}
+                    transition={{ duration: DURATION.micro, ease: EASE }}
+                    aria-hidden
+                  >
+                    <Plus className="h-4 w-4" />
+                  </motion.span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen ? (
+                    <motion.div
+                      className="overflow-hidden"
+                      initial={reduce ? false : { height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={reduce ? undefined : { height: 0, opacity: 0 }}
+                      transition={{ duration: DURATION.short, ease: EASE }}
+                    >
+                      <p className="max-w-[58ch] pb-6 pr-10 text-[15px] leading-[1.6] text-[#6e6e73]">
+                        {faq.a}
+                      </p>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
-      </ScrollReveal>
+      </Section>
+
+      <Section tone="alt" rule width="wide">
+        <Reveal>
+          <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-[color:var(--apple-hairline)] bg-white p-8 landing-elev-1 md:flex-row md:items-center md:p-10">
+            <div>
+              <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
+                Still have questions?
+              </h2>
+              <p className="mt-2 max-w-[480px] text-[15px] leading-[1.55] text-[#6e6e73]">
+                Read the docs or talk to our team. We will help you map Nexus OS
+                to your revenue motion.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              <LiftButton href="/docs">Read the docs</LiftButton>
+              <LiftButton href="mailto:support@example.com" variant="secondary">
+                Contact support
+              </LiftButton>
+            </div>
+          </div>
+        </Reveal>
+      </Section>
+
+      <FinalCta />
     </div>
   );
 }

@@ -123,7 +123,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
     <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6">
       <div>
         <h2 className="nexus-section-title text-foreground">Workspace setup</h2>
-        <p className="mt-1 text-base text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-base text-[#6e6e73]">
           Tell us about your company. You can invite teammates later.
         </p>
       </div>
@@ -165,7 +165,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </FormSelect>
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+        <p className="mb-2 text-sm font-medium text-[#1d1d1f]">
           Workspace type
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -173,21 +173,21 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("solo")}
             className={cn(
-              "flex cursor-pointer items-start gap-3 rounded-xl border border-selectable-edge bg-white p-4 text-left transition dark:bg-surface-card",
+              "flex cursor-pointer items-start gap-3 rounded-xl border border-selectable-edge bg-white p-4 text-left transition",
               workspaceType === "solo"
-                ? "border border-nexus-intake-border bg-nexus-intake-soft dark:bg-nexus-intake-soft"
-                : "hover:bg-nexus-intake-soft dark:hover:bg-surface-elevated",
+                ? "border border-nexus-intake-border bg-nexus-intake-soft"
+                : "hover:bg-nexus-intake-soft",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
-              <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <User className="w-5 h-5 text-[#6e6e73]" />
             </span>
             <span>
               <span className="flex items-center gap-2 font-sans font-semibold text-foreground">
-                <User className="h-4 w-4 text-nexus-intake dark:text-nexus-intake" />
+                <User className="h-4 w-4 text-nexus-intake" />
                 Solo
               </span>
-              <span className="mt-1 block text-sm text-gray-500 dark:text-gray-400">
+              <span className="mt-1 block text-sm text-[#6e6e73]">
                 Just me managing my inbox
               </span>
             </span>
@@ -196,21 +196,21 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
             type="button"
             onClick={() => setWorkspaceType("team")}
             className={cn(
-              "flex cursor-pointer items-start gap-3 rounded-xl border border-selectable-edge bg-white p-4 text-left transition dark:bg-surface-card",
+              "flex cursor-pointer items-start gap-3 rounded-xl border border-selectable-edge bg-white p-4 text-left transition",
               workspaceType === "team"
-                ? "border border-nexus-discovery-border bg-nexus-discovery-soft dark:bg-nexus-discovery-soft"
-                : "hover:bg-nexus-discovery-soft dark:hover:bg-surface-elevated",
+                ? "border border-nexus-discovery-border bg-nexus-discovery-soft"
+                : "hover:bg-nexus-discovery-soft",
             )}
           >
             <span className="flex items-center justify-center w-6 h-6" aria-hidden>
-              <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <Users className="w-5 h-5 text-[#6e6e73]" />
             </span>
             <span>
               <span className="flex items-center gap-2 font-sans font-semibold text-foreground">
-                <Users className="h-4 w-4 text-nexus-discovery dark:text-nexus-discovery" />
+                <Users className="h-4 w-4 text-nexus-discovery" />
                 Team
               </span>
-              <span className="mt-1 block text-sm text-gray-500 dark:text-gray-400">
+              <span className="mt-1 block text-sm text-[#6e6e73]">
                 Multiple people will use this workspace
               </span>
             </span>
@@ -218,7 +218,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
         </div>
       </div>
       {workspaceType === "team" ? (
-        <div className="space-y-4 rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft p-4 dark:border-nexus-discovery-border dark:bg-nexus-discovery-soft">
+        <div className="space-y-4 rounded-xl border border-nexus-discovery-border bg-nexus-discovery-soft p-4">
           <FormInput
             id="teamSize"
             label="Expected number of users"
@@ -230,14 +230,14 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
           />
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              <p className="text-sm font-medium text-[#1d1d1f]">
                 Team member emails{" "}
                 <span className="font-normal normal-case text-atmospheric-grey/40">(optional)</span>
               </p>
               <button
                 type="button"
                 onClick={addEmailRow}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-nexus-discovery-soft dark:border-border dark:bg-surface-card dark:text-gray-200 dark:hover:bg-surface-elevated"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-medium text-[#1d1d1f] transition hover:bg-nexus-discovery-soft"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add
@@ -248,7 +248,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                 <div key={i} className="flex gap-2">
                   <input
                     type="email"
-                    className="glass-input h-10 flex-1 px-3 text-sm text-atmospheric-grey outline-none placeholder:text-muted"
+                    className="landing-input h-10 flex-1 px-3 text-sm text-atmospheric-grey outline-none placeholder:text-muted"
                     placeholder="teammate@company.com"
                     value={row}
                     onChange={(e) => updateEmailRow(i, e.target.value)}
@@ -258,7 +258,7 @@ export default function StepWorkspace({ snapshot, onComplete }: StepWorkspacePro
                       type="button"
                       aria-label="Remove row"
                       onClick={() => removeEmailRow(i)}
-                      className="cursor-pointer border border-border p-2 text-gray-500 transition hover:bg-[rgba(18,116,249,0.06)] dark:border-border dark:text-gray-400 dark:hover:bg-surface-elevated"
+                      className="cursor-pointer border border-border p-2 text-[#6e6e73] transition hover:bg-[rgba(18,116,249,0.06)]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

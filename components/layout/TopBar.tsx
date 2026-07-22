@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
 import { ScrollProgressRail } from "@/components/landing/ScrollProgressRail";
+import { isLightShellRoute } from "@/components/layout/AppShell";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
@@ -15,25 +16,22 @@ const marketingLinks = [
 ] as const;
 
 /**
- * The landing page is light-only, but <html> still carries the `dark` class, so
- * every `dark:` utility would fire there. On "/" we drop them entirely and let
- * the light tokens from `.landing-full-bleed` drive the colours.
+ * Light-shell routes (landing, marketing, login, signup) never use `dark:`
+ * utilities — the shell pins light tokens even when <html> carries `dark`.
  */
-function marketingNavLinkClass(active: boolean, landing: boolean) {
+function marketingNavLinkClass(active: boolean) {
   return cn(
     "relative inline-flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 px-1 text-[13px] font-medium tracking-normal transition-opacity duration-interaction",
     active
-      ? cn("text-apple-text", !landing && "dark:text-white")
-      : cn(
-          "text-apple-text/75 hover:text-apple-text",
-          !landing && "dark:text-white/70 dark:hover:text-white",
-        ),
+      ? "text-apple-text"
+      : "text-apple-text/75 hover:text-apple-text",
   );
 }
 
 export default function TopBar() {
   const pathname = usePathname();
-  const isLanding = pathname === "/";
+  const lightShell = isLightShellRoute(pathname);
+  const isHome = pathname === "/";
 
   return (
     <header className="apple-chrome-bar sticky top-0 z-50 font-chrome font-sans">
@@ -46,9 +44,6 @@ export default function TopBar() {
           <span className="logo-os"> OS</span>
         </Link>
 
-        {/* Hidden below sm: there is no room for four links between the
-            wordmark and the CTA, and wrapping them collided with the logo.
-            The footer carries the same links on small screens. */}
         <nav
           className="nexus-nav-scroll relative hidden max-w-[min(100vw-10rem,40rem)] flex-1 flex-nowrap items-center justify-center gap-x-4 overflow-x-auto sm:flex sm:gap-x-6 lg:gap-x-8"
           aria-label="Primary"
@@ -61,7 +56,7 @@ export default function TopBar() {
                 <Link
                   key={href}
                   href={href}
-                  className={marketingNavLinkClass(active, isLanding)}
+                  className={marketingNavLinkClass(active)}
                 >
                   <span className="relative z-10 whitespace-nowrap">{label}</span>
                   {active ? (
@@ -85,10 +80,7 @@ export default function TopBar() {
         <div className="flex shrink-0 items-center gap-2 font-chrome md:gap-3">
           <Link
             href="/login"
-            className={cn(
-              "hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[color:var(--apple-hairline)] bg-transparent px-3 py-2 text-[13px] font-medium tracking-normal text-apple-text transition-colors hover:bg-black/[0.03] lg:inline-flex",
-              !isLanding && "dark:hover:bg-white/[0.06]",
-            )}
+            className="hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[color:var(--apple-hairline)] bg-transparent px-3 py-2 text-[13px] font-medium tracking-normal text-apple-text transition-colors hover:bg-black/[0.03] lg:inline-flex"
           >
             Sign in
           </Link>
@@ -98,15 +90,15 @@ export default function TopBar() {
           >
             Get started
           </Link>
-          {/* Hidden on "/" — the landing page does not participate in theming. */}
-          {isLanding ? null : (
+          {/* Hidden on the light shell — those pages do not participate in theming. */}
+          {lightShell ? null : (
             <div className="rounded-lg border border-[color:var(--apple-hairline)] p-0.5">
               <ThemeToggle />
             </div>
           )}
         </div>
       </div>
-      {isLanding ? <ScrollProgressRail /> : null}
+      {isHome || lightShell ? <ScrollProgressRail /> : null}
     </header>
   );
 }

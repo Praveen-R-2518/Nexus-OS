@@ -15,34 +15,39 @@ import { TenantScopeErrorBanner } from "@/components/tenant/TenantScopeErrorBann
 import { useAppearancePrefs } from "@/lib/use-appearance-prefs";
 import { cn } from "@/lib/utils";
 
-const AUTH_ONLY_PREFIXES = ["/login", "/signup"] as const;
-const MARKETING_PREFIXES = [
+const LIGHT_SHELL_PREFIXES = [
   "/docs",
   "/customers",
   "/resources",
   "/pricing",
   "/privacy",
   "/terms",
+  "/login",
+  "/signup",
 ] as const;
 
-export function isMarketingShellRoute(pathname: string): boolean {
+/**
+ * Marketing + auth surfaces share the landing page's light-locked Swiss shell.
+ * The app console keeps its own themed chrome.
+ */
+export function isLightShellRoute(pathname: string): boolean {
   if (pathname === "/") return true;
-  if (
-    MARKETING_PREFIXES.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-    )
-  ) {
-    return true;
-  }
-  return AUTH_ONLY_PREFIXES.some(
+  return LIGHT_SHELL_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 
-/** Login/signup get their own dark, chromeless shell that matches the dashboard. */
+/** @deprecated Use isLightShellRoute — kept for any callers that import the old name. */
+export function isMarketingShellRoute(pathname: string): boolean {
+  return isLightShellRoute(pathname);
+}
+
 export function isAuthShellRoute(pathname: string): boolean {
-  return AUTH_ONLY_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/signup" ||
+    pathname.startsWith("/signup/")
   );
 }
 
@@ -50,9 +55,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { fontScale, mounted: appearanceMounted } = useAppearancePrefs();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const auth = isAuthShellRoute(pathname);
-  const marketing = !auth && isMarketingShellRoute(pathname);
-  const isLanding = pathname === "/";
+  const lightShell = isLightShellRoute(pathname);
+  const isHome = pathname === "/";
   const isSupabaseConfigured = !!(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -62,12 +66,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div
       className={cn(
         "flex min-h-screen flex-col",
-        auth
-          ? "app-shell-bg bg-surface-page text-atmospheric-grey dark:bg-obsidian"
-          : marketing
-            ? "marketing-apple-shell bg-apple-bg text-apple-text"
-            : "bg-surface-page text-atmospheric-grey dark:bg-obsidian",
-        isLanding && "landing-full-bleed",
+        lightShell
+          ? "marketing-apple-shell landing-full-bleed bg-apple-bg text-apple-text"
+          : "bg-surface-page text-atmospheric-grey dark:bg-obsidian",
       )}
     >
       {!isSupabaseConfigured && (
@@ -75,20 +76,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
           ⚠️ <strong>Supabase Configuration Missing</strong>: Please create a <code>.env.local</code> file in the project root containing your Supabase credentials (see <code>.env.example</code>).
         </div>
       )}
-      {auth ? (
-        <main data-app-body className="relative z-[1] flex w-full flex-1 flex-col">
-          {children}
-        </main>
-      ) : marketing ? (
+      {lightShell ? (
         <>
           <TopBar />
           <main
             data-app-body
             className={cn(
-              "nexus-marketing-main",
-              isLanding
-                ? "flex w-full flex-1 flex-col"
-                : "mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 md:px-8 md:py-10",
+              "nexus-marketing-main flex w-full flex-1 flex-col",
+              /* Home owns its own section padding; other light pages get a calm page frame. */
+              !isHome && "bg-white",
             )}
           >
             {children}

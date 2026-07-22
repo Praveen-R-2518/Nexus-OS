@@ -10,27 +10,27 @@ const LAST_UPDATED = "June 18, 2026";
 
 export default function PrivacyPage() {
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="hairline-b pb-12 pt-4">
-        <p className="nexus-meta text-nexus-growth dark:text-nexus-growth">
+    <div className="mx-auto flex w-full max-w-[980px] flex-1 flex-col px-5 py-12 md:px-8 md:py-16">
+      <header className="border-b border-[color:var(--apple-hairline)] pb-12">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#6e6e73]">
           Legal
         </p>
-        <h1 className="mt-3 max-w-3xl nexus-page-title text-atmospheric-grey">
+        <h1 className="landing-section-headline mt-3 max-w-3xl text-[#1d1d1f]">
           Privacy Policy
         </h1>
-        <p className="mt-5 max-w-2xl nexus-body text-muted">
+        <p className="mt-5 max-w-2xl text-[17px] leading-[1.55] text-[#6e6e73]">
           This policy explains what data Nexus OS collects, how we use it, and
           your choices. It covers our handling of Google account data accessed
           through Gmail.
         </p>
-        <p className="mt-3 font-mono text-[11px] uppercase tracking-widest text-muted">
+        <p className="mt-3 font-mono text-[11px] uppercase tracking-widest text-[#86868b]">
           Last updated {LAST_UPDATED}
         </p>
       </header>
 
-      <article className="max-w-3xl space-y-10 py-12 text-sm leading-relaxed text-muted dark:text-slate-300">
+      <article className="max-w-3xl space-y-10 py-12 text-[15px] leading-relaxed text-[#6e6e73]">
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             1. Overview
           </h2>
           <p>
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             2. Google account data we access
           </h2>
           <p>
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
           </p>
           <ul className="ml-5 list-disc space-y-2">
             <li>
-              <code className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs dark:bg-white/10">
+              <code className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs">
                 gmail.readonly
               </code>{" "}
               &mdash; read-only access to your Gmail messages and metadata so we
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
               scope.
             </li>
             <li>
-              <code className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs dark:bg-white/10">
+              <code className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs">
                 userinfo.email
               </code>{" "}
               &mdash; your account email address, used to identify the connected
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             3. How we use your data
           </h2>
           <p>We use the Gmail data described above solely to:</p>
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             4. How we store and protect your data
           </h2>
           <p>
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             5. Data retention and deletion
           </h2>
           <p>
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             6. Limited Use disclosure
           </h2>
           <p>
@@ -149,7 +149,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="nexus-section-title text-atmospheric-grey">
+          <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
             7. Contact
           </h2>
           <p>

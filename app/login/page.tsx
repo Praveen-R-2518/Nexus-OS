@@ -4,13 +4,13 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Mail } from "lucide-react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { Eyebrow } from "@/components/landing/primitives/Eyebrow";
 import { buildAuthCallbackUrl, safeNextPath } from "@/lib/auth/redirect-url";
+import { DURATION, EASE } from "@/lib/landing/motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { cn } from "@/lib/utils";
 
-const inputClass =
-  "glass-input h-11 w-full px-3 text-[15px] text-atmospheric-grey outline-none transition placeholder:text-muted";
-
-// Client-side throttle so users can't hammer Supabase Auth into a 429.
 const PASSWORD_BACKOFF_SECONDS = [5, 15, 30, 60] as const;
 const MAGIC_LINK_COOLDOWN_SECONDS = 60;
 
@@ -56,6 +56,7 @@ async function resolvePostLoginPath(safeNext: string, session: SessionLike): Pro
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const reduce = useReducedMotion();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -68,7 +69,6 @@ function LoginForm() {
 
   const nextPath = searchParams.get("next");
   const safeNext = safeNextPath(nextPath, "/dashboard");
-
   const callbackError = searchParams.get("error");
 
   useEffect(() => {
@@ -114,6 +114,13 @@ function LoginForm() {
     const supabase = createSupabaseBrowserClient();
     let cancelled = false;
 
+    const finishLoading = () => {
+      if (!cancelled) setLoading(false);
+    };
+
+    // Don't leave the form blank forever if the auth client hangs (offline, bad env).
+    const timeout = window.setTimeout(finishLoading, 4000);
+
     supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled) return;
       if (data.session) {
@@ -121,7 +128,11 @@ function LoginForm() {
         if (!cancelled) router.replace(destination);
         return;
       }
-      setLoading(false);
+      window.clearTimeout(timeout);
+      finishLoading();
+    }).catch(() => {
+      window.clearTimeout(timeout);
+      finishLoading();
     });
 
     const {
@@ -137,6 +148,7 @@ function LoginForm() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [router, safeNext]);
@@ -194,7 +206,6 @@ function LoginForm() {
         setMessage(error.message);
       }
     } else {
-      // Lock the button for the per-email window to avoid tripping the limit.
       startCooldown(MAGIC_LINK_COOLDOWN_SECONDS);
       setMessage("Magic link sent. Check your email.");
     }
@@ -203,33 +214,36 @@ function LoginForm() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm font-medium text-muted">
+      <div className="flex min-h-[50vh] items-center justify-center text-[14px] text-[#86868b]">
         Loading secure workspace…
       </div>
     );
   }
 
+  const rise = reduce
+    ? {}
+    : {
+        initial: { opacity: 0, y: 16 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: DURATION.entrance, ease: EASE },
+      };
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="app-glass-card w-full max-w-md rounded-[2rem] p-8 md:p-10">
-        <div className="mb-6 hairline-b pb-6">
-          <p className="nexus-meta text-nexus-approval">
-            Auth session
-          </p>
-          <h1 className="mt-4 nexus-section-title text-atmospheric-grey">
-            Sign in
-          </h1>
-          <p className="mt-3 text-base leading-relaxed text-muted">
-            Gmail and webhook data stay protected behind the founder dashboard.
-          </p>
-        </div>
-        <form className="space-y-5" onSubmit={signInWithPassword}>
+    <div className="flex flex-1 flex-col items-center justify-center bg-[#f5f5f7] px-5 py-16 md:px-8 md:py-24">
+      <motion.div className="landing-card w-full max-w-md p-8 md:p-10" {...rise}>
+        <Eyebrow>Sign in</Eyebrow>
+        <h1 className="mt-4 text-[28px] font-semibold tracking-[-0.02em] text-[#1d1d1f]">
+          Welcome back
+        </h1>
+        <p className="mt-3 text-[15px] leading-[1.55] text-[#6e6e73]">
+          Gmail and webhook data stay protected behind your workspace.
+        </p>
+
+        <form className="mt-8 space-y-5" onSubmit={signInWithPassword}>
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-atmospheric-grey">
-              Email
-            </span>
+            <span className="text-[13px] font-medium text-[#1d1d1f]">Email</span>
             <input
-              className={inputClass}
+              className="landing-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -238,64 +252,69 @@ function LoginForm() {
             />
           </label>
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-atmospheric-grey">
-              Password
-            </span>
+            <span className="text-[13px] font-medium text-[#1d1d1f]">Password</span>
             <input
-              className={inputClass}
+              className="landing-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
             />
           </label>
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-muted">
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-[#6e6e73]">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 shrink-0 rounded border border-glass-border bg-glass text-nexus-approval focus:ring-1 focus:ring-nexus-approval"
+              className="h-4 w-4 shrink-0 rounded border border-[color:var(--apple-hairline)] text-[color:var(--nexus-approval)] focus:ring-[color:var(--nexus-approval)]"
             />
             Remember me
           </label>
           {message ? (
             <p
-              className="rounded-xl border border-nexus-approval-border bg-nexus-approval-soft px-3 py-2 text-sm text-atmospheric-grey"
+              className="rounded-xl border border-[color:var(--nexus-approval-border)] bg-[color:var(--nexus-approval-soft)] px-3 py-2 text-[14px] text-[#1d1d1f]"
               role="alert"
             >
               {message}
             </p>
           ) : null}
           <div className="flex flex-wrap gap-3 pt-1">
-            <button
+            <motion.button
               type="submit"
               disabled={busy || cooldownRemaining > 0}
-              className="btn-primary inline-flex cursor-pointer items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium"
+              whileHover={reduce ? undefined : { y: -1 }}
+              whileTap={reduce ? undefined : { scale: 0.98 }}
+              className={cn(
+                "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-[color:var(--nexus-approval)] px-6 text-[15px] font-medium text-white transition-colors hover:bg-[#2b82ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--nexus-approval)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+              )}
             >
               <LogIn className="h-4 w-4 shrink-0" aria-hidden />
               {cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : "Sign in"}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               disabled={busy || !email || cooldownRemaining > 0}
               onClick={sendMagicLink}
-              className="glass-pill inline-flex cursor-pointer items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-glass disabled:cursor-not-allowed disabled:opacity-50"
+              whileHover={reduce ? undefined : { y: -1 }}
+              whileTap={reduce ? undefined : { scale: 0.98 }}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[color:var(--apple-hairline)] bg-white px-6 text-[15px] font-medium text-[#1d1d1f] transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--nexus-approval)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Mail className="h-4 w-4 shrink-0" aria-hidden />
               Magic link
-            </button>
+            </motion.button>
           </div>
         </form>
-        <p className="mt-8 hairline-t pt-6 text-center text-sm text-muted">
+
+        <p className="mt-8 border-t border-[color:var(--apple-hairline)] pt-6 text-center text-[14px] text-[#6e6e73]">
           Need an account?{" "}
           <Link
             href="/signup"
-            className="cursor-pointer font-medium text-nexus-approval underline underline-offset-4 hover:text-atmospheric-grey"
+            className="landing-link font-medium text-[color:var(--nexus-approval)]"
           >
             Start signup
           </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -304,7 +323,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm font-medium text-muted">
+        <div className="flex min-h-[50vh] items-center justify-center text-[14px] text-[#86868b]">
           Loading…
         </div>
       }

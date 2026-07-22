@@ -1,10 +1,11 @@
 /**
- * Shared button styles for the auth surfaces (login + signup steps), matched to
- * the dashboard's action buttons so sign-in/sign-up use the same primitives.
+ * Shared button styles for login + signup — matched to the landing LiftButton
+ * language (rounded-full primary / hairline secondary). No `dark:` utilities:
+ * these surfaces live inside `.landing-full-bleed`.
  */
 
 export const authPrimaryButton =
-  "inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-approval-border bg-nexus-approval-soft py-3 text-sm font-medium text-nexus-approval transition-colors hover:bg-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex w-full min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[color:var(--nexus-approval)] px-6 py-3 text-[15px] font-medium text-white transition-colors hover:bg-[#2b82ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--nexus-approval)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const authSecondaryButton =
-  "glass-pill inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium text-atmospheric-grey transition-colors hover:bg-glass disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex w-full min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[color:var(--apple-hairline)] bg-white px-6 py-3 text-[15px] font-medium text-[#1d1d1f] transition-colors hover:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--nexus-approval)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
