@@ -162,7 +162,7 @@ export function BrandAssetPicker({
 
         {isPending
           ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="glass-skeleton aspect-square animate-pulse rounded-xl" />
+              <div key={i} className="glass-skeleton aspect-square rounded-xl" />
             ))
           : assets.map((asset) => (
               <BrandAssetThumb

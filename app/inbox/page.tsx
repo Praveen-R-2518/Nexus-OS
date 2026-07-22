@@ -580,7 +580,7 @@ function InboxPageContent() {
                     <button
                       type="button"
                       onClick={() => setOpenInboxConfirm(true)}
-                      className="glass-pill inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-medium text-foreground transition-colors duration-interaction hover:bg-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval"
+                      className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface-muted px-4 py-2 text-[13px] font-medium text-foreground transition-colors duration-interaction hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexus-approval"
                     >
                       <ExternalLink className="h-4 w-4" aria-hidden />
                       Open in {externalInboxLabel(selectedConversation.source)}
@@ -732,7 +732,7 @@ function InboxPageContent() {
                 <button
                   type="button"
                   onClick={() => setOpenInboxConfirm(false)}
-                  className="glass-pill inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-sm font-medium text-foreground hover:bg-glass"
+                  className="inline-flex min-h-11 items-center rounded-xl border border-border-strong bg-surface-muted px-4 py-2 text-sm font-medium text-foreground transition-colors duration-interaction hover:bg-surface-elevated"
                 >
                   Cancel
                 </button>

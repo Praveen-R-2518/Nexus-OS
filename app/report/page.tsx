@@ -135,7 +135,7 @@ function TypewriterSummary({ text }: { text: string | null | undefined }) {
     <p className="whitespace-pre-line font-mono text-sm leading-relaxed text-atmospheric-grey">
       {visibleText}
       {safeText.length > 0 && visibleText.length < safeText.length ? (
-        <span className="ml-0.5 animate-pulse text-status-positive">|</span>
+        <span className="ml-0.5 text-status-positive">|</span>
       ) : null}
     </p>
   );
@@ -480,7 +480,7 @@ export default function ReportPage() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="glass-skeleton h-40 animate-pulse rounded-xl"
+                className="glass-skeleton h-40 rounded-xl"
               />
             ))}
           </div>
@@ -551,7 +551,7 @@ export default function ReportPage() {
                   type="button"
                   onClick={handleExportCsv}
                   disabled={sortedRows.length === 0}
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-execution-border bg-nexus-execution-soft px-4 py-2 text-[13px] font-medium tracking-normal text-nexus-execution transition-colors duration-interaction hover:bg-nexus-execution-soft disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-nexus-execution bg-nexus-execution px-4 py-2 text-[13px] font-medium tracking-normal text-white transition-colors duration-interaction hover:opacity-90 disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-muted disabled:text-muted disabled:opacity-50"
                 >
                   <Download className="h-5 w-5 shrink-0" />
                   Export CSV

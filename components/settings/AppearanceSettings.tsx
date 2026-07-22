@@ -15,8 +15,12 @@ import {
 import { cn } from "@/lib/utils";
 
 function ThemeIcon({ id }: { id: ThemeId }) {
-  if (id === "dark") return <Moon className="h-4 w-4 shrink-0" aria-hidden />;
-  if (id === "light") return <Sun className="h-4 w-4 shrink-0" aria-hidden />;
+  if (id === "swiss-dark" || id === "dark") {
+    return <Moon className="h-4 w-4 shrink-0" aria-hidden />;
+  }
+  if (id === "swiss-light" || id === "light") {
+    return <Sun className="h-4 w-4 shrink-0" aria-hidden />;
+  }
   return <Sparkles className="h-4 w-4 shrink-0" aria-hidden />;
 }
 
@@ -33,8 +37,8 @@ export function AppearanceSettings() {
   if (!mounted) {
     return (
       <div className="space-y-4">
-        <div className="glass-skeleton h-24 animate-pulse rounded-xl" />
-        <div className="glass-skeleton h-20 animate-pulse rounded-xl" />
+        <div className="glass-skeleton h-24 rounded-xl" />
+        <div className="glass-skeleton h-20 rounded-xl" />
       </div>
     );
   }
@@ -43,7 +47,7 @@ export function AppearanceSettings() {
     ? theme
     : isThemeId(resolvedTheme)
       ? resolvedTheme
-      : "dark";
+      : "swiss-dark";
 
   function handleFontScaleChange(scale: FontScale) {
     setFontScale(scale);

@@ -106,7 +106,7 @@ export function PostStatusBoard({ orgId, onNewPost, onOpenPost }: PostStatusBoar
       {isPending ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="glass-skeleton aspect-[4/3] animate-pulse rounded-xl" />
+            <div key={i} className="glass-skeleton aspect-[4/3] rounded-xl" />
           ))}
         </div>
       ) : visible.length === 0 ? (
