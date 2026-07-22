@@ -241,6 +241,5 @@
   "239": "ai_provider.test.ts",
   "240": "20260717131000_n8n_job_token_rpcs.sql",
   "241": "openai_smoke.test.ts",
-  "242": "20260718120000_generic_mailbox_credentials.sql",
-  "243": "outbound-jobs.ts"
+  "242": "20260718120000_generic_mailbox_credentials.sql"
 }
