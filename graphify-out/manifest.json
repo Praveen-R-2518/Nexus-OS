@@ -205,8 +205,8 @@
     "semantic_hash": "a15d6ceccf3f85211ddc7306b43157fd"
   },
   "app/login/page.tsx": {
-    "mtime": 1784731006.015757,
-    "ast_hash": "17421ea56c2ff7f031747c7cad364fa2",
+    "mtime": 1784734083.9220107,
+    "ast_hash": "3a13a9524a7acb8fcbb6776e9de6fcc9",
     "semantic_hash": ""
   },
   "app/not-found.tsx": {
@@ -255,8 +255,8 @@
     "semantic_hash": ""
   },
   "app/signup/page.tsx": {
-    "mtime": 1784730790.8091033,
-    "ast_hash": "50b085bb14c500709c3b3fb7ad3af9e9",
+    "mtime": 1784734144.401801,
+    "ast_hash": "9c13f12b9c515c4050cc33cd8b698654",
     "semantic_hash": ""
   },
   "app/team/page.tsx": {
@@ -295,8 +295,8 @@
     "semantic_hash": "b8af2ca86acae9a5afd76fb54533dda1"
   },
   "components/layout/AppShell.tsx": {
-    "mtime": 1784730605.306995,
-    "ast_hash": "e9593d35427a7b8d178a3cee0814c5ce",
+    "mtime": 1784734000.0234842,
+    "ast_hash": "8e0376a86e7037e4c177cd850678a3bf",
     "semantic_hash": ""
   },
   "components/layout/AppSidebar.tsx": {
@@ -2142,6 +2142,31 @@
   "public/icon.svg": {
     "mtime": 1784353334.974251,
     "ast_hash": "b1163f13d61c88b08d26ce9176d3f424",
+    "semantic_hash": ""
+  },
+  "components/auth/AuthAmbientField.tsx": {
+    "mtime": 1784734038.8029969,
+    "ast_hash": "3f3d9634b9452e08cfcdb24577f157c8",
+    "semantic_hash": ""
+  },
+  "components/auth/AuthBrandPanel.tsx": {
+    "mtime": 1784734045.6362884,
+    "ast_hash": "dfccea96425f37d4129e94d237bffc4e",
+    "semantic_hash": ""
+  },
+  "components/auth/AuthModeToggle.tsx": {
+    "mtime": 1784734027.406028,
+    "ast_hash": "e52af829701577e358124296181ca846",
+    "semantic_hash": ""
+  },
+  "components/auth/AuthSplitLayout.tsx": {
+    "mtime": 1784734046.1050565,
+    "ast_hash": "9376c9600a569050c8a4d4f9019d87f5",
+    "semantic_hash": ""
+  },
+  "lib/auth/brandCopy.ts": {
+    "mtime": 1784734011.694758,
+    "ast_hash": "76d8a5b50efe5d6e9333ad5a9ae790da",
     "semantic_hash": ""
   }
 }

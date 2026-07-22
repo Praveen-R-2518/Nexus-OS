@@ -56,6 +56,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const lightShell = isLightShellRoute(pathname);
+  const authShell = isAuthShellRoute(pathname);
   const isHome = pathname === "/";
   const isSupabaseConfigured = !!(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -76,7 +77,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
           ⚠️ <strong>Supabase Configuration Missing</strong>: Please create a <code>.env.local</code> file in the project root containing your Supabase credentials (see <code>.env.example</code>).
         </div>
       )}
-      {lightShell ? (
+      {authShell ? (
+        <main
+          data-app-body
+          className="nexus-marketing-main flex min-h-dvh w-full flex-1 flex-col bg-white"
+        >
+          {children}
+        </main>
+      ) : lightShell ? (
         <>
           <TopBar />
           <main
