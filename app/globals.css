@@ -1073,6 +1073,126 @@
     color: var(--apple-accent);
   }
 
+  /* ---------------------------------------------------------------
+     Landing page utilities. Light-only by design — no dark variants.
+     One elevation scale for the whole page; depth never comes from blur.
+     --------------------------------------------------------------- */
+  /* Slightly tighter than .apple-hero-headline so the hero's product
+     animation still peeks above the fold on a 900px viewport. */
+  .landing-hero-headline {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+      var(--font-inter), Inter, sans-serif;
+    font-size: clamp(2.35rem, 4.7vw, 4.05rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.04;
+  }
+
+  .landing-section-headline {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+      var(--font-inter), Inter, sans-serif;
+    font-size: clamp(1.85rem, 3.2vw, 2.9rem);
+    font-weight: 600;
+    letter-spacing: -0.018em;
+    line-height: 1.1;
+  }
+
+  .landing-elev-1 {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .landing-elev-2 {
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.1);
+  }
+  .landing-elev-3 {
+    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.14);
+  }
+
+  /* Underline that sweeps in from the left and retreats to the right. */
+  .landing-link {
+    position: relative;
+  }
+  .landing-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .landing-link:hover::after,
+  .landing-link:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  /* Marquee: the track holds two identical halves, so -50% loops seamlessly. */
+  @keyframes landing-marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+  @keyframes landing-marquee-reverse {
+    from {
+      transform: translate3d(-50%, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  .landing-marquee-track {
+    animation: landing-marquee var(--marquee-duration, 46s) linear infinite;
+    will-change: transform;
+  }
+  .landing-marquee-track[data-direction="reverse"] {
+    animation-name: landing-marquee-reverse;
+  }
+  .landing-marquee:hover .landing-marquee-track,
+  .landing-marquee:focus-within .landing-marquee-track {
+    animation-play-state: paused;
+  }
+  .landing-marquee-mask {
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 8%,
+      #000 92%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 8%,
+      #000 92%,
+      transparent
+    );
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-marquee-track {
+      animation: none;
+    }
+    .landing-link::after {
+      transition: none;
+    }
+  }
+
+  /* Nav links stay on one row and scroll horizontally on narrow screens,
+     without a visible scrollbar cutting through the chrome bar. */
+  .nexus-nav-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .nexus-nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
   .apple-chrome-bar {
     background-color: color-mix(in srgb, var(--apple-bg) 78%, transparent);
     border-bottom: 1px solid var(--apple-hairline);
@@ -1104,7 +1224,6 @@
     color: var(--apple-text);
   }
 
-  .dark .landing-full-bleed,
   .dark .marketing-apple-shell {
     --apple-text: #ffffff;
     --apple-text-secondary: #d1d5db;
@@ -1120,6 +1239,41 @@
     --atmospheric-grey: #ffffff;
     --text-primary: #ffffff;
     --text-secondary: #d1d5db;
+  }
+
+  /* The landing page is light-only by design.
+     AppShell puts BOTH .marketing-apple-shell and .landing-full-bleed on the
+     same element for "/", so this needs equal specificity (0,2,0) to the rule
+     above AND to come after it in source order. Do not reorder these two. */
+  .dark .landing-full-bleed {
+    --apple-text: #1d1d1f;
+    --apple-text-secondary: #6e6e73;
+    --apple-bg: #ffffff;
+    --apple-bg-alt: #f5f5f7;
+    --apple-hairline: rgba(0, 0, 0, 0.1);
+    --surface-page: #ffffff;
+    --surface-card: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-muted: #f5f5f7;
+    --border-subtle: rgba(0, 0, 0, 0.1);
+    --foreground: #1d1d1f;
+    --atmospheric-grey: #1d1d1f;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    /* .dark sets these to literal white values, so they must be restated —
+       unlike --app-chrome-bg, they are not derived from --surface-*. */
+    --app-chrome-bg: rgba(255, 255, 255, 0.78);
+    --app-chrome-border: rgba(0, 0, 0, 0.1);
+    color-scheme: light;
+  }
+
+  /* `.dark` recolours the wordmark directly, not through a token. */
+  .dark .landing-full-bleed .logo-nexus {
+    color: var(--text-primary);
+  }
+  .dark .landing-full-bleed .logo-os {
+    color: var(--ref-cta);
+    letter-spacing: 0;
   }
 
   .marketing-apple-shell:not(.landing-full-bleed) {
@@ -1316,38 +1470,9 @@
     border-radius: 8px;
   }
 
-  .ambient-glow {
-    animation: ambient-drift 18s ease-in-out infinite alternate;
-  }
-
-  .ambient-grain {
-    animation: ambient-grain 24s linear infinite;
-  }
-
-  @keyframes ambient-drift {
-    0% {
-      transform: translate(-50%, -50%) scale(1);
-    }
-    100% {
-      transform: translate(-48%, -52%) scale(1.06);
-    }
-  }
-
-  @keyframes ambient-grain {
-    0% {
-      transform: translate(0, 0);
-    }
-    100% {
-      transform: translate(-12px, 8px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ambient-glow,
-    .ambient-grain {
-      animation: none;
-    }
-  }
+  /* The .ambient-glow / .ambient-grain orb-and-noise backdrop was removed with
+     the old hero — the rebuilt landing page gets its depth from hairlines and
+     one elevation scale, not from drifting gradients. */
 }
 
 /* Atmospheric Executive — workspace onboarding (/onboarding) */
