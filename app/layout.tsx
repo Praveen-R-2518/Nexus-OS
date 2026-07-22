@@ -58,20 +58,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} ${sourceSans3.variable} ${inter.variable}`}
+      className={`swiss-dark ${geistSans.variable} ${geistMono.variable} ${sourceSans3.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-surface-page font-chrome text-atmospheric-grey antialiased transition-colors duration-300 dark:bg-obsidian">
         <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var themes=['dark','light','aurora-dark','aurora-light'];var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(themes.indexOf(r)===-1)r='dark';var el=document.documentElement;themes.forEach(function(t){el.classList.remove(t);});el.classList.add(r);}catch(e){document.documentElement.classList.add('dark');}})();`}
+          {`(function(){try{var themes=['swiss-dark','swiss-light','dark','light','aurora-dark','aurora-light'];var k='theme',s=localStorage.getItem(k),r=s;if(!r)r='swiss-dark';if(r==='system')r=window.matchMedia('(prefers-color-scheme: dark)').matches?'swiss-dark':'swiss-light';if(themes.indexOf(r)===-1)r='swiss-dark';var el=document.documentElement;themes.forEach(function(t){el.classList.remove(t);});el.classList.add(r);}catch(e){document.documentElement.classList.add('swiss-dark');}})();`}
         </Script>
         <Script id="font-scale-init" strategy="beforeInteractive">
           {`(function(){try{var k='nexus-ui-font-scale',s=localStorage.getItem(k),v=s;if(v!=='compact'&&v!=='default'&&v!=='comfortable')v='default';document.documentElement.setAttribute('data-font-scale',v);}catch(e){document.documentElement.setAttribute('data-font-scale','default');}})();`}
         </Script>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          themes={["dark", "light", "aurora-dark", "aurora-light"]}
+          defaultTheme="swiss-dark"
+          themes={["swiss-dark", "swiss-light", "dark", "light", "aurora-dark", "aurora-light"]}
           enableSystem
           disableTransitionOnChange
         >

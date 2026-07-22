@@ -754,7 +754,7 @@ export default function ApprovalPage() {
               <button
                 type="button"
                 onClick={() => setRejectingDraft(null)}
-                className="glass-pill inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass hover:text-atmospheric-grey"
+                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-border-strong bg-surface-muted text-muted transition-colors duration-interaction hover:bg-surface-elevated hover:text-atmospheric-grey"
                 aria-label="Close rejection modal"
               >
                 <XCircle className="h-6 w-6" aria-hidden />
@@ -771,7 +771,7 @@ export default function ApprovalPage() {
               />
             </label>
             <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button variant="ghost" onClick={() => setRejectingDraft(null)}>
+              <Button variant="secondary" onClick={() => setRejectingDraft(null)}>
                 Cancel
               </Button>
               <Button

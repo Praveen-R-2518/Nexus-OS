@@ -128,7 +128,7 @@ export default function CommandCenter() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               LIVE INBOX
-              <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-white/50"></span>
             </h2>
             <a href="/inbox" className="text-gray-400 text-sm hover:underline">
               Open inbox →

@@ -138,7 +138,7 @@ export default function LogsPage() {
       {isPending ? (
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="glass-skeleton h-12 animate-pulse rounded-xl" />
+            <div key={i} className="glass-skeleton h-12 rounded-xl" />
           ))}
         </div>
       ) : rows.length === 0 ? (

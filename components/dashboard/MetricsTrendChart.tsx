@@ -56,7 +56,7 @@ function formatDateLabel(date: string): string {
 
 export function MetricsTrendChartSkeleton() {
   return (
-    <div className="glass-skeleton h-[320px] animate-pulse rounded-xl" aria-hidden />
+    <div className="glass-skeleton h-[320px] rounded-xl" aria-hidden />
   );
 }
 

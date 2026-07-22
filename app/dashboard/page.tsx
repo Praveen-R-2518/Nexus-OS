@@ -91,7 +91,7 @@ function MetricsSkeletonRow() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="glass-skeleton h-36 animate-pulse rounded-xl"
+          className="glass-skeleton h-36 rounded-xl"
         />
       ))}
     </div>
@@ -104,7 +104,7 @@ function FeedSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="glass-skeleton flex animate-pulse gap-3 rounded-xl p-3"
+          className="glass-skeleton flex gap-3 rounded-xl p-3"
         >
           <div className="glass-skeleton h-6 w-14 shrink-0 rounded-md" />
           <div className="min-w-0 flex-1 space-y-2">
@@ -120,7 +120,7 @@ function FeedSkeleton() {
 
 function SideCardSkeleton() {
   return (
-    <div className="glass-skeleton animate-pulse rounded-xl p-4">
+    <div className="glass-skeleton rounded-xl p-4">
       <div className="glass-skeleton mb-4 h-4 w-36 rounded-md" />
       <div className="space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -322,7 +322,6 @@ export default function DashboardPage() {
                 icon={<TrendingDown />}
                 variant="critical"
                 accent="text-status-critical"
-                className="animate-fade-up [animation-delay:0ms]"
               />
               <Card
                 title="Hot Leads"
@@ -331,7 +330,6 @@ export default function DashboardPage() {
                 icon={<Flame />}
                 variant="critical"
                 accent="text-nexus-intake"
-                className="animate-fade-up [animation-delay:75ms]"
               />
               <Card
                 title="Churn Risks"
@@ -340,7 +338,6 @@ export default function DashboardPage() {
                 icon={<AlertTriangle />}
                 variant="support"
                 accent="text-nexus-rescue"
-                className="animate-fade-up [animation-delay:150ms]"
               />
               <Card
                 title="Hours Saved"
@@ -349,7 +346,6 @@ export default function DashboardPage() {
                 icon={<Clock />}
                 variant="support"
                 accent="text-nexus-execution"
-                className="animate-fade-up [animation-delay:225ms]"
               />
             </div>
           ) : (
@@ -450,7 +446,7 @@ export default function DashboardPage() {
                           "flex flex-col gap-4 px-5 py-4 transition-colors sm:flex-row sm:items-center sm:gap-5",
                           c.urgency === "critical" &&
                             "bg-status-critical-surface/60 dark:bg-status-critical-surface/40",
-                          highlighted && "animate-slide-down-row",
+                          highlighted && "bg-nexus-approval-soft",
                         )}
                       >
                         <div className="flex min-w-0 flex-1 items-start gap-4">
@@ -491,7 +487,7 @@ export default function DashboardPage() {
                           </time>
                           <Link
                             href={`/inbox?id=${encodeURIComponent(c.id)}`}
-                            className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-atmospheric-grey transition-colors duration-interaction hover:border-nexus-approval hover:bg-glass"
+                            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border-strong bg-surface-muted text-atmospheric-grey transition-colors duration-interaction hover:bg-surface-elevated hover:border-nexus-approval"
                             aria-label={`Open ${c.customer_name} in inbox`}
                           >
                             <ArrowRight className="h-5 w-5" />

@@ -5,6 +5,7 @@ import { Moon, Sun, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   getAlternateTheme,
+  isAuroraTheme,
   isThemeId,
   type ThemeId,
 } from "@/lib/appearance-prefs";
@@ -25,10 +26,12 @@ export function ThemeToggle({ className }: { className?: string }) {
     ? theme
     : isThemeId(resolvedTheme)
       ? resolvedTheme
-      : "dark";
-  const isAurora = activeTheme.startsWith("aurora");
+      : "swiss-dark";
+  const isAurora = isAuroraTheme(activeTheme);
   const isDarkFamily =
-    activeTheme === "dark" || activeTheme === "aurora-dark";
+    activeTheme === "dark" ||
+    activeTheme === "aurora-dark" ||
+    activeTheme === "swiss-dark";
 
   function handleToggle() {
     const next = getAlternateTheme(activeTheme as ThemeId);

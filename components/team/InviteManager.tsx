@@ -220,7 +220,7 @@ export function InviteManager() {
         ) : isPending ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="glass-skeleton h-12 animate-pulse rounded-lg" />
+              <div key={i} className="glass-skeleton h-12 rounded-lg" />
             ))}
           </div>
         ) : invites.length === 0 ? (

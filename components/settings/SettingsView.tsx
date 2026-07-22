@@ -178,7 +178,7 @@ function SettingsSkeleton() {
   return (
     <div className="space-y-6">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="glass-skeleton h-48 animate-pulse rounded-xl" />
+        <div key={i} className="glass-skeleton h-48 rounded-xl" />
       ))}
     </div>
   );

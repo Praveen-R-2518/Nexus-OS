@@ -2,13 +2,21 @@ export const FONT_SCALE_STORAGE_KEY = "nexus-ui-font-scale";
 
 export type FontScale = "compact" | "default" | "comfortable";
 
-export type ThemeId = "dark" | "light" | "aurora-dark" | "aurora-light";
+export type ThemeId =
+  | "dark"
+  | "light"
+  | "aurora-dark"
+  | "aurora-light"
+  | "swiss-dark"
+  | "swiss-light";
 
 export const THEME_OPTIONS: {
   id: ThemeId;
   label: string;
   description: string;
 }[] = [
+  { id: "swiss-dark", label: "Swiss Night", description: "Matte black, hairline precision" },
+  { id: "swiss-light", label: "Swiss Day", description: "Paper-white, Swiss-precision workspace" },
   { id: "dark", label: "Command Night", description: "Deep obsidian workspace" },
   { id: "light", label: "Signal Day", description: "Bright glass workspace" },
   { id: "aurora-dark", label: "Aurora Night", description: "Cool navy command surface" },
@@ -20,11 +28,15 @@ export function isThemeId(value: string | null | undefined): value is ThemeId {
     value === "dark" ||
     value === "light" ||
     value === "aurora-dark" ||
-    value === "aurora-light"
+    value === "aurora-light" ||
+    value === "swiss-dark" ||
+    value === "swiss-light"
   );
 }
 
 export function getAlternateTheme(theme: ThemeId): ThemeId {
+  if (theme === "swiss-dark") return "swiss-light";
+  if (theme === "swiss-light") return "swiss-dark";
   if (theme === "aurora-dark") return "aurora-light";
   if (theme === "aurora-light") return "aurora-dark";
   if (theme === "light") return "dark";
@@ -33,6 +45,10 @@ export function getAlternateTheme(theme: ThemeId): ThemeId {
 
 export function isAuroraTheme(theme: string | undefined): boolean {
   return theme === "aurora-dark" || theme === "aurora-light";
+}
+
+export function isSwissTheme(theme: string | undefined): boolean {
+  return theme === "swiss-dark" || theme === "swiss-light";
 }
 
 export const FONT_SCALE_OPTIONS: {
