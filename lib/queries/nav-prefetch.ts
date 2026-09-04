@@ -3,7 +3,14 @@ import type { TenantScopeValue } from "@/components/tenant/TenantScope";
 import {
   conversationsQuery,
   dailyReportQuery,
+  EMPLOYEES_PAGE_SIZE,
+  CANDIDATES_PAGE_SIZE,
+  candidatesQuery,
+  employeesQuery,
+  JOBS_PAGE_SIZE,
+  jobsQuery,
   metricsQuery,
+  PEOPLE_EMAIL_PICKER_LIMIT,
   replyDraftsQuery,
   settingsQuery,
 } from "@/lib/queries/fetchers";
@@ -68,6 +75,84 @@ export function prefetchNavRoute(
     void queryClient.prefetchQuery({
       queryKey: queryKeys.conversations(teamId, 100),
       queryFn: () => conversationsQuery(100),
+      staleTime: STALE,
+    });
+    return;
+  }
+
+  if (href === "/people/email" || href.startsWith("/people/email")) {
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.employees(
+        teamId,
+        "",
+        "",
+        false,
+        PEOPLE_EMAIL_PICKER_LIMIT,
+        0,
+      ),
+      queryFn: () =>
+        employeesQuery({ limit: PEOPLE_EMAIL_PICKER_LIMIT, offset: 0 }),
+      staleTime: STALE,
+    });
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.candidates(
+        teamId,
+        "",
+        "",
+        false,
+        PEOPLE_EMAIL_PICKER_LIMIT,
+        0,
+      ),
+      queryFn: () =>
+        candidatesQuery({ limit: PEOPLE_EMAIL_PICKER_LIMIT, offset: 0 }),
+      staleTime: STALE,
+    });
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.settings(teamId),
+      queryFn: settingsQuery,
+      staleTime: STALE,
+    });
+    return;
+  }
+
+  if (href === "/people/jobs" || href.startsWith("/people/jobs")) {
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.jobs(teamId, "", "", false, JOBS_PAGE_SIZE, 0),
+      queryFn: () => jobsQuery({ limit: JOBS_PAGE_SIZE, offset: 0 }),
+      staleTime: STALE,
+    });
+    return;
+  }
+
+  if (href === "/people/candidates" || href.startsWith("/people/candidates")) {
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.candidates(
+        teamId,
+        "",
+        "",
+        false,
+        CANDIDATES_PAGE_SIZE,
+        0,
+      ),
+      queryFn: () =>
+        candidatesQuery({ limit: CANDIDATES_PAGE_SIZE, offset: 0 }),
+      staleTime: STALE,
+    });
+    return;
+  }
+
+  if (href === "/people" || href.startsWith("/people")) {
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.employees(
+        teamId,
+        "",
+        "",
+        false,
+        EMPLOYEES_PAGE_SIZE,
+        0,
+      ),
+      queryFn: () =>
+        employeesQuery({ limit: EMPLOYEES_PAGE_SIZE, offset: 0 }),
       staleTime: STALE,
     });
     return;

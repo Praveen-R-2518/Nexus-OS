@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   JSON_LIMITS,
   jsonError,
@@ -10,7 +11,7 @@ import {
 import type { Platform } from "@/lib/posts/types";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 /** Resolve the WF8b publish webhook (server-only). Path matches the live WF8b. */
 function publishWebhookUrl(): string | null {
@@ -120,12 +121,44 @@ export async function POST(request: Request) {
     });
     if (!res.ok) {
       console.error(`[posts/publish] WF8b responded ${res.status}`);
+      await markPublishFailed(
+        org.supabase,
+        org.organizationId,
+        postId,
+        `Publishing failed to start (${res.status})`,
+      );
       return jsonError("Publishing failed to start", 502);
     }
   } catch (e) {
     console.error("[posts/publish]", e instanceof Error ? e.message : e);
+    await markPublishFailed(
+      org.supabase,
+      org.organizationId,
+      postId,
+      e instanceof Error ? e.message : "Publishing failed to start",
+    );
     return jsonError("Publishing failed to start", 502);
   }
 
   return NextResponse.json({ ok: true, status: "publishing" });
+}
+
+async function markPublishFailed(
+  supabase: SupabaseClient,
+  organizationId: string,
+  postId: string,
+  reason: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("social_posts")
+    .update({
+      status: "failed",
+      publish_error: reason.slice(0, 500),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", postId)
+    .eq("organization_id", organizationId);
+  if (error) {
+    console.error("[posts/publish] failed to write failed status:", error.message);
+  }
 }

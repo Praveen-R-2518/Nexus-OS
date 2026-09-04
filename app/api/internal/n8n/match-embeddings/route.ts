@@ -6,12 +6,12 @@ import {
   readJsonObjectWithLimit,
   requireN8nJobOrBootstrapToken,
 } from "@/lib/api-security";
+import { DEFAULT_KNOWLEDGE_KINDS, matchKnowledge, type EmbeddingKind } from "@/lib/embeddings/store";
 import { createServerClient } from "@/lib/supabase";
-import { matchKnowledge, type EmbeddingKind } from "@/lib/embeddings/store";
 
 export const dynamic = "force-dynamic";
 
-const KINDS: readonly EmbeddingKind[] = ["business_doc", "summary", "conversation"];
+const KINDS: readonly EmbeddingKind[] = DEFAULT_KNOWLEDGE_KINDS;
 const MAX_QUERY_LEN = 4000;
 const MAX_LIMIT = 12;
 

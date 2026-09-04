@@ -55,7 +55,7 @@ function CopyLinkButton({ token }: { token: string }) {
     <button
       type="button"
       onClick={() => void copy()}
-      className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-nexus-intake transition-colors hover:bg-glass"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-nexus-intake transition-colors hover:bg-glass"
     >
       {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
       {copied ? "Copied" : "Copy link"}
@@ -138,7 +138,7 @@ export function InviteManager() {
     <div className="min-h-0 space-y-10">
       <header className="hairline-b pb-8">
         <p className="nexus-meta text-nexus-approval">Settings</p>
-        <h1 className="mt-3 nexus-app-title text-atmospheric-grey">Team</h1>
+        <h1 className="mt-3 nexus-app-title text-balance text-atmospheric-grey">Team</h1>
         <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
           Invite teammates to your organization. Share the generated link. Anyone
           who signs up with it joins this organization automatically.
@@ -228,7 +228,26 @@ export function InviteManager() {
             No invites yet. Invite your first teammate above.
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <ul className="divide-y divide-border/60 md:hidden">
+              {invites.map((inv) => (
+                <li key={inv.id} className="flex flex-col gap-2 px-4 py-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 truncate text-sm font-medium text-atmospheric-grey">
+                      {inv.email}
+                    </p>
+                    <StatusPill status={inv.status} />
+                  </div>
+                  <p className="text-sm capitalize text-muted">
+                    {inv.role} · {formatRelativeTime(inv.created_at)}
+                  </p>
+                  {inv.status === "pending" ? (
+                    <CopyLinkButton token={inv.token} />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[36rem] text-left text-sm">
               <thead>
                 <tr className="text-muted">
@@ -262,6 +281,7 @@ export function InviteManager() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>

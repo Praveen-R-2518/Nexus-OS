@@ -4,9 +4,12 @@
  *
  * Proves, entirely from an in-memory Supabase fake + a FAKE OpenAI client:
  *  A. aggregateSnapshot computes correct aggregates from raw rows (pure).
- *  B. buildAnalystContext is tenant-scoped: team A never sees team B's data (isolation).
- *  C. An empty tenant yields the graceful empty snapshot (isEmpty, all-zero totals).
- *  D. System-prompt assembly injects business context + forbids fabrication + read-only rules.
+ *  A2. aggregatePeopleSnapshot: stats, open jobs, awaiting-review order, archived excluded.
+ *  B. buildAnalystContext is tenant-scoped: team A never sees team B's data (isolation),
+ *     including People employees/candidates.
+ *  C. An empty tenant yields the graceful empty snapshot (isEmpty, all-zero totals, empty People).
+ *  D. System-prompt assembly injects business context + forbids fabrication + read-only rules,
+ *     including People (no "I emailed them" / no employee updates).
  *  E. Route smoke test: POST /api/chat streams the (fake) reply and persists user + assistant
  *     messages to chat_messages, creating a chat_sessions row — with a fake OpenAI + fake tenant.
  *
@@ -31,6 +34,10 @@ function newStore(): Store {
     business_profiles: [],
     chat_sessions: [],
     chat_messages: [],
+    employees: [],
+    jobs: [],
+    candidates: [],
+    candidate_jobs: [],
   };
 }
 
@@ -230,9 +237,8 @@ function post(POST: (r: Request) => Promise<Response>, body: Record<string, unkn
 }
 
 (async () => {
-  const { aggregateSnapshot, buildAnalystContext, emptySnapshot } = await import(
-    "@/lib/chat/analyst-context"
-  );
+  const { aggregatePeopleSnapshot, aggregateSnapshot, buildAnalystContext, emptySnapshot } =
+    await import("@/lib/chat/analyst-context");
   const { buildAnalystSystemPrompt } = await import("@/lib/chat/system-prompt");
 
   // ==============================================================================================
@@ -259,6 +265,59 @@ function post(POST: (r: Request) => Promise<Response>, body: Record<string, unkn
   assert(snap.hotLeads[0]?.customerName === "Priya" && snap.hotLeads[0]?.estimatedValue === 9000, "A: top hot lead by value");
   assert(snap.hotLeads.every((l) => l.customerName !== "Closed"), "A: terminal row excluded from hot leads list");
   assert(snap.churnRisk.length === 1 && snap.churnRisk[0]?.customerName === "Priya", "A: churn list");
+  assert(snap.people.isEmpty === true, "A: inbox-only aggregate has empty People");
+
+  // ==============================================================================================
+  // A2. aggregatePeopleSnapshot — pure People aggregates.
+  const peopleSnap = aggregatePeopleSnapshot(
+    [
+      { full_name: "Riley Chen", employment_status: "active", archived_at: null },
+      { full_name: "Sam Onboard", employment_status: "onboarding", archived_at: null },
+      { full_name: "Ghost", employment_status: "active", archived_at: "2026-01-01T00:00:00Z" },
+    ],
+    [
+      { id: "job-fe", title: "Frontend Engineer", status: "open", location: "Remote", archived_at: null },
+      { id: "job-sup", title: "Support Lead", status: "open", location: null, archived_at: null },
+      { id: "job-draft", title: "Secret", status: "draft", location: null, archived_at: null },
+      { id: "job-old", title: "Archived Role", status: "open", location: null, archived_at: "2026-02-01T00:00:00Z" },
+    ],
+    [
+      { id: "cand-maya", full_name: "Maya Singh", archived_at: null },
+      { id: "cand-nia", full_name: "Nia Park", archived_at: null },
+      { id: "cand-kai", full_name: "Kai Lopez", archived_at: null },
+      { id: "cand-zoe", full_name: "Zoe Reed", archived_at: null },
+      { id: "cand-old", full_name: "Archived Candidate", archived_at: "2026-03-01T00:00:00Z" },
+    ],
+    [
+      { candidate_id: "cand-maya", job_id: "job-fe", stage: "new", match_score: 88, data_quality: "sufficient" },
+      { candidate_id: "cand-nia", job_id: "job-fe", stage: "new", match_score: 40, data_quality: "pending" },
+      { candidate_id: "cand-kai", job_id: "job-fe", stage: "shortlisted", match_score: 70, data_quality: "sufficient" },
+      { candidate_id: "cand-zoe", job_id: "job-fe", stage: "new", match_score: null, data_quality: "pending" },
+      { candidate_id: "cand-old", job_id: "job-fe", stage: "new", match_score: 99, data_quality: "sufficient" },
+      { candidate_id: "cand-maya", job_id: "job-old", stage: "new", match_score: 91, data_quality: "sufficient" },
+    ],
+  );
+  assert(peopleSnap.isEmpty === false, "A2: People not empty");
+  assert(peopleSnap.totals.employees === 2, `A2: employees = 2 (got ${peopleSnap.totals.employees})`);
+  assert(peopleSnap.totals.employeesByStatus.active === 1, "A2: one active employee");
+  assert(peopleSnap.totals.employeesByStatus.onboarding === 1, "A2: one onboarding employee");
+  assert(peopleSnap.totals.jobs === 3, `A2: jobs = 3 non-archived (got ${peopleSnap.totals.jobs})`);
+  assert(peopleSnap.totals.jobsOpen === 2, "A2: two open jobs");
+  assert(peopleSnap.totals.candidates === 4, "A2: four active candidates");
+  assert(peopleSnap.totals.applications === 4, `A2: 4 applications on active pairs (got ${peopleSnap.totals.applications})`);
+  assert(peopleSnap.totals.byStage.new === 3 && peopleSnap.totals.byStage.shortlisted === 1, "A2: stage histogram");
+  assert(peopleSnap.totals.awaitingReview === 3, "A2: awaiting review count is all stage=new");
+  assert(peopleSnap.openJobs[0]?.title === "Frontend Engineer", "A2: top open job by candidate count");
+  assert(peopleSnap.openJobs[0]?.candidateCount === 4, `A2: FE candidate count (got ${peopleSnap.openJobs[0]?.candidateCount})`);
+  assert(peopleSnap.openJobs.some((j) => j.title === "Support Lead" && j.candidateCount === 0), "A2: empty open job listed");
+  assert(peopleSnap.openJobs.every((j) => j.title !== "Secret" && j.title !== "Archived Role"), "A2: draft/archived jobs not in openJobs");
+  assert(peopleSnap.awaitingReview[0]?.candidateName === "Maya Singh", "A2: highest score first");
+  assert(peopleSnap.awaitingReview[0]?.matchScore === 88, "A2: Maya score 88");
+  assert(peopleSnap.awaitingReview[1]?.candidateName === "Nia Park" && peopleSnap.awaitingReview[1]?.matchScore === 40, "A2: Nia 40 second");
+  assert(peopleSnap.awaitingReview[2]?.candidateName === "Zoe Reed" && peopleSnap.awaitingReview[2]?.matchScore === null, "A2: null scores last");
+  assert(peopleSnap.awaitingReview.every((r) => r.candidateName !== "Kai Lopez"), "A2: shortlisted excluded from awaiting review");
+  assert(peopleSnap.awaitingReview.every((r) => r.candidateName !== "Archived Candidate"), "A2: archived candidate excluded");
+  assert(!JSON.stringify(peopleSnap).includes("Ghost"), "A2: archived employee excluded");
 
   // ==============================================================================================
   // B. buildAnalystContext — tenant isolation.
@@ -279,6 +338,22 @@ function post(POST: (r: Request) => Promise<Response>, body: Record<string, unkn
     { id: "bpA", team_id: TEAM_A, name: "Acme Realty", industry: "Real estate", tone: "warm, concise", services: ["Leasing", "Sales"], approval_mode: "approval_queue", created_at: "2026-01-01T00:00:00Z" } as Row,
     { id: "bpB", team_id: TEAM_B, name: "Beta Corp", industry: "SaaS", tone: "formal", services: ["Onboarding"], approval_mode: "auto", created_at: "2026-01-01T00:00:00Z" } as Row,
   );
+  store.employees.push(
+    { id: "eA", team_id: TEAM_A, full_name: "Riley Chen", employment_status: "active", archived_at: null, created_at: "2026-04-01T00:00:00Z" } as Row,
+    { id: "eB", team_id: TEAM_B, full_name: "B-Spy", employment_status: "active", archived_at: null, created_at: "2026-04-01T00:00:00Z" } as Row,
+  );
+  store.jobs.push(
+    { id: "jobA", team_id: TEAM_A, title: "Frontend Engineer", status: "open", location: "Remote", archived_at: null, created_at: "2026-04-02T00:00:00Z" } as Row,
+    { id: "jobB", team_id: TEAM_B, title: "B-Secret Role", status: "open", location: null, archived_at: null, created_at: "2026-04-02T00:00:00Z" } as Row,
+  );
+  store.candidates.push(
+    { id: "candA", team_id: TEAM_A, full_name: "Maya Singh", archived_at: null, created_at: "2026-04-03T00:00:00Z" } as Row,
+    { id: "candB", team_id: TEAM_B, full_name: "B-Mole", archived_at: null, created_at: "2026-04-03T00:00:00Z" } as Row,
+  );
+  store.candidate_jobs.push(
+    { id: "cjA", team_id: TEAM_A, candidate_id: "candA", job_id: "jobA", stage: "new", match_score: 88, data_quality: "sufficient", created_at: "2026-04-04T00:00:00Z" } as Row,
+    { id: "cjB", team_id: TEAM_B, candidate_id: "candB", job_id: "jobB", stage: "new", match_score: 12, data_quality: "pending", created_at: "2026-04-04T00:00:00Z" } as Row,
+  );
 
   const ctxA = await buildAnalystContext({ supabase: fake as never, teamId: TEAM_A });
   assert(ctxA.snapshot.totals.conversations === 2, "B: team A sees only its 2 conversations");
@@ -286,11 +361,23 @@ function post(POST: (r: Request) => Promise<Response>, body: Record<string, unkn
   assert(ctxA.snapshot.totals.pendingDrafts === 1, "B: team A pending drafts = 1");
   assert(ctxA.business?.name === "Acme Realty", "B: team A business profile");
   assert(!JSON.stringify(ctxA.snapshot).includes("B-Whale"), "B: no cross-tenant customer leak");
+  assert(ctxA.snapshot.people.totals.employees === 1, "B: team A employee count");
+  assert(ctxA.snapshot.people.openJobs[0]?.title === "Frontend Engineer", "B: team A open job");
+  assert(ctxA.snapshot.people.awaitingReview[0]?.candidateName === "Maya Singh", "B: team A candidate");
+  assert(!JSON.stringify(ctxA.snapshot.people).includes("B-Spy"), "B: no cross-tenant employee leak");
+  assert(!JSON.stringify(ctxA.snapshot.people).includes("B-Mole"), "B: no cross-tenant candidate leak");
+  assert(!JSON.stringify(ctxA.snapshot.people).includes("B-Secret"), "B: no cross-tenant job leak");
 
   const ctxB = await buildAnalystContext({ supabase: fake as never, teamId: TEAM_B });
   assert(ctxB.snapshot.totals.conversations === 1, "B: team B sees only its 1 conversation");
   assert(ctxB.snapshot.totals.revenueAtRisk === 999999, "B: team B revenue isolated");
   assert(ctxB.business?.name === "Beta Corp", "B: team B business profile");
+  assert(ctxB.snapshot.people.totals.employees === 1, "B: team B employee isolated");
+  assert(JSON.stringify(ctxB.snapshot.people).includes("B-Secret Role"), "B: team B sees its job");
+  assert(JSON.stringify(ctxB.snapshot.people).includes("B-Mole"), "B: team B sees its candidate");
+  assert(!JSON.stringify(ctxB.snapshot.people).includes("Riley Chen"), "B: team B does not see team A employee");
+  assert(!JSON.stringify(ctxB.snapshot.people).includes("Maya Singh"), "B: team B does not see team A candidate");
+  assert(!JSON.stringify(ctxB.snapshot.people).includes("Frontend Engineer"), "B: team B does not see team A job");
 
   // ==============================================================================================
   // C. Empty tenant → graceful empty snapshot.
@@ -298,7 +385,10 @@ function post(POST: (r: Request) => Promise<Response>, body: Record<string, unkn
   assert(ctxEmpty.snapshot.isEmpty === true, "C: empty tenant isEmpty");
   assert(ctxEmpty.snapshot.totals.conversations === 0 && ctxEmpty.snapshot.totals.revenueAtRisk === 0, "C: empty totals zero");
   assert(ctxEmpty.business === null, "C: empty tenant has no business profile");
+  assert(ctxEmpty.snapshot.people.isEmpty === true, "C: empty tenant has empty People");
+  assert(ctxEmpty.snapshot.people.totals.employees === 0, "C: empty People employee count");
   assert(emptySnapshot().isEmpty === true, "C: emptySnapshot helper");
+  assert(emptySnapshot().people.isEmpty === true, "C: emptySnapshot People empty");
 
   // ==============================================================================================
   // D. System-prompt assembly.
@@ -308,8 +398,15 @@ function post(POST: (r: Request) => Promise<Response>, body: Record<string, unkn
   assert(/NEVER fabricate/i.test(prompt), "D: prompt forbids fabrication");
   assert(/READ-ONLY/i.test(prompt), "D: prompt states read-only");
   assert(/never claim to have sent/i.test(prompt), "D: prompt forbids claiming to have sent");
+  assert(prompt.includes("Maya Singh"), "D: prompt includes candidate from People snapshot");
+  assert(prompt.includes("Frontend Engineer"), "D: prompt includes open job from People snapshot");
+  assert(prompt.includes('"employees":1'), "D: prompt includes People employee count");
+  assert(/DATA SNAPSHOT\.people/i.test(prompt), "D: prompt cites People numbers from snapshot.people");
+  assert(/NEVER claim to have emailed/i.test(prompt), "D: prompt forbids claiming to have emailed");
+  assert(/updated an employee/i.test(prompt), "D: prompt forbids updating an employee");
   const emptyPrompt = buildAnalystSystemPrompt(ctxEmpty);
   assert(/no conversations yet|empty/i.test(emptyPrompt), "D: empty prompt states inbox empty");
+  assert(/no People data yet|do not invent employees/i.test(emptyPrompt), "D: empty prompt states People empty");
 
   // ==============================================================================================
   // E. Route smoke test — fake OpenAI + fake tenant.

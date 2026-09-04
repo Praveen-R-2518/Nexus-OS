@@ -1,0 +1,91 @@
+{
+  "id": "d1CkkuSDwsZKVhQq",
+  "name": "WF9 People Match Drain",
+  "active": true,
+  "note": "K1 2026-09-03: no scoring, OpenAI, or Supabase service-role in n8n. Schedule every 15 min → POST {NEXUS_APP_URL}/api/internal/people/jobs/run with N8N_BOOTSTRAP_TOKEN (or legacy N8N_INGEST_TOKEN). App claims queued people.match rows and runs D2/D3/D4 in-process.",
+  "nodes": [
+    {
+      "id": "sn-wf9",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "content": "## Nexus OS — WF9 People Match Drain\n\nPOST `/api/internal/people/jobs/run` with bootstrap token.\nThe app claims queued `people.match` jobs and scores in Nexus — n8n must not compute scores, call OpenAI, or use Supabase REST.\n\n**Required n8n Variables:** `NEXUS_APP_URL`, `N8N_BOOTSTRAP_TOKEN` (or legacy `N8N_INGEST_TOKEN`).\n\n**Do NOT** use Supabase service-role credentials in this workflow.",
+        "height": 280,
+        "width": 460
+      }
+    },
+    {
+      "id": "schedule-wf9",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [240, 240],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "drain-wf9",
+      "name": "Drain People Match Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [480, 240],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '') + '/api/internal/people/jobs/run' }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($vars.N8N_BOOTSTRAP_TOKEN || $vars.N8N_INGEST_TOKEN || '').trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { limit: 5 } }}",
+        "options": {
+          "timeout": 300000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Drain People Match Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
+}

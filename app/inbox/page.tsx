@@ -21,6 +21,8 @@ import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
+import { MobileBackButton } from "@/components/layout/MobileBackButton";
+import { useLgUp } from "@/components/layout/useLgUp";
 import { conversationDraftsQuery, conversationsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
 import type { Conversation } from "@/types";
@@ -158,12 +160,96 @@ function timelineCompletion(status: Conversation["status"]): {
   };
 }
 
+function InboxFilterGroups({
+  activeUrgencyFilter,
+  activeIntentFilter,
+  urgencyCounts,
+  intentCounts,
+  onUrgency,
+  onIntent,
+}: {
+  activeUrgencyFilter: UrgencyFilter;
+  activeIntentFilter: IntentFilter;
+  urgencyCounts: Record<string, number>;
+  intentCounts: Record<string, number>;
+  onUrgency: (value: UrgencyFilter) => void;
+  onIntent: (value: IntentFilter) => void;
+}) {
+  return (
+    <>
+      <div>
+        <p className="mb-2 nexus-meta text-muted">Urgency</p>
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="flex w-max gap-2 lg:w-full lg:flex-wrap">
+            {URGENCY_OPTIONS.map((opt) => {
+              const active = activeUrgencyFilter === opt.value;
+              const count = urgencyCounts[opt.value] ?? 0;
+              return (
+                <FilterChip
+                  key={opt.label + opt.value}
+                  active={active}
+                  accent="intake"
+                  onClick={() => onUrgency(opt.value)}
+                >
+                  {opt.label}
+                  <span
+                    className={cn(
+                      "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
+                      active
+                        ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
+                        : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
+                    )}
+                  >
+                    {count}
+                  </span>
+                </FilterChip>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      <div>
+        <p className="mb-2 nexus-meta text-muted">Intent</p>
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="flex w-max gap-2 lg:w-full lg:flex-wrap">
+            {INTENT_OPTIONS.map((opt) => {
+              const active = activeIntentFilter === opt.value;
+              const pillCount = intentCounts[opt.value] ?? 0;
+              return (
+                <FilterChip
+                  key={opt.label}
+                  active={active}
+                  accent="intake"
+                  onClick={() => onIntent(opt.value)}
+                >
+                  {opt.label}
+                  <span
+                    className={cn(
+                      "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
+                      active
+                        ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
+                        : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
+                    )}
+                  >
+                    {pillCount}
+                  </span>
+                </FilterChip>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function InboxPageContent() {
   const searchParams = useSearchParams();
   const prevQsRef = useRef<string | null>(null);
   const tenant = useTenantScope();
   const teamId = tenant.teamId;
   const queriesEnabled = tenant.ready && teamId !== null;
+  const lgUp = useLgUp();
 
   const {
     data: conversations = [],
@@ -261,15 +347,19 @@ function InboxPageContent() {
     const stillValid = selectedConversationId
       ? filteredConversations.some((c) => c.id === selectedConversationId)
       : false;
-    if (!stillValid) {
+    if (stillValid) return;
+    if (lgUp) {
       setSelectedConversationId(filteredConversations[0]!.id);
+      return;
     }
+    setSelectedConversationId(null);
   }, [
     filteredConversations,
     listLoading,
     queriesEnabled,
     selectedConversationId,
     searchParams,
+    lgUp,
   ]);
 
   useEffect(() => {
@@ -360,14 +450,19 @@ function InboxPageContent() {
           Could not refresh inbox: {listError}
         </p>
       ) : null}
-      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-      <aside className="app-glass-card flex h-full min-h-0 w-[400px] shrink-0 flex-col overflow-hidden rounded-xl">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+      <aside
+        className={cn(
+          "app-glass-card flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-xl lg:w-[400px]",
+          selectedConversation ? "hidden lg:flex" : "flex",
+        )}
+      >
         <div className="shrink-0 px-3 pt-3 pb-2">
           <div className="glass-pill rounded-xl p-4">
             <p className="nexus-meta text-muted">
               Revenue at Risk
             </p>
-            <p className="mt-2 font-sans text-3xl font-bold tabular-nums tracking-normal text-status-critical sm:text-4xl">
+            <p className="mt-2 min-w-0 break-all font-sans text-2xl font-bold tabular-nums tracking-normal text-status-critical sm:text-4xl">
               {formatCurrency(revenueAtRisk)}
             </p>
             <p className="mt-1.5 text-sm text-muted">
@@ -376,69 +471,37 @@ function InboxPageContent() {
           </div>
         </div>
 
-        <div className="max-h-[min(38vh,320px)] shrink-0 space-y-4 overflow-y-auto overscroll-y-contain hairline-b p-4">
-          <div>
-            <p className="mb-2 nexus-meta text-muted">
-              Urgency
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {URGENCY_OPTIONS.map((opt) => {
-                const active = activeUrgencyFilter === opt.value;
-                const count = urgencyCounts[opt.value] ?? 0;
-                return (
-                  <FilterChip
-                    key={opt.label + opt.value}
-                    active={active}
-                    accent="intake"
-                    onClick={() => setActiveUrgencyFilter(opt.value)}
-                  >
-                    {opt.label}
-                    <span
-                      className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
-                        active
-                          ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
-                      )}
-                    >
-                      {count}
-                    </span>
-                  </FilterChip>
-                );
-              })}
-            </div>
+        <details className="shrink-0 hairline-b lg:hidden">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 py-2 text-sm font-medium text-atmospheric-grey marker:content-none [&::-webkit-details-marker]:hidden">
+            <span>Filters</span>
+            {activeUrgencyFilter || activeIntentFilter ? (
+              <span className="rounded-lg border border-nexus-intake-border bg-nexus-intake-soft px-2 py-0.5 font-mono text-xs text-nexus-intake">
+                On
+              </span>
+            ) : (
+              <span className="text-xs text-muted">Urgency & intent</span>
+            )}
+          </summary>
+          <div className="space-y-4 px-4 pb-4">
+            <InboxFilterGroups
+              activeUrgencyFilter={activeUrgencyFilter}
+              activeIntentFilter={activeIntentFilter}
+              urgencyCounts={urgencyCounts}
+              intentCounts={intentCounts}
+              onUrgency={setActiveUrgencyFilter}
+              onIntent={setActiveIntentFilter}
+            />
           </div>
-          <div>
-            <p className="mb-2 nexus-meta text-muted">
-              Intent
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {INTENT_OPTIONS.map((opt) => {
-                const active = activeIntentFilter === opt.value;
-                const pillCount = intentCounts[opt.value] ?? 0;
-                return (
-                  <FilterChip
-                    key={opt.label}
-                    active={active}
-                    accent="intake"
-                    onClick={() => setActiveIntentFilter(opt.value)}
-                  >
-                    {opt.label}
-                    <span
-                      className={cn(
-                        "inline-flex min-w-[1.75rem] items-center justify-center rounded-lg border px-2 py-0.5 font-mono text-xs tabular-nums",
-                        active
-                          ? "border-nexus-intake-border bg-nexus-intake-soft font-bold text-nexus-intake"
-                          : "border-border-strong bg-surface-elevated font-medium text-atmospheric-grey/80",
-                      )}
-                    >
-                      {pillCount}
-                    </span>
-                  </FilterChip>
-                );
-              })}
-            </div>
-          </div>
+        </details>
+        <div className="hidden shrink-0 space-y-4 hairline-b p-4 lg:block">
+          <InboxFilterGroups
+            activeUrgencyFilter={activeUrgencyFilter}
+            activeIntentFilter={activeIntentFilter}
+            urgencyCounts={urgencyCounts}
+            intentCounts={intentCounts}
+            onUrgency={setActiveUrgencyFilter}
+            onIntent={setActiveIntentFilter}
+          />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain hairline-t p-2">
@@ -533,7 +596,12 @@ function InboxPageContent() {
       </aside>
 
       {/* Right panel */}
-      <section className="app-glass-card flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl">
+      <section
+        className={cn(
+          "app-glass-card flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl",
+          selectedConversation ? "flex" : "hidden lg:flex",
+        )}
+      >
         {!selectedConversation ? (
           !queriesEnabled && tenant.ready ? (
             <ExecutiveEmptyState
@@ -558,9 +626,13 @@ function InboxPageContent() {
           )
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain p-5 sm:p-6">
+            <MobileBackButton
+              label="All messages"
+              onClick={() => setSelectedConversationId(null)}
+            />
             <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="nexus-app-title text-foreground">
+                <h1 className="nexus-app-title text-balance text-foreground">
                   {selectedConversation.customer_name}
                 </h1>
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-base text-muted">

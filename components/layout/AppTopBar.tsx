@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -15,6 +15,15 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
 import { cn } from "@/lib/utils";
+
+function showsChromeSearch(pathname: string): boolean {
+  return (
+    pathname === "/inbox" ||
+    pathname.startsWith("/inbox/") ||
+    pathname === "/approval" ||
+    pathname.startsWith("/approval/")
+  );
+}
 
 const LANGUAGE_OPTIONS = [
   { code: "en", label: "English", enabled: true },
@@ -30,8 +39,10 @@ function profileInitial(email: string | null): string {
 
 export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
   const { query, setQuery } = useAppChromeSearch();
+  const showSearch = showsChromeSearch(pathname);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -71,35 +82,37 @@ export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void })
   }
 
   return (
-    <header className="app-topbar sticky top-0 z-20 shrink-0 px-4 py-3 md:px-8 lg:px-10">
+    <header className="app-topbar sticky top-0 z-20 shrink-0 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-8 lg:px-10">
       <div className="flex items-center gap-3">
         {onOpenMobileNav ? (
           <button
             type="button"
             onClick={onOpenMobileNav}
-            className="app-topbar-icon-btn inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center transition-colors lg:hidden"
+            className="app-topbar-icon-btn inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center transition-colors lg:hidden"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" aria-hidden />
           </button>
         ) : null}
 
-        <div className="relative min-w-0 max-w-sm flex-1">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-topbar-search-placeholder)]"
-            aria-hidden
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search inbox & approval…"
-            className="app-topbar-search h-9 w-full min-w-0 py-1.5 pl-9 pr-3.5 outline-none transition"
-            aria-label="Search inbox and approval"
-          />
-        </div>
-
-        <div className="min-w-0 flex-1" aria-hidden />
+        {showSearch ? (
+          <div className="relative min-w-0 max-w-sm flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--app-topbar-search-placeholder)]"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search…"
+              className="app-topbar-search h-11 w-full min-w-0 py-1.5 pl-9 pr-3.5 outline-none transition"
+              aria-label="Search inbox and approval"
+            />
+          </div>
+        ) : (
+          <div className="min-w-0 flex-1" aria-hidden />
+        )}
 
         <div className="flex shrink-0 items-center gap-2">
           <div ref={languageRef} className="relative">
@@ -109,14 +122,14 @@ export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void })
                 setLanguageOpen((open) => !open);
                 setProfileOpen(false);
               }}
-              className="app-topbar-icon-btn inline-flex h-10 cursor-pointer items-center gap-1.5 px-3 text-sm transition-colors"
+              className="app-topbar-icon-btn inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-1.5 text-sm transition-colors md:w-auto md:px-3"
               aria-expanded={languageOpen}
               aria-haspopup="listbox"
               aria-label="Language"
             >
               <Globe className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="hidden sm:inline">EN</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden />
+              <span className="hidden md:inline">EN</span>
+              <ChevronDown className="hidden h-3.5 w-3.5 opacity-70 md:inline" aria-hidden />
             </button>
             {languageOpen ? (
               <div
@@ -158,7 +171,7 @@ export function AppTopBar({ onOpenMobileNav }: { onOpenMobileNav?: () => void })
                 setProfileOpen((open) => !open);
                 setLanguageOpen(false);
               }}
-              className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[var(--app-topbar-border)] bg-[var(--app-topbar-icon-bg)] text-sm font-semibold text-[var(--app-topbar-icon-fg)] transition hover:text-[var(--app-topbar-search-fg)]"
+              className="relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[var(--app-topbar-border)] bg-[var(--app-topbar-icon-bg)] text-sm font-semibold text-[var(--app-topbar-icon-fg)] transition hover:text-[var(--app-topbar-search-fg)]"
               aria-expanded={profileOpen}
               aria-haspopup="menu"
               aria-label="Profile menu"

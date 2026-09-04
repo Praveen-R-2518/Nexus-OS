@@ -112,19 +112,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <TenantScopeGate>
                 <AppChromeSearchProvider>
                   <div
-                    className="nexus-app-shell app-shell-bg relative flex min-h-screen"
+                    className="nexus-app-shell app-shell-bg relative flex min-h-dvh flex-1"
                     data-font-scale={appearanceMounted ? fontScale : "default"}
                   >
                     <AppSidebar
                       mobileOpen={mobileNavOpen}
                       onMobileOpenChange={setMobileNavOpen}
                     />
-                    <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                       <AppTopBar onOpenMobileNav={() => setMobileNavOpen(true)} />
                       <TenantScopeErrorBanner />
                       <main
                         data-app-body
-                        className="nexus-app-main flex-1 px-4 pb-8 pt-4 md:px-8 md:pt-6 lg:px-10"
+                        className="nexus-app-main flex min-h-0 flex-1 flex-col overflow-x-hidden px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 md:px-8 md:pt-6 lg:px-10"
                       >
                         {children}
                       </main>

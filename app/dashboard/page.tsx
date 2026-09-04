@@ -261,7 +261,7 @@ export default function DashboardPage() {
             Operations
           </p>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <h1 className="nexus-app-title text-atmospheric-grey">
+            <h1 className="nexus-app-title text-balance text-atmospheric-grey">
               Command Center
             </h1>
           </div>

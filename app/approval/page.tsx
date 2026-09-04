@@ -19,6 +19,8 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { Spinner } from "@/components/ui/Spinner";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { useAppChromeSearch } from "@/components/layout/AppChromeSearch";
+import { MobileBackButton } from "@/components/layout/MobileBackButton";
+import { useLgUp } from "@/components/layout/useLgUp";
 import {
   approveReply,
   rejectReply,
@@ -167,6 +169,7 @@ export default function ApprovalPage() {
   const tenant = useTenantScope();
   const teamId = tenant.teamId;
   const queriesEnabled = tenant.ready && teamId !== null;
+  const lgUp = useLgUp();
 
   const [draftOverride, setDraftOverride] = useState<DraftItem[] | null>(null);
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
@@ -250,10 +253,13 @@ export default function ApprovalPage() {
     const stillVisible = selectedDraftId
       ? filteredDrafts.some((d) => d.id === selectedDraftId)
       : false;
-    if (!stillVisible) {
+    if (stillVisible) return;
+    if (lgUp) {
       setSelectedDraftId(filteredDrafts[0]!.id);
+      return;
     }
-  }, [filteredDrafts, loading, selectedDraftId]);
+    setSelectedDraftId(null);
+  }, [filteredDrafts, loading, selectedDraftId, lgUp]);
 
   const selectedDraft = useMemo(() => {
     if (!selectedDraftId) return null;
@@ -396,7 +402,7 @@ export default function ApprovalPage() {
       {toast ? (
         <div
           className={cn(
-            "fixed right-6 top-6 z-50 app-glass-card rounded-xl px-5 py-4 text-sm font-medium",
+            "fixed inset-x-4 bottom-4 z-50 app-glass-card rounded-xl px-5 py-4 text-sm font-medium lg:inset-auto lg:bottom-auto lg:right-6 lg:top-6",
             toast.kind === "success"
               ? "border-status-positive-border bg-status-positive-surface text-status-positive"
               : "border-status-critical-border bg-status-critical-surface text-status-critical",
@@ -406,13 +412,18 @@ export default function ApprovalPage() {
         </div>
       ) : null}
 
-      <div className="flex min-h-[560px] flex-1 flex-col gap-4 lg:flex-row">
-        <aside className="app-glass-card flex w-full shrink-0 flex-col overflow-hidden rounded-xl lg:w-[420px]">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:min-h-[560px] lg:flex-row">
+        <aside
+          className={cn(
+            "app-glass-card flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-xl lg:w-[420px]",
+            selectedDraft ? "hidden lg:flex" : "flex",
+          )}
+        >
           <div className="hairline-b p-5">
             <p className="nexus-meta text-nexus-approval dark:text-nexus-approval">
               Approval Queue
             </p>
-            <div className="mt-3 flex items-end justify-between gap-4">
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
               <div>
                 <p className="font-sans text-3xl font-semibold tabular-nums text-atmospheric-grey">
                   {counts.pending} pending
@@ -441,7 +452,8 @@ export default function ApprovalPage() {
           </div>
 
           <div className="hairline-b p-4">
-            <div className="flex flex-wrap gap-2">
+            <div className="-mx-1 overflow-x-auto px-1">
+              <div className="flex w-max gap-2 lg:w-full lg:flex-wrap">
               {FILTERS.map((filter) => {
                 const active = activeFilter === filter.value;
                 return (
@@ -465,6 +477,7 @@ export default function ApprovalPage() {
                   </FilterChip>
                 );
               })}
+              </div>
             </div>
           </div>
 
@@ -546,7 +559,12 @@ export default function ApprovalPage() {
           </div>
         </aside>
 
-        <section className="app-glass-card flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl">
+        <section
+          className={cn(
+            "app-glass-card flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl",
+            selectedDraft ? "flex" : "hidden lg:flex",
+          )}
+        >
           {!selectedDraft ? (
             <ExecutiveEmptyState
               title={
@@ -560,17 +578,21 @@ export default function ApprovalPage() {
                   : "Choose a draft from the queue to inspect the customer message, classification, and AI reply."
               }
               icon={<CheckCircle className="shrink-0" aria-hidden />}
-              className="m-4 min-h-[420px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50"
+              className="m-4 min-h-[240px] flex-1 rounded-xl border border-dashed border-border/80 dark:border-border/50 lg:min-h-[420px]"
             />
           ) : (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 pb-8">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 pb-8 sm:p-6">
+                <MobileBackButton
+                  label="All drafts"
+                  onClick={() => setSelectedDraftId(null)}
+                />
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="nexus-meta text-muted">
                       Review Draft
                     </p>
-                    <h1 className="mt-2 nexus-app-title text-foreground">
+                    <h1 className="mt-2 nexus-app-title text-balance text-foreground">
                       {selectedDraft.conversation.customer_name}
                     </h1>
                   </div>
@@ -686,8 +708,8 @@ export default function ApprovalPage() {
                 </section>
               </div>
 
-              <div className="approval-action-bar flex flex-wrap items-center justify-between gap-4 px-6 py-4">
-                <div className="flex min-w-0 items-center gap-3 text-base text-muted">
+              <div className="approval-action-bar flex flex-col gap-3 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6">
+                <div className="flex min-w-0 items-center gap-3 text-sm text-muted sm:text-base">
                   <DollarSign
                     className="h-5 w-5 shrink-0 text-status-positive"
                     aria-hidden
@@ -701,9 +723,10 @@ export default function ApprovalPage() {
                     </strong>
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
                   <Button
                     variant="destructive"
+                    className="w-full sm:w-auto"
                     onClick={() => {
                       setRejectingDraft(selectedDraft);
                       setRejectionReason("");
@@ -718,7 +741,7 @@ export default function ApprovalPage() {
                   </Button>
                   <Button
                     variant="primary"
-                    className="px-6"
+                    className="w-full px-6 sm:w-auto"
                     onClick={() => void handleApprove(selectedDraft)}
                     disabled={
                       actionDraftId === selectedDraft.id ||

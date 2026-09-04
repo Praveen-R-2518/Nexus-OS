@@ -61,7 +61,7 @@ export function Card({
           </p>
           <p
             className={cn(
-              "mt-3 text-3xl font-semibold tabular-nums tracking-normal sm:text-4xl",
+              "mt-3 min-w-0 break-all text-3xl font-semibold tabular-nums tracking-normal sm:text-4xl",
               accent,
             )}
           >

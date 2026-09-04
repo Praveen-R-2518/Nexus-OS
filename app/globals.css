@@ -880,14 +880,16 @@
   .swiss-dark .app-sidebar .logo-os {
     color: color-mix(in srgb, var(--app-sidebar-nav-active) 62%, transparent);
   }
-  .nexus-app-shell[data-font-scale="compact"] {
-    zoom: 0.94;
-  }
-  .nexus-app-shell[data-font-scale="default"] {
-    zoom: 1;
-  }
-  .nexus-app-shell[data-font-scale="comfortable"] {
-    zoom: 1.07;
+  @media (min-width: 1024px) {
+    .nexus-app-shell[data-font-scale="compact"] {
+      zoom: 0.94;
+    }
+    .nexus-app-shell[data-font-scale="default"] {
+      zoom: 1;
+    }
+    .nexus-app-shell[data-font-scale="comfortable"] {
+      zoom: 1.07;
+    }
   }
   .nexus-app-shell .surface-card {
     border-color: var(--glass-border);

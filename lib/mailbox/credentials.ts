@@ -6,7 +6,7 @@ import "server-only";
  * Sibling of `lib/gmail/credentials.ts`, but for `credential_type='imap'` rows that carry
  * host/port/tls columns (migration 20260718120000). Loads the connected mailbox for a workspace and
  * decrypts the stored password(s) so the inbound poller (IMAP) and the outbound SMTP transport can
- * use them. Decryption happens ONLY here on the server — n8n never sees a secret (CLAUDE.md rule).
+ * use them. Decryption happens ONLY here on the server — n8n never sees a secret (Nexus secrets rule).
  *
  * SMTP reuses the IMAP password unless a distinct `smtp_password_encrypted` override is stored.
  * Requires a service-role Supabase client for the poller path; the settings UI reads via RLS.

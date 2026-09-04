@@ -1,0 +1,174 @@
+---
+description: Nexus OS engineering, quality, and security rules. Always apply.
+alwaysApply: true
+---
+
+# Nexus OS — Engineering Rules
+
+Read this first every session. For build state, read `docs/NEXUS_REBUILD_CONTEXT.md`. For People / operating-layer work, read `docs/NEXUS_OPERATING_LAYER_PLAN.md`, implement **one partition per conversation**, and tick that partition in the **Build checklist** at the top of that file when verify passes.
+
+Do not start coding until you know which of those docs applies. If something you need is not documented, STOP and ask rather than inventing it.
+
+## What Nexus OS is
+
+An AI operating layer for founders and small teams. Revenue Command Center is live (Gmail/Meta intake, classification, approval-gated replies, knowledge, read-only analyst chat, social studio). People Intelligence is the next domain. The founder is the highest-authority decision maker. Nexus prepares and executes **approved** operational work.
+
+Stack: Next.js 14 App Router + Supabase (Postgres + RLS) + n8n + OpenAI via `lib/ai/*`. Tenant root for pipeline and People: `teams` / `workspaces` (`team_id`, `workspace_id`). Social may use `organizations`; do not make `organization_id` the People tenant key.
+
+## Non-negotiable architecture
+
+These override habit. If a request conflicts, STOP and ask.
+
+1. **Pipelines are functions, not agent loops.** Fetch, noise-filter, classify, draft, score, CSV parse, and send are deterministic steps or single LLM calls. Do not wrap them in tool routers. **Chat is the only conversational agent** and stays read-only unless a named plan partition explicitly adds confirmation-gated tools. Domain agents, if added later, are thin facades over services — never a mega-agent with every Nexus tool.
+
+2. **One vector store, in Supabase.** `pgvector` in existing Postgres. One `embeddings` table tagged by `kind` (`business_doc` | `conversation` | `summary` | `people_summary`). Do not embed a kind until a feature reads it. No Pinecone/Weaviate/etc.
+
+3. **All outbound is approval-gated by policy.** Replies and posts go through the existing approval layer (`lib/approval-policy.ts`, `/approval`, `reply_drafts`). People email is **generate draft → persist → explicit send**. Never send or publish from a classifier, scorer, drafter, or Chat. The LLM must never decide whether an action is allowed.
+
+4. **No fine-tuning.** System prompts + few-shot + retrieval. If a task “needs” a fine-tune, improve the prompt.
+
+5. **Migrations are additive and numbered.** Never rewrite or destructively alter an existing migration. Add a new sequentially-named file under `supabase/migrations/` that sorts after the latest existing `*.sql`. New tables get RLS from day one.
+
+6. **Tenant isolation everywhere.** Every tenant-owned row carries `team_id` / `workspace_id`. Every API mutation calls `requireApiTenantContext()` (`lib/api-security.ts`). Never trust client-supplied tenant or actor ids. Rate-limit public and authenticated routes.
+
+7. **People scoring:** deterministic numeric score; LLM explains only. No evidence → no claim. Sparse data → `insufficient_data`, not a fake score. Never infer protected attributes. Never hire/reject/terminate via AI.
+
+8. **n8n orchestrates; Nexus owns business logic.** n8n must not decrypt tokens, compute match scores, or bypass RLS. Internal n8n routes use ingest tokens.
+
+## Repo map (canonical)
+
+```
+app/api/          gmail, meta, internal/n8n, approval, conversations, people (when added)
+app/              dashboard, inbox, approval, chat, posts, people, team (workspace invites — NOT employees)
+lib/              api-security.ts, ai/, chat/, encryption/, supabase/, queries/, people/
+n8n_logic/        normalizer, noise_filter, tenant_route_resolver, workflow_*, exports/
+supabase/migrations/   schema + RLS source of truth
+ai_prompts/       versioned prompt files
+scripts/          tests (`tsx scripts/*.test.ts`)
+docs/             NEXUS_REBUILD_CONTEXT.md, NEXUS_OPERATING_LAYER_PLAN.md, env/test notes
+```
+
+`/team` is workspace members/invites. Company employees live under `/people`.
+
+## iCloud duplicate hazard
+
+This repo is iCloud-synced and may contain conflicted copies named `* 2.ext`.
+
+- **NEVER read, edit, or import a file whose name contains ` 2` before the extension.**
+- If logic exists only in a ` 2` file, flag it — do not silently adopt it.
+- Do not delete ` 2` files unless a human explicitly asks.
+
+## Graphify
+
+Knowledge graph at `graphify-out/`. Setup: `docs/GRAPHIFY.md`.
+
+**Agents must use the wrapper** (works when `graphify` is not on PATH):
+
+```bash
+./scripts/graphify.sh query "<question>"
+./scripts/graphify.sh path "<A>" "<B>"
+./scripts/graphify.sh explain "<concept>"
+./scripts/graphify.sh update .
+```
+
+Before Read/Grep/Glob/Bash exploration, run a graphify query when `graphify-out/graph.json` exists. Include this in subagent prompts.
+
+Fallback if no graph: `graphify-out/GRAPH_REPORT.md`, then Read/Grep. Bootstrap: `./scripts/ensure-graphify.sh`.
+
+After modifying **code** files, run `./scripts/graphify.sh update .` (AST-only, no API cost).
+
+## Hosted Supabase (migrations)
+
+**Canonical project:** `NexusOs` — ref `xuvodbcdmfhlbldbvwvt` (see `supabase/migrations/MIGRATION_NOTES.md`).
+
+**Apply new migrations to hosted Postgres with the Supabase MCP** (`plugin-supabase-supabase`), not raw `execute_sql` for DDL:
+
+1. `list_projects` → confirm project ref `xuvodbcdmfhlbldbvwvt`.
+2. If status is `INACTIVE`, call `restore_project` and wait until `get_project` reports `ACTIVE_HEALTHY`.
+3. `list_migrations` → confirm the local file is not already applied.
+4. `apply_migration` with `project_id`, `name` (snake_case, e.g. `audit_events`), and the full SQL from `supabase/migrations/<file>.sql`.
+5. Verify: `list_tables` or `execute_sql` on `pg_policies` — table exists with RLS.
+
+Local repo files remain the source of truth; MCP records its own version timestamp in `supabase_migrations.schema_migrations` (may differ from the local filename prefix — that is OK).
+
+**Do not use the Supabase CLI in this iCloud-synced repo** unless a human explicitly asks: `npx supabase` / the bundled binary may SIGKILL on this path. Prefer MCP for remote apply; use CLI only for local `supabase start` when a human has linked the project.
+
+After a partition adds SQL, note in **NEEDS HUMAN** only until that migration is verified on hosted via MCP.
+
+## Conventions
+
+- TypeScript strict mode; import alias `@/*`.
+- Secrets: `SUPABASE_SERVICE_ROLE_KEY` and `ENCRYPTION_KEY` are server-only — never `NEXT_PUBLIC_*`. Third-party tokens are AES-encrypted before storage (`lib/encryption/`).
+- Webhooks: verify signatures (e.g. Meta `X-Hub-Signature-256`) before trusting a payload.
+- n8n Code nodes: copy-pasteable from `// --- n8n entrypoint ---`; no hardcoded secrets; config from env.
+- AI: nothing outside `lib/ai/*` (and documented thin wrappers) should import `openai` or read `OPENAI_API_KEY`.
+- UI: reuse `components/ui/*` and existing React Query fetchers. Do not install a second component library unless asked.
+- Do not silently redesign global navigation. People work may add **one** `/people` nav item.
+
+## Code quality (every change)
+
+- **Re-check after implementation.** Re-read the diff before claiming done. Fix what you missed.
+- **DRY.** Extract repeated logic into shared functions. Do not clone CSV parsers, tenant getters, or form shells per entity.
+- **Small functions.** One responsibility. Name by effect.
+- **Remove dead code**, unused imports, and `console.log` / leftover debug before finishing.
+- **No nested if/else ladders.** Early returns and guard clauses.
+- **Null safety.** Handle missing/empty API data, null FKs, and sparse People records without throwing.
+- **Boy scout:** if you touch messy formatting in a file you already must edit, clean that file. Do not start drive-by refactors in unrelated files.
+- **Implement only the requested partition.** Never silently redesign architecture.
+
+## Security (non-optional)
+
+Treat every change as handling someone else's customer and employee PII.
+
+- RLS on every new table; fail closed.
+- No raw SQL string concatenation with user input. Use the Supabase client / parameterized queries.
+- Validate and bound all request bodies (length, enums, file size/type).
+- CSV: do not execute spreadsheet formulas; treat leading `= + - @` as untrusted text or fail the row.
+- File uploads: size cap, allowlisted types, no path traversal, tenant-prefixed storage keys, private buckets.
+- Rate-limit new routes. Defense in depth with RLS — never skip `requireApiTenantContext` because “RLS will save us.”
+- Do not log access tokens, OAuth codes, raw CV dumps, or `ENCRYPTION_KEY`. Minimize PII in `workflow_logs`.
+- Prompt injection: Chat/tools must not take actions from user text. Extend `scripts/chat_prompt_injection.test.ts` when Chat context grows.
+- Cross-tenant tests for any new readable table.
+- Idempotency for ingest and job workers (`platform + message_id`, `idempotency_key`).
+
+## Verify before you call it done
+
+Run and report what applies:
+
+```bash
+npm run lint
+npm run build
+npm run test:tenant-intake
+npm run n8n:export-workflows   # only if you touched n8n_logic
+```
+
+Plus the partition’s focused tests. Do not mark complete if lint, build, or those tests fail.
+
+New logic needs tests (normalizer, tenant resolution, scoring, CSV, RLS, signature verification, prompt injection).
+
+## Report back (every task)
+
+```
+## DONE
+- <one line per change, with file path>
+
+## FILES CHANGED
+- <path> — <why>
+
+## MIGRATIONS ADDED
+- <filename or "none">
+
+## VERIFICATION
+- lint: pass/fail
+- build: pass/fail
+- tests run + results
+
+## CHECKLIST
+- ticked partition <ID> in docs/NEXUS_OPERATING_LAYER_PLAN.md Build checklist: yes/no
+
+## NEEDS HUMAN
+- env vars, Supabase migration apply, n8n import, or decisions
+
+## OPEN QUESTIONS / RISKS
+- <assumptions or unverified items>
+```

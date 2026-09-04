@@ -63,7 +63,7 @@ export function PostStatusBoard({ orgId, onNewPost, onOpenPost }: PostStatusBoar
         <p className="nexus-meta text-nexus-approval">Content</p>
         <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="nexus-app-title text-atmospheric-grey">Posts</h1>
+            <h1 className="nexus-app-title text-balance text-atmospheric-grey">Posts</h1>
             <p className="mb-2 mt-4 max-w-2xl text-base leading-relaxed text-muted">
               Draft, schedule, and publish social posts across your connected
               platforms.

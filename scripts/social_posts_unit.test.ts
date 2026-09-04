@@ -10,6 +10,10 @@
  */
 
 import { buildStoragePath, captionsFromText } from "../lib/posts/data";
+import {
+  composeCaptionWithHashtags,
+  scheduledPostApprovalFields,
+} from "../lib/posts/caption-text";
 import { BOARD_FILTER_STATUSES, POST_STATUSES } from "../lib/posts/types";
 
 function assert(cond: unknown, msg?: string): void {
@@ -42,6 +46,17 @@ function main() {
   assert(caps.x?.caption === "Launch day!", "caption should apply to every selected platform");
   assert(Array.isArray(caps.instagram?.hashtags), "hashtags should default to an array");
   assert(Object.keys(captionsFromText("", ["instagram"])).length === 0, "empty text yields no captions");
+
+  const withTags = composeCaptionWithHashtags("Launch day!", ["nexus", "os"]);
+  assert(withTags.includes("Launch day!"), "base caption is kept");
+  assert(withTags.includes("#nexus") && withTags.includes("#os"), "hashtags are appended");
+  assert(
+    composeCaptionWithHashtags("Hello #nexus", ["nexus"]).trim() === "Hello #nexus",
+    "existing hashtags are not duplicated",
+  );
+  const approval = scheduledPostApprovalFields("2026-09-01T00:00:00.000Z");
+  assert(approval.approval_status === "approved", "scheduled posts stamp approved");
+  assert(approval.approved_at === "2026-09-01T00:00:00.000Z", "approved_at uses the provided timestamp");
 
   // --- lifecycle constants --------------------------------------------------
   assert(

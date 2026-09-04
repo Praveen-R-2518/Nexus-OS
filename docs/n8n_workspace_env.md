@@ -9,8 +9,8 @@ being replaced by three narrower mechanisms (`lib/api-security.ts`, `lib/n8n-job
 
 | Token | Direction | Guards | Guard helper |
 |---|---|---|---|
-| `N8N_BOOTSTRAP_TOKEN` | n8n → app | Scheduler/claim endpoints that run **before any job exists**: `gmail-sync`, `gmail-backfill`, `inbound-replay`, `scheduled-posts` (GET claim), `conversations` (create), `inbound-record`, `outbound-jobs/claim`. | `requireN8nBootstrapToken()` |
-| Job token (opaque, minted per-call) | n8n → app | Job-scoped callbacks bound to a specific team/workspace/resource and action, single-use, short-lived (default 15 min): `send-reply`, `autopilot-send`, `post-result`, `ai-usage`, `match-embeddings`, `gmail-credentials`, `meta-credentials`, `social-credentials`, `outbound-jobs/result`. Minted with `issueN8nJobToken()`, validated with `requireN8nJobToken()` / `consumeN8nJobToken()`. | `requireN8nJobToken()` |
+| `N8N_BOOTSTRAP_TOKEN` | n8n → app | Scheduler/claim endpoints that run **before any job exists**: `gmail-sync`, `gmail-backfill`, `inbound-replay`, `scheduled-posts` (GET claim), `conversations` (create), `inbound-record`, `outbound-jobs/claim`, `followups/drain`, `daily-report`, `people/jobs/run` (WF9 match drain). | `requireN8nBootstrapToken()` |
+| Job token (opaque, minted per-call) | n8n → app | Job-scoped callbacks bound to a specific team/workspace/resource and action, single-use, short-lived (default 15 min): `send-reply`, `autopilot-send`, `post-result`, `ai-usage`, `match-embeddings`, `gmail-credentials`, `meta-credentials`, `social-credentials`, `social-post`, `outbound-jobs/result`. Minted with `issueN8nJobToken()`, validated with `requireN8nJobToken()` / `consumeN8nJobToken()`. | `requireN8nJobToken()` |
 | `N8N_WEBHOOK_TOKEN` | app → n8n | Header Auth the app sends when it calls OUT to an n8n webhook (`approval-trigger`, `gmail-inbound`, `publish-social-post`). Configure the matching Header Auth credential on n8n's webhook trigger nodes. | `n8nWebhookAuthHeaders()` |
 
 `N8N_INGEST_TOKEN` (the old broad secret) is kept as a **temporary fallback** during the
@@ -76,13 +76,25 @@ Current wiring:
 
 ### WF8b Social Post Publishing (calls into the Next.js app)
 
-WF8b (`VZ9ZaA1S2JxSAeGQ`) fetches decrypted social platform tokens via
-`GET /api/internal/n8n/social-credentials?organization_id={orgId}` — n8n must **never** read
-`social_credentials` tokens directly from Supabase REST.
+WF8b (`VZ9ZaA1S2JxSAeGQ`) loads the post (signed media URL + composed captions) via
+`GET /api/internal/n8n/social-post?organization_id={orgId}&post_id={postId}` and decrypted platform
+tokens via `GET /api/internal/n8n/social-credentials?organization_id={orgId}`. n8n must **never**
+read `social_posts` or `social_credentials` via Supabase REST. Terminal status is
+`POST /api/internal/n8n/post-result`.
 
 | Value | How it's supplied |
 |---|---|
 | App base URL | `{{ $vars.NEXUS_APP_URL }}` with fallback `https://nexusos.knurdz.org` |
 | `N8N_INGEST_TOKEN` | `{{ $vars.N8N_INGEST_TOKEN }}` (or `NEXUS_INGEST_TOKEN`) — n8n **Variable** |
 
-Requires app deploy of the social-credentials endpoint and migration `20260713180000`.
+Requires app deploy of the social-credentials + social-post endpoints and migration `20260713180000`.
+
+### WF4 Follow-up Scheduler / WF5 Daily Report (app-owned)
+
+Both workflows call the Next.js app with bootstrap/ingest Bearer tokens. **Do not** attach the
+Supabase service-role HTTP credential.
+
+| Workflow | App endpoint |
+|---|---|
+| WF4 (`qWHvc2AmqX10jEjk`) | `POST /api/internal/n8n/followups/drain` — body `{ limit?: number }` |
+| WF5 (`QoJIseLTX2jwDYEy`) | `POST /api/internal/n8n/daily-report` — optional `{ team_id }` |

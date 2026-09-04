@@ -12,7 +12,7 @@ draft to `approval_status='approved'` and POSTs `{draft_id, action, conversation
 nothing is ever sent.** The Channel Sender closes that gap: it turns an approved
 `reply_draft` into a real email to the customer, tenant-scoped and idempotent.
 
-Architecture principle #3 (CLAUDE.md): *all outbound is approval-gated.* The sender is the
+Architecture principle #3 (`.cursor/rules/nexus.mdc`): *all outbound is approval-gated.* The sender is the
 **only** component that performs an actual send, and it only sends drafts that are already
 `approved` (or auto-approved by the policy in `lib/approval-policy.ts`, task 1.4). Classifiers
 and drafters never call it directly.
@@ -31,7 +31,7 @@ and drafters never call it directly.
 
 Trust boundary: **n8n never decrypts a token and never talks to Gmail.** It only calls the
 token-guarded Next.js executor, which owns all secrets. This keeps `ENCRYPTION_KEY` and
-Gmail tokens server-side (CLAUDE.md secrets rule).
+Gmail tokens server-side (Nexus secrets rule in `.cursor/rules/nexus.mdc`).
 
 ## Flow
 

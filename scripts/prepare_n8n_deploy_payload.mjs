@@ -24,6 +24,7 @@ const LIVE_IDS = {
   "wf8b_social_publish.json": "VZ9ZaA1S2JxSAeGQ",
   "wf8d_social_scheduler.json": "47BO0agxAJGizttR",
   "wf0g_outbound_drain.json": "JmxmlFw6dW1SDVKQ",
+  "wf9_people_match_drain.json": "d1CkkuSDwsZKVhQq",
 };
 
 const SUPABASE_CRED = { id: "4rfwTEeSitzS3JeQ", name: "Supabase API" };

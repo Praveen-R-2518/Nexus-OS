@@ -9,6 +9,7 @@ import type {
   PostGeneration,
   SocialPost,
 } from "./types";
+import { scheduledPostApprovalFields } from "./caption-text";
 
 export const POST_MEDIA_BUCKET = "post-media";
 export const BRAND_ASSETS_BUCKET = "brand-assets";
@@ -120,6 +121,8 @@ export async function createPost(
   orgId: string,
   input: PostDraftInput,
 ): Promise<SocialPost> {
+  const scheduledApproval =
+    input.status === "scheduled" ? scheduledPostApprovalFields() : null;
   const { data, error } = await supabase
     .from("social_posts")
     .insert({
@@ -132,6 +135,7 @@ export async function createPost(
       scheduled_at: input.scheduled_at ?? null,
       source: input.source ?? "upload",
       generation_id: input.generation_id ?? null,
+      ...(scheduledApproval ?? {}),
     })
     .select("*")
     .single();
@@ -199,8 +203,7 @@ export async function schedulePost(
   await updatePost(supabase, orgId, postId, {
     status: "scheduled",
     scheduled_at: scheduledAtIso,
-    approval_status: "approved",
-    approved_at: nowIso,
+    ...scheduledPostApprovalFields(nowIso),
   });
 }
 

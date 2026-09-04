@@ -1,8 +1,9 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-import { embedBatch, embedText } from "./openai";
+import { assertPeopleAiAllowed } from "@/lib/ai/budget";
+import { AI_MODELS, recordAiUsage } from "@/lib/ai/provider";
+import { embedBatch, embedBatchWithUsage, embedText } from "./openai";
 
 /**
  * Knowledge-layer store operations over the single `embeddings` table (tagged by `kind`).
@@ -13,7 +14,20 @@ import { embedBatch, embedText } from "./openai";
  * retrieval or a summary write threw. See the try/catch guards in the callers.
  */
 
-export type EmbeddingKind = "business_doc" | "conversation" | "summary";
+export const EMBEDDING_KINDS = [
+  "business_doc",
+  "conversation",
+  "summary",
+  "people_summary",
+] as const;
+export type EmbeddingKind = (typeof EMBEDDING_KINDS)[number];
+
+/** Default RAG kinds for n8n and any caller that omits `kinds`. Never includes people_summary. */
+export const DEFAULT_KNOWLEDGE_KINDS: readonly EmbeddingKind[] = [
+  "business_doc",
+  "summary",
+  "conversation",
+];
 
 export type KnowledgeChunk = {
   content: string;
@@ -39,6 +53,7 @@ const DEFAULT_MIN_SIMILARITY = 0.25;
 const KIND_WEIGHTS: Record<EmbeddingKind, number> = {
   business_doc: 1.0,
   summary: 0.95,
+  people_summary: 0.95,
   conversation: 0.9,
 };
 
@@ -148,7 +163,7 @@ export async function matchKnowledge(params: {
   limit?: number;
 }): Promise<KnowledgeChunk[]> {
   const { supabase, teamId, queryText } = params;
-  const kinds = params.kinds ?? ["business_doc", "summary", "conversation"];
+  const kinds = params.kinds ?? [...DEFAULT_KNOWLEDGE_KINDS];
   const limit = params.limit ?? 6;
 
   if (typeof (supabase as { rpc?: unknown }).rpc !== "function") return [];
@@ -228,6 +243,116 @@ async function deleteSummaryForSource(params: {
     .eq("team_id", teamId)
     .eq("kind", "summary")
     .eq("source_id", sourceId);
+}
+
+export type PeopleSummaryEmbedItem = {
+  sourceId: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+};
+
+/**
+ * Remove the People summary embedding for one source (employee / job / candidate /
+ * candidate_job id). Kind-scoped so a colliding UUID cannot wipe other kinds.
+ */
+export async function deletePeopleSummaryForSource(params: {
+  supabase: SupabaseClient;
+  teamId: string;
+  sourceId: string;
+}): Promise<void> {
+  const { supabase, teamId, sourceId } = params;
+  try {
+    await supabase
+      .from("embeddings")
+      .delete()
+      .eq("team_id", teamId)
+      .eq("kind", "people_summary")
+      .eq("source_id", sourceId);
+  } catch {
+    /* best-effort */
+  }
+}
+
+/**
+ * Replace `people_summary` embeddings for one or more People sources. Best-effort.
+ * The match worker awaits this; HTTP CRUD must fire-and-forget.
+ */
+export async function upsertPeopleSummaryEmbeddings(params: {
+  supabase: SupabaseClient;
+  teamId: string;
+  workspaceId: string | null;
+  items: PeopleSummaryEmbedItem[];
+}): Promise<void> {
+  const { supabase, teamId, workspaceId, items } = params;
+  const prepared = items
+    .map((item) => ({
+      sourceId: item.sourceId.trim(),
+      content: item.content.trim(),
+      metadata: item.metadata ?? {},
+    }))
+    .filter((item) => item.sourceId && item.content);
+  if (prepared.length === 0) return;
+
+  try {
+    const gate = await assertPeopleAiAllowed(supabase, teamId);
+    if (!gate.allowed) return;
+
+    const { vectors, inputTokens } = await embedBatchWithUsage(
+      prepared.map((item) => item.content),
+    );
+    await recordAiUsage(supabase, {
+      teamId,
+      workspaceId,
+      model: AI_MODELS.EMBED,
+      operation: "people_embed",
+      inputTokens,
+      outputTokens: 0,
+    });
+    for (let i = 0; i < prepared.length; i += 1) {
+      const item = prepared[i];
+      await deletePeopleSummaryForSource({
+        supabase,
+        teamId,
+        sourceId: item.sourceId,
+      });
+      await supabase.from("embeddings").insert({
+        team_id: teamId,
+        workspace_id: workspaceId,
+        kind: "people_summary" as const,
+        source_id: item.sourceId,
+        content: item.content,
+        metadata: item.metadata,
+        embedding: toVectorLiteral(vectors[i]),
+      });
+    }
+  } catch {
+    /* best-effort: never break the caller */
+  }
+}
+
+/**
+ * Replace the single `people_summary` embedding for a People row. Best-effort.
+ */
+export async function upsertPeopleSummaryEmbedding(params: {
+  supabase: SupabaseClient;
+  teamId: string;
+  workspaceId: string | null;
+  sourceId: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  await upsertPeopleSummaryEmbeddings({
+    supabase: params.supabase,
+    teamId: params.teamId,
+    workspaceId: params.workspaceId,
+    items: [
+      {
+        sourceId: params.sourceId,
+        content: params.content,
+        metadata: params.metadata,
+      },
+    ],
+  });
 }
 
 /**

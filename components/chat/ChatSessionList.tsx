@@ -114,9 +114,9 @@ export function ChatSessionList({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
-        <div>
-          <h1 className="nexus-app-title text-foreground">Chats</h1>
+      <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="nexus-app-title text-balance text-foreground">Chats</h1>
           <p className="mt-2 text-base text-muted">
             Your past conversations with the analyst. Open one to continue where you left off.
           </p>
@@ -124,7 +124,7 @@ export function ChatSessionList({
         <button
           type="button"
           onClick={onNewChat}
-          className="btn-primary inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-medium"
+          className="btn-primary inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 self-start rounded-xl px-4 py-2 text-[13px] font-medium"
         >
           <Plus className="h-4 w-4" aria-hidden />
           <span>New chat</span>
@@ -162,7 +162,7 @@ export function ChatSessionList({
                     onClick={() => toggleExpand(s.id)}
                     aria-label={expanded ? "Collapse preview" : "Preview chat"}
                     aria-expanded={expanded}
-                    className="glass-pill inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass"
+                    className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass"
                   >
                     <ChevronDown
                       className={cn(
@@ -189,12 +189,12 @@ export function ChatSessionList({
                           if (e.key === "Escape") setRenamingId(null);
                         }}
                         maxLength={80}
-                        className="glass-input min-h-9 flex-1 px-3 py-1.5 text-sm text-atmospheric-grey outline-none"
+                        className="glass-input min-h-11 flex-1 px-3 py-1.5 text-sm text-atmospheric-grey outline-none"
                       />
                       <button
                         type="submit"
                         aria-label="Save name"
-                        className="glass-pill inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-nexus-discovery transition-colors hover:bg-glass"
+                        className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-nexus-discovery transition-colors hover:bg-glass"
                       >
                         <Check className="h-4 w-4" aria-hidden />
                       </button>
@@ -202,7 +202,7 @@ export function ChatSessionList({
                         type="button"
                         onClick={() => setRenamingId(null)}
                         aria-label="Cancel rename"
-                        className="glass-pill inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass"
+                        className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass"
                       >
                         <X className="h-4 w-4" aria-hidden />
                       </button>
@@ -225,7 +225,7 @@ export function ChatSessionList({
                         type="button"
                         onClick={() => startRename(s)}
                         aria-label="Rename chat"
-                        className="glass-pill inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass hover:text-foreground"
+                        className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-glass hover:text-foreground"
                       >
                         <Pencil className="h-4 w-4" aria-hidden />
                       </button>
@@ -241,7 +241,7 @@ export function ChatSessionList({
                           }
                         }}
                         aria-label="Delete chat"
-                        className="glass-pill inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-status-warning-surface hover:text-status-warning"
+                        className="glass-pill inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-status-warning-surface hover:text-status-warning"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden />
                       </button>

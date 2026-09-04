@@ -1,0 +1,59 @@
+---
+description: Git identity & authorship policy — all git activity is attributed to the repo owner, never the Cursor agent. Always apply (cloud and local).
+alwaysApply: true
+---
+
+# Git identity & authorship (non-negotiable)
+
+Every git action you perform — creating branches, committing, pushing, pulling,
+opening or updating pull requests — MUST be attributed to the repository owner,
+**Senuka Deneth**, and never to the Cursor agent. This applies identically in
+Cloud Agents and local runs.
+
+## Author identity
+
+Before your first commit in any session, ensure the identity is set (local scope
+so it never depends on the global Cursor default):
+
+```bash
+git config --local user.name  "Senuka Deneth"
+git config --local user.email "113520257+Senuka-Deneth@users.noreply.github.com"
+git config --local commit.gpgsign false
+```
+
+- Never commit or author as `Cursor Agent` / `cursoragent@cursor.com`.
+- Never sign commits with the Cursor agent's SSH/GPG key. If the global config
+  enables signing with a Cursor key, disable it locally (as above) so GitHub does
+  not record a Cursor-owned signature.
+- If the owner's email above is ever wrong, ask the owner rather than guessing.
+
+## No "Cursor" footprint anywhere on GitHub
+
+- **Never** add `Co-authored-by: Cursor ...`, `Co-authored-by: Cursor Agent ...`,
+  or any Cursor/AI co-author trailer to a commit.
+- **Never** add "Generated with Cursor", "Made by Cursor Agent", "🤖", or any
+  similar attribution/notice to commit messages, PR titles, PR descriptions, or
+  comments.
+- Commit messages describe the change only. Do not reference the agent, the model,
+  or the tooling that produced the change.
+- Before pushing, verify no Cursor attribution remains:
+
+```bash
+git log --format='%an <%ae> | %cn <%ce> | %s' origin/main..HEAD
+git log --format='%b' origin/main..HEAD | grep -i cursor   # must print nothing
+```
+
+If any commit is authored/committed by Cursor Agent or carries a Cursor trailer,
+rewrite it (amend/rebase) to the owner identity and force-push the branch before
+handing off.
+
+> Note: the Cursor PR tool may append its own platform metadata footer to a PR
+> body automatically; that is outside message content and cannot be removed from
+> the body. Prefer integrating work by pushing to `dev` (see below) over tool-
+> created PRs when a fully Cursor-free PR record is required.
+
+## Branch policy for this project
+
+- **Commit directly to the `dev` branch** for this repository. Do work on `dev`
+  (or a short-lived branch that merges into `dev`), not against `main`.
+- Do not push directly to `main`; `main` is updated by promoting `dev`.

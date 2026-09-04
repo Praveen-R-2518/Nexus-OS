@@ -5,6 +5,7 @@ import { useState } from "react";
 import { AlertTriangle, ChevronLeft, ChevronRight, ClipboardList, RotateCw } from "lucide-react";
 import { ExecutiveEmptyState } from "@/components/ui/ExecutiveEmptyState";
 import { Spinner } from "@/components/ui/Spinner";
+import { TableScrollHint } from "@/components/ui/TableScrollHint";
 import { useTenantScope } from "@/components/tenant/TenantScope";
 import { workflowLogsQuery } from "@/lib/queries/fetchers";
 import { queryKeys } from "@/lib/queries/keys";
@@ -149,8 +150,8 @@ export default function LogsPage() {
           className="app-glass-card"
         />
       ) : (
-        <div className="app-glass-card overflow-hidden rounded-xl">
-          <div className="overflow-x-auto">
+          <div className="app-glass-card min-w-0 overflow-hidden rounded-xl">
+          <TableScrollHint>
             <table className="min-w-full text-sm">
               <thead className="bg-glass/60">
                 <tr className="hairline-b">
@@ -200,9 +201,9 @@ export default function LogsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScrollHint>
 
-          <div className="flex items-center justify-between gap-3 hairline-t px-4 py-3 text-xs text-muted">
+          <div className="flex flex-col gap-3 hairline-t px-4 py-3 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
             <span>
               {count === 0
                 ? "No results"
@@ -213,7 +214,7 @@ export default function LogsPage() {
                 type="button"
                 onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
                 disabled={!hasPrev}
-                className="inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-lg border border-border-strong bg-surface-muted px-2.5 py-1 font-medium text-atmospheric-grey transition hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-lg border border-border-strong bg-surface-muted px-2.5 py-1 font-medium text-atmospheric-grey transition hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
                 Prev
@@ -222,7 +223,7 @@ export default function LogsPage() {
                 type="button"
                 onClick={() => setOffset((o) => o + PAGE_SIZE)}
                 disabled={!hasNext}
-                className="inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-lg border border-border-strong bg-surface-muted px-2.5 py-1 font-medium text-atmospheric-grey transition hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-lg border border-border-strong bg-surface-muted px-2.5 py-1 font-medium text-atmospheric-grey transition hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next
                 <ChevronRight className="h-3.5 w-3.5" aria-hidden />

@@ -9,9 +9,11 @@ import { authenticatedFetch } from "@/lib/auth/authenticated-fetch";
 import { ChartBlock } from "@/components/chat/ChartBlock";
 import { ChatUsageToolbar } from "@/components/chat/ChatUsageToolbar";
 import { ChatSessionList, type ChatSession } from "@/components/chat/ChatSessionList";
+import { ProposedActionCard } from "@/components/chat/ProposedActionCard";
 import { parseAssistantContent } from "@/lib/chat/visuals";
 import { cn } from "@/lib/utils";
 import { useAiStatus } from "@/app/hooks/useAiStatus";
+import type { ChatProposedAction } from "@/types";
 
 type ChatRole = "user" | "assistant";
 
@@ -24,6 +26,7 @@ const SOURCE_KIND_LABEL: Record<string, string> = {
   business_doc: "Document",
   summary: "Summary",
   conversation: "Inbox",
+  people_summary: "People",
 };
 
 function decodeSourcesHeader(value: string | null): KnowledgeSource[] {
@@ -108,6 +111,9 @@ export default function ChatPage() {
   const [view, setView] = useState<"list" | "chat">("list");
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [proposedActions, setProposedActions] = useState<ChatProposedAction[]>([]);
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(true);
@@ -123,7 +129,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages, proposedActions, scrollToBottom]);
 
   const refreshSessions = useCallback(async () => {
     try {
@@ -135,6 +141,57 @@ export default function ChatPage() {
       /* keep the current list on a transient error */
     }
   }, []);
+
+  const loadProposedActions = useCallback(async (sessionId: string) => {
+    try {
+      const res = await authenticatedFetch(
+        `/api/chat/actions?session_id=${encodeURIComponent(sessionId)}`,
+      );
+      if (!res.ok) return;
+      const json = (await res.json()) as { actions?: ChatProposedAction[] };
+      setProposedActions(Array.isArray(json.actions) ? json.actions : []);
+      setActionErrors({});
+    } catch {
+      /* keep current cards on a transient error */
+    }
+  }, []);
+
+  const decideProposedAction = useCallback(
+    async (id: string, decision: "confirm" | "cancel") => {
+      setActionBusyId(id);
+      setActionErrors((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      try {
+        const res = await authenticatedFetch(
+          `/api/chat/actions/${encodeURIComponent(id)}`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ decision }),
+          },
+        );
+        const json = (await res.json()) as {
+          data?: ChatProposedAction;
+          error?: string;
+        };
+        if (!res.ok || !json.data) {
+          throw new Error(json.error || "Could not update confirmation");
+        }
+        setProposedActions((prev) =>
+          prev.map((row) => (row.id === id ? json.data! : row)),
+        );
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Could not update confirmation";
+        setActionErrors((prev) => ({ ...prev, [id]: msg }));
+      } finally {
+        setActionBusyId(null);
+      }
+    },
+    [],
+  );
 
   // On entry, load the list of past chats. The founder picks one (or starts a new chat) —
   // we never auto-open a conversation.
@@ -169,6 +226,8 @@ export default function ChatPage() {
     setError(null);
     sessionIdRef.current = id;
     setMessages([]);
+    setProposedActions([]);
+    setActionErrors({});
     setMessagesLoading(true);
     setView("chat");
     try {
@@ -184,17 +243,20 @@ export default function ChatPage() {
           .filter((m) => m.role === "user" || m.role === "assistant")
           .map((m) => ({ role: m.role as ChatRole, content: m.content })),
       );
+      await loadProposedActions(id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load chat history");
     } finally {
       setMessagesLoading(false);
     }
-  }, []);
+  }, [loadProposedActions]);
 
   const startNewChat = useCallback(() => {
     setError(null);
     sessionIdRef.current = null;
     setMessages([]);
+    setProposedActions([]);
+    setActionErrors({});
     setMessagesLoading(false);
     setView("chat");
   }, []);
@@ -208,7 +270,11 @@ export default function ChatPage() {
   const deleteSession = useCallback(
     async (id: string) => {
       setSessions((prev) => prev.filter((s) => s.id !== id));
-      if (sessionIdRef.current === id) sessionIdRef.current = null;
+      if (sessionIdRef.current === id) {
+        sessionIdRef.current = null;
+        setProposedActions([]);
+        setActionErrors({});
+      }
       try {
         const res = await authenticatedFetch(
           `/api/chat?session_id=${encodeURIComponent(id)}`,
@@ -309,6 +375,10 @@ export default function ChatPage() {
             return next;
           });
         }
+
+        if (sessionIdRef.current) {
+          await loadProposedActions(sessionIdRef.current);
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : "The analyst could not respond.";
         setError(msg);
@@ -324,7 +394,7 @@ export default function ChatPage() {
         setSending(false);
       }
     },
-    [sending],
+    [sending, loadProposedActions],
   );
 
   if (tenant.loading || loadingSessions) {
@@ -382,10 +452,10 @@ export default function ChatPage() {
             <span>New chat</span>
           </button>
         </div>
-        <h1 className="nexus-app-title text-foreground">Chat</h1>
+        <h1 className="nexus-app-title text-balance text-foreground">Chat</h1>
         <p className="mt-2 flex items-center gap-2 text-base text-muted">
           <Sparkles className="h-5 w-5 shrink-0 text-nexus-discovery" aria-hidden />
-          Read-only. Answers only from your real inbox data. It never sends or edits anything.
+          Read-only analyst. People changes need your Confirm — Chat never sends email.
         </p>
       </div>
 
@@ -416,8 +486,9 @@ export default function ChatPage() {
                 Ask about your revenue command center
               </h2>
               <p className="mt-2 max-w-md text-sm text-muted">
-                I read your conversations, leads, and pending drafts, then tell you what needs
-                attention. I can suggest what to do, but you take action in the Approval Queue.
+                I read your conversations, leads, People snapshot, and pending drafts.
+                I can queue a People confirmation; you take action with Confirm or in the
+                Approval Queue. Email still happens in People.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {SUGGESTIONS.map((s) => (
@@ -433,39 +504,60 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
-            <ul className="space-y-4">
-              {messages.map((m, i) => (
-                <li
-                  key={i}
-                  className={cn(
-                    "flex",
-                    m.role === "user" ? "justify-end" : "justify-start",
-                  )}
-                >
-                  <div
+            <>
+              <ul className="space-y-4">
+                {messages.map((m, i) => (
+                  <li
+                    key={i}
                     className={cn(
-                      "max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed",
-                      m.role === "user"
-                        ? "glass-pill whitespace-pre-wrap border-glass-border bg-glass text-atmospheric-grey"
-                        : "glass-pill w-full border-glass-border bg-glass/70 text-atmospheric-grey sm:w-auto sm:min-w-[280px]",
+                      "flex",
+                      m.role === "user" ? "justify-end" : "justify-start",
                     )}
                   >
-                    {m.content ? (
-                      m.role === "assistant" ? (
-                        <AssistantBody message={m} />
-                      ) : (
-                        m.content
-                      )
-                    ) : m.role === "assistant" && sending ? (
-                      <span className="inline-flex items-center gap-2 text-muted">
-                        <Spinner className="h-4 w-4" label="Thinking" />
-                        Analyzing your inbox…
-                      </span>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div
+                      className={cn(
+                        "max-w-[80%] min-w-0 break-words rounded-xl px-4 py-3 text-sm leading-relaxed",
+                        m.role === "user"
+                          ? "glass-pill whitespace-pre-wrap border-glass-border bg-glass text-atmospheric-grey"
+                          : "glass-pill w-full border-glass-border bg-glass/70 text-atmospheric-grey sm:w-auto sm:min-w-[280px]",
+                      )}
+                    >
+                      {m.content ? (
+                        m.role === "assistant" ? (
+                          <AssistantBody message={m} />
+                        ) : (
+                          m.content
+                        )
+                      ) : m.role === "assistant" && sending ? (
+                        <span className="inline-flex items-center gap-2 text-muted">
+                          <Spinner className="h-4 w-4" label="Thinking" />
+                          Analyzing your inbox…
+                        </span>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {proposedActions.length > 0 ? (
+                <ul className="mt-4 space-y-3">
+                  {proposedActions.map((action) => (
+                    <li key={action.id}>
+                      <ProposedActionCard
+                        action={action}
+                        busy={actionBusyId === action.id}
+                        error={actionErrors[action.id] ?? null}
+                        onConfirm={() =>
+                          void decideProposedAction(action.id, "confirm")
+                        }
+                        onCancel={() =>
+                          void decideProposedAction(action.id, "cancel")
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </>
           )}
         </div>
 
@@ -476,7 +568,7 @@ export default function ChatPage() {
         ) : null}
 
         <form
-          className="flex shrink-0 items-end gap-2 border-t border-glass-border p-3"
+          className="sticky bottom-0 flex shrink-0 items-end gap-2 border-t border-glass-border bg-[var(--surface-card)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           onSubmit={(e) => {
             e.preventDefault();
             void send(input);
