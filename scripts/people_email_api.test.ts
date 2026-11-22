@@ -645,7 +645,9 @@ async function check(name: string, fn: () => Promise<void>): Promise<void> {
     const json = (await res.json()) as { data: Row; error?: string };
     assert(res.status === 200, `status ${res.status} ${json.error ?? ""}`);
     assert(json.data.status === "sent", "status sent");
-    assert(json.data.transport === "gmail", "gmail transport");
+    const expectedTransport =
+      process.env.CHANNEL_SENDER_TRANSPORT === "sandbox" ? "sandbox" : "gmail";
+    assert(json.data.transport === expectedTransport, `${expectedTransport} transport`);
     assert(gmailSendCalls.length === 1, "gmail called once");
     assert(gmailSendCalls[0].to === "ada@example.com", "send to snapshot");
     assert(gmailSendCalls[0].subject === "Updated subject", "stored subject");
@@ -730,7 +732,9 @@ async function check(name: string, fn: () => Promise<void>): Promise<void> {
     const res = await postSend(send.POST, String(createdJson.data.id), {});
     const json = (await res.json()) as { data: Row; error?: string };
     assert(res.status === 200, `status ${res.status} ${json.error ?? ""}`);
-    assert(json.data.transport === "smtp", "smtp transport");
+    const expectedTransport =
+      process.env.CHANNEL_SENDER_TRANSPORT === "sandbox" ? "sandbox" : "smtp";
+    assert(json.data.transport === expectedTransport, `${expectedTransport} transport`);
     assert(gmailSendCalls.length === 0, "gmail unused");
     assert(smtpSendCalls.length === 1, "smtp used");
   });
