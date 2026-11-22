@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rateLimitDurable, requireN8nBootstrapToken } from "@/lib/api-security";
+import { signPostMediaUrl } from "@/lib/posts/publish-media";
 import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -55,5 +56,15 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ success: true, data: data ?? [] }, { status: 200 });
+  const claimed = data ?? [];
+  const withMedia = [];
+  for (const row of claimed) {
+    const mediaSignedUrl = await signPostMediaUrl(
+      supabase,
+      (row as { media_url?: string | null }).media_url,
+    );
+    withMedia.push({ ...row, media_signed_url: mediaSignedUrl });
+  }
+
+  return NextResponse.json({ success: true, data: withMedia }, { status: 200 });
 }

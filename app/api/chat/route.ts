@@ -8,8 +8,9 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { buildAnalystContext } from "@/lib/chat/analyst-context";
-import { buildAnalystSystemPrompt } from "@/lib/chat/system-prompt";
 import { completeText, streamAnalystReply, type ChatTurn } from "@/lib/chat/openai";
+import { laneAttachesPeopleTools, routeChatLane } from "@/lib/chat/route-lane";
+import { buildAnalystSystemPrompt } from "@/lib/chat/system-prompt";
 import { deleteEmbeddingsForSource, upsertSummaryEmbedding } from "@/lib/embeddings/store";
 import { isOpenAiConfigured } from "@/lib/ai/provider";
 
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
 
   const tenant = await requireApiTenantContext();
   if (!tenant.ok) return tenant.response;
-  const { supabase, teamId, workspaceId } = tenant;
+  const { supabase, teamId, workspaceId, user } = tenant;
 
   const parsed = await readJsonObjectWithLimit(request, JSON_LIMITS.small);
   if (!parsed.ok) return parsed.response;
@@ -230,12 +231,18 @@ export async function POST(request: Request) {
     history.push({ role: "user", content: message });
   }
 
-  // 4. Build the read-only snapshot + system prompt.
+  // 4. Lane (I1) then read-only snapshot + system prompt.
+  const lane = routeChatLane({ message, history });
   let systemPrompt: string;
   let sourcesHeader = "";
   try {
-    const context = await buildAnalystContext({ supabase, teamId, queryText: message });
-    systemPrompt = buildAnalystSystemPrompt(context);
+    const context = await buildAnalystContext({
+      supabase,
+      teamId,
+      queryText: message,
+      lane,
+    });
+    systemPrompt = buildAnalystSystemPrompt(context, { lane });
     // Citation metadata for the UI: retrieval happens before streaming, so the
     // sources ride along as a base64url JSON response header the client can
     // pair with the model's inline [n] citations.
@@ -263,7 +270,20 @@ export async function POST(request: Request) {
     async start(controller) {
       let full = "";
       try {
-        for await (const delta of streamAnalystReply({ system: systemPrompt, history })) {
+        for await (const delta of streamAnalystReply({
+          system: systemPrompt,
+          history,
+          lane,
+          peopleTools: laneAttachesPeopleTools(lane)
+            ? {
+                supabase,
+                teamId,
+                workspaceId,
+                user: { id: user.id },
+                sessionId,
+              }
+            : undefined,
+        })) {
           full += delta;
           controller.enqueue(encoder.encode(delta));
         }

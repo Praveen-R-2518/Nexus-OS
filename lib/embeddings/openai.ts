@@ -23,6 +23,11 @@ function mockVector(seed: string): number[] {
   return vec;
 }
 
+export type EmbedBatchUsage = {
+  vectors: number[][];
+  inputTokens: number | null;
+};
+
 /** Embed a single string. Returns a 1536-dim vector. */
 export async function embedText(text: string): Promise<number[]> {
   const [vector] = await embedBatch([text]);
@@ -31,10 +36,19 @@ export async function embedText(text: string): Promise<number[]> {
 
 /** Embed many strings in one request. Order of the result matches the input order. */
 export async function embedBatch(texts: string[]): Promise<number[][]> {
-  if (texts.length === 0) return [];
+  const { vectors } = await embedBatchWithUsage(texts);
+  return vectors;
+}
+
+/** Same as embedBatch, plus prompt token usage for People cost accounting. */
+export async function embedBatchWithUsage(texts: string[]): Promise<EmbedBatchUsage> {
+  if (texts.length === 0) return { vectors: [], inputTokens: 0 };
 
   if (isMockMode()) {
-    return texts.map(mockVector);
+    return {
+      vectors: texts.map(mockVector),
+      inputTokens: texts.reduce((sum, text) => sum + text.length, 0),
+    };
   }
 
   const client = getOpenAiClient("embed");
@@ -47,5 +61,9 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
     // pgvector column is vector(1536); large models must request reduced dimensions.
     dimensions: 1536,
   });
-  return response.data.map((d) => d.embedding as number[]);
+  const promptTokens = response.usage?.prompt_tokens;
+  return {
+    vectors: response.data.map((d) => d.embedding as number[]),
+    inputTokens: typeof promptTokens === "number" ? promptTokens : null,
+  };
 }

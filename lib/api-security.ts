@@ -37,6 +37,8 @@ export const JSON_LIMITS = {
   small: 16 * 1024,
   medium: 64 * 1024,
   ingest: 256 * 1024,
+  /** 1 MB CSV + mapping envelope (B4). */
+  csv: 1_000_000 + 64 * 1024,
 } as const;
 
 export function jsonError(

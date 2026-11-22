@@ -1,0 +1,17 @@
+{
+  "name": "Nexus OS",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "next-dev",
+      "command": "npm run dev",
+      "description": "Next.js dev server on http://localhost:3000. Reads secrets from environment vars / .env.local; boots and serves the marketing site without them."
+    }
+  ],
+  "ports": [
+    {
+      "name": "Next.js dev server",
+      "port": 3000
+    }
+  ]
+}

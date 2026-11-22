@@ -21,7 +21,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const AI_MODELS = {
   CLASSIFY: process.env.OPENAI_MODEL_CLASSIFY?.trim() || "gpt-4o-mini",
   DRAFT: process.env.OPENAI_MODEL_DRAFT?.trim() || "gpt-4o",
+  EMAIL_DRAFT: process.env.OPENAI_MODEL_EMAIL_DRAFT?.trim() || "gpt-4o",
   REPORT: process.env.OPENAI_MODEL_REPORT?.trim() || "gpt-4o-mini",
+  PEOPLE_EXPLAIN: process.env.OPENAI_MODEL_PEOPLE_EXPLAIN?.trim() || "gpt-4o-mini",
   CHAT: process.env.OPENAI_MODEL?.trim() || "gpt-4o",
   EMBED: process.env.OPENAI_EMBEDDING_MODEL?.trim() || "text-embedding-3-small",
   CAPTION: "gpt-4o-mini",
@@ -31,7 +33,10 @@ export const AI_MODELS = {
 export type AiOperation =
   | "classify"
   | "draft"
+  | "email_draft"
   | "report_summary"
+  | "people_explain"
+  | "people_embed"
   | "chat"
   | "embed"
   | "caption"
@@ -74,35 +79,8 @@ function resolveGlobalBaseUrl(): string | undefined {
 
 /** True when a real (or mock) OpenAI key is configured — the gate every AI route/function checks first. */
 export function isOpenAiConfigured(): boolean {
-  const mock = isMockMode();
-  const apiKey = resolveGlobalApiKey();
-  const configured = mock || !!apiKey;
-  // #region agent log
-  fetch("http://127.0.0.1:7718/ingest/82f32985-4bff-4337-b714-72c7f9526288", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "23c246" },
-    body: JSON.stringify({
-      sessionId: "23c246",
-      runId: "post-fix",
-      hypothesisId: "A,B,C,D",
-      location: "lib/ai/provider.ts:isOpenAiConfigured",
-      message: "AI config gate evaluated",
-      data: {
-        configured,
-        mock,
-        resolvedKeyLen: apiKey?.length ?? 0,
-        resolvedKeyIsMock: apiKey?.toLowerCase() === "mock",
-        openAiKeyLen: process.env.OPENAI_API_KEY?.trim().length ?? 0,
-        azureOpenAiKeyLen: process.env.AZURE_OPENAI_API_KEY?.trim().length ?? 0,
-        aiProvider: process.env.AI_PROVIDER?.trim() || null,
-        hasResolvedBaseUrl: !!resolveGlobalBaseUrl(),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-  if (mock) return true;
-  return !!apiKey;
+  if (isMockMode()) return true;
+  return !!resolveGlobalApiKey();
 }
 
 /**

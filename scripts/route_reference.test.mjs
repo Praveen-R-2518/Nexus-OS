@@ -53,8 +53,8 @@ assert(
 );
 
 // Guard against re-introducing a stale iCloud-conflict duplicate for any of these routes
-// (see CLAUDE.md — "NEVER read, edit, or import a file whose name contains ' 2' before the
-// extension"). If one of these ever appears, canonical files may have been silently replaced.
+// (see .cursor/rules/nexus.mdc — never read, edit, or import a file whose name contains " 2"
+// before the extension). If one of these ever appears, canonical files may have been silently replaced.
 function findDuplicateSiblings(relDir) {
   const dirPath = resolve(root, relDir);
   if (!existsSync(dirPath)) return [];

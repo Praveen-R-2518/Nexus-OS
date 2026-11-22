@@ -4,7 +4,7 @@
  * Loads the connected OAuth credential for a workspace, decrypts the stored tokens, refreshes
  * the access token when it is near expiry (persisting the new value), and returns a usable
  * access token. Decryption and refresh MUST happen here on the server — n8n never sees a token
- * (CLAUDE.md secrets rule). This mirrors the read path in
+ * (Nexus secrets rule). This mirrors the read path in
  * `app/api/internal/n8n/gmail-credentials/route.ts`; that route may adopt this helper later.
  */
 

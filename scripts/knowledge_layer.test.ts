@@ -82,12 +82,15 @@ moduleWithLoad._load = function (this: unknown, ...args: unknown[]) {
     knowledge: [
       { content: "Our standard leasing fee is 8% of annual rent.", kind: "business_doc", similarity: 0.9 },
       { content: "Refunds are processed within 14 days.", kind: "summary", similarity: 0.7 },
+      { content: "Ada is an engineer in London.", kind: "people_summary", similarity: 0.85 },
     ],
   };
   const promptK = buildAnalystSystemPrompt(ctxWithKnowledge as never);
   assert(promptK.includes(BLOCK_HEADER), "C: knowledge block rendered");
   assert(promptK.includes("8% of annual rent"), "C: business_doc chunk content included");
   assert(promptK.includes("Refunds are processed"), "C: summary chunk content included");
+  assert(promptK.includes("(People)"), "C: people_summary labeled People");
+  assert(promptK.includes("Ada is an engineer in London."), "C: people_summary content included");
 
   // ==============================================================================================
   // D. Document-type validation

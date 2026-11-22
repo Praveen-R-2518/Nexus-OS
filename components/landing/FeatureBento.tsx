@@ -7,6 +7,9 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Target,
+  Users,
+  CalendarDays,
+  MessagesSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -18,12 +21,6 @@ import { TracedCard } from "@/components/landing/primitives/TracedCard";
 import { ACCENT_SOFT, ACCENT_VAR, FEATURES } from "@/lib/landing/content";
 import { cn } from "@/lib/utils";
 
-/**
- * Asymmetric 4-column bento: two wide cells carry the load-bearing claims, four
- * small ones fill in the rest. Each card keeps one tiny always-on micro-loop
- * that names its job; hover adds the border trace + 2px lift.
- */
-
 const ICONS: Record<string, LucideIcon> = {
   filter: SlidersHorizontal,
   classify: Target,
@@ -31,6 +28,9 @@ const ICONS: Record<string, LucideIcon> = {
   queue: ShieldCheck,
   inbox: Inbox,
   report: LineChart,
+  analyst: MessagesSquare,
+  posts: CalendarDays,
+  hiring: Users,
 };
 
 function MicroLoop({
@@ -80,6 +80,7 @@ function MicroLoop({
           ))}
         </svg>
       );
+    case "hiring":
     case "classify":
       return (
         <svg viewBox="0 0 120 32" className="mt-5 h-8 w-full" aria-hidden>
@@ -101,6 +102,7 @@ function MicroLoop({
           ))}
         </svg>
       );
+    case "posts":
     case "draft":
       return (
         <svg viewBox="0 0 120 32" className="mt-5 h-8 w-full" aria-hidden>
@@ -157,6 +159,7 @@ function MicroLoop({
           ))}
         </svg>
       );
+    case "analyst":
     case "report":
       return (
         <svg viewBox="0 0 120 32" className="mt-5 h-8 w-full" aria-hidden>

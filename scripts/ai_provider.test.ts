@@ -6,9 +6,10 @@
  *  1. isOpenAiConfigured()/isMockMode() reflect AI_PROVIDER / OPENAI_API_KEY.
  *  2. classifyMessage() returns a deterministic fixture in mock mode (no network).
  *  3. draftReply() returns a deterministic fixture in mock mode (no network).
- *  4. summarizeReport() returns a labelled `source: 'fallback'` summary when not configured,
+ *  4. draftEmail() returns a deterministic fixture in mock mode (no network).
+ *  5. summarizeReport() returns a labelled `source: 'fallback'` summary when not configured,
  *     and never throws.
- *  5. AI_MODELS constants match the spec.
+ *  6. AI_MODELS constants match the spec.
  */
 
 import Module from "module";
@@ -42,7 +43,9 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
   delete process.env.OPENAI_MODEL;
   delete process.env.OPENAI_MODEL_CLASSIFY;
   delete process.env.OPENAI_MODEL_DRAFT;
+  delete process.env.OPENAI_MODEL_EMAIL_DRAFT;
   delete process.env.OPENAI_MODEL_REPORT;
+  delete process.env.OPENAI_MODEL_PEOPLE_EXPLAIN;
   delete process.env.OPENAI_EMBEDDING_MODEL;
   delete process.env.OPENAI_EMBED_API_KEY;
   delete process.env.OPENAI_EMBED_BASE_URL;
@@ -52,12 +55,16 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
   const { isMockMode, isOpenAiConfigured, AI_MODELS } = await import("@/lib/ai/provider");
   const { classifyMessage } = await import("@/lib/ai/classify");
   const { draftReply } = await import("@/lib/ai/draft");
+  const { draftEmail } = await import("@/lib/ai/draft-email");
   const { summarizeReport } = await import("@/lib/ai/report-summary");
+  const { explainMatchScore } = await import("@/lib/ai/people-explain");
 
   await check("AI_MODELS constants match spec", () => {
     assert(AI_MODELS.CLASSIFY === "gpt-4o-mini", "CLASSIFY");
     assert(AI_MODELS.DRAFT === "gpt-4o", "DRAFT");
+    assert(AI_MODELS.EMAIL_DRAFT === "gpt-4o", "EMAIL_DRAFT");
     assert(AI_MODELS.REPORT === "gpt-4o-mini", "REPORT");
+    assert(AI_MODELS.PEOPLE_EXPLAIN === "gpt-4o-mini", "PEOPLE_EXPLAIN");
     assert(AI_MODELS.CHAT === "gpt-4o", "CHAT");
     assert(AI_MODELS.EMBED === "text-embedding-3-small", "EMBED");
     assert(AI_MODELS.CAPTION === "gpt-4o-mini", "CAPTION");
@@ -87,6 +94,54 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
     });
     assert(source === "mock", `source mock, got ${source}`);
     assert(draft.reply_text.length > 0, "has reply_text");
+  });
+
+  await check("draftEmail returns deterministic fixture in mock mode", async () => {
+    const result = await draftEmail({
+      teamId: "11111111-2222-3333-4444-555555555555",
+      recipient: { name: "Jordan" },
+      situation: "Confirm start date",
+    });
+    assert(result.status === "success", "success");
+    if (result.status !== "success") return;
+    assert(result.metadata.source === "mock", `source mock, got ${result.metadata.source}`);
+    assert(result.subject.length > 0, "has subject");
+    assert(result.body.length > 0, "has body");
+  });
+
+  await check("explainMatchScore returns deterministic fixture in mock mode", async () => {
+    const result = await explainMatchScore({
+      teamId: "11111111-2222-3333-4444-555555555555",
+      job: {
+        title: "Engineer",
+        required_skills: ["TypeScript"],
+        preferred_skills: [],
+        experience_min_years: 3,
+        experience_max_years: 8,
+        seniority: "senior",
+        location: "SF",
+        remote_policy: "onsite",
+      },
+      candidate: {
+        headline: "Dev",
+        current_role: "Engineer",
+        experience_years: 5,
+        skills: ["TypeScript"],
+        location: "SF",
+      },
+      scoring: {
+        scoring_version: "people.match.v1",
+        data_quality: "sufficient",
+        match_score: 70,
+        insufficient_reason: null,
+        match_components: [],
+        match_weights_used: {},
+      },
+    });
+    assert(result.status === "success", "success");
+    if (result.status !== "success") return;
+    assert(result.source === "mock", "mock source");
+    assert(result.explanation.summary.length > 0, "summary");
   });
 
   await check("summarizeReport succeeds in mock mode (source openai)", async () => {
@@ -136,7 +191,7 @@ async function check(name: string, fn: () => Promise<void> | void): Promise<void
     assert(summary.includes("Acme"), "fallback summary uses stats");
   });
 
-  console.log(`\nai_provider: ${passed}/9 checks passed`);
+  console.log(`\nai_provider: ${passed}/11 checks passed`);
 })().catch((e) => {
   console.error("FAIL:", e instanceof Error ? e.message : e);
   process.exit(1);

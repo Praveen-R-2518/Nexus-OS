@@ -13,6 +13,7 @@ const TOKEN = "test-ingest-token";
 const TEAM_ID = "11111111-2222-3333-4444-555555555555";
 
 let rpcRows: Array<{ content: string; kind: string; similarity: number }> = [];
+let lastMatchParams: Record<string, unknown> | null = null;
 
 const fakeClient = {
   from(table: string) {
@@ -38,6 +39,7 @@ const fakeClient = {
       return Promise.resolve({ data: { allowed: true }, error: null });
     }
     if (name === "match_embeddings") {
+      lastMatchParams = _params;
       return Promise.resolve({ data: rpcRows, error: null });
     }
     return Promise.resolve({ data: null, error: { message: `unknown rpc ${name}` } });
@@ -141,7 +143,33 @@ function post(
     assert(json.chunks[0].kind === "business_doc", "doc ranked first by kind weight");
   });
 
-  console.log(`\nmatch_embeddings_route: ${passed}/4 checks passed`);
+  await check("people_summary in body.kinds is dropped", async () => {
+    lastMatchParams = null;
+    rpcRows = [
+      { content: "Enterprise refunds are 30 days.", kind: "business_doc", similarity: 0.9 },
+    ];
+    const res = await post(POST, {
+      token: TOKEN,
+      body: {
+        team_id: TEAM_ID,
+        query: "refund policy",
+        kinds: ["people_summary", "business_doc"],
+      },
+    });
+    assert(res.status === 200, `ok -> 200, got ${res.status}`);
+    const kinds = lastMatchParams?.p_kinds;
+    assert(Array.isArray(kinds), "p_kinds recorded");
+    assert(
+      (kinds as unknown[]).includes("business_doc"),
+      "business_doc kept",
+    );
+    assert(
+      !(kinds as unknown[]).includes("people_summary"),
+      "people_summary stripped from n8n retrieval",
+    );
+  });
+
+  console.log(`\nmatch_embeddings_route: ${passed}/5 checks passed`);
 })().catch((e) => {
   console.error("FAIL:", e instanceof Error ? e.message : e);
   process.exit(1);

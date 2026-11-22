@@ -1,7 +1,7 @@
 /**
  * Approval policy — the single source of truth for "auto-send or hard-gate?".
  *
- * Architecture principle #3 (CLAUDE.md): all outbound is approval-gated by policy. Auto-send
+ * Architecture principle #3 (.cursor/rules/nexus.mdc): all outbound is approval-gated by policy. Auto-send
  * only low-risk / low-value replies; ALWAYS hard-gate high estimated value or churn risk. This
  * is a pure function so it can be unit-tested and reused everywhere a send decision is made
  * (the send executor's WF3 autopilot path, task 1.5). Never send from a classifier/drafter —

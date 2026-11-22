@@ -2,26 +2,32 @@
   "id": "VZ9ZaA1S2JxSAeGQ",
   "name": "WF8b - Social Post Platform Publishing",
   "active": true,
-  "note": "Hardened 2026-07-17: webhook auth, IG container→publish, FB message field, mediaUrl, flatten fix, post-result gating.",
+  "note": "Hardened 2026-09-01: app social-post signed URL, hashtags, LinkedIn, IG container wait, post-result on error.",
   "nodes": [
     {
       "parameters": {
-        "content": "## WF8b — Social publish (hardened)\n\nRequires `N8N_WEBHOOK_TOKEN` on incoming webhooks and `NEXUS_APP_URL` + `N8N_INGEST_TOKEN` for app callbacks.\n\nTerminal status is written via `POST /api/internal/n8n/post-result` only after all platform calls succeed.",
+        "content": "## WF8b \u2014 Social publish (hardened)\n\nRequires `N8N_WEBHOOK_TOKEN` on incoming webhooks and `NEXUS_APP_URL` + `N8N_INGEST_TOKEN` for app callbacks.\n\nReads the post + signed media URL from `GET /api/internal/n8n/social-post` (no Supabase REST). Terminal status is written via `POST /api/internal/n8n/post-result`. Same-workflow Error Trigger writes `failed` if a node throws.",
         "height": 220,
         "width": 440
       },
       "id": "b8b00001-0000-4000-8000-000000000001",
-      "name": "Sticky Note — post-result",
+      "name": "Sticky Note \u2014 post-result",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-200, 180]
+      "position": [
+        -200,
+        180
+      ]
     },
     {
       "id": "ad76d65c-3ade-4a86-aa39-d018e49f653d",
       "name": "Publish Request",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "parameters": {
         "path": "publish-social-post",
         "httpMethod": "POST",
@@ -34,7 +40,10 @@
       "name": "Verify Webhook Auth",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [420, 300],
+      "position": [
+        420,
+        300
+      ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "jsCode": "function getVar(name) {\n  if (typeof $vars !== 'undefined' && $vars[name] != null && String($vars[name]).trim()) {\n    return String($vars[name]).trim();\n  }\n  return '';\n}\nconst expected = getVar('N8N_WEBHOOK_TOKEN');\nif (!expected) throw new Error('N8N_WEBHOOK_TOKEN is not set in n8n Variables');\nconst req = $input.first().json || {};\nconst headers = req.headers || {};\nconst auth = String(headers.authorization || headers.Authorization || '').trim();\nconst token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : auth;\nif (!token || token !== expected) throw new Error('Unauthorized');\nreturn $input.all();"
@@ -45,16 +54,30 @@
       "name": "Fetch Draft Post",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [640, 300],
+      "position": [
+        640,
+        300
+      ],
       "parameters": {
         "method": "GET",
-        "url": "=https://xuvodbcdmfhlbldbvwvt.supabase.co/rest/v1/social_posts?id=eq.{{ $('Publish Request').first().json.body.postId }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpCustomAuth",
-        "options": { "response": { "response": { "responseFormat": "json" } } }
-      },
-      "credentials": {
-        "httpCustomAuth": { "id": "4rfwTEeSitzS3JeQ", "name": "Supabase API" }
+        "url": "={{ (($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '')) + '/api/internal/n8n/social-post?organization_id=' + $('Publish Request').first().json.body.orgId + '&post_id=' + $('Publish Request').first().json.body.postId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ ($vars.N8N_INGEST_TOKEN || $vars.N8N_BOOTSTRAP_TOKEN || '').trim() }}"
+            }
+          ]
+        },
+        "authentication": "none",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
       }
     },
     {
@@ -62,10 +85,13 @@
       "name": "Flatten Post Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [860, 300],
+      "position": [
+        860,
+        300
+      ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const raw = $input.first().json;\nconst row = Array.isArray(raw) ? raw[0] : (raw && raw.id ? raw : (Array.isArray(raw?.body) ? raw.body[0] : raw));\nif (!row || !row.id) throw new Error('Draft post not found');\nreturn [{ json: {\n  id: row.id,\n  captions: row.captions || {},\n  platforms: row.platforms || [],\n  mediaUrl: row.media_url || row.mediaUrl || null\n} }];"
+        "jsCode": "const postId = $('Publish Request').first().json.body.postId || '';\nconst raw = $input.first().json;\nif (raw && raw.success === false) {\n  throw new Error((raw.error || 'Failed to load social post') + ' postId=' + postId);\n}\nconst row = raw && raw.data ? raw.data : raw;\nif (!row || !row.id) throw new Error('Draft post not found postId=' + postId);\nreturn [{ json: {\n  id: row.id,\n  captions: row.captions || {},\n  composed_captions: row.composed_captions || {},\n  platforms: row.platforms || [],\n  mediaUrl: row.media_signed_url || row.mediaUrl || null,\n  postId: row.id\n} }];"
       }
     },
     {
@@ -73,7 +99,10 @@
       "name": "Fetch Platform Tokens",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1080, 300],
+      "position": [
+        1080,
+        300
+      ],
       "parameters": {
         "method": "GET",
         "url": "={{ (($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '')) + '/api/internal/n8n/social-credentials?organization_id=' + $('Publish Request').first().json.body.orgId }}",
@@ -87,7 +116,13 @@
           ]
         },
         "authentication": "none",
-        "options": { "response": { "response": { "responseFormat": "json" } } }
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
       }
     },
     {
@@ -95,9 +130,12 @@
       "name": "Build Platform Post Items",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1300, 300],
+      "position": [
+        1300,
+        300
+      ],
       "parameters": {
-        "jsCode": "const post = $('Flatten Post Data').first().json;\nconst resp = $input.first().json;\nif (resp && resp.success === false) {\n  throw new Error(resp.error || 'Failed to fetch social credentials');\n}\nconst creds = Array.isArray(resp?.data) ? resp.data : [];\nconst platforms = post.platforms || [];\nconst captions = post.captions || {};\nconst mediaUrl = post.mediaUrl;\nconst postId = post.id;\nconst SUPPORTED = ['instagram', 'facebook', 'x'];\nconst items = [];\nfor (const platform of platforms) {\n  if (!SUPPORTED.includes(platform)) continue;\n  const cred = creds.find(c => c.platform === platform);\n  if (!cred) continue;\n  items.push({ json: {\n    platform,\n    caption: (captions[platform] && captions[platform].caption) || '',\n    platformToken: cred.access_token,\n    mediaUrl,\n    postId\n  }});\n}\nif (items.length === 0) throw new Error('No connected platform credentials for requested platforms');\nreturn items;",
+        "jsCode": "const post = $('Flatten Post Data').first().json;\nconst resp = $input.first().json;\nif (resp && resp.success === false) {\n  throw new Error((resp.error || 'Failed to fetch social credentials') + ' postId=' + post.id);\n}\nconst creds = Array.isArray(resp?.data) ? resp.data : [];\nconst platforms = post.platforms || [];\nconst composed = post.composed_captions || {};\nconst captions = post.captions || {};\nconst mediaUrl = post.mediaUrl;\nconst postId = post.id;\nconst SUPPORTED = ['instagram', 'facebook', 'x', 'linkedin'];\nconst items = [];\nfor (const platform of platforms) {\n  if (!SUPPORTED.includes(platform)) continue;\n  const cred = creds.find(c => c.platform === platform);\n  if (!cred) continue;\n  const caption = composed[platform] || (captions[platform] && captions[platform].caption) || '';\n  items.push({ json: {\n    platform,\n    caption,\n    platformToken: cred.access_token,\n    mediaUrl,\n    postId\n  }});\n}\nif (items.length === 0) throw new Error('No connected platform credentials for requested platforms postId=' + postId);\nreturn items;",
         "mode": "runOnceForAllItems"
       }
     },
@@ -106,18 +144,26 @@
       "name": "Process Each Platform",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [1520, 300],
-      "parameters": { "batchSize": 1 }
+      "position": [
+        1520,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
     },
     {
       "id": "3b10e707-051b-45d9-bd66-a96b47c6baef",
       "name": "Publish Platform",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1740, 420],
+      "position": [
+        1740,
+        420
+      ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const item = $input.first().json;\nconst platform = item.platform;\nconst token = item.platformToken;\nconst caption = item.caption || '';\nconst mediaUrl = item.mediaUrl;\nconst helpers = this.helpers;\n\ntry {\n  if (platform === 'facebook') {\n    const body = { message: caption };\n    if (mediaUrl) body.link = mediaUrl;\n    const res = await helpers.httpRequest({\n      method: 'POST',\n      url: 'https://graph.facebook.com/v18.0/me/feed',\n      headers: { Authorization: `Bearer ${token}` },\n      body,\n      json: true,\n    });\n    return [{ json: { platform, success: true, provider_id: res.id || null } }];\n  }\n\n  if (platform === 'instagram') {\n    const pages = await helpers.httpRequest({\n      method: 'GET',\n      url: 'https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account',\n      headers: { Authorization: `Bearer ${token}` },\n      json: true,\n    });\n    const page = (pages.data || []).find(p => p.instagram_business_account && p.instagram_business_account.id);\n    const igUserId = page?.instagram_business_account?.id;\n    if (!igUserId) throw new Error('No instagram_business_account linked to token');\n    const containerBody = { caption };\n    if (mediaUrl) containerBody.image_url = mediaUrl;\n    else throw new Error('Instagram publish requires mediaUrl');\n    const container = await helpers.httpRequest({\n      method: 'POST',\n      url: `https://graph.facebook.com/v18.0/${igUserId}/media`,\n      headers: { Authorization: `Bearer ${token}` },\n      body: containerBody,\n      json: true,\n    });\n    const creationId = container.id;\n    if (!creationId) throw new Error('IG media container creation failed');\n    const published = await helpers.httpRequest({\n      method: 'POST',\n      url: `https://graph.facebook.com/v18.0/${igUserId}/media_publish`,\n      headers: { Authorization: `Bearer ${token}` },\n      body: { creation_id: creationId },\n      json: true,\n    });\n    return [{ json: { platform, success: true, provider_id: published.id || creationId } }];\n  }\n\n  if (platform === 'x') {\n    const body = { text: caption };\n    const res = await helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.twitter.com/2/tweets',\n      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n      body,\n      json: true,\n    });\n    return [{ json: { platform, success: true, provider_id: res.data?.id || null } }];\n  }\n\n  throw new Error(`Unsupported platform: ${platform}`);\n} catch (error) {\n  return [{ json: { platform, success: false, error: error.message || String(error) } }];\n}"
+        "jsCode": "const item = $input.first().json;\nconst platform = item.platform;\nconst token = item.platformToken;\nconst caption = item.caption || '';\nconst mediaUrl = item.mediaUrl;\nconst helpers = this.helpers;\nconst sleep = (ms) => new Promise((r) => setTimeout(r, ms));\nconst remember = (result) => {\n  const staticData = $getWorkflowStaticData('global');\n  if (!Array.isArray(staticData.publishResults)) staticData.publishResults = [];\n  staticData.publishResults.push(result);\n  return [{ json: result }];\n};\n\ntry {\n  if (platform === 'facebook') {\n    const pages = await helpers.httpRequest({\n      method: 'GET',\n      url: 'https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token',\n      headers: { Authorization: `Bearer ${token}` },\n      json: true,\n    });\n    const page = (pages.data || [])[0];\n    if (!page || !page.id) throw new Error('No Facebook page linked to token');\n    const pageToken = page.access_token || token;\n    let res;\n    if (mediaUrl) {\n      res = await helpers.httpRequest({\n        method: 'POST',\n        url: `https://graph.facebook.com/v21.0/${page.id}/photos`,\n        headers: { Authorization: `Bearer ${pageToken}` },\n        body: { url: mediaUrl, caption },\n        json: true,\n      });\n    } else {\n      res = await helpers.httpRequest({\n        method: 'POST',\n        url: `https://graph.facebook.com/v21.0/${page.id}/feed`,\n        headers: { Authorization: `Bearer ${pageToken}` },\n        body: { message: caption },\n        json: true,\n      });\n    }\n    return remember({ platform, success: true, provider_id: res.id || res.post_id || null });\n  }\n\n  if (platform === 'instagram') {\n    const pages = await helpers.httpRequest({\n      method: 'GET',\n      url: 'https://graph.facebook.com/v21.0/me/accounts?fields=instagram_business_account',\n      headers: { Authorization: `Bearer ${token}` },\n      json: true,\n    });\n    const page = (pages.data || []).find(p => p.instagram_business_account && p.instagram_business_account.id);\n    const igUserId = page && page.instagram_business_account && page.instagram_business_account.id;\n    if (!igUserId) throw new Error('No instagram_business_account linked to token');\n    if (!mediaUrl) throw new Error('Instagram publish requires mediaUrl');\n    const container = await helpers.httpRequest({\n      method: 'POST',\n      url: `https://graph.facebook.com/v21.0/${igUserId}/media`,\n      headers: { Authorization: `Bearer ${token}` },\n      body: { caption, image_url: mediaUrl },\n      json: true,\n    });\n    const creationId = container.id;\n    if (!creationId) throw new Error('IG media container creation failed');\n    let status = 'IN_PROGRESS';\n    for (let i = 0; i < 12; i++) {\n      await sleep(5000);\n      const st = await helpers.httpRequest({\n        method: 'GET',\n        url: `https://graph.facebook.com/v21.0/${creationId}?fields=status_code`,\n        headers: { Authorization: `Bearer ${token}` },\n        json: true,\n      });\n      status = st.status_code || status;\n      if (status === 'FINISHED') break;\n      if (status === 'ERROR' || status === 'EXPIRED') throw new Error('IG media container ' + status);\n    }\n    if (status !== 'FINISHED') throw new Error('IG media container did not finish in time');\n    const published = await helpers.httpRequest({\n      method: 'POST',\n      url: `https://graph.facebook.com/v21.0/${igUserId}/media_publish`,\n      headers: { Authorization: `Bearer ${token}` },\n      body: { creation_id: creationId },\n      json: true,\n    });\n    return remember({ platform, success: true, provider_id: published.id || creationId });\n  }\n\n  if (platform === 'x') {\n    let text = caption;\n    if (mediaUrl && (text + ' ' + mediaUrl).length <= 280) {\n      text = text ? (text + ' ' + mediaUrl) : mediaUrl;\n    }\n    const res = await helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.twitter.com/2/tweets',\n      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n      body: { text },\n      json: true,\n    });\n    return remember({ platform, success: true, provider_id: (res.data && res.data.id) || null });\n  }\n\n  if (platform === 'linkedin') {\n    let personId = null;\n    try {\n      const me = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.linkedin.com/v2/userinfo',\n        headers: { Authorization: `Bearer ${token}` },\n        json: true,\n      });\n      personId = me.sub || me.id || null;\n    } catch (e) {\n      const me = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.linkedin.com/v2/me',\n        headers: { Authorization: `Bearer ${token}` },\n        json: true,\n      });\n      personId = me.id || null;\n    }\n    if (!personId) throw new Error('Could not resolve LinkedIn member id');\n    const author = String(personId).startsWith('urn:') ? personId : ('urn:li:person:' + personId);\n    const shareContent = {\n      shareCommentary: { text: caption },\n      shareMediaCategory: mediaUrl ? 'ARTICLE' : 'NONE',\n    };\n    if (mediaUrl) {\n      shareContent.media = [{ status: 'READY', originalUrl: mediaUrl }];\n    }\n    const share = {\n      author,\n      lifecycleState: 'PUBLISHED',\n      specificContent: { 'com.linkedin.ugc.ShareContent': shareContent },\n      visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },\n    };\n    const res = await helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.linkedin.com/v2/ugcPosts',\n      headers: {\n        Authorization: `Bearer ${token}`,\n        'Content-Type': 'application/json',\n        'X-Restli-Protocol-Version': '2.0.0',\n      },\n      body: share,\n      json: true,\n    });\n    return remember({ platform, success: true, provider_id: res.id || null });\n  }\n\n  throw new Error('Unsupported platform: ' + platform);\n} catch (error) {\n  return remember({ platform, success: false, error: error.message || String(error) });\n}\n"
       }
     },
     {
@@ -125,10 +171,13 @@
       "name": "Finalize Post Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1740, 180],
+      "position": [
+        1740,
+        180
+      ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const postId = $('Publish Request').first().json.body.postId;\nconst results = $('Publish Platform').all().map(i => i.json);\nconst failures = results.filter(r => !r.success);\nconst appUrl = ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '');\nconst token = ($vars.N8N_INGEST_TOKEN || $vars.N8N_BOOTSTRAP_TOKEN || '').trim();\nif (!token) throw new Error('N8N_INGEST_TOKEN not configured');\nconst status = failures.length ? 'failed' : 'published';\nconst error = failures.map(f => `${f.platform}: ${f.error || 'failed'}`).join('; ') || null;\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: `${appUrl}/api/internal/n8n/post-result`,\n  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n  body: { postId, status, error },\n  json: true,\n});\nreturn [{ json: { postId, status, platforms: results } }];"
+        "jsCode": "const postId = $('Publish Request').first().json.body.postId;\nconst staticData = $getWorkflowStaticData('global');\nconst stored = Array.isArray(staticData.publishResults) ? staticData.publishResults : [];\nconst results = stored.length ? stored : $('Publish Platform').all().map(i => i.json);\nstaticData.publishResults = [];\nconst failures = results.filter(r => !r.success);\nconst appUrl = ($vars.NEXUS_APP_URL || 'https://nexusos.knurdz.org').replace(/\\/$/, '');\nconst token = ($vars.N8N_INGEST_TOKEN || $vars.N8N_BOOTSTRAP_TOKEN || '').trim();\nif (!token) throw new Error('N8N_INGEST_TOKEN not configured postId=' + postId);\nconst status = failures.length ? 'failed' : 'published';\nconst error = failures.map(f => `${f.platform}: ${f.error || 'failed'}`).join('; ') || null;\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: `${appUrl}/api/internal/n8n/post-result`,\n  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n  body: { postId, status, error },\n  json: true,\n});\nreturn [{ json: { postId, status, platforms: results } }];\n"
       }
     },
     {
@@ -136,44 +185,162 @@
       "name": "Return Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1980, 180],
+      "position": [
+        1980,
+        180
+      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ $json }}"
+      }
+    },
+    {
+      "id": "b8b-error-0001",
+      "name": "On Publish Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        560
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b8b-error-report-0001",
+      "name": "Report Publish Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        560
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function getVar(name) {\n  if (typeof $vars !== 'undefined' && $vars[name] != null && String($vars[name]).trim()) {\n    return String($vars[name]).trim();\n  }\n  return '';\n}\nconst payload = $input.first().json || {};\nconst msg = String((payload.execution && payload.execution.error && payload.execution.error.message) || payload.message || '');\nconst uuidMatch = msg.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);\nconst postId = uuidMatch ? uuidMatch[0] : null;\nif (!postId) {\n  return [{ json: { skipped: true, reason: 'no postId in error' } }];\n}\nconst appUrl = (getVar('NEXUS_APP_URL') || 'https://nexusos.knurdz.org').replace(/\\/$/, '');\nconst token = (getVar('N8N_INGEST_TOKEN') || getVar('N8N_BOOTSTRAP_TOKEN') || '').trim();\nif (!token) throw new Error('N8N_INGEST_TOKEN not configured');\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: `${appUrl}/api/internal/n8n/post-result`,\n  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },\n  body: { postId, status: 'failed', error: (msg || 'publish workflow failed').slice(0, 500) },\n  json: true,\n});\nreturn [{ json: { postId, status: 'failed' } }];\n"
       }
     }
   ],
   "connections": {
     "Publish Request": {
-      "main": [[{ "node": "Verify Webhook Auth", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Verify Webhook Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Verify Webhook Auth": {
-      "main": [[{ "node": "Fetch Draft Post", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch Draft Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch Draft Post": {
-      "main": [[{ "node": "Flatten Post Data", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Flatten Post Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Flatten Post Data": {
-      "main": [[{ "node": "Fetch Platform Tokens", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch Platform Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch Platform Tokens": {
-      "main": [[{ "node": "Build Platform Post Items", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Build Platform Post Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Build Platform Post Items": {
-      "main": [[{ "node": "Process Each Platform", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Process Each Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Process Each Platform": {
       "main": [
-        [{ "node": "Finalize Post Status", "type": "main", "index": 0 }],
-        [{ "node": "Publish Platform", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Finalize Post Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Publish Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Publish Platform": {
-      "main": [[{ "node": "Process Each Platform", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Process Each Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Finalize Post Status": {
-      "main": [[{ "node": "Return Success", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Publish Error": {
+      "main": [
+        [
+          {
+            "node": "Report Publish Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "settings": { "executionOrder": "v1", "availableInMCP": true }
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
 }

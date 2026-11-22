@@ -123,7 +123,7 @@ export function PostsWorkspace() {
       {toast ? (
         <div
           role="status"
-          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-glass-border bg-glass px-4 py-2.5 text-sm font-medium text-atmospheric-grey shadow-lg backdrop-blur-xl"
+          className="fixed inset-x-4 bottom-4 z-50 rounded-xl border border-glass-border bg-glass px-4 py-2.5 text-center text-sm font-medium text-atmospheric-grey shadow-lg backdrop-blur-xl sm:inset-x-auto sm:left-1/2 sm:w-auto sm:-translate-x-1/2"
         >
           {toast}
         </div>

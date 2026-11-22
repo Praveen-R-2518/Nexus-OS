@@ -36,10 +36,14 @@ and committed under `supabase/migrations/`. Nothing to run — just be aware:
 - `20260715140000_durable_rate_limit.sql` — `rate_limit_hit` RPC (service-role only).
 - `20260715150000_workspace_ai_settings.sql` — `ai_monthly_token_budget`, `chat_visuals_enabled`.
 - `20260715160000_reply_drafts_provider_message_id.sql`.
+- L1 `people_hardening_grants` (2026-09-03) — `authenticated` no longer has
+  TRUNCATE/DELETE on People-era tables; DELETE policies dropped. Archive-only.
+  Remote MCP version `20260903051451`.
 
 Still yours to decide/do in the Supabase dashboard:
 
 - [ ] **Enable leaked-password protection** (Auth → Passwords → HaveIBeenPwned check).
+      Unchanged by L1 — this stays a human Auth setting, not a migration.
 - [ ] **Move the `vector` extension out of `public`** (advisor WARN; low urgency, coordinate
       with the `embeddings` table + `match_embeddings` before touching).
 - [ ] Advisors still list `invite_preview`, `launch_workspace`, `is_workspace_member/owner`,
@@ -58,7 +62,8 @@ Live workflow IDs (from the 2026-07-11 audit; kept here since they exist nowhere
 | WF0e Backfill | `Y54F1bZLJkRyexTH` | | WF5 Summary | `QoJIseLTX2jwDYEy` |
 | WF0f Gmail sync poller | `rNjW8GyWfZHuXnnf` (INACTIVE) | | WF8b Social publish | `VZ9ZaA1S2JxSAeGQ` |
 | WF1 Webhook intake | `zU8cDHJeoUGWbUgC` | | WF8c Image gen | `RfmuS0guiaq64Lrx` |
-| WF2 Classification | `MmA7EKsOYAZgx3ep` | | WF8a orphan (Claude) | `YjEXyYnAHhoSSc2W` — delete when convenient |
+| WF2 Classification | `MmA7EKsOYAZgx3ep` | | WF9 People match drain | `d1CkkuSDwsZKVhQq` (ACTIVE) |
+| WF8a orphan (Claude) | `YjEXyYnAHhoSSc2W` — delete when convenient | | | |
 
 To do:
 
@@ -109,5 +114,7 @@ Code for WhatsApp/Messenger/Instagram outbound is **built and tested but disable
   row in the chat UI; WF3 drafting retrieves similar past context.
 - Chat visuals: the analyst can render bar/line/donut/table blocks; toggle (default ON, with
   a usage note) in Settings → AI & Approval Rules.
-- Per-tenant monthly AI token budget (soft alert only) + AI usage card on the Report page.
+- Per-tenant monthly AI token budget + AI usage card on the Report page.
+  People AI (match explanations, People email drafts, people_summary embeddings)
+  pauses at 100% when a budget is set. Chat and Revenue send stay alert-only.
 - Prompt-injection canary tests: `npm run test:prompt-injection`.

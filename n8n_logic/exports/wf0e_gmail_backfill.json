@@ -1,8 +1,8 @@
 {
   "id": "Y54F1bZLJkRyexTH",
   "name": "WF0e Gmail Backfill",
-  "active": true,
-  "note": "Hardened 2026-07-17: no Supabase service-role. Schedule → POST {NEXUS_APP_URL}/api/internal/n8n/gmail-backfill (empty body; app claims next pending job). Re-import into live n8n after pull.",
+  "active": false,
+  "note": "Deactivated 2026-09-01 to stop n8n Cloud quota burn (was firing every 5 min with nothing to backfill). Re-activate when a gmail_backfill_jobs row is queued. Schedule → POST {NEXUS_APP_URL}/api/internal/n8n/gmail-backfill.",
   "nodes": [
     {
       "id": "sn-wf0e",

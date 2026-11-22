@@ -1,8 +1,8 @@
 {
   "id": "47BO0agxAJGizttR",
   "name": "WF8d - Social Post Scheduler",
-  "active": true,
-  "note": "Hardened 2026-07-17: active, NEXUS_APP_URL fallback, WF8b webhook auth header on trigger.",
+  "active": false,
+  "note": "Deactivated 2026-09-01 until the first real scheduled post (idle 5-min polling burned n8n Cloud quota). Re-activate after a founder schedules a post. Hardened 2026-07-17: NEXUS_APP_URL fallback, WF8b webhook auth header on trigger.",
   "nodes": [
     {
       "id": "8e6b4de6-813c-4a6b-b9a7-5fd6f6e01e60",

@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   "/chat",
   "/posts",
   "/profile",
+  "/people",
   "/team",
   "/logs",
 ] as const;
@@ -113,6 +114,8 @@ export const config = {
     "/posts/:path*",
     "/profile",
     "/profile/:path*",
+    "/people",
+    "/people/:path*",
     "/team",
     "/team/:path*",
     "/logs",
