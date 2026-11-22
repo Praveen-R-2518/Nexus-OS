@@ -1,14 +1,16 @@
 "use client";
 
+import { useState } from "react";
+import { InboxSortSelect } from "@/components/inbox/InboxSortSelect";
+import { sortInbox, type InboxSort } from "@/lib/inbox-sort";
+import { formatCurrency } from "@/lib/utils";
 import {
   CheckCircle2,
   FileText,
   Inbox,
   LayoutGrid,
-  Pencil,
-  Search,
   Settings,
-  TrendingUp,
+  Users,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -25,9 +27,9 @@ import { ACCENT_VAR, type NexusAccent } from "@/lib/landing/content";
 
 const nav: { label: string; icon: LucideIcon; badge?: string }[] = [
   { label: "Dashboard", icon: LayoutGrid },
-  { label: "Inbox", icon: Inbox, badge: "24" },
-  { label: "Approvals", icon: CheckCircle2, badge: "6" },
-  { label: "Leads", icon: TrendingUp },
+  { label: "Inbox", icon: Inbox, badge: "4" },
+  { label: "Approvals", icon: CheckCircle2 },
+  { label: "People", icon: Users },
   { label: "Reports", icon: FileText },
   { label: "Settings", icon: Settings },
 ];
@@ -49,17 +51,13 @@ function Chrome({ title }: { title: string }) {
         <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
       </div>
       <p className="ml-3.5 text-[11px] font-medium text-[#86868b]">{title}</p>
-      <span className="ml-auto hidden items-center gap-1.5 rounded-full border border-[color:var(--apple-hairline)] bg-white px-2.5 py-1 text-[10px] text-[#b0b0b5] sm:flex">
-        <Search className="h-3 w-3" aria-hidden />
-        Search
-      </span>
     </div>
   );
 }
 
 function Rail({ active }: { active: string }) {
   return (
-    <nav className="hidden w-[168px] shrink-0 border-r border-[color:var(--apple-hairline)] bg-[#fbfbfd] p-2.5 sm:block">
+    <div className="hidden w-[168px] shrink-0 border-r border-[color:var(--apple-hairline)] bg-[#fbfbfd] p-2.5 sm:block">
       <ul className="space-y-0.5">
         {nav.map((item) => {
           const on = item.label === active;
@@ -84,7 +82,7 @@ function Rail({ active }: { active: string }) {
           );
         })}
       </ul>
-    </nav>
+    </div>
   );
 }
 
@@ -109,20 +107,26 @@ const inboxRows: {
   preview: string;
   priority: string;
   accent: NexusAccent;
-  value: string;
+  estimated_value: number;
+  risk_score: number;
+  created_at: string;
 }[] = [
-  { name: "Sarah Chen", channel: "Gmail", preview: "We need to upgrade before Q3. Can you send pricing?", priority: "Critical", accent: "rescue", value: "$24,000" },
-  { name: "Marcus Webb", channel: "WhatsApp", preview: "Invoice discrepancy on last month's subscription", priority: "High", accent: "execution", value: "$8,400" },
-  { name: "Priya Nair", channel: "Instagram", preview: "Love the onboarding. Team wants to expand seats", priority: "High", accent: "discovery", value: "$12,500" },
-  { name: "Emma Rodriguez", channel: "Messenger", preview: "Five-star review, asked about the referral program", priority: "New lead", accent: "growth", value: "$4,900" },
+  { name: "Sarah Chen", channel: "Gmail", preview: "We need to upgrade before Q3. Can you send pricing?", priority: "Critical", accent: "rescue", estimated_value: 24000, risk_score: 95, created_at: "2026-04-02T09:00:00Z" },
+  { name: "Marcus Webb", channel: "WhatsApp", preview: "Invoice discrepancy on last month's subscription", priority: "High", accent: "execution", estimated_value: 8400, risk_score: 85, created_at: "2026-04-02T09:20:00Z" },
+  { name: "Priya Nair", channel: "Instagram", preview: "Love the onboarding. Team wants to expand seats", priority: "High", accent: "discovery", estimated_value: 12500, risk_score: 60, created_at: "2026-04-02T09:30:00Z" },
+  { name: "Emma Rodriguez", channel: "Messenger", preview: "Five-star review, asked about the referral program", priority: "New lead", accent: "growth", estimated_value: 4900, risk_score: 20, created_at: "2026-04-02T10:00:00Z" },
 ];
 
 function InboxPanel() {
+  const [sort, setSort] = useState<InboxSort>("risk_score");
   return (
     <>
-      <PanelHead eyebrow="Unified inbox" title="24 conversations, sorted by what they are worth" />
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3">
+        <PanelHead eyebrow="Unified inbox" title="Priority conversations" />
+        <InboxSortSelect value={sort} onChange={setSort} />
+      </div>
       <ul className="divide-y divide-[color:var(--apple-hairline)] overflow-hidden rounded-xl border border-[color:var(--apple-hairline)]">
-        {inboxRows.map((row) => (
+        {sortInbox(inboxRows, sort).map((row) => (
           <li key={row.name} className="flex items-center gap-3 bg-white px-3.5 py-3">
             <span
               className="h-2 w-2 shrink-0 rounded-full"
@@ -133,14 +137,14 @@ function InboxPanel() {
               <p className="flex items-baseline gap-2 text-[12.5px] font-semibold text-[#1d1d1f]">
                 {row.name}
                 <span className="font-mono text-[9px] font-normal text-[#86868b]">
-                  {row.channel}
+                  {row.channel} · {row.created_at.slice(11, 16)}
                 </span>
               </p>
               <p className="truncate text-[11.5px] text-[#6e6e73]">{row.preview}</p>
             </div>
             <div className="shrink-0 text-right">
               <p className="text-[12px] font-semibold tabular-nums text-[#1d1d1f]">
-                {row.value}
+                {formatCurrency(row.estimated_value)}
               </p>
               <p
                 className="font-mono text-[9px] font-semibold uppercase"
@@ -156,10 +160,15 @@ function InboxPanel() {
   );
 }
 
+const sampleReply =
+  "Hi Sarah, I can put together a quote for your board meeting on Thursday. How many seats should I include?";
+
 function ApprovalPanel() {
+  const [reply, setReply] = useState(sampleReply);
+  const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
   return (
     <>
-      <PanelHead eyebrow="Approval queue" title="6 drafts waiting on you" />
+      <PanelHead eyebrow="Approval queue" title="Review a sample draft" />
       <div className="overflow-hidden rounded-xl border border-[color:var(--apple-hairline)] bg-white">
         <div className="border-b border-[color:var(--apple-hairline)] bg-[#fbfbfd] px-4 py-3">
           <p className="flex items-center gap-2 text-[12px] font-semibold text-[#1d1d1f]">
@@ -184,31 +193,39 @@ function ApprovalPanel() {
         </div>
 
         <div className="px-4 py-3.5">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#86868b]">
+          <label htmlFor="sample-draft" className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#6e6e73]">
             Drafted reply
-          </p>
-          <p className="mt-2 rounded-lg border border-dashed border-[color:var(--apple-hairline)] bg-[#fbfbfd] p-3 text-[11.5px] leading-[1.6] text-[#1d1d1f]">
-            Hi Sarah — congratulations on outgrowing five seats. Professional
-            lifts you to 5,000 messages a month and unlocks Instagram DMs. I have
-            attached pricing for a 12-seat plan and can hold the annual rate
-            until Thursday so it is ready for your board.
-          </p>
-
-          <div className="mt-3.5 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--nexus-approval)] px-3 py-1.5 text-[11px] font-medium text-white">
-              <CheckCircle2 className="h-3 w-3" aria-hidden />
-              Approve &amp; send
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--apple-hairline)] px-3 py-1.5 text-[11px] font-medium text-[#1d1d1f]">
-              <Pencil className="h-3 w-3" aria-hidden />
-              Edit
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--apple-hairline)] px-3 py-1.5 text-[11px] font-medium text-[#6e6e73]">
-              <X className="h-3 w-3" aria-hidden />
-              Reject
-            </span>
-            <span className="ml-auto font-mono text-[9px] text-[#86868b]">
-              Hard-gated by policy: value &gt; $10k
+          </label>
+          <textarea
+            id="sample-draft"
+            value={reply}
+            onChange={(event) => setReply(event.target.value)}
+            readOnly={decision !== null}
+            rows={3}
+            className="mt-2 block w-full resize-y rounded-lg border border-[color:var(--apple-hairline)] bg-[#fbfbfd] p-3 text-sm leading-relaxed text-[#1d1d1f]"
+          />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {decision === null ? (
+              <>
+                <button type="button" onClick={() => setDecision("approved")} disabled={!reply.trim()}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[color:var(--nexus-approval)] px-4 text-xs font-medium text-white disabled:opacity-50">
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                  Approve draft
+                </button>
+                <button type="button" onClick={() => setDecision("rejected")}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[color:var(--apple-hairline)] px-4 text-xs font-medium">
+                  <X className="h-3.5 w-3.5" aria-hidden />
+                  Reject
+                </button>
+              </>
+            ) : (
+              <button type="button" className="min-h-11 rounded-full border border-[color:var(--apple-hairline)] px-4 text-xs font-medium"
+                onClick={() => { setReply(sampleReply); setDecision(null); }}>
+                Reset sample
+              </button>
+            )}
+            <span role="status" className="text-xs text-[#6e6e73]">
+              {decision && `Sample draft ${decision}.`}
             </span>
           </div>
         </div>
@@ -218,57 +235,15 @@ function ApprovalPanel() {
 }
 
 const reportStats = [
-  { label: "Replies drafted", value: "148", accent: "discovery" as NexusAccent },
-  { label: "Noise filtered", value: "1,204", accent: "intake" as NexusAccent },
-  { label: "Waiting on you", value: "6", accent: "approval" as NexusAccent },
-];
-
-const trend = [12, 16, 14, 22, 19, 26, 31, 29, 38, 42, 40, 48];
-
-function TrendChart() {
-  const max = 56;
-  const pt = (v: number, i: number) => ({
-    x: (i / (trend.length - 1)) * 100,
-    y: 40 - (v / max) * 37,
-  });
-  const line = trend
-    .map((v, i) => {
-      const { x, y } = pt(v, i);
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const last = pt(trend[trend.length - 1], trend.length - 1);
-
-  return (
-    <svg viewBox="0 0 100 42" className="h-full w-full" preserveAspectRatio="none" aria-hidden>
-      <defs>
-        <linearGradient id="aw-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--nexus-approval)" stopOpacity="0.16" />
-          <stop offset="100%" stopColor="var(--nexus-approval)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {[10, 20, 30].map((y) => (
-        <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(0,0,0,0.06)" strokeWidth="0.5" />
-      ))}
-      <path d={`${line} L100,40 L0,40 Z`} fill="url(#aw-area)" stroke="none" />
-      <path
-        d={line}
-        fill="none"
-        stroke="var(--nexus-approval)"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        vectorEffect="non-scaling-stroke"
-      />
-      <circle cx={last.x} cy={last.y} r="1.6" fill="var(--nexus-approval)" />
-    </svg>
-  );
-}
+  { label: "Messages processed", value: "24", accent: "discovery" },
+  { label: "Revenue recovered", value: "$4,900", accent: "growth" },
+  { label: "Drafts approved", value: "3", accent: "approval" },
+] as const;
 
 function ReportPanel() {
   return (
     <>
-      <PanelHead eyebrow="Buy-back report" title="What the queue handled this month" />
+      <PanelHead eyebrow="Buy-back report" title="Today’s conversation summary" />
       <div className="grid grid-cols-3 gap-2.5">
         {reportStats.map((s) => (
           <div
@@ -277,7 +252,7 @@ function ReportPanel() {
           >
             <p className="text-[11px] text-[#86868b]">{s.label}</p>
             <p
-              className="mt-1 text-[20px] font-semibold tabular-nums leading-none"
+              className="mt-1 text-[15px] font-semibold tabular-nums leading-none sm:text-[20px]"
               style={{ color: ACCENT_VAR[s.accent] }}
             >
               {s.value}
@@ -286,28 +261,11 @@ function ReportPanel() {
         ))}
       </div>
       <div className="mt-2.5 rounded-xl border border-[color:var(--apple-hairline)] bg-white p-3.5">
-        <div className="flex items-center justify-between">
-          <p className="text-[12px] font-semibold text-[#1d1d1f]">
-            Conversations resolved
-          </p>
-          <div className="flex gap-1">
-            {["7D", "30D", "90D"].map((p) => (
-              <span
-                key={p}
-                className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-medium ${
-                  p === "30D"
-                    ? "bg-[color:var(--nexus-approval-soft)] text-[color:var(--nexus-approval)]"
-                    : "text-[#86868b]"
-                }`}
-              >
-                {p}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="mt-3 h-[92px]">
-          <TrendChart />
-        </div>
+        <p className="text-[12px] font-semibold text-[#1d1d1f]">Executive summary</p>
+        <p className="mt-2 text-[12px] leading-relaxed text-[#6e6e73]">
+          The team approved three drafts today. The largest open conversation is a
+          $24,000 upgrade request waiting for a reply before Thursday.
+        </p>
       </div>
     </>
   );
@@ -328,7 +286,7 @@ export function AppWindowFrame({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[color:var(--apple-hairline)] bg-white landing-elev-3">
-      <Chrome title="Nexus OS — Command Center" />
+      <Chrome title="Nexus OS · Sample workspace" />
       <div className="flex min-h-[404px]">
         <Rail active={NAV_FOR_STOP[stopId] ?? "Inbox"} />
         <div className="min-w-0 flex-1 bg-[#fdfdfe] p-4 md:p-5">{children}</div>

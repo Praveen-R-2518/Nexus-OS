@@ -36,10 +36,8 @@ export function Hero() {
           <AnimatedHeading
             as="h1"
             text={HERO.headline}
-            /* Two-tone: the first two promises are context, the third is the
-               product's actual differentiator — so it gets the ink. */
             className="landing-hero-headline mt-7 text-balance text-[#6e6e73]"
-            accentFrom={6}
+            accentFrom={5}
             accentColor="#1d1d1f"
             delay={0.1}
           />
@@ -63,12 +61,6 @@ export function Hero() {
             </LiftButton>
           </motion.div>
 
-          <motion.p
-            className="mt-5 font-mono text-[11px] tracking-[0.06em] text-[#86868b]"
-            {...rise(0.38)}
-          >
-            {HERO.microcopy}
-          </motion.p>
         </div>
 
         <motion.div

@@ -37,13 +37,12 @@ export const ACCENT_SOFT: Record<NexusAccent, string> = {
 
 export const HERO = {
   eyebrow: "Revenue Command Center",
-  headline: "Every message triaged. Every reply drafted. Nothing sent without you.",
+  headline: "One inbox for the conversations that need you.",
   /** Rendered as one <h1>; split here only to control the line accent. */
   subhead:
-    "Nexus OS reads every inbound customer message across Gmail, WhatsApp and Instagram, filters the noise, scores what it is worth, and writes the reply. You stay the last step.",
+    "Bring email and customer messages into one queue. Spot accounts at risk, review drafted replies, and decide what needs a personal response.",
   primaryCta: { label: "Start free trial", href: "/signup" },
-  secondaryCta: { label: "See how it works", href: "#protocol" },
-  microcopy: "14-day trial · No credit card · Live in under a day",
+  secondaryCta: { label: "Explore the inbox", href: "#product" },
 } as const;
 
 /* -------------------------------------------------------------- channels */
@@ -107,27 +106,27 @@ export type TourStop = {
 
 export const TOUR = {
   eyebrow: "The product",
-  title: "One surface for everything customers send you.",
+  title: "From the inbox to a reviewed reply.",
   stops: [
     {
       id: "inbox",
       tab: "Inbox",
-      title: "Every channel, one queue",
-      body: "Gmail, WhatsApp and Instagram normalise into a single message shape, deduplicated and sorted by what each conversation is worth.",
+      title: "Choose what to handle first",
+      body: "Sort your queue by risk, estimated value, or newest arrival. Try each view with the sample conversations.",
       accent: "intake",
     },
     {
       id: "approval",
       tab: "Approval",
-      title: "You are the last step",
-      body: "High-value and churn-risk replies stop here. Read the draft, edit a line, approve. Low-risk replies can auto-send once you set the policy.",
+      title: "Review replies that need your judgment",
+      body: "Read the original message alongside its draft. Edit, approve, or reject the reply according to your workspace policy.",
       accent: "approval",
     },
     {
       id: "report",
       tab: "Report",
-      title: "The hours you got back",
-      body: "See what was rescued, what was drafted for you, and where the queue is slowing down — without opening a spreadsheet.",
+      title: "Review the day’s results",
+      body: "See how many messages your team processed, which drafts were approved, and the value of those conversations. Export the breakdown as a CSV.",
       accent: "growth",
     },
   ] satisfies TourStop[],
@@ -152,7 +151,7 @@ export const PROTOCOL = {
       index: "01",
       title: "Discovery",
       accent: "discovery",
-      body: "Nexus watches your connected inboxes continuously. New messages arrive through OAuth and webhooks, not a nightly export, so nothing waits in a queue you forgot about.",
+      body: "Nexus picks up email from connected mailboxes and receives customer messages from WhatsApp, Instagram, and Messenger through webhooks.",
     },
     {
       id: "intake",
@@ -166,7 +165,7 @@ export const PROTOCOL = {
       index: "03",
       title: "Rescue",
       accent: "rescue",
-      body: "Each surviving message is classified for intent, urgency, estimated value and churn risk — so an angry enterprise customer never sits below a cold pitch.",
+      body: "Nexus classifies each message by intent, urgency, estimated value, and churn risk. Sort the inbox by risk, value, or arrival time to decide what to handle first.",
     },
     {
       id: "approval",
@@ -187,7 +186,7 @@ export const PROTOCOL = {
       index: "06",
       title: "Growth",
       accent: "growth",
-      body: "The buy-back report closes the loop: what was rescued, what was drafted, and how much of your week the queue handed back to you.",
+      body: "The daily buy-back report shows messages processed, drafts approved, and recovered revenue. Export the conversation breakdown for your team.",
     },
   ] satisfies ProtocolStep[],
 } as const;
@@ -205,8 +204,8 @@ export type FeatureCard = {
 
 export const FEATURES = {
   eyebrow: "Capabilities",
-  title: "Built as plain steps, not a black box.",
-  body: "Fetch, filter, classify, draft and send are deterministic. The only agent in the system is the read-only one you talk to.",
+  title: "Tools for your team’s daily work.",
+  body: "Start with customer conversations, then explore the tools for revenue analysis, publishing, and hiring.",
   cards: [
     {
       id: "filter",
@@ -232,7 +231,7 @@ export const FEATURES = {
     {
       id: "queue",
       title: "An approval queue you actually clear",
-      body: "One screen, one decision per message. Approve, edit, or reject — and the policy learns where you want the line drawn between auto-send and hard gate.",
+      body: "Review the message and its draft together. Your workspace policy determines which replies need a person to approve them.",
       accent: "approval",
       size: "wide",
     },
@@ -246,7 +245,28 @@ export const FEATURES = {
     {
       id: "report",
       title: "Buy-back report",
-      body: "What the system rescued and drafted, summarised on a schedule you set.",
+      body: "See messages processed, drafts approved, and recovered revenue in your daily report.",
+      accent: "growth",
+      size: "small",
+    },
+    {
+      id: "analyst",
+      title: "Revenue Analyst",
+      body: "Ask which accounts need attention. Review answers alongside the conversations and business documents that informed them.",
+      accent: "discovery",
+      size: "wide",
+    },
+    {
+      id: "posts",
+      title: "Social publishing",
+      body: "Draft captions, review posts, and schedule them for your connected channels.",
+      accent: "execution",
+      size: "small",
+    },
+    {
+      id: "hiring",
+      title: "Hiring pipeline",
+      body: "Compare candidates for an open role and track each person from shortlist to decision.",
       accent: "growth",
       size: "small",
     },

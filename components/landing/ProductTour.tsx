@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AppPanel, AppWindowFrame } from "@/components/landing/AppWindow";
 import { AnimatedHeading } from "@/components/landing/primitives/AnimatedHeading";
@@ -10,38 +10,16 @@ import { Section } from "@/components/landing/primitives/Section";
 import { ACCENT_VAR, TOUR } from "@/lib/landing/content";
 import { DURATION, EASE } from "@/lib/landing/motion";
 
-const DWELL_MS = 6000;
-
-/**
- * Three stops through the product, on tabs rather than a tall pinned scroll.
- *
- * Tabs auto-advance, and the underline fills over the dwell so the rotation is
- * legible instead of surprising. Any interaction — hover, focus, a click —
- * stops the rotation for good; nothing should move under someone who is reading.
- */
 export function ProductTour() {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
-  const [autoplay, setAutoplay] = useState(true);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const stop = TOUR.stops[active];
   const accent = ACCENT_VAR[stop.accent];
 
-  const halt = useCallback(() => setAutoplay(false), []);
-
-  useEffect(() => {
-    if (!autoplay || reduce) return;
-    timer.current = setInterval(() => {
-      setActive((i) => (i + 1) % TOUR.stops.length);
-    }, DWELL_MS);
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
-  }, [autoplay, reduce]);
-
   return (
-    <Section tone="page" rule width="wide" id="product">
+    <Section tone="page" rule width="wide" id="product" className="scroll-mt-16">
       <div className="max-w-[720px]">
         <Reveal>
           <Eyebrow>{TOUR.eyebrow}</Eyebrow>
@@ -52,12 +30,7 @@ export function ProductTour() {
         />
       </div>
 
-      <div
-        className="mt-10"
-        onMouseEnter={halt}
-        onFocusCapture={halt}
-        onTouchStart={halt}
-      >
+      <div className="mt-10">
         <div
           className="flex flex-wrap gap-2 border-b border-[color:var(--apple-hairline)]"
           role="tablist"
@@ -71,14 +44,27 @@ export function ProductTour() {
                 type="button"
                 role="tab"
                 aria-selected={on}
-                aria-controls={`tour-panel-${s.id}`}
+                aria-controls="tour-panel"
                 id={`tour-tab-${s.id}`}
-                onClick={() => {
-                  setActive(i);
-                  halt();
+                tabIndex={on ? 0 : -1}
+                ref={(button) => { tabs.current[i] = button; }}
+                onClick={() => setActive(i)}
+                onKeyDown={(event) => {
+                  const count = TOUR.stops.length;
+                  const destinations: Record<string, number> = {
+                    ArrowLeft: (i + count - 1) % count,
+                    ArrowRight: (i + 1) % count,
+                    Home: 0,
+                    End: count - 1,
+                  };
+                  const next = destinations[event.key];
+                  if (next === undefined) return;
+                  event.preventDefault();
+                  setActive(next);
+                  tabs.current[next]?.focus();
                 }}
                 className={`relative min-h-11 cursor-pointer px-1 pb-3.5 pt-3 text-[15px] font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--nexus-approval)] focus-visible:ring-offset-2 ${
-                  on ? "text-[#1d1d1f]" : "text-[#86868b] hover:text-[#1d1d1f]"
+                  on ? "text-[#1d1d1f]" : "text-[#6e6e73] hover:text-[#1d1d1f]"
                 } ${i > 0 ? "ml-5" : ""}`}
               >
                 {s.tab}
@@ -87,14 +73,9 @@ export function ProductTour() {
                     aria-hidden
                     className="absolute inset-x-0 -bottom-px h-0.5 origin-left"
                     style={{ background: ACCENT_VAR[s.accent] }}
-                    // Fills over the dwell so the rotation is predictable;
-                    // once autoplay stops it is simply a full underline.
-                    initial={reduce ? { scaleX: 1 } : { scaleX: 0 }}
+                    initial={{ scaleX: reduce ? 1 : 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{
-                      duration: reduce || !autoplay ? 0.28 : DWELL_MS / 1000,
-                      ease: autoplay && !reduce ? "linear" : EASE,
-                    }}
+                    transition={{ duration: reduce ? 0 : DURATION.short, ease: EASE }}
                   />
                 ) : null}
               </button>
@@ -102,12 +83,14 @@ export function ProductTour() {
           })}
         </div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
-          <div
-            role="tabpanel"
-            id={`tour-panel-${stop.id}`}
-            aria-labelledby={`tour-tab-${stop.id}`}
-          >
+        <div
+          role="tabpanel"
+          id="tour-panel"
+          aria-labelledby={`tour-tab-${stop.id}`}
+          tabIndex={0}
+          className="mt-8 grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10"
+        >
+          <div>
             <AnimatePresence mode="wait">
               <motion.div
                 key={stop.id}

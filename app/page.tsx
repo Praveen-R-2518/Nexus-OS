@@ -4,7 +4,6 @@ import { FeatureBento } from "@/components/landing/FeatureBento";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { Hero } from "@/components/landing/Hero";
 import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
-import { PricingSection } from "@/components/landing/PricingSection";
 import { ProductTour } from "@/components/landing/ProductTour";
 import { ProtocolStepper } from "@/components/landing/ProtocolStepper";
 import { StakesSection } from "@/components/landing/StakesSection";
@@ -29,7 +28,6 @@ export default function LandingPage() {
       <IntegrationsSection />
       {/* Renders nothing until real quotes exist in lib/landing/testimonials.ts */}
       <TestimonialSection />
-      <PricingSection />
       <FaqSection />
       <FinalCta />
     </div>

@@ -14,6 +14,8 @@ import {
   ExternalLink,
   Check,
 } from "lucide-react";
+import { InboxSortSelect } from "@/components/inbox/InboxSortSelect";
+import { sortInbox, type InboxSort } from "@/lib/inbox-sort";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChip } from "@/components/ui/FilterChip";
@@ -272,6 +274,7 @@ function InboxPageContent() {
     useState<UrgencyFilter>("");
   const [activeIntentFilter, setActiveIntentFilter] =
     useState<IntentFilter>("");
+  const [sort, setSort] = useState<InboxSort>("risk_score");
   const { query: searchQuery } = useAppChromeSearch();
   const [openInboxConfirm, setOpenInboxConfirm] = useState(false);
 
@@ -296,7 +299,7 @@ function InboxPageContent() {
 
   const filteredConversations = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return conversations.filter((c) => {
+    const filtered = conversations.filter((c) => {
       if (activeUrgencyFilter && c.urgency !== activeUrgencyFilter) {
         return false;
       }
@@ -304,13 +307,14 @@ function InboxPageContent() {
         return false;
       }
       if (q) {
-        const name = c.customer_name.toLowerCase();
+        const name = (c.customer_name ?? "").toLowerCase();
         const msg = conversationMessageText(c).toLowerCase();
         if (!name.includes(q) && !msg.includes(q)) return false;
       }
       return true;
     });
-  }, [conversations, activeUrgencyFilter, activeIntentFilter, searchQuery]);
+    return sortInbox(filtered, sort);
+  }, [conversations, activeUrgencyFilter, activeIntentFilter, searchQuery, sort]);
 
   useEffect(() => {
     const intent = searchParams.get("intent");
@@ -504,6 +508,14 @@ function InboxPageContent() {
           />
         </div>
 
+        {conversations.length > 0 && (
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-foreground">
+            <span className="text-xs text-muted">
+              {filteredConversations.length} of {conversations.length} loaded
+            </span>
+            <InboxSortSelect value={sort} onChange={setSort} />
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain hairline-t p-2">
           {!queriesEnabled && tenant.ready ? (
             <ExecutiveEmptyState
